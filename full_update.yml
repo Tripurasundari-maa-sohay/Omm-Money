@@ -1,0 +1,40 @@
+name: Update Market Indices & Portfolio Data
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # Every 15 minutes — GitHub runs this on their servers
+  workflow_dispatch:           # Lets you also click "Run workflow" manually in GitHub UI
+  push:
+    branches: [ main ]         # Also runs when you push any file change
+
+permissions:
+  contents: write              # Needed to commit the generated JSON files back to the repo
+
+jobs:
+  update:
+    runs-on: ubuntu-latest     # GitHub provides a free Ubuntu machine — no Python needed on your laptop
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install yfinance pandas pytz requests
+
+      - name: Fetch market indices
+        run: |
+          python scripts/market_indices.py
+
+      - name: Commit updated JSON files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/processed/
+          git diff --staged --quiet || git commit -m "🤖 Auto-update: market indices $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push

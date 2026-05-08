@@ -1,50 +1,50 @@
 {
   "usa_market": {
-    "status": "CLOSED",
+    "status": "PREOPEN",
     "indices": {
       "snp_500": {
         "ticker": "^GSPC",
         "name": "S&P 500",
-        "current": 0,
-        "change": 0,
-        "change_pct": 0,
-        "prev_close": 0,
-        "timestamp": "2026-01-01T00:00:00-05:00"
+        "current": 7337.11,
+        "change": -28.01,
+        "change_pct": -0.3803,
+        "prev_close": 7365.12,
+        "timestamp": "2026-05-08T04:43:22.649499-04:00"
       },
       "nasdaq": {
         "ticker": "^IXIC",
         "name": "NASDAQ",
-        "current": 0,
-        "change": 0,
-        "change_pct": 0,
-        "prev_close": 0,
-        "timestamp": "2026-01-01T00:00:00-05:00"
+        "current": 25806.2,
+        "change": -32.74,
+        "change_pct": -0.1267,
+        "prev_close": 25838.94,
+        "timestamp": "2026-05-08T04:43:22.779564-04:00"
       }
     },
-    "timestamp": "2026-01-01T00:00:00-05:00"
+    "timestamp": "2026-05-08T04:43:22.779590-04:00"
   },
   "india_market": {
-    "status": "CLOSED",
+    "status": "OPEN",
     "indices": {
       "nifty_50": {
         "ticker": "^NSEI",
         "name": "Nifty 50",
-        "current": 0,
-        "change": 0,
-        "change_pct": 0,
-        "prev_close": 0,
-        "timestamp": "2026-01-01T00:00:00+05:30"
+        "current": 24156.5,
+        "change": -170.15,
+        "change_pct": -0.6994,
+        "prev_close": 24326.65,
+        "timestamp": "2026-05-08T14:13:22.865507+05:30"
       },
       "sensex": {
         "ticker": "^BSESN",
         "name": "Sensex",
-        "current": 0,
-        "change": 0,
-        "change_pct": 0,
-        "prev_close": 0,
-        "timestamp": "2026-01-01T00:00:00+05:30"
+        "current": 77254.76,
+        "change": -589.77,
+        "change_pct": -0.7576,
+        "prev_close": 77844.52,
+        "timestamp": "2026-05-08T14:13:22.938525+05:30"
       }
     },
-    "timestamp": "2026-01-01T00:00:00+05:30"
+    "timestamp": "2026-05-08T14:13:22.938549+05:30"
   }
 }

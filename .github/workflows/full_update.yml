@@ -1,0 +1,42 @@
+name: Update Market Indices & Portfolio Data
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install yfinance pandas pytz requests --quiet
+
+      - name: Fetch market indices
+        run: |
+          python scripts/market_indices.py data/processed/market_indices.json
+
+      - name: Commit updated JSON files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/processed/
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "🤖 Auto-update: market indices $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase origin main
+          git push
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

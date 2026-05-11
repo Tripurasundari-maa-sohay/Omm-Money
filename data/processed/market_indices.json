@@ -1,24 +1,24 @@
 {
   "usa_market": {
-    "status": "OPEN",
+    "status": "CLOSED",
     "indices": {
       "snp_500": {
         "ticker": "^GSPC",
         "name": "S&P 500",
-        "current": 7411.77,
-        "change": 12.84,
-        "change_pct": 0.1735,
+        "current": 7412.84,
+        "change": 13.91,
+        "change_pct": 0.188,
         "prev_close": 7398.93,
-        "timestamp": "2026-05-11T15:10:12.348755-04:00"
+        "timestamp": "2026-05-11T16:53:22.917290-04:00"
       },
       "nasdaq": {
         "ticker": "^IXIC",
         "name": "NASDAQ",
-        "current": 26284.23,
-        "change": 37.15,
-        "change_pct": 0.1415,
+        "current": 26274.12,
+        "change": 27.04,
+        "change_pct": 0.103,
         "prev_close": 26247.08,
-        "timestamp": "2026-05-11T15:10:12.627886-04:00"
+        "timestamp": "2026-05-11T16:53:23.181811-04:00"
       }
     },
     "holdings": [
@@ -27,191 +27,191 @@
         "name": "TotalEnergies SE",
         "qty": 8,
         "purchase_px": 82.84,
-        "ltp": 90.61,
+        "ltp": 90.69,
         "prev_close": 88.48,
-        "day_change": 2.13,
-        "day_change_pct": 2.4073,
-        "mkt_value": 724.88,
-        "unreal_pl": 62.16,
-        "unreal_pl_pct": 9.3795,
+        "day_change": 2.21,
+        "day_change_pct": 2.4977,
+        "mkt_value": 725.52,
+        "unreal_pl": 62.8,
+        "unreal_pl_pct": 9.4761,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:13.293940-04:00"
+        "timestamp": "2026-05-11T16:53:23.899338-04:00"
       },
       {
         "ticker": "AVGO",
         "name": "Broadcom Inc.",
         "qty": 4,
         "purchase_px": 341.7,
-        "ltp": 429.08,
+        "ltp": 428.43,
         "prev_close": 430.0,
-        "day_change": -0.92,
-        "day_change_pct": -0.2139,
-        "mkt_value": 1716.32,
-        "unreal_pl": 349.52,
-        "unreal_pl_pct": 25.5722,
+        "day_change": -1.57,
+        "day_change_pct": -0.3651,
+        "mkt_value": 1713.72,
+        "unreal_pl": 346.92,
+        "unreal_pl_pct": 25.3819,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:13.535776-04:00"
+        "timestamp": "2026-05-11T16:53:24.160899-04:00"
       },
       {
         "ticker": "AMZN",
         "name": "Amazon.com Inc.",
         "qty": 10,
         "purchase_px": 249.73,
-        "ltp": 269.55,
+        "ltp": 268.99,
         "prev_close": 272.68,
-        "day_change": -3.13,
-        "day_change_pct": -1.1479,
-        "mkt_value": 2695.5,
-        "unreal_pl": 198.2,
-        "unreal_pl_pct": 7.9366,
+        "day_change": -3.69,
+        "day_change_pct": -1.3532,
+        "mkt_value": 2689.9,
+        "unreal_pl": 192.6,
+        "unreal_pl_pct": 7.7123,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:13.763229-04:00"
+        "timestamp": "2026-05-11T16:53:24.384255-04:00"
       },
       {
         "ticker": "MSFT",
         "name": "Microsoft Corp.",
         "qty": 6,
         "purchase_px": 416.07,
-        "ltp": 410.33,
+        "ltp": 412.66,
         "prev_close": 415.12,
-        "day_change": -4.79,
-        "day_change_pct": -1.1539,
-        "mkt_value": 2461.98,
-        "unreal_pl": -34.44,
-        "unreal_pl_pct": -1.3796,
+        "day_change": -2.46,
+        "day_change_pct": -0.5926,
+        "mkt_value": 2475.96,
+        "unreal_pl": -20.46,
+        "unreal_pl_pct": -0.8196,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:13.953665-04:00"
+        "timestamp": "2026-05-11T16:53:24.664878-04:00"
       },
       {
         "ticker": "GEV",
         "name": "GE Vernova Inc",
         "qty": 1,
         "purchase_px": 1097.14,
-        "ltp": 1082.05,
+        "ltp": 1073.08,
         "prev_close": 1040.15,
-        "day_change": 41.9,
-        "day_change_pct": 4.0283,
-        "mkt_value": 1082.05,
-        "unreal_pl": -15.09,
-        "unreal_pl_pct": -1.3754,
+        "day_change": 32.93,
+        "day_change_pct": 3.1659,
+        "mkt_value": 1073.08,
+        "unreal_pl": -24.06,
+        "unreal_pl_pct": -2.193,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:14.177039-04:00"
+        "timestamp": "2026-05-11T16:53:24.905455-04:00"
       },
       {
         "ticker": "VOOG",
         "name": "Vanguard S&P 500 Growth ETF",
         "qty": 18,
         "purchase_px": 73.58,
-        "ltp": 81.96,
+        "ltp": 81.86,
         "prev_close": 81.63,
-        "day_change": 0.33,
-        "day_change_pct": 0.4043,
-        "mkt_value": 1475.28,
-        "unreal_pl": 150.84,
-        "unreal_pl_pct": 11.389,
+        "day_change": 0.23,
+        "day_change_pct": 0.2818,
+        "mkt_value": 1473.48,
+        "unreal_pl": 149.04,
+        "unreal_pl_pct": 11.2531,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:14.577846-04:00"
+        "timestamp": "2026-05-11T16:53:25.162194-04:00"
       },
       {
         "ticker": "GOOG",
         "name": "Alphabet Inc. Class C",
         "qty": 3,
         "purchase_px": 310.19,
-        "ltp": 387.72,
+        "ltp": 386.77,
         "prev_close": 397.05,
-        "day_change": -9.33,
-        "day_change_pct": -2.3498,
-        "mkt_value": 1163.16,
-        "unreal_pl": 232.59,
-        "unreal_pl_pct": 24.9944,
+        "day_change": -10.28,
+        "day_change_pct": -2.5891,
+        "mkt_value": 1160.31,
+        "unreal_pl": 229.74,
+        "unreal_pl_pct": 24.6881,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:14.833856-04:00"
+        "timestamp": "2026-05-11T16:53:25.399129-04:00"
       },
       {
         "ticker": "MU",
         "name": "Micron Technology Inc.",
         "qty": 1,
         "purchase_px": 492.0,
-        "ltp": 808.64,
+        "ltp": 795.33,
         "prev_close": 746.81,
-        "day_change": 61.83,
-        "day_change_pct": 8.2785,
-        "mkt_value": 808.64,
-        "unreal_pl": 316.64,
-        "unreal_pl_pct": 64.3567,
+        "day_change": 48.52,
+        "day_change_pct": 6.497,
+        "mkt_value": 795.33,
+        "unreal_pl": 303.33,
+        "unreal_pl_pct": 61.6524,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:15.221035-04:00"
+        "timestamp": "2026-05-11T16:53:25.678309-04:00"
       },
       {
         "ticker": "RKLB",
         "name": "Rocket Lab Corporation",
         "qty": 15,
         "purchase_px": 80.91,
-        "ltp": 122.16,
+        "ltp": 117.35,
         "prev_close": 105.47,
-        "day_change": 16.69,
-        "day_change_pct": 15.8244,
-        "mkt_value": 1832.4,
-        "unreal_pl": 618.75,
-        "unreal_pl_pct": 50.9826,
+        "day_change": 11.88,
+        "day_change_pct": 11.2639,
+        "mkt_value": 1760.25,
+        "unreal_pl": 546.6,
+        "unreal_pl_pct": 45.0377,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:15.410376-04:00"
+        "timestamp": "2026-05-11T16:53:25.909094-04:00"
       },
       {
         "ticker": "EWY",
         "name": "iShares MSCI South Korea ETF",
         "qty": 11,
         "purchase_px": 138.22,
-        "ltp": 194.21,
+        "ltp": 192.85,
         "prev_close": 190.2,
-        "day_change": 4.01,
-        "day_change_pct": 2.1057,
-        "mkt_value": 2136.26,
-        "unreal_pl": 615.84,
-        "unreal_pl_pct": 40.5043,
+        "day_change": 2.65,
+        "day_change_pct": 1.3933,
+        "mkt_value": 2121.35,
+        "unreal_pl": 600.93,
+        "unreal_pl_pct": 39.524,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:15.637710-04:00"
+        "timestamp": "2026-05-11T16:53:26.223574-04:00"
       },
       {
         "ticker": "MP",
         "name": "MP Materials Corp.",
         "qty": 10,
         "purchase_px": 53.0,
-        "ltp": 69.43,
+        "ltp": 67.41,
         "prev_close": 67.43,
-        "day_change": 2.0,
-        "day_change_pct": 2.9734,
-        "mkt_value": 694.35,
-        "unreal_pl": 164.35,
-        "unreal_pl_pct": 31.0094,
+        "day_change": -0.02,
+        "day_change_pct": -0.0297,
+        "mkt_value": 674.1,
+        "unreal_pl": 144.1,
+        "unreal_pl_pct": 27.1887,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:15.834402-04:00"
+        "timestamp": "2026-05-11T16:53:26.392660-04:00"
       },
       {
         "ticker": "GLW",
         "name": "Corning Inc.",
         "qty": 6,
         "purchase_px": 182.17,
-        "ltp": 207.92,
+        "ltp": 207.39,
         "prev_close": 186.94,
-        "day_change": 20.98,
-        "day_change_pct": 11.2228,
-        "mkt_value": 1247.52,
-        "unreal_pl": 154.5,
-        "unreal_pl_pct": 14.1351,
+        "day_change": 20.45,
+        "day_change_pct": 10.9393,
+        "mkt_value": 1244.34,
+        "unreal_pl": 151.32,
+        "unreal_pl_pct": 13.8442,
         "currency": "USD",
-        "timestamp": "2026-05-11T15:10:16.127179-04:00"
+        "timestamp": "2026-05-11T16:53:26.745282-04:00"
       }
     ],
     "summary": {
-      "total_value": 18038.34,
+      "total_value": 17907.34,
       "total_invested": 15224.48,
-      "total_unreal_pl": 2813.86,
-      "day_pl": 475.34,
+      "total_unreal_pl": 2682.86,
+      "day_pl": 344.34,
       "cash": 46.84,
-      "account_value": 18085.18
+      "account_value": 17954.18
     },
-    "timestamp": "2026-05-11T15:10:20.736024-04:00"
+    "timestamp": "2026-05-11T16:53:31.276113-04:00"
   },
   "india_market": {
     "status": "CLOSED",
@@ -223,7 +223,7 @@
         "change": -57.5,
         "change_pct": -0.2373,
         "prev_close": 24233.65,
-        "timestamp": "2026-05-12T00:40:12.820761+05:30"
+        "timestamp": "2026-05-12T02:23:23.365875+05:30"
       },
       "sensex": {
         "ticker": "^BSESN",
@@ -232,7 +232,7 @@
         "change": -303.75,
         "change_pct": -0.3913,
         "prev_close": 77631.94,
-        "timestamp": "2026-05-12T00:40:12.985825+05:30"
+        "timestamp": "2026-05-12T02:23:23.593751+05:30"
       }
     },
     "holdings": [
@@ -249,7 +249,7 @@
         "unreal_pl": 522.21,
         "unreal_pl_pct": 1.7093,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:16.358419+05:30",
+        "timestamp": "2026-05-12T02:23:27.010959+05:30",
         "broker": "Motilal"
       },
       {
@@ -265,7 +265,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:17.502584+05:30",
+        "timestamp": "2026-05-12T02:23:28.059216+05:30",
         "broker": "Motilal"
       },
       {
@@ -281,7 +281,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:17.707410+05:30",
+        "timestamp": "2026-05-12T02:23:28.249525+05:30",
         "broker": "Mstock"
       },
       {
@@ -297,7 +297,7 @@
         "unreal_pl": 1800.0,
         "unreal_pl_pct": 8.3333,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:17.928693+05:30",
+        "timestamp": "2026-05-12T02:23:28.461086+05:30",
         "broker": "Upstox"
       },
       {
@@ -313,7 +313,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:18.206131+05:30",
+        "timestamp": "2026-05-12T02:23:28.736278+05:30",
         "broker": "Motilal"
       },
       {
@@ -329,7 +329,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:18.462821+05:30",
+        "timestamp": "2026-05-12T02:23:28.897291+05:30",
         "broker": "Motilal"
       },
       {
@@ -345,7 +345,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:18.498556+05:30",
+        "timestamp": "2026-05-12T02:23:28.933522+05:30",
         "broker": "Upstox"
       },
       {
@@ -361,7 +361,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:18.691046+05:30",
+        "timestamp": "2026-05-12T02:23:29.221099+05:30",
         "broker": "Mstock"
       },
       {
@@ -377,7 +377,7 @@
         "unreal_pl": null,
         "unreal_pl_pct": null,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:18.905720+05:30",
+        "timestamp": "2026-05-12T02:23:29.497700+05:30",
         "broker": "Motilal"
       },
       {
@@ -393,7 +393,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:20.245353+05:30",
+        "timestamp": "2026-05-12T02:23:30.750710+05:30",
         "broker": "Motilal"
       },
       {
@@ -409,7 +409,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:20.506044+05:30",
+        "timestamp": "2026-05-12T02:23:31.024212+05:30",
         "broker": "Motilal"
       },
       {
@@ -425,7 +425,7 @@
         "unreal_pl": NaN,
         "unreal_pl_pct": NaN,
         "currency": "INR",
-        "timestamp": "2026-05-12T00:40:20.735954+05:30",
+        "timestamp": "2026-05-12T02:23:31.276054+05:30",
         "broker": "Upstox"
       }
     ],
@@ -435,6 +435,6 @@
       "total_unreal_pl": NaN,
       "day_pl": NaN
     },
-    "timestamp": "2026-05-12T00:40:20.736038+05:30"
+    "timestamp": "2026-05-12T02:23:31.276127+05:30"
   }
 }

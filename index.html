@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Dashboard · SABARNA DBG</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050d16;color:#c0d8f0;font-family:'Segoe UI',Arial,sans-serif;font-size:13px}
+
+  /* ── BANNER ── */
+  .top-banner{position:fixed;top:0;left:0;right:0;height:62px;
+    background:linear-gradient(135deg,#0a1929 0%,#0d2b47 100%);
+    border-bottom:2px solid #00ff88;display:flex;align-items:center;
+    justify-content:space-between;padding:0 20px;z-index:1000;
+    box-shadow:0 4px 16px rgba(0,0,0,0.6)}
+  .logo{font-size:17px;color:#00ff88;font-weight:700;letter-spacing:2px}
+  .banner-tabs{display:flex;gap:10px;align-items:center;flex:1;justify-content:center}
+  .tab-button{padding:7px 18px;background:transparent;color:#00ccff;
+    border:2px solid #00ccff;border-radius:4px;cursor:pointer;
+    font-size:12px;font-weight:700;letter-spacing:1px;transition:all .25s}
+  .tab-button:hover{background:rgba(0,204,255,.1);border-color:#00ff88;color:#00ff88}
+  .tab-button.active{background:#00ff88;color:#0a1929;border-color:#00ff88;
+    box-shadow:0 0 12px rgba(0,255,136,.4)}
+  .banner-right{font-size:11px;color:#00ccff;text-align:right}
+  #update-time{color:#00ff88;font-weight:700;font-family:Monaco,monospace}
+  #fetch-status{font-size:10px;color:#556;margin-top:2px}
+  #fetch-status.live{color:#00ff88}
+  #fetch-status.stale{color:#ffaa00}
+  #fetch-status.error{color:#ff4444}
+
+  /* ── LAYOUT ── */
+  .dashboard-container{width:100%;min-height:100vh;padding-top:62px}
+  .main-content{padding:20px;max-width:1600px;margin:0 auto}
+  .tab-content{display:none}
+  .tab-content.active{display:block;animation:fadeIn .3s ease-in-out}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  h2{font-size:13px;color:#00ff88;font-weight:700;letter-spacing:1px;margin-bottom:14px}
+  h3{font-size:12px;color:#00ccff;font-weight:600;letter-spacing:1px;margin-bottom:10px}
+
+  /* ── MARKET STATUS ── */
+  .markets-status{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+  .market-card{background:#0a1929;border:2px solid #00ccff;border-radius:8px;padding:16px}
+  .market-card.india-market{border-color:#ffaa00}
+  .market-header{display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #1a2a4a}
+  .market-name{color:#00ff88;font-weight:700;font-size:14px}
+  .market-status{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700}
+  .market-status.OPEN{background:rgba(0,255,136,.15);color:#00ff88;border:1px solid #00ff88}
+  .market-status.CLOSED{background:rgba(255,68,68,.15);color:#ff4444;border:1px solid #ff4444}
+  .market-status.PREOPEN{background:rgba(255,170,0,.15);color:#ffaa00;border:1px solid #ffaa00}
+  .market-details{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+  .index-item{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 10px;background:#0d2b47;border-radius:4px}
+  .index-name{color:#00ccff;font-weight:600}
+  .index-value{color:#00ff88;font-weight:700;font-family:Monaco,monospace;font-size:13px}
+  .index-change{font-size:12px;font-weight:700;margin-left:8px}
+  .index-change.positive{color:#00ff88}
+  .index-change.negative{color:#ff4444}
+  .market-time{font-size:10px;color:#556;font-style:italic}
+  .market-countdown{display:flex;justify-content:space-between;align-items:center;
+    margin-top:8px;padding:8px 10px;background:#0d2b47;
+    border:1px dashed #1a4a6a;border-radius:4px;font-size:11px}
+  .countdown-label{color:#00ccff;font-weight:700;letter-spacing:.5px}
+  .countdown-value{color:#00ff88;font-weight:700;font-family:Monaco,monospace;font-size:13px}
+  .countdown-value.warn{color:#ffaa00}
+  .countdown-value.alert{color:#ff4444}
+
+  /* ── METRIC CARDS ── */
+  .portfolio-overview,.portfolio-metrics{background:#0a1929;border:1px solid #00ff88;
+    border-radius:8px;padding:18px;margin-bottom:22px}
+  .portfolio-metrics{border-color:#1a3a5a}
+  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .metric-card{background:#0d2b47;border:1px solid #1a4a6a;border-radius:4px;
+    padding:12px;display:flex;flex-direction:column;gap:5px}
+  .metric-card label{color:#00ccff;font-size:10px;font-weight:700;
+    text-transform:uppercase;letter-spacing:1px}
+  .metric-card .mval{color:#00ff88;font-size:18px;font-weight:700;font-family:Monaco,monospace}
+  .metric-card .mchg{font-size:11px}
+  .metric-card .mchg.positive{color:#00ff88}
+  .metric-card .mchg.negative{color:#ff4444}
+  .metric-card .mdesc{font-size:10px;color:#556}
+  .metric-card .mval.positive{color:#00ff88}
+  .metric-card .mval.negative{color:#ff4444}
+  .metric-card .mval.loading{color:#556;font-size:14px}
+
+  /* ── CHARTS ── */
+  .analytics-section{background:#0a1929;border:1px solid #1a3a5a;border-radius:8px;
+    padding:18px;margin-bottom:22px}
+  .analytics-header{display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;margin-bottom:14px}
+  .analytics-header h2{margin-bottom:0}
+  .chart-container canvas{width:100%!important}
+  .chart-wide{height:280px}
+  .chart-square{height:260px}
+  .chart-stat-bar{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;
+    padding:8px 12px;background:#0d2b47;border-radius:4px;font-size:11px}
+  .chart-stat-bar strong{color:#00ff88}
+  .analytics-two-col{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start}
+
+  /* ── TABLES ── */
+  .holdings-section,.holdings-preview,.tab-section{background:#0a1929;border:1px solid #1a3a5a;
+    border-radius:8px;padding:18px;margin-bottom:22px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  thead th{background:#0d2b47;color:#00ccff;padding:8px 10px;text-align:left;
+    font-weight:700;font-size:11px;letter-spacing:.5px;white-space:nowrap;
+    border-bottom:1px solid #1a4a6a;cursor:pointer;user-select:none}
+  thead th:hover{color:#00ff88}
+  tbody tr{border-bottom:1px solid #0d2234;transition:background .15s}
+  tbody tr:hover{background:#0d2b47}
+  tbody td{padding:7px 10px;color:#b0c8e0;white-space:nowrap}
+  tfoot td{padding:8px 10px;font-weight:700;color:#00ff88;background:#0d2b47;
+    border-top:1px solid #1a4a6a}
+  .positive{color:#00ff88!important}
+  .negative{color:#ff4444!important}
+  .table-meta{margin-bottom:10px}
+  .live-badge{color:#00ff88;font-size:11px;font-weight:700;margin-right:10px}
+  .live-badge.stale{color:#ffaa00}
+  .preopen-tag{color:#00ccff;font-size:9px;letter-spacing:.5px}
+  .badge{padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;
+    border:1px solid currentColor;display:inline-block}
+  .badge-buy{color:#00ff88;background:rgba(0,255,136,.15)}
+  .badge-sell{color:#ff4444;background:rgba(255,68,68,.15)}
+  .badge-hold{color:#ffaa00;background:rgba(255,170,0,.15)}
+  .badge-trim{color:#cc6600;background:rgba(200,100,0,.15)}
+  .badge-open{color:#00ccff;background:rgba(0,204,255,.15)}
+  .badge-closed{color:#aabbcc;background:rgba(170,187,204,.15)}
+
+  /* ── INDEX MONITOR (US/India tabs) ── */
+  .index-card{background:#0a1929;border:2px solid #00ccff;border-radius:8px;
+    padding:16px;margin-bottom:18px}
+  .index-card.india{border-color:#ffaa00}
+  .index-main{display:flex;align-items:center;gap:20px;margin-top:10px}
+  .index-value-large{color:#00ff88;font-size:30px;font-weight:700;font-family:Monaco,monospace}
+  .index-change-large{font-size:15px;font-weight:700}
+  .index-time{font-size:10px;color:#556}
+
+  /* ── TRANSACTIONS ── */
+  .txn-summary-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    gap:12px;margin-bottom:18px}
+  .txn-stat-card{background:#0a1929;border:1px solid #1a3a5a;border-radius:6px;padding:14px}
+  .txn-stat-card label{display:block;color:#00ccff;font-size:10px;font-weight:700;
+    letter-spacing:1px;margin-bottom:6px}
+  .txn-stat-card .v{display:block;color:#00ff88;font-size:18px;font-weight:700;
+    font-family:Monaco,monospace}
+  .txn-stat-card .v.negative{color:#ff4444}
+  .txn-filter-bar{background:#0a1929;border:1px solid #1a3a5a;border-radius:8px;
+    padding:16px;margin-bottom:18px}
+  .txn-filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .txn-search-wrap input{background:#0d2b47;border:1px solid #1a4a6a;color:#c0d8f0;
+    padding:6px 10px;border-radius:4px;font-size:12px;width:220px}
+  .txn-pill{padding:4px 10px;background:transparent;color:#00ccff;
+    border:1px solid #1a4a6a;border-radius:20px;cursor:pointer;
+    font-size:11px;font-weight:600;transition:all .2s}
+  .txn-pill.active{background:#00ccff;color:#0a1929}
+  .txn-result-count{font-size:11px;color:#556;margin-top:8px}
+  .txn-result-count span{color:#00ccff;font-weight:700}
+  .charges-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .charges-panel h4{color:#00ccff;font-size:12px;margin-bottom:10px}
+  .txn-export-btn{padding:5px 14px;background:rgba(0,255,136,.1);border:1px solid #00ff88;
+    color:#00ff88;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700}
+  .txn-table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+
+  /* ── PENDING NOTE ── */
+  .pending-note{background:rgba(255,170,0,.08);border:1px dashed #ffaa00;
+    color:#ffaa00;padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px}
+
+  @media (max-width:900px){
+    .markets-status,.analytics-two-col,.charges-grid{grid-template-columns:1fr}
+    .banner-tabs{gap:5px}
+    .tab-button{padding:5px 10px;font-size:10px}
+  }
+</style>
+</head>
+
+<body>
+<div class="dashboard-container">
+
+  <!-- ══════════ BANNER ══════════ -->
+  <div class="top-banner">
+    <div><h1 class="logo">SABARNA · DBG 🌐</h1></div>
+    <div class="banner-tabs">
+      <button class="tab-button active" data-tab="portfolio">PORTFOLIO</button>
+      <button class="tab-button" data-tab="us">US PORTFOLIO</button>
+      <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
+      <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
+    </div>
+    <div class="banner-right">
+      <div>Clock: <span id="update-time">--:--:--</span></div>
+      <div id="fetch-status">Loading…</div>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+  <!-- ══════════ TAB 1 · PORTFOLIO ══════════ -->
+  <div id="portfolio-tab" class="tab-content active">
+
+    <!-- Markets -->
+    <div class="markets-status">
+      <div class="market-card">
+        <div class="market-header">
+          <span class="market-name">🇺🇸 USA Markets</span>
+          <span class="market-status CLOSED" id="usa-status">CLOSED</span>
+        </div>
+        <div class="market-details">
+          <div class="index-item">
+            <span class="index-name">S&amp;P 500</span>
+            <span class="index-value" id="snp-value">--</span>
+            <span class="index-change" id="snp-change">--</span>
+          </div>
+          <div class="index-item">
+            <span class="index-name">NASDAQ</span>
+            <span class="index-value" id="nasdaq-value">--</span>
+            <span class="index-change" id="nasdaq-change">--</span>
+          </div>
+        </div>
+        <div class="market-time" id="usa-time">Fetching…</div>
+        <div class="market-countdown">
+          <span class="countdown-label" id="usa-countdown-label">OPENS IN</span>
+          <span class="countdown-value" id="usa-countdown-value">--:--:--</span>
+        </div>
+      </div>
+      <div class="market-card india-market">
+        <div class="market-header">
+          <span class="market-name">🇮🇳 India Markets</span>
+          <span class="market-status CLOSED" id="india-status">CLOSED</span>
+        </div>
+        <div class="market-details">
+          <div class="index-item">
+            <span class="index-name">Nifty 50</span>
+            <span class="index-value" id="nifty-value">--</span>
+            <span class="index-change" id="nifty-change">--</span>
+          </div>
+          <div class="index-item">
+            <span class="index-name">Sensex</span>
+            <span class="index-value" id="sensex-value">--</span>
+            <span class="index-change" id="sensex-change">--</span>
+          </div>
+        </div>
+        <div class="market-time" id="india-time">Fetching…</div>
+        <div class="market-countdown">
+          <span class="countdown-label" id="india-countdown-label">OPENS IN</span>
+          <span class="countdown-value" id="india-countdown-value">--:--:--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero tiles -->
+    <div class="portfolio-overview">
+      <h2>PORTFOLIO SUMMARY · USA + INDIA</h2>
+      <div class="metrics-grid">
+        <div class="metric-card"><label>US PORTFOLIO VALUE</label><div class="mval loading" id="hero-us-value">…</div><div class="mdesc">Equities + cash</div></div>
+        <div class="metric-card"><label>INDIA PORTFOLIO VALUE</label><div class="mval loading" id="hero-india-value">…</div><div class="mdesc">Equities</div></div>
+        <div class="metric-card"><label>TOTAL VALUE (USD)</label><div class="mval loading" id="hero-total-value">…</div><div class="mchg" id="hero-total-return">--</div></div>
+        <div class="metric-card"><label>UNREALISED P&amp;L (USD)</label><div class="mval loading" id="hero-total-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>TODAY'S GAIN (USD)</label><div class="mval loading" id="hero-day-pl">…</div><div class="mchg" id="hero-day-pl-pct">--</div></div>
+        <div class="metric-card"><label>CASH INFUSED</label><div class="mval loading" id="hero-cash-infused">…</div><div class="mdesc">Net deposits ITD</div></div>
+      </div>
+    </div>
+
+    <!-- Cumulative return chart -->
+    <div class="analytics-section">
+      <h2>CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
+      <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
+      <div class="chart-stat-bar">
+        <span>Portfolio ITD: <strong id="cum-port">--</strong></span>
+        <span>S&amp;P 500 ITD: <strong id="cum-snp">--</strong></span>
+        <span>Alpha vs S&amp;P: <strong id="cum-alpha">--</strong></span>
+      </div>
+    </div>
+
+    <!-- Allocation + Cash vs Value -->
+    <div class="analytics-section">
+      <div class="analytics-two-col">
+        <div>
+          <h2>ALLOCATION · BY ASSET CLASS &amp; PORTFOLIO</h2>
+          <div class="chart-container chart-square"><canvas id="alloc-chart"></canvas></div>
+        </div>
+        <div>
+          <h2>CASH DEPLOYED vs ACCOUNT VALUE · US</h2>
+          <div class="chart-container chart-square"><canvas id="cash-value-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top holdings table -->
+    <div class="holdings-preview">
+      <h2>TOP HOLDINGS · USA + INDIA · LIVE</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>TICKER</th><th>NAME</th><th>PORTFOLIO</th><th>QTY</th>
+            <th>LTP</th><th>MKT VALUE (USD)</th><th>WT %</th>
+            <th>RETURN %</th><th>DAY %</th>
+          </tr>
+        </thead>
+        <tbody id="top-holdings-body"><tr><td colspan="9" style="text-align:center;color:#556;padding:20px;">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+  </div><!-- /portfolio-tab -->
+
+  <!-- ══════════ TAB 2 · US PORTFOLIO ══════════ -->
+  <div id="us-tab" class="tab-content">
+    <div class="index-card">
+      <h2 style="margin-bottom:0">S&amp;P 500 Index</h2>
+      <div class="index-main">
+        <div class="index-value-large" id="snp-value-large">--</div>
+        <div class="index-change-large" id="snp-change-large">--</div>
+        <div class="index-time" id="snp-time">Market: --</div>
+      </div>
+    </div>
+
+    <div class="portfolio-metrics">
+      <h2>USA Portfolio Metrics</h2>
+      <div class="metrics-grid">
+        <div class="metric-card"><label>STOCKS VALUE</label><div class="mval loading" id="us-stocks-value">…</div><div class="mdesc" id="us-stocks-count">-- positions</div></div>
+        <div class="metric-card"><label>ETF VALUE</label><div class="mval loading" id="us-etf-value">…</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
+        <div class="metric-card"><label>CASH</label><div class="mval loading" id="us-cash-value">…</div><div class="mdesc">From broker statement</div></div>
+        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading" id="us-day-pl">…</div><div class="mchg" id="us-day-pl-pct">--</div></div>
+        <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div></div>
+      </div>
+    </div>
+
+    <div class="holdings-section">
+      <h2>USA HOLDINGS · OPEN POSITIONS</h2>
+      <div class="table-meta">
+        <span class="live-badge" id="us-live-badge">● LIVE</span>
+        <span id="us-asof">--</span>
+      </div>
+      <table id="us-holdings-table">
+        <thead>
+          <tr>
+            <th>TICKER</th><th>QTY</th><th>AVG</th><th>LTP</th>
+            <th>PREV CLOSE</th><th>DAY P&amp;L</th>
+            <th>MKT VALUE</th><th>FEES</th>
+            <th>UNREAL P&amp;L</th><th>RETURN %</th>
+          </tr>
+        </thead>
+        <tbody id="us-holdings-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align:right;">TOTAL</td>
+            <td id="us-foot-day"></td>
+            <td id="us-foot-mv"></td>
+            <td id="us-foot-fees"></td>
+            <td id="us-foot-pl"></td>
+            <td id="us-foot-ret"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="analytics-section">
+      <h2>US PORTFOLIO vs S&amp;P 500 · CUMULATIVE</h2>
+      <div class="chart-container chart-wide"><canvas id="us-perf-chart"></canvas></div>
+    </div>
+
+    <div class="tab-section">
+      <h3>MONTHLY BREAKDOWN · US PORTFOLIO</h3>
+      <table>
+        <thead><tr><th>MONTH</th><th>P&amp;L $</th><th>COSTS $</th><th>RETURN %</th><th>vs S&amp;P</th></tr></thead>
+        <tbody id="us-monthly-body"></tbody>
+        <tfoot>
+          <tr>
+            <td>TOTAL</td>
+            <td id="us-mo-pl"></td>
+            <td id="us-mo-cost"></td>
+            <td id="us-mo-ret"></td>
+            <td id="us-mo-alpha"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div><!-- /us-tab -->
+
+  <!-- ══════════ TAB 3 · INDIA PORTFOLIO ══════════ -->
+  <div id="india-tab" class="tab-content">
+    <div class="index-card india">
+      <h2 style="margin-bottom:0">Nifty 50 Index</h2>
+      <div class="index-main">
+        <div class="index-value-large" id="nifty-value-large">--</div>
+        <div class="index-change-large" id="nifty-change-large">--</div>
+        <div class="index-time" id="nifty-time">Market: --</div>
+      </div>
+    </div>
+
+    <div class="pending-note" id="india-pending-note">⚠ India broker statement pending — only confirmed positions (Paramatrix, Ashalog) are shown. Cash &amp; transaction history not yet available.</div>
+
+    <div class="portfolio-metrics">
+      <h2>India Portfolio Metrics · Live</h2>
+      <div class="metrics-grid">
+        <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
+        <div class="metric-card"><label>CASH</label><div class="mval" id="in-cash-value">— pending</div><div class="mdesc">Broker statement awaited</div></div>
+        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading" id="in-day-pl">…</div><div class="mchg" id="in-day-pl-pct">--</div></div>
+      </div>
+    </div>
+
+    <div class="holdings-section">
+      <h2>INDIA HOLDINGS · LIVE PRICES (NSE/BSE)</h2>
+      <div class="table-meta">
+        <span class="live-badge" id="in-live-badge">● LIVE</span>
+        <span id="in-asof">--</span>
+      </div>
+      <table id="india-holdings-table">
+        <thead>
+          <tr>
+            <th>TICKER</th><th>NAME</th><th>BROKER</th><th>EXCH</th>
+            <th>QTY</th><th>AVG</th><th>LTP</th><th>PREV CLOSE</th>
+            <th>DAY P&amp;L</th><th>DAY %</th>
+            <th>UNREAL P&amp;L</th><th>MKT VAL</th><th>WT %</th><th>FM</th>
+          </tr>
+        </thead>
+        <tbody id="india-holdings-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="8" style="text-align:right;">TOTAL</td>
+            <td id="in-foot-day"></td>
+            <td id="in-foot-daypct"></td>
+            <td id="in-foot-pl"></td>
+            <td id="in-foot-mv"></td>
+            <td id="in-foot-wt">100%</td>
+            <td>--</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div><!-- /india-tab -->
+
+  <!-- ══════════ TAB 4 · TRANSACTIONS (US-ONLY) ══════════ -->
+  <div id="transactions-tab" class="tab-content">
+
+    <h2 style="margin-bottom:6px;">TRANSACTION HISTORY · 🇺🇸 US PORTFOLIO</h2>
+    <div style="font-size:11px;color:#556;margin-bottom:16px;">Source: Doha Bank Global statement · India transactions pending</div>
+
+    <div class="txn-summary-strip">
+      <div class="txn-stat-card"><label>POSITIONS (OPEN + CLOSED)</label><span class="v" id="tx-count">--</span></div>
+      <div class="txn-stat-card"><label>TOTAL INVESTED (ITD)</label><span class="v" id="tx-invested">--</span></div>
+      <div class="txn-stat-card"><label>TOTAL DIVIDENDS</label><span class="v" id="tx-div">--</span></div>
+      <div class="txn-stat-card"><label>TOTAL CHARGES</label><span class="v" id="tx-charges">--</span></div>
+      <div class="txn-stat-card"><label>TOTAL REALISED P&amp;L</label><span class="v" id="tx-realised">--</span></div>
+    </div>
+
+    <div class="txn-filter-bar">
+      <div class="txn-filter-row">
+        <div class="txn-search-wrap"><input type="text" id="tx-search" placeholder="Search ticker or name…" oninput="DASH.filterTx()"></div>
+        <div class="txn-pill active" data-status="ALL"    onclick="DASH.togglePill(this)">ALL</div>
+        <div class="txn-pill" data-status="OPEN"          onclick="DASH.togglePill(this)">OPEN</div>
+        <div class="txn-pill" data-status="CLOSED"        onclick="DASH.togglePill(this)">CLOSED</div>
+        <div class="txn-pill" data-status="STOCK"         onclick="DASH.togglePill(this)">STOCK</div>
+        <div class="txn-pill" data-status="ETF"           onclick="DASH.togglePill(this)">ETF</div>
+      </div>
+      <div class="txn-result-count">Showing <span id="tx-shown">0</span> of <span id="tx-all">0</span> positions</div>
+    </div>
+
+    <div class="tab-section">
+      <div class="txn-table-header">
+        <h3>P/L BREAKDOWN · BY SCRIP</h3>
+        <button class="txn-export-btn" onclick="DASH.exportPL()">↓ EXPORT CSV</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ASSET CLASS</th><th>TICKER · NAME</th><th>STATUS</th>
+            <th>INCOME</th><th>COSTS</th><th>REALISED P&amp;L</th>
+            <th>UNREAL P&amp;L</th><th>TOTAL P&amp;L</th><th>RETURN %</th>
+          </tr>
+        </thead>
+        <tbody id="pl-body"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align:right;">TOTAL</td>
+            <td id="pl-foot-income"></td>
+            <td id="pl-foot-costs"></td>
+            <td id="pl-foot-realised"></td>
+            <td id="pl-foot-unreal"></td>
+            <td id="pl-foot-total"></td>
+            <td id="pl-foot-ret"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="tab-section">
+      <h3>SUMMARY BY TICKER</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>TICKER</th><th>NAME</th><th>STATUS</th><th>QTY</th>
+            <th>AVG BUY</th><th>LTP</th><th>MKT VALUE</th>
+            <th>DIVIDENDS</th><th>CHARGES</th><th>TOTAL P&amp;L</th>
+          </tr>
+        </thead>
+        <tbody id="ticker-summary-body"></tbody>
+      </table>
+    </div>
+
+    <div class="tab-section">
+      <h3>CHARGES &amp; COSTS · US PORTFOLIO</h3>
+      <div class="charges-grid">
+        <div class="charges-panel">
+          <table>
+            <thead><tr><th>Charge Type</th><th>Amount (USD)</th><th>% of Invested</th></tr></thead>
+            <tbody id="us-charges-body"></tbody>
+          </table>
+        </div>
+        <div class="charges-panel">
+          <h4>🇮🇳 India Portfolio</h4>
+          <div style="color:#556;padding:14px;text-align:center;border:1px dashed #1a3a5a;border-radius:6px;">
+            Pending broker statement
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /transactions-tab -->
+
+  </div><!-- /main-content -->
+</div><!-- /dashboard-container -->
+
+
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   DASHBOARD — single namespace, single data pipeline.
+     load()  → fetch COST + LIVE_PRICES + INDICES (defensive, parallel)
+     build() → produce VIEW model (everything renderers need)
+     render()→ paint every tile/table/chart from VIEW
+   Hero tiles always populate, even if live feed is unavailable.
+══════════════════════════════════════════════════════════════════════ */
+const DASH = (() => {
+  'use strict';
+
+  /* ── config ── */
+  const REFRESH_MS = 5 * 60 * 1000;
+  const FX_DEFAULT = 83.5;
+
+  /* ── state ── */
+  const S = { cost: null, prices: {}, indices: null, view: null, charts: {}, ui: { status: 'ALL', search: '' } };
+
+  /* ── tiny helpers ── */
+  const $ = id => document.getElementById(id);
+  const setText = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+  const setClass= (id, c) => { const e = $(id); if (e) e.className = c; };
+  const sign    = v => (v >= 0 ? '+' : '');
+  const pn      = v => v >= 0 ? 'positive' : 'negative';
+  const usd     = v => '$'  + Math.round(v).toLocaleString('en-US');
+  const usd2    = v => '$'  + Number(v).toFixed(2);
+  const inr     = v => '₹'  + Math.round(v).toLocaleString('en-IN');
+  const inr2    = v => '₹'  + Number(v).toFixed(2);
+  const pct     = v => Number(v).toFixed(2) + '%';
+  const fmBadge = fm => 'badge-' + ({BUY:'buy',SELL:'sell',HOLD:'hold',TRIM:'trim'}[fm] || 'hold');
+
+  /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
+  async function load() {
+    const fetchJSON = async (path) => {
+      try {
+        const r = await fetch(path, { cache: 'no-store' });
+        if (!r.ok) return null;
+        return await r.json();
+      } catch { return null; }
+    };
+    const [cost, prices, indices] = await Promise.all([
+      fetchJSON('data/holdings_cost.json'),
+      fetchJSON('data/processed/holdings_prices.json'),
+      fetchJSON('data/processed/market_indices.json')
+    ]);
+    if (cost)    S.cost = cost;
+    if (prices)  S.prices = prices.prices || {};
+    if (indices) S.indices = indices;
+
+    // freshness banner
+    const status = $('fetch-status');
+    if (!S.cost) {
+      status.textContent = 'No cost basis file (data/holdings_cost.json)';
+      status.className = 'error';
+    } else if (Object.keys(S.prices).length === 0) {
+      status.textContent = 'Live prices unavailable — showing cost basis';
+      status.className = 'stale';
+    } else {
+      status.textContent = '● Live · last update ' + new Date().toLocaleTimeString();
+      status.className = 'live';
+    }
+  }
+
+  /* ── 2. BUILD VIEW MODEL ──────────────────────────────────────── */
+  function priceFor(holding) {
+    const p = S.prices[holding.tk];
+    if (p && Number.isFinite(p.ltp)) return { ltp: p.ltp, pc: p.pc ?? p.ltp, live: true };
+    return { ltp: holding.avg, pc: holding.avg, live: false };
+  }
+  function enrich(holding) {
+    const { ltp, pc, live } = priceFor(holding);
+    const mv     = holding.qty * ltp;
+    const upl    = (ltp - holding.avg) * holding.qty;
+    const dayPL  = (ltp - pc) * holding.qty;
+    const dayPct = pc ? ((ltp - pc) / pc) * 100 : 0;
+    const ret    = holding.avg ? ((ltp - holding.avg) / holding.avg) * 100 : 0;
+    return { ...holding, ltp, pc, live, mv, upl, dayPL, dayPct, ret };
+  }
+  function build() {
+    if (!S.cost) { S.view = null; return; }
+    const fx = S.cost.fx_inr_usd || FX_DEFAULT;
+
+    // US
+    const usOpen = (S.cost.us.open || []).map(enrich);
+    const usMV   = usOpen.reduce((s,p)=>s+p.mv,0);
+    usOpen.forEach(p => p.wt = usMV ? (p.mv/usMV)*100 : 0);
+    const us = {
+      cash:         S.cost.us.cash,
+      cashInfusion: S.cost.us.cash_infusion_itd,
+      open:         usOpen,
+      closed:       S.cost.us.closed || [],
+      monthly:      S.cost.us.monthly,
+      charges:      S.cost.us.charges_breakdown || [],
+      stocksMV:     usOpen.filter(p=>p.cls==='Stock').reduce((s,p)=>s+p.mv,0),
+      etfsMV:       usOpen.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
+      mv:           usMV,
+      unrealPL:     usOpen.reduce((s,p)=>s+p.upl,0),
+      dayPL:        usOpen.reduce((s,p)=>s+p.dayPL,0),
+    };
+    us.totalValue = us.mv + (us.cash||0);
+    us.dayPct     = us.totalValue ? (us.dayPL / (us.totalValue - us.dayPL)) * 100 : 0;
+    us.returnPct  = us.cashInfusion ? ((us.totalValue - us.cashInfusion) / us.cashInfusion) * 100 : 0;
+    us.realisedPL = us.closed.reduce((s,p)=>s+p.realised,0);
+    us.dividends  = us.open.reduce((s,p)=>s+(p.income||0),0) + us.closed.reduce((s,p)=>s+(p.income||0),0);
+    us.charges_total = us.charges.reduce((s,c)=>s+c.amt,0);
+
+    // India
+    const inOpen = ((S.cost.india && S.cost.india.open) || []).map(enrich);
+    const inMV   = inOpen.reduce((s,p)=>s+p.mv,0);
+    inOpen.forEach(p => p.wt = inMV ? (p.mv/inMV)*100 : 0);
+    const india = {
+      cash:     S.cost.india && S.cost.india.cash,
+      open:     inOpen,
+      mv:       inMV,
+      unrealPL: inOpen.reduce((s,p)=>s+p.upl,0),
+      dayPL:    inOpen.reduce((s,p)=>s+p.dayPL,0),
+    };
+    india.dayPct = india.mv ? (india.dayPL / (india.mv - india.dayPL)) * 100 : 0;
+
+    // Combined
+    const totalUSD = us.totalValue + india.mv / fx;
+    const combined = {
+      totalUSD,
+      unrealPL_USD: us.unrealPL + india.unrealPL / fx,
+      dayPL_USD:    us.dayPL    + india.dayPL    / fx,
+      returnPct:    us.cashInfusion ? ((totalUSD - us.cashInfusion) / us.cashInfusion) * 100 : 0
+    };
+
+    // Last update timestamp from prices
+    const ts = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().pop();
+    const anyLive = Object.keys(S.prices).length > 0;
+
+    S.view = { fx, us, india, combined, asOf: ts || S.cost.as_of, anyLive };
+  }
+
+  /* ── 3. RENDERERS ─────────────────────────────────────────────── */
+  function safe(fn, label){ try { fn(); } catch(e) { console.error(`[render:${label}]`, e); } }
+
+  function renderHero() {
+    if (!S.view) return;
+    const { us, india, combined } = S.view;
+    setText('hero-us-value',    usd(us.totalValue));
+    setText('hero-india-value', inr(india.mv));
+    setText('hero-total-value', usd(combined.totalUSD));
+    setText('hero-total-return', sign(combined.returnPct) + pct(combined.returnPct) + ' ITD');
+    setClass('hero-total-return', 'mchg ' + pn(combined.returnPct));
+    setText('hero-total-pl', sign(combined.unrealPL_USD) + usd(combined.unrealPL_USD));
+    setClass('hero-total-pl', 'mval ' + pn(combined.unrealPL_USD));
+    setText('hero-day-pl', sign(combined.dayPL_USD) + usd(combined.dayPL_USD));
+    setClass('hero-day-pl', 'mval ' + pn(combined.dayPL_USD));
+    const dayPct = combined.totalUSD ? (combined.dayPL_USD / (combined.totalUSD - combined.dayPL_USD)) * 100 : 0;
+    setText('hero-day-pl-pct', sign(dayPct) + pct(dayPct));
+    setClass('hero-day-pl-pct', 'mchg ' + pn(dayPct));
+    setText('hero-cash-infused', usd(us.cashInfusion || 0));
+  }
+
+  function renderUSMetrics() {
+    if (!S.view) return;
+    const us = S.view.us;
+    setText('us-stocks-value', usd(us.stocksMV));
+    setText('us-etf-value',    usd(us.etfsMV));
+    setText('us-cash-value',   usd(us.cash || 0));
+    setText('us-unreal-pl',    sign(us.unrealPL) + usd(us.unrealPL));
+    setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
+    setText('us-day-pl',       sign(us.dayPL) + usd(us.dayPL));
+    setClass('us-day-pl', 'mval ' + pn(us.dayPL));
+    setText('us-day-pl-pct',   sign(us.dayPct) + pct(us.dayPct));
+    setClass('us-day-pl-pct', 'mchg ' + pn(us.dayPct));
+    setText('us-account-value',usd(us.totalValue));
+    setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');
+    setText('us-etf-count',    us.open.filter(p=>p.cls==='ETF').length + ' positions');
+  }
+
+  function renderIndiaMetrics() {
+    if (!S.view) return;
+    const ind = S.view.india;
+    setText('in-equities-value', inr(ind.mv));
+    setText('in-unreal-pl',      sign(ind.unrealPL) + inr(ind.unrealPL));
+    setClass('in-unreal-pl', 'mval ' + pn(ind.unrealPL));
+    setText('in-day-pl',         sign(ind.dayPL) + inr(ind.dayPL));
+    setClass('in-day-pl', 'mval ' + pn(ind.dayPL));
+    setText('in-day-pl-pct',     sign(ind.dayPct) + pct(ind.dayPct));
+    setClass('in-day-pl-pct', 'mchg ' + pn(ind.dayPct));
+    setText('in-equities-count', ind.open.length + ' positions');
+    if (ind.cash != null) setText('in-cash-value', inr(ind.cash));
+  }
+
+  function renderUSHoldings() {
+    if (!S.view) return;
+    const tbody = $('us-holdings-body');
+    const us = S.view.us;
+    let totDay=0, totFee=0, totMV=0, totPL=0, totCost=0;
+    tbody.innerHTML = us.open.map(p => {
+      totDay += p.dayPL; totFee += p.fees; totMV += p.mv; totPL += p.upl; totCost += p.qty*p.avg;
+      const pcCls = p.pc > p.ltp ? 'positive' : p.pc < p.ltp ? 'negative' : '';
+      return `<tr>
+        <td><strong>${p.tk}</strong><br><span style="color:#556;font-size:10px;">${p.name}</span>${p.live?'':' <span class="preopen-tag" style="color:#ffaa00;">STALE</span>'}</td>
+        <td>${p.qty}</td>
+        <td>${usd2(p.avg)}</td>
+        <td><strong>${usd2(p.ltp)}</strong></td>
+        <td class="${pcCls}"><span class="preopen-tag">PC</span> ${usd2(p.pc)}</td>
+        <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${usd2(p.dayPL)} (${sign(p.dayPct)}${pct(p.dayPct)})</td>
+        <td>${usd2(p.mv)}</td>
+        <td>${usd2(p.fees)}</td>
+        <td class="${pn(p.upl)}">${sign(p.upl)}${usd2(p.upl)}</td>
+        <td class="${pn(p.ret)}">${sign(p.ret)}${pct(p.ret)}</td>
+      </tr>`;
+    }).join('');
+    const totRet = totCost ? (totPL/totCost)*100 : 0;
+    setText('us-foot-day',  sign(totDay)+usd2(totDay));   setClass('us-foot-day', pn(totDay));
+    setText('us-foot-mv',   usd2(totMV));
+    setText('us-foot-fees', usd2(totFee));
+    setText('us-foot-pl',   sign(totPL)+usd2(totPL));     setClass('us-foot-pl',  pn(totPL));
+    setText('us-foot-ret',  sign(totRet)+pct(totRet));    setClass('us-foot-ret', pn(totRet));
+    const stale = us.open.some(p => !p.live);
+    const badge = $('us-live-badge');
+    if (badge) { badge.textContent = stale ? '○ STALE (cost basis)' : '● LIVE'; badge.className = 'live-badge' + (stale?' stale':''); }
+    setText('us-asof', 'as of ' + (S.view.asOf || '—'));
+  }
+
+  function renderIndiaHoldings() {
+    if (!S.view) return;
+    const tbody = $('india-holdings-body');
+    const ind = S.view.india;
+    let totDay=0, totPL=0, totMV=0;
+    tbody.innerHTML = ind.open.map(p => {
+      totDay += p.dayPL; totPL += p.upl; totMV += p.mv;
+      return `<tr>
+        <td><strong>${p.tk}</strong>${p.live?'':' <span class="preopen-tag" style="color:#ffaa00;">STALE</span>'}</td>
+        <td>${p.name}</td>
+        <td>${p.broker}</td>
+        <td>${p.exch}</td>
+        <td>${p.qty.toLocaleString('en-IN')}</td>
+        <td>${inr2(p.avg)}</td>
+        <td><strong>${inr2(p.ltp)}</strong></td>
+        <td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>
+        <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${inr(p.dayPL)}</td>
+        <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
+        <td class="${pn(p.upl)}">${sign(p.upl)}${inr(p.upl)}</td>
+        <td>${inr(p.mv)}</td>
+        <td>${pct(p.wt)}</td>
+        <td><span class="badge ${fmBadge(p.fm)}">${p.fm}</span></td>
+      </tr>`;
+    }).join('');
+    setText('in-foot-day',    sign(totDay)+inr(totDay));   setClass('in-foot-day',    pn(totDay));
+    setText('in-foot-daypct', sign(ind.dayPct)+pct(ind.dayPct)); setClass('in-foot-daypct', pn(ind.dayPct));
+    setText('in-foot-pl',     sign(totPL)+inr(totPL));     setClass('in-foot-pl',     pn(totPL));
+    setText('in-foot-mv',     inr(totMV));
+    const stale = ind.open.some(p => !p.live);
+    const badge = $('in-live-badge');
+    if (badge) { badge.textContent = stale ? '○ STALE (cost basis)' : '● LIVE'; badge.className = 'live-badge' + (stale?' stale':''); }
+    setText('in-asof', 'as of ' + (S.view.asOf || '—'));
+  }
+
+  function renderTopHoldings() {
+    if (!S.view) return;
+    const fx = S.view.fx;
+    const all = [
+      ...S.view.us.open.map(p => ({ ...p, pf:'🇺🇸 US', mvUSD:p.mv })),
+      ...S.view.india.open.map(p => ({ ...p, pf:'🇮🇳 India', mvUSD:p.mv/fx }))
+    ].sort((a,b)=>b.mvUSD - a.mvUSD);
+    const tbody = $('top-holdings-body');
+    tbody.innerHTML = all.map(p => `<tr>
+      <td><strong>${p.tk}</strong></td>
+      <td>${p.name}</td>
+      <td>${p.pf}</td>
+      <td>${p.qty.toLocaleString('en-US')}</td>
+      <td>${p.pf.includes('US') ? usd2(p.ltp) : inr2(p.ltp)}</td>
+      <td>${usd(p.mvUSD)}</td>
+      <td>${pct(p.wt)}</td>
+      <td class="${pn(p.ret)}">${sign(p.ret)}${pct(p.ret)}</td>
+      <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
+    </tr>`).join('');
+  }
+
+  function renderTransactionsTab() {
+    if (!S.view) return;
+    const us = S.view.us;
+    setText('tx-count',    us.open.length + us.closed.length);
+    setText('tx-invested', usd(us.cashInfusion));
+    setText('tx-div',      usd2(us.dividends));
+    setText('tx-charges',  usd2(us.charges_total));
+    setText('tx-realised', sign(us.realisedPL)+usd2(us.realisedPL));
+    setClass('tx-realised', 'v ' + pn(us.realisedPL));
+
+    // P/L breakdown body
+    const all = [
+      ...us.open.map(p => ({ cls:p.cls, tk:p.tk+' · '+p.name, status:'OPEN',
+        income:p.income||0, costs:p.fees, realised:0, unreal:p.upl, total:p.upl + (p.income||0) + p.fees, ret:p.ret })),
+      ...us.closed.map(p => ({ cls:p.cls, tk:p.tk+' · '+p.name, status:'CLOSED',
+        income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised + p.income + p.costs, ret:p.ret_pct }))
+    ];
+    S.txRows = all;
+    repaintTransactions();
+
+    // Ticker summary
+    const sb = $('ticker-summary-body');
+    sb.innerHTML = [
+      ...us.open.map(p => `<tr>
+        <td><strong>${p.tk}</strong></td><td>${p.name}</td>
+        <td><span class="badge badge-open">OPEN</span></td>
+        <td>${p.qty}</td><td>${usd2(p.avg)}</td><td>${usd2(p.ltp)}</td>
+        <td>${usd2(p.mv)}</td><td>${usd2(p.income||0)}</td><td>${usd2(p.fees)}</td>
+        <td class="${pn(p.upl)}">${sign(p.upl)}${usd2(p.upl)}</td>
+      </tr>`),
+      ...us.closed.map(p => `<tr>
+        <td><strong>${p.tk}</strong></td><td>${p.name}</td>
+        <td><span class="badge badge-closed">CLOSED</span></td>
+        <td>0</td><td>—</td><td>—</td><td>—</td>
+        <td>${usd2(p.income)}</td><td>${usd2(p.costs)}</td>
+        <td class="${pn(p.realised)}">${sign(p.realised)}${usd2(p.realised)}</td>
+      </tr>`)
+    ].join('');
+
+    // US charges
+    const cb = $('us-charges-body');
+    const totalCost = us.charges.reduce((s,c)=>s+c.amt,0);
+    cb.innerHTML = us.charges.map(c => `<tr>
+      <td>${c.type}</td>
+      <td>${usd2(c.amt)}</td>
+      <td>${pct(Math.abs(c.amt)/us.cashInfusion*100)}</td>
+    </tr>`).join('') + `<tr style="border-top:1px solid #00ff88;">
+      <td><strong>TOTAL</strong></td>
+      <td><strong>${usd2(totalCost)}</strong></td>
+      <td><strong>${pct(Math.abs(totalCost)/us.cashInfusion*100)}</strong></td>
+    </tr>`;
+  }
+
+  function repaintTransactions() {
+    const tbody = $('pl-body');
+    const cellUSD = v => `<span class="${pn(v)}">${sign(v)}${usd2(v)}</span>`;
+    const q = S.ui.search.toLowerCase();
+    const status = S.ui.status;
+    const filtered = (S.txRows || []).filter(r => {
+      if (status !== 'ALL' && status !== r.status && status !== r.cls.toUpperCase()) return false;
+      if (q && !r.tk.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    tbody.innerHTML = filtered.map(r => `<tr>
+      <td>${r.cls}</td>
+      <td>${r.tk}</td>
+      <td><span class="badge ${r.status==='OPEN'?'badge-open':'badge-closed'}">${r.status}</span></td>
+      <td>${cellUSD(r.income)}</td>
+      <td>${cellUSD(r.costs)}</td>
+      <td>${cellUSD(r.realised)}</td>
+      <td>${cellUSD(r.unreal)}</td>
+      <td><strong>${cellUSD(r.total)}</strong></td>
+      <td class="${pn(r.ret)}">${sign(r.ret)}${pct(r.ret)}</td>
+    </tr>`).join('');
+
+    const sum = k => filtered.reduce((s,r)=>s+r[k],0);
+    setText('pl-foot-income',   usd2(sum('income')));
+    setText('pl-foot-costs',    usd2(sum('costs')));
+    setText('pl-foot-realised', sign(sum('realised'))+usd2(sum('realised')));
+    setText('pl-foot-unreal',   sign(sum('unreal'))+usd2(sum('unreal')));
+    setText('pl-foot-total',    sign(sum('total'))+usd2(sum('total')));
+    const us = S.view.us;
+    const r = us.cashInfusion ? (sum('total')/us.cashInfusion)*100 : 0;
+    setText('pl-foot-ret',      sign(r)+pct(r));
+    setText('tx-shown', filtered.length);
+    setText('tx-all',   (S.txRows||[]).length);
+  }
+
+  /* ── 4. CHARTS ─────────────────────────────────────────────── */
+  Chart.defaults.color = '#556677';
+  Chart.defaults.borderColor = '#1a2a3a';
+  Chart.defaults.font.family = "'Segoe UI', Arial, sans-serif";
+  Chart.defaults.font.size = 11;
+  const darkLine = { borderWidth:2, tension:0.3, pointRadius:2, fill:false };
+
+  function destroyChart(id){ if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } }
+  function mkChart(id, cfg) {
+    destroyChart(id);
+    const ctx = $(id);
+    if (!ctx) return;
+    S.charts[id] = new Chart(ctx, cfg);
+  }
+
+  function renderCharts() {
+    if (!S.view) return;
+    const { us, india } = S.view;
+    const m = us.monthly;
+    const cashBase = us.cashInfusion || 0;
+    const dualLabel = ctx => {
+      const v = ctx.parsed.y;
+      const usdDelta = cashBase * (v/100);
+      const s = v >= 0 ? '+' : '';
+      return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
+    };
+
+    // Cumulative chart (portfolio)
+    if (m && m.labels) {
+      mkChart('cumulative-chart', { type:'line',
+        data: { labels: m.labels, datasets: [
+          { label:'Portfolio', data:m.port_return_cum_pct, borderColor:'#00ff88', ...darkLine },
+          { label:'S&P 500',   data:m.snp_return_cum_pct,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine }
+        ]},
+        options: lineOpts({ callbacks: { label: dualLabel } })
+      });
+      const portPct = m.port_return_cum_pct.at(-1) || 0;
+      const snpPct  = m.snp_return_cum_pct.at(-1)  || 0;
+      setText('cum-port',  sign(portPct) + pct(portPct));
+      setText('cum-snp',   sign(snpPct)  + pct(snpPct));
+      setText('cum-alpha', sign(portPct-snpPct) + pct(portPct - snpPct));
+
+      // US-tab dedicated chart (same data)
+      mkChart('us-perf-chart', { type:'line',
+        data: { labels: m.labels, datasets: [
+          { label:'US Portfolio', data:m.port_return_cum_pct, borderColor:'#00ff88', ...darkLine },
+          { label:'S&P 500',      data:m.snp_return_cum_pct,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine }
+        ]},
+        options: lineOpts({ callbacks: { label: dualLabel } })
+      });
+
+      // Cash vs Account value
+      mkChart('cash-value-chart', { type:'line',
+        data: { labels: m.labels, datasets: [
+          { label:'Cash Deployed',  data:m.cash_deployed,  borderColor:'#00ccff', backgroundColor:'rgba(0,204,255,.12)', fill:true, ...darkLine },
+          { label:'Account Value',  data:m.account_value,  borderColor:'#00ff88', backgroundColor:'rgba(0,255,136,.08)', fill:true, ...darkLine }
+        ]},
+        options: lineOpts()
+      });
+
+      // Monthly breakdown body
+      const mb = $('us-monthly-body');
+      if (mb) {
+        mb.innerHTML = m.labels.slice(1).map((mo,i) => {
+          const idx = i+1;
+          const pl = m.monthly_pl[idx];
+          const cost = m.monthly_cost[idx];
+          const alpha = m.port_return_cum_pct[idx] - m.snp_return_cum_pct[idx];
+          return `<tr>
+            <td>${mo}</td>
+            <td class="${pn(pl)}">${sign(pl)}${usd2(pl)}</td>
+            <td>${usd2(cost)}</td>
+            <td>${sign(m.port_return_cum_pct[idx]-m.port_return_cum_pct[idx-1])}${pct(m.port_return_cum_pct[idx]-m.port_return_cum_pct[idx-1])}</td>
+            <td class="${pn(alpha)}">${sign(alpha)}${pct(alpha)}</td>
+          </tr>`;
+        }).join('');
+        const totPL = m.monthly_pl.reduce((s,v)=>s+v,0);
+        const totC  = m.monthly_cost.reduce((s,v)=>s+v,0);
+        setText('us-mo-pl',    sign(totPL)+usd2(totPL));
+        setText('us-mo-cost',  usd2(totC));
+        setText('us-mo-ret',   sign(portPct)+pct(portPct));
+        setText('us-mo-alpha', sign(portPct-snpPct)+pct(portPct-snpPct));
+      }
+    }
+
+    // Allocation donut
+    const labels = ['Equities (US)','ETFs (US)','Cash (US)'];
+    const data   = [us.stocksMV, us.etfsMV, us.cash || 0];
+    const colors = ['rgba(0,255,136,.7)','rgba(0,204,255,.7)','rgba(255,170,0,.6)'];
+    if (india.mv) {
+      labels.push('Equities (India · USD)');
+      data.push(india.mv / S.view.fx);
+      colors.push('rgba(255,68,170,.6)');
+    }
+    mkChart('alloc-chart', { type:'doughnut',
+      data: { labels, datasets:[{ data:data.map(v=>Math.round(v)), backgroundColor:colors, borderColor:'#0a1929', borderWidth:2 }] },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ position:'right', labels:{ color:'#889aaa', boxWidth:12 } },
+                  tooltip:{ callbacks:{ label: ctx => `${ctx.label}: $${ctx.parsed.toLocaleString('en-US')} (${pct(ctx.parsed/data.reduce((s,v)=>s+v,0)*100)})` } } } }
+    });
+  }
+  function lineOpts(extraTooltip={}){
+    return {
+      responsive:true, maintainAspectRatio:false, animation:{duration:400},
+      plugins:{ legend:{ position:'top', labels:{ color:'#889aaa', boxWidth:12 } },
+        tooltip:{ mode:'index', intersect:false, backgroundColor:'#0d2b47', borderColor:'#00ccff', borderWidth:1, ...extraTooltip } },
+      scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556677'} },
+               y:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556677'} } }
+    };
+  }
+
+  /* ── 5. MARKET INDICES + COUNTDOWN ─────────────────────────────── */
+  function setIndexChange(id, change, pctv) {
+    const el = $(id); if (!el) return;
+    const s = pctv >= 0 ? '+' : '';
+    el.textContent = `${s}${change.toFixed(2)} (${s}${pctv.toFixed(2)}%)`;
+    el.className = 'index-change ' + (pctv >= 0 ? 'positive' : 'negative');
+  }
+  function applyMarketStatus(id, status) {
+    const el = $(id); if (!el) return;
+    el.textContent = status;
+    el.className = 'market-status ' + status;
+  }
+  function renderIndices() {
+    if (!S.indices) return;
+    const usa = S.indices.usa_market, ind = S.indices.india_market;
+    if (usa) {
+      applyMarketStatus('usa-status', usa.status);
+      const snp = usa.indices && usa.indices.snp_500;
+      if (snp) {
+        setText('snp-value',       snp.current.toLocaleString('en-US',{minimumFractionDigits:2}));
+        setText('snp-value-large', snp.current.toLocaleString('en-US',{minimumFractionDigits:2}));
+        setIndexChange('snp-change',       snp.change, snp.change_pct);
+        setIndexChange('snp-change-large', snp.change, snp.change_pct);
+      }
+      const nq = usa.indices && usa.indices.nasdaq;
+      if (nq) {
+        setText('nasdaq-value', nq.current.toLocaleString('en-US',{minimumFractionDigits:2}));
+        setIndexChange('nasdaq-change', nq.change, nq.change_pct);
+      }
+      setText('usa-time', 'Updated: ' + new Date(usa.timestamp).toLocaleTimeString());
+      setText('snp-time', 'Market: ' + usa.status);
+    }
+    if (ind) {
+      applyMarketStatus('india-status', ind.status);
+      const n50 = ind.indices && ind.indices.nifty_50;
+      if (n50) {
+        setText('nifty-value',       n50.current.toLocaleString('en-IN',{minimumFractionDigits:2}));
+        setText('nifty-value-large', n50.current.toLocaleString('en-IN',{minimumFractionDigits:2}));
+        setIndexChange('nifty-change',       n50.change, n50.change_pct);
+        setIndexChange('nifty-change-large', n50.change, n50.change_pct);
+      }
+      const sx = ind.indices && ind.indices.sensex;
+      if (sx) {
+        setText('sensex-value', sx.current.toLocaleString('en-IN',{minimumFractionDigits:2}));
+        setIndexChange('sensex-change', sx.change, sx.change_pct);
+      }
+      setText('india-time', 'Updated: ' + new Date(ind.timestamp).toLocaleTimeString());
+      setText('nifty-time', 'Market: ' + ind.status);
+    }
+  }
+  function fmtHMS(ms){ if (ms<0) ms=0; const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; }
+  function tzNow(tz){ return new Date(new Date().toLocaleString('en-US',{timeZone:tz})); }
+  function updateCountdown(prefix, tz, openH, openM, closeH, closeM) {
+    const now = tzNow(tz);
+    const wd = now.getDay();
+    const mins = now.getHours()*60 + now.getMinutes();
+    const lblEl = $(prefix+'-countdown-label');
+    const valEl = $(prefix+'-countdown-value');
+    if (!lblEl || !valEl) return;
+    valEl.classList.remove('warn','alert');
+    const target = (h,m) => { const d = new Date(now); d.setHours(h, m, 0, 0); return d; };
+    if (wd === 0 || wd === 6) {
+      const t = target(openH, openM); t.setDate(t.getDate() + (wd===0?1:2));
+      lblEl.textContent = 'OPENS IN'; valEl.textContent = fmtHMS(t-now); valEl.classList.add('warn'); return;
+    }
+    const openMins = openH*60+openM, closeMins = closeH*60+closeM;
+    if (mins < openMins) {
+      lblEl.textContent = 'OPENS IN'; valEl.textContent = fmtHMS(target(openH,openM)-now);
+      valEl.classList.add(openMins-mins<=30?'alert':'warn');
+    } else if (mins < closeMins) {
+      const el = mins - openMins; const eh = Math.floor(el/60); const em = el%60;
+      lblEl.textContent = `OPEN ${String(eh).padStart(2,'0')}h${String(em).padStart(2,'0')}m · CLOSES IN`;
+      valEl.textContent = fmtHMS(target(closeH,closeM)-now);
+    } else {
+      const t = target(openH, openM); t.setDate(t.getDate() + (wd===5?3:1));
+      lblEl.textContent = 'OPENS IN'; valEl.textContent = fmtHMS(t-now); valEl.classList.add('warn');
+    }
+  }
+  function tickCountdowns(){
+    setText('update-time', new Date().toLocaleTimeString());
+    updateCountdown('usa',   'America/New_York', 9, 30, 16, 0);
+    updateCountdown('india', 'Asia/Kolkata',     9, 15, 15, 30);
+  }
+
+  /* ── 6. TAB SWITCHING + UI HANDLERS ─────────────────────────── */
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
+    const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
+  }
+  function togglePill(el) {
+    document.querySelectorAll('.txn-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    S.ui.status = el.dataset.status;
+    repaintTransactions();
+  }
+  function filterTx() {
+    S.ui.search = $('tx-search').value;
+    repaintTransactions();
+  }
+  function exportPL() {
+    const rows = [['Asset Class','Ticker · Name','Status','Income','Costs','Realised','Unrealised','Total','Return %']];
+    $('pl-body').querySelectorAll('tr').forEach(tr => {
+      rows.push(Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim()));
+    });
+    const csv = rows.map(r => r.map(c => `"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = 'us_pl_breakdown.csv';
+    a.click();
+  }
+
+  /* ── 7. RENDER PIPELINE ────────────────────────────────────────── */
+  function render() {
+    build();
+    safe(renderHero,         'hero');
+    safe(renderUSMetrics,    'us-metrics');
+    safe(renderIndiaMetrics, 'india-metrics');
+    safe(renderUSHoldings,   'us-holdings');
+    safe(renderIndiaHoldings,'india-holdings');
+    safe(renderTopHoldings,  'top-holdings');
+    safe(renderTransactionsTab, 'tx-tab');
+    safe(renderIndices,      'indices');
+    safe(renderCharts,       'charts');
+  }
+
+  async function refresh() {
+    await load();
+    render();
+  }
+
+  /* ── INIT ── */
+  function init() {
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', e => switchTab(e.currentTarget.getAttribute('data-tab')));
+    });
+    tickCountdowns();
+    setInterval(tickCountdowns, 1000);
+    refresh();
+    setInterval(refresh, REFRESH_MS);
+  }
+  document.addEventListener('DOMContentLoaded', init);
+
+  // public surface for inline handlers
+  return { togglePill, filterTx, exportPL };
+})();
+</script>
+</body>
+</html>

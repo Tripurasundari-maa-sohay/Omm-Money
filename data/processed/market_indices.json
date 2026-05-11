@@ -1,6 +1,6 @@
 {
   "usa_market": {
-    "status": "CLOSED",
+    "status": "PREOPEN",
     "indices": {
       "snp_500": {
         "ticker": "^GSPC",
@@ -9,7 +9,7 @@
         "change": 61.82,
         "change_pct": 0.8426,
         "prev_close": 7337.11,
-        "timestamp": "2026-05-11T01:27:14.134548-04:00"
+        "timestamp": "2026-05-11T04:36:51.022943-04:00"
       },
       "nasdaq": {
         "ticker": "^IXIC",
@@ -18,7 +18,7 @@
         "change": 440.88,
         "change_pct": 1.7084,
         "prev_close": 25806.2,
-        "timestamp": "2026-05-11T01:27:14.201667-04:00"
+        "timestamp": "2026-05-11T04:36:51.142023-04:00"
       }
     },
     "holdings": [
@@ -35,7 +35,7 @@
         "unreal_pl": 45.12,
         "unreal_pl_pct": 6.8083,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:14.482062-04:00"
+        "timestamp": "2026-05-11T04:36:51.646556-04:00"
       },
       {
         "ticker": "AVGO",
@@ -50,7 +50,7 @@
         "unreal_pl": 353.2,
         "unreal_pl_pct": 25.8414,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:14.588087-04:00"
+        "timestamp": "2026-05-11T04:36:51.870825-04:00"
       },
       {
         "ticker": "AMZN",
@@ -65,7 +65,7 @@
         "unreal_pl": 229.5,
         "unreal_pl_pct": 9.1899,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:14.654536-04:00"
+        "timestamp": "2026-05-11T04:36:52.030660-04:00"
       },
       {
         "ticker": "MSFT",
@@ -80,7 +80,7 @@
         "unreal_pl": -5.7,
         "unreal_pl_pct": -0.2283,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:14.807365-04:00"
+        "timestamp": "2026-05-11T04:36:52.140157-04:00"
       },
       {
         "ticker": "GEV",
@@ -95,7 +95,7 @@
         "unreal_pl": -56.99,
         "unreal_pl_pct": -5.1944,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:14.881688-04:00"
+        "timestamp": "2026-05-11T04:36:52.363325-04:00"
       },
       {
         "ticker": "VOOG",
@@ -110,7 +110,7 @@
         "unreal_pl": 144.9,
         "unreal_pl_pct": 10.9405,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.005347-04:00"
+        "timestamp": "2026-05-11T04:36:52.576702-04:00"
       },
       {
         "ticker": "GOOG",
@@ -125,7 +125,7 @@
         "unreal_pl": 260.58,
         "unreal_pl_pct": 28.0022,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.077963-04:00"
+        "timestamp": "2026-05-11T04:36:52.723366-04:00"
       },
       {
         "ticker": "MU",
@@ -140,7 +140,7 @@
         "unreal_pl": 254.81,
         "unreal_pl_pct": 51.7906,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.242538-04:00"
+        "timestamp": "2026-05-11T04:36:53.024016-04:00"
       },
       {
         "ticker": "RKLB",
@@ -155,7 +155,7 @@
         "unreal_pl": 368.4,
         "unreal_pl_pct": 30.3547,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.311335-04:00"
+        "timestamp": "2026-05-11T04:36:53.088963-04:00"
       },
       {
         "ticker": "EWY",
@@ -170,7 +170,7 @@
         "unreal_pl": 571.78,
         "unreal_pl_pct": 37.6067,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.425238-04:00"
+        "timestamp": "2026-05-11T04:36:53.206431-04:00"
       },
       {
         "ticker": "MP",
@@ -185,7 +185,7 @@
         "unreal_pl": 144.3,
         "unreal_pl_pct": 27.2264,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.495307-04:00"
+        "timestamp": "2026-05-11T04:36:53.267282-04:00"
       },
       {
         "ticker": "GLW",
@@ -200,7 +200,7 @@
         "unreal_pl": 28.62,
         "unreal_pl_pct": 2.6184,
         "currency": "USD",
-        "timestamp": "2026-05-11T01:27:15.679358-04:00"
+        "timestamp": "2026-05-11T04:36:53.505416-04:00"
       }
     ],
     "summary": {
@@ -211,7 +211,7 @@
       "cash": 46.84,
       "account_value": 17609.84
     },
-    "timestamp": "2026-05-11T01:27:17.550544-04:00"
+    "timestamp": "2026-05-11T04:36:56.073394-04:00"
   },
   "india_market": {
     "status": "OPEN",
@@ -219,20 +219,20 @@
       "nifty_50": {
         "ticker": "^NSEI",
         "name": "Nifty 50",
-        "current": 23888.2,
-        "change": -287.95,
-        "change_pct": -1.1911,
+        "current": 23966.55,
+        "change": -209.6,
+        "change_pct": -0.867,
         "prev_close": 24176.15,
-        "timestamp": "2026-05-11T10:57:14.277909+05:30"
+        "timestamp": "2026-05-11T14:06:51.210488+05:30"
       },
       "sensex": {
         "ticker": "^BSESN",
         "name": "Sensex",
-        "current": 76234.11,
-        "change": -1094.08,
-        "change_pct": -1.4149,
+        "current": 76581.44,
+        "change": -746.75,
+        "change_pct": -0.9657,
         "prev_close": 77328.19,
-        "timestamp": "2026-05-11T10:57:14.343366+05:30"
+        "timestamp": "2026-05-11T14:06:51.377048+05:30"
       }
     },
     "holdings": [
@@ -249,7 +249,7 @@
         "unreal_pl": 522.21,
         "unreal_pl_pct": 1.7093,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:15.767600+05:30",
+        "timestamp": "2026-05-11T14:06:53.590956+05:30",
         "broker": "Motilal"
       },
       {
@@ -257,15 +257,15 @@
         "name": "Avadh Sugar & Energy Ltd",
         "qty": 248,
         "purchase_px": 405.13,
-        "ltp": 506.5,
+        "ltp": 503.0,
         "prev_close": 509.3,
-        "day_change": -2.8,
-        "day_change_pct": -0.5498,
-        "mkt_value": 125612.0,
-        "unreal_pl": 25139.76,
-        "unreal_pl_pct": 25.0216,
+        "day_change": -6.3,
+        "day_change_pct": -1.237,
+        "mkt_value": 124744.0,
+        "unreal_pl": 24271.76,
+        "unreal_pl_pct": 24.1577,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.194121+05:30",
+        "timestamp": "2026-05-11T14:06:54.272226+05:30",
         "broker": "Motilal"
       },
       {
@@ -273,15 +273,15 @@
         "name": "Diamond Power Infrastructure",
         "qty": 100,
         "purchase_px": 154.21,
-        "ltp": 172.95,
+        "ltp": 173.6,
         "prev_close": 172.85,
-        "day_change": 0.1,
-        "day_change_pct": 0.0578,
-        "mkt_value": 17295.0,
-        "unreal_pl": 1874.0,
-        "unreal_pl_pct": 12.1523,
+        "day_change": 0.75,
+        "day_change_pct": 0.4339,
+        "mkt_value": 17360.0,
+        "unreal_pl": 1939.0,
+        "unreal_pl_pct": 12.5738,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.274626+05:30",
+        "timestamp": "2026-05-11T14:06:54.441974+05:30",
         "broker": "Mstock"
       },
       {
@@ -289,15 +289,15 @@
         "name": "Filatex Fashions Ltd",
         "qty": 90000,
         "purchase_px": 0.24,
-        "ltp": 0.26,
+        "ltp": 0.27,
         "prev_close": 0.27,
-        "day_change": -0.01,
-        "day_change_pct": -3.7037,
-        "mkt_value": 23400.0,
-        "unreal_pl": 1800.0,
-        "unreal_pl_pct": 8.3333,
+        "day_change": 0.0,
+        "day_change_pct": 0.0,
+        "mkt_value": 24300.0,
+        "unreal_pl": 2700.0,
+        "unreal_pl_pct": 12.5,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.342644+05:30",
+        "timestamp": "2026-05-11T14:06:54.600085+05:30",
         "broker": "Upstox"
       },
       {
@@ -305,15 +305,15 @@
         "name": "G M Breweries Ltd",
         "qty": 194,
         "purchase_px": 875.38,
-        "ltp": 952.1,
+        "ltp": 950.85,
         "prev_close": 967.8,
-        "day_change": -15.7,
-        "day_change_pct": -1.6222,
-        "mkt_value": 184707.4,
-        "unreal_pl": 14883.68,
-        "unreal_pl_pct": 8.7642,
+        "day_change": -16.95,
+        "day_change_pct": -1.7514,
+        "mkt_value": 184464.9,
+        "unreal_pl": 14641.18,
+        "unreal_pl_pct": 8.6214,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.453392+05:30",
+        "timestamp": "2026-05-11T14:06:54.711355+05:30",
         "broker": "Motilal"
       },
       {
@@ -321,15 +321,15 @@
         "name": "Nippon India ETF Gold BeES (MO)",
         "qty": 10937,
         "purchase_px": 89.39,
-        "ltp": 123.79,
+        "ltp": 123.61,
         "prev_close": 124.31,
-        "day_change": -0.52,
-        "day_change_pct": -0.4183,
-        "mkt_value": 1353891.24,
-        "unreal_pl": 376232.81,
-        "unreal_pl_pct": 38.4831,
+        "day_change": -0.7,
+        "day_change_pct": -0.5631,
+        "mkt_value": 1351922.58,
+        "unreal_pl": 374264.15,
+        "unreal_pl_pct": 38.2817,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.523396+05:30",
+        "timestamp": "2026-05-11T14:06:54.805450+05:30",
         "broker": "Motilal"
       },
       {
@@ -337,15 +337,15 @@
         "name": "Nippon India ETF Gold BeES (UP)",
         "qty": 1563,
         "purchase_px": 122.47,
-        "ltp": 123.79,
+        "ltp": 123.61,
         "prev_close": 124.31,
-        "day_change": -0.52,
-        "day_change_pct": -0.4183,
-        "mkt_value": 193483.77,
-        "unreal_pl": 2063.16,
-        "unreal_pl_pct": 1.0778,
+        "day_change": -0.7,
+        "day_change_pct": -0.5631,
+        "mkt_value": 193202.43,
+        "unreal_pl": 1781.82,
+        "unreal_pl_pct": 0.9308,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.534179+05:30",
+        "timestamp": "2026-05-11T14:06:54.815978+05:30",
         "broker": "Upstox"
       },
       {
@@ -353,15 +353,15 @@
         "name": "Jyoti Structures Ltd",
         "qty": 1936,
         "purchase_px": 24.74,
-        "ltp": 13.33,
+        "ltp": 13.32,
         "prev_close": 13.87,
-        "day_change": -0.54,
-        "day_change_pct": -3.8933,
-        "mkt_value": 25806.88,
-        "unreal_pl": -22089.76,
-        "unreal_pl_pct": -46.1196,
+        "day_change": -0.55,
+        "day_change_pct": -3.9654,
+        "mkt_value": 25787.52,
+        "unreal_pl": -22109.12,
+        "unreal_pl_pct": -46.1601,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.643490+05:30",
+        "timestamp": "2026-05-11T14:06:54.917105+05:30",
         "broker": "Mstock"
       },
       {
@@ -369,15 +369,15 @@
         "name": "NBCC (India) Ltd",
         "qty": 150,
         "purchase_px": null,
-        "ltp": 97.09,
+        "ltp": 96.83,
         "prev_close": 100.64,
-        "day_change": -3.55,
-        "day_change_pct": -3.5274,
-        "mkt_value": 14563.5,
+        "day_change": -3.81,
+        "day_change_pct": -3.7858,
+        "mkt_value": 14524.5,
         "unreal_pl": null,
         "unreal_pl_pct": null,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:16.746235+05:30",
+        "timestamp": "2026-05-11T14:06:55.009944+05:30",
         "broker": "Motilal"
       },
       {
@@ -385,15 +385,15 @@
         "name": "Reliance Industries Ltd",
         "qty": 248,
         "purchase_px": 1397.43,
-        "ltp": 1418.4,
+        "ltp": 1399.5,
         "prev_close": 1435.2,
-        "day_change": -16.8,
-        "day_change_pct": -1.1706,
-        "mkt_value": 351763.21,
-        "unreal_pl": 5200.57,
-        "unreal_pl_pct": 1.5006,
+        "day_change": -35.7,
+        "day_change_pct": -2.4875,
+        "mkt_value": 347076.0,
+        "unreal_pl": 513.36,
+        "unreal_pl_pct": 0.1481,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:17.325473+05:30",
+        "timestamp": "2026-05-11T14:06:55.694230+05:30",
         "broker": "Motilal"
       },
       {
@@ -401,15 +401,15 @@
         "name": "State Bank of India",
         "qty": 100,
         "purchase_px": 700.43,
-        "ltp": 980.2,
+        "ltp": 981.1,
         "prev_close": 1019.3,
-        "day_change": -39.1,
-        "day_change_pct": -3.836,
-        "mkt_value": 98020.0,
-        "unreal_pl": 27977.0,
-        "unreal_pl_pct": 39.9426,
+        "day_change": -38.2,
+        "day_change_pct": -3.7477,
+        "mkt_value": 98110.0,
+        "unreal_pl": 28067.0,
+        "unreal_pl_pct": 40.0711,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:17.483324+05:30",
+        "timestamp": "2026-05-11T14:06:55.913908+05:30",
         "broker": "Motilal"
       },
       {
@@ -417,24 +417,24 @@
         "name": "Waaree Energies Ltd",
         "qty": 15,
         "purchase_px": 2182.36,
-        "ltp": 3239.8,
+        "ltp": 3229.7,
         "prev_close": 3230.1,
-        "day_change": 9.7,
-        "day_change_pct": 0.3003,
-        "mkt_value": 48597.0,
-        "unreal_pl": 15861.6,
-        "unreal_pl_pct": 48.454,
+        "day_change": -0.4,
+        "day_change_pct": -0.0124,
+        "mkt_value": 48445.5,
+        "unreal_pl": 15710.1,
+        "unreal_pl_pct": 47.9912,
         "currency": "INR",
-        "timestamp": "2026-05-11T10:57:17.550477+05:30",
+        "timestamp": "2026-05-11T14:06:56.073327+05:30",
         "broker": "Upstox"
       }
     ],
     "summary": {
-      "total_value": 2468214.03,
+      "total_value": 2461011.46,
       "total_invested": 2004185.5,
-      "total_unreal_pl": 449465.03,
-      "day_pl": -20639.04
+      "total_unreal_pl": 442301.46,
+      "day_pl": -27841.6
     },
-    "timestamp": "2026-05-11T10:57:17.550559+05:30"
+    "timestamp": "2026-05-11T14:06:56.073408+05:30"
   }
 }

@@ -3,14 +3,10 @@ name: Refresh market data (indices + holdings)
 on:
   schedule:
     - cron: "*/15 * * * *"          # every 15 minutes
-  workflow_dispatch:                  # manual trigger from Actions tab
-  push:
-    paths:
-      - "data/holdings_cost.json"     # rerun whenever cost basis changes
-      - "scripts/**"
+  workflow_dispatch:                  # also runs on manual trigger
 
 permissions:
-  contents: write
+  contents: write                     # needed to commit the updated JSON back
 
 concurrency:
   group: market-data
@@ -28,10 +24,9 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: requirements.txt
 
       - name: Install deps
-        run: pip install -r requirements.txt
+        run: pip install yfinance pytz
 
       - name: Fetch live prices
         run: python scripts/market_data.py

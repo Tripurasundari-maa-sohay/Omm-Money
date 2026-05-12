@@ -1,0 +1,22 @@
+# ── Sensitive data (NEVER commit) ─────────────────────────────
+# Broker statements contain account numbers, addresses, names.
+# They stay on your machine; only the sanitised JSON is pushed.
+*.pdf
+data/statements/
+private/
+
+# ── Local Python ──────────────────────────────────────────────
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Editors / OS ──────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ── Local-only output that shouldn't reach prod ───────────────
+*.log
+*.tmp

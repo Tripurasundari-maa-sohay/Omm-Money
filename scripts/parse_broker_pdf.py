@@ -138,9 +138,11 @@ def parse_account_summary(pdf) -> dict:
 
 
 def parse_monthly_timeline(pdf) -> dict:
-    """Page 3 (Cash/Accruals/Position/Account-value by month) + Page 4 (% return, P/L, costs)."""
-    rows3 = page_rows(pdf.pages[2])
-    rows4 = page_rows(pdf.pages[3])
+    """Page 3 (Cash/Accruals/Position/Account-value by month) + Page 4 (% return, P/L, costs).
+       Both pages have a two-column layout: x<240 is explanatory prose, x>=240 is the
+       data table.  We crop to the right column before extracting rows."""
+    rows3 = page_rows(pdf.pages[2].crop((240, 0, pdf.pages[2].width, pdf.pages[2].height)))
+    rows4 = page_rows(pdf.pages[3].crop((240, 0, pdf.pages[3].width, pdf.pages[3].height)))
 
     # Collect date headers in order of appearance (page 3)
     date_set, dates = set(), []
@@ -158,18 +160,32 @@ def parse_monthly_timeline(pdf) -> dict:
         labels.append(f"{mo}-{yr}" if i in (0, len(dates) - 1) else mo)
 
     def row_starting_with(rows, label_tokens):
-        """Find a row whose first tokens match label_tokens (ignoring case & spaces), return floats from that row."""
-        for r in rows:
-            joined = "".join(r).lower()
-            if joined.startswith("".join(label_tokens).lower()):
-                # numeric tokens only
-                vals = []
-                for t in r:
-                    try:
-                        vals.append(float(t.replace(",", "").replace("%", "")))
-                    except ValueError:
-                        continue
+        """Find a row whose first tokens match label_tokens AND contains numeric data.
+           If the label sits on a row by itself (e.g. 'Benchmark') the data row often
+           follows immediately — we fall back to that row."""
+        target = "".join(label_tokens).lower()
+
+        def floats_in(r):
+            out = []
+            for t in r:
+                try:
+                    out.append(float(t.replace(",", "").replace("%", "")))
+                except ValueError:
+                    continue
+            return out
+
+        for i, r in enumerate(rows):
+            if not "".join(r).lower().startswith(target):
+                continue
+            vals = floats_in(r)
+            if vals:
                 return vals
+            # label was on its own line — try the very next row
+            if i + 1 < len(rows):
+                vals = floats_in(rows[i + 1])
+                if vals:
+                    return vals
+            # not a match — keep scanning for a later row that does contain data
         return []
 
     # Page 3 rows

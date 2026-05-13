@@ -438,10 +438,6 @@
           <div style="height:260px;position:relative;"><canvas id="india-upl-chart"></canvas></div>
         </div>
       </div>
-      <div style="margin-top:18px;">
-        <h3 style="margin-bottom:8px;">Realised P&amp;L · Closed Positions (₹) — top 15 by absolute P&amp;L</h3>
-        <div style="height:240px;position:relative;"><canvas id="india-rpnl-chart"></canvas></div>
-      </div>
     </div>
 
     <div class="holdings-section">
@@ -1347,23 +1343,6 @@ const DASH = (() => {
                  y:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} } } }
     });
 
-    // 3. Realised P&L bar — top 15 by absolute value
-    const rSorted = [...ind.closed].sort((a,b)=>Math.abs(b.rpnl||0)-Math.abs(a.rpnl||0)).slice(0,15);
-    mkChart('india-rpnl-chart', { type:'bar',
-      data: {
-        labels: rSorted.map(p=>p.tk),
-        datasets: [{ label:'Realised P&L (₹)',
-          data: rSorted.map(p=>+(p.rpnl||0).toFixed(0)),
-          backgroundColor: rSorted.map(p=>(p.rpnl||0)>=0?'rgba(0,255,136,.7)':'rgba(255,68,68,.7)'),
-          borderColor:     rSorted.map(p=>(p.rpnl||0)>=0?'#00ff88':'#ff4444'),
-          borderWidth:1 }]
-      },
-      options: { responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false},
-          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.y)}${inr(ctx.parsed.y)}` } } },
-        scales:{ x:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} },
-                 y:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>inr(v)} } } }
-    });
   }
 
   /* ── 7. RENDER PIPELINE ────────────────────────────────────────── */

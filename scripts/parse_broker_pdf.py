@@ -59,6 +59,7 @@ TICKER_MAP = {
     "directiondailymubull2xetf":           ("MUU",   "MUU",   "ETF"),
     "direxiondailymubull2xetf":            ("MUU",   "MUU",   "ETF"),
     "globalxdaxgermanyetf":                ("DAX",   "DAX",   "ETF"),
+    "keelinfrastructurecorp":              ("KEEL",  "KEEL",  "Stock"),
 }
 
 
@@ -385,7 +386,8 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     closed_full = []
     for r in pl_rows:
         k = norm(r["name"]).split("(")[0]
-        if k in held_norms:
+        # Skip if exact match OR if this is a PDF fragment of a currently-held name
+        if k in held_norms or any(k in h for h in held_norms):
             continue
         tk, yf, cls = lookup(r["name"])
         closed_full.append({

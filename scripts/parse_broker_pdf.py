@@ -332,9 +332,7 @@ def parse_cash(pdf) -> float:
 
 
 def parse_charges(pdf) -> list[dict]:
-    """Page 12 cost summary — match label rows to USD amounts."""
-    rows = page_rows(pdf.pages[11])
-    out  = []
+    """Cost summary page — search all pages for the charges section."""
     label_map = [
         ("Commission",                   "Commission"),
         ("ClientCustodyFee",             "Custody Fee (ongoing)"),
@@ -342,11 +340,18 @@ def parse_charges(pdf) -> list[dict]:
         ("FrenchFinancialTransaction",   "French FTT"),
         ("Externalproductcosts",         "External Product Costs (implicit)"),
     ]
-    for r in rows:
+    # Find the page containing "Cost summary" rather than hardcoding page index
+    cost_page_rows = []
+    for page in pdf.pages:
+        text = "".join("".join(r) for r in page_rows(page))
+        if "Costsummary" in text or "Commission" in text and "USD" in text:
+            cost_page_rows = page_rows(page)
+            break
+    out = []
+    for r in cost_page_rows:
         joined = "".join(r)
         for needle, pretty in label_map:
             if needle in joined:
-                # Find the first USD-tagged number on the row
                 m = re.search(r"(-?\d{1,3}(?:,\d{3})*\.\d{2})USD", joined)
                 if m:
                     out.append({"type": pretty, "amt": float(m.group(1).replace(",", ""))})

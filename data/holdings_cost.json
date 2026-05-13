@@ -296,7 +296,28 @@
         "ret_pct": 10.71
       }
     ],
-    "charges_breakdown": []
+    "charges_breakdown": [
+      {
+        "type": "External Product Costs (implicit)",
+        "amt": -1.84
+      },
+      {
+        "type": "Custody Fee (ongoing)",
+        "amt": -7.14
+      },
+      {
+        "type": "Exchange Fee",
+        "amt": -0.25
+      },
+      {
+        "type": "Commission",
+        "amt": -339.2
+      },
+      {
+        "type": "French FTT",
+        "amt": -2.65
+      }
+    ]
   },
   "india": {
     "cash": null,

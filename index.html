@@ -167,6 +167,24 @@
   .pending-note{background:rgba(255,170,0,.08);border:1px dashed #ffaa00;
     color:#ffaa00;padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px}
 
+  /* ── PRIVACY MODE ── */
+  .pv{transition:filter .25s,opacity .25s}
+  body.privacy .pv{filter:blur(7px);opacity:.5;user-select:none;pointer-events:none}
+
+  /* ── BANNER CONTROLS (privacy + currency) ── */
+  .banner-controls{display:flex;align-items:center;gap:10px}
+  .privacy-btn{background:transparent;border:1px solid #1a4a6a;border-radius:4px;
+    color:#556;cursor:pointer;padding:5px 8px;font-size:16px;transition:all .2s;line-height:1}
+  .privacy-btn:hover{border-color:#00ccff;color:#00ccff}
+  .privacy-btn.active{border-color:#ffaa00;color:#ffaa00}
+  .ccy-group{display:flex;border:1px solid #1a4a6a;border-radius:4px;overflow:hidden}
+  .ccy-btn{background:transparent;border:none;border-right:1px solid #1a4a6a;
+    color:#556;cursor:pointer;padding:5px 9px;font-size:10px;font-weight:700;
+    letter-spacing:.5px;transition:all .2s}
+  .ccy-btn:last-child{border-right:none}
+  .ccy-btn:hover{background:rgba(0,204,255,.1);color:#00ccff}
+  .ccy-btn.active{background:rgba(0,255,136,.15);color:#00ff88}
+
   @media (max-width:900px){
     .markets-status,.analytics-two-col,.charges-grid{grid-template-columns:1fr}
     .banner-tabs{gap:5px}
@@ -186,6 +204,14 @@
       <button class="tab-button" data-tab="us">US PORTFOLIO</button>
       <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
       <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
+    </div>
+    <div class="banner-controls">
+      <div class="ccy-group">
+        <button class="ccy-btn active" data-ccy="USD" onclick="DASH.setCurrency(this)">$ USD</button>
+        <button class="ccy-btn"        data-ccy="QAR" onclick="DASH.setCurrency(this)">﷼ QAR</button>
+        <button class="ccy-btn"        data-ccy="INR" onclick="DASH.setCurrency(this)">₹ INR</button>
+      </div>
+      <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Hide portfolio values">👁</button>
     </div>
     <div class="banner-right">
       <div>Clock: <span id="update-time">--:--:--</span></div>
@@ -250,14 +276,14 @@
 
     <!-- Hero tiles -->
     <div class="portfolio-overview">
-      <h2>PORTFOLIO SUMMARY · USA + INDIA</h2>
+      <h2>PORTFOLIO SUMMARY · USA + INDIA · <span id="hero-ccy-label" style="color:#ffaa00;font-size:11px;">USD</span></h2>
       <div class="metrics-grid">
-        <div class="metric-card"><label>US PORTFOLIO VALUE</label><div class="mval loading" id="hero-us-value">…</div><div class="mdesc">Equities + cash</div></div>
-        <div class="metric-card"><label>INDIA PORTFOLIO VALUE</label><div class="mval loading" id="hero-india-value">…</div><div class="mdesc">Equities</div></div>
-        <div class="metric-card"><label>TOTAL VALUE (USD)</label><div class="mval loading" id="hero-total-value">…</div><div class="mchg" id="hero-total-return">--</div></div>
-        <div class="metric-card"><label>UNREALISED P&amp;L (USD)</label><div class="mval loading" id="hero-total-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label>TODAY'S GAIN (USD)</label><div class="mval loading" id="hero-day-pl">…</div><div class="mchg" id="hero-day-pl-pct">--</div></div>
-        <div class="metric-card"><label>CASH INFUSED</label><div class="mval loading" id="hero-cash-infused">…</div><div class="mdesc">Net deposits ITD</div></div>
+        <div class="metric-card"><label>US PORTFOLIO VALUE</label><div class="mval loading pv" id="hero-us-value">…</div><div class="mdesc">Equities + cash</div></div>
+        <div class="metric-card"><label>INDIA PORTFOLIO VALUE</label><div class="mval loading pv" id="hero-india-value">…</div><div class="mdesc">Equities</div></div>
+        <div class="metric-card"><label id="hero-total-label">TOTAL VALUE (USD)</label><div class="mval loading pv" id="hero-total-value">…</div><div class="mchg pv" id="hero-total-return">--</div></div>
+        <div class="metric-card"><label id="hero-pl-label">UNREALISED P&amp;L (USD)</label><div class="mval loading pv" id="hero-total-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label id="hero-day-label">TODAY'S GAIN (USD)</label><div class="mval loading pv" id="hero-day-pl">…</div><div class="mchg pv" id="hero-day-pl-pct">--</div></div>
+        <div class="metric-card"><label>CASH INFUSED (US)</label><div class="mval loading pv" id="hero-cash-infused">…</div><div class="mdesc">Net deposits ITD</div></div>
       </div>
     </div>
 
@@ -568,26 +594,64 @@
 const DASH = (() => {
   'use strict';
 
-  /* ── config ── */
-  const REFRESH_MS = 5 * 60 * 1000;
-  const FX_DEFAULT = 83.5;
+  /* ══ CONFIG ══════════════════════════════════════════════════════ */
+  const REFRESH_MS  = 5 * 60 * 1000;
+  const FX_DEFAULT  = 83.5;    // INR per USD (fallback)
+  const QAR_PER_USD = 3.6413;  // fixed peg — update if needed
 
-  /* ── state ── */
-  const S = { cost: null, prices: {}, indices: null, view: null, charts: {}, ui: { status: 'ALL', search: '' } };
+  /* ══ STATE ═══════════════════════════════════════════════════════
+     ui.currency : 'USD' | 'QAR' | 'INR'  — hero banner display ccy
+     ui.privacy  : bool — blur all .pv elements when true
+     ui.status   : tx filter (ALL/OPEN/CLOSED/STOCK/ETF)
+     ui.market   : tx filter (ALL/US/INDIA)
+  ══════════════════════════════════════════════════════════════════ */
+  const S = {
+    cost: null, prices: {}, indices: null, view: null, charts: {},
+    ui: { currency: 'USD', privacy: false, status: 'ALL', market: 'ALL', search: '' }
+  };
 
-  /* ── tiny helpers ── */
-  const $ = id => document.getElementById(id);
-  const setText = (id, v) => { const e = $(id); if (e) e.textContent = v; };
-  const setClass= (id, c) => { const e = $(id); if (e) e.className = c; };
-  const sign    = v => (v >= 0 ? '+' : '');
+  /* ══ DOM HELPERS ═════════════════════════════════════════════════ */
+  const $        = id => document.getElementById(id);
+  const setText  = (id, v) => { const e=$(id); if(e) e.textContent=v; };
+  const setClass = (id, c) => { const e=$(id); if(e) e.className=c; };
+
+  /* ══ NUMBER FORMATTERS ════════════════════════════════════════════
+     Native-currency formatters (for individual portfolio pages):
+       usd / usd2  — always USD
+       inr / inr2  — always INR
+     Hero-banner formatter:
+       hero(valueUSD) — converts to S.ui.currency on the fly
+  ══════════════════════════════════════════════════════════════════ */
+  const sign    = v => v >= 0 ? '+' : '';
   const pn      = v => v >= 0 ? 'positive' : 'negative';
-  const usd     = v => '$'  + Math.round(v).toLocaleString('en-US');
-  const usd2    = v => '$'  + Number(v).toFixed(2);
-  const inr     = v => '₹'  + Math.round(v).toLocaleString('en-IN');
-  const inr2    = v => '₹'  + Number(v).toFixed(2);
   const pct     = v => Number(v).toFixed(2) + '%';
-  const fmBadge = fm => 'badge-' + ({BUY:'buy',SELL:'sell',HOLD:'hold',TRIM:'trim'}[fm] || 'hold');
+  const usd     = v => '$' + Math.round(v).toLocaleString('en-US');
+  const usd2    = v => '$' + Number(v).toFixed(2);
+  const inr     = v => '₹' + Math.round(v).toLocaleString('en-IN');
+  const inr2    = v => '₹' + Number(v).toFixed(2);
+  const fmBadge = fm => 'badge-' + ({BUY:'buy',SELL:'sell',HOLD:'hold',TRIM:'trim'}[fm]||'hold');
   const FREE_TAG = '<span style="color:#00ff88;font-size:11px;letter-spacing:.5px;">★ FREE</span>';
+
+  /* Convert a USD value to the currently selected display currency */
+  function heroConvert(usdVal) {
+    const fx = S.view ? S.view.fx : FX_DEFAULT;
+    switch (S.ui.currency) {
+      case 'QAR': return usdVal * QAR_PER_USD;
+      case 'INR': return usdVal * fx;
+      default:    return usdVal;               // USD
+    }
+  }
+  /* Format a USD-based value into display currency string */
+  function hero(usdVal) {
+    const v = heroConvert(usdVal);
+    switch (S.ui.currency) {
+      case 'QAR': return '﷼' + Math.round(v).toLocaleString('en-US');
+      case 'INR': return '₹' + Math.round(v).toLocaleString('en-IN');
+      default:    return '$'  + Math.round(v).toLocaleString('en-US');
+    }
+  }
+  /* Label suffix for hero tiles (e.g. "(QAR)") */
+  function ccyLabel() { return S.ui.currency; }
 
   /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
   async function load() {
@@ -720,19 +784,28 @@ const DASH = (() => {
   function renderHero() {
     if (!S.view) return;
     const { us, india, combined } = S.view;
-    setText('hero-us-value',    usd(us.totalValue));
-    setText('hero-india-value', inr(india.mv));
-    setText('hero-total-value', usd(combined.totalUSD));
+    const ccy = ccyLabel();
+
+    // Update labels to reflect active currency
+    setText('hero-ccy-label', ccy);
+    setText('hero-total-label', `TOTAL VALUE (${ccy})`);
+    setText('hero-pl-label',    `UNREALISED P&L (${ccy})`);
+    setText('hero-day-label',   `TODAY'S GAIN (${ccy})`);
+
+    // Values — all USD-based numbers go through hero()
+    setText('hero-us-value',   hero(us.totalValue));
+    setText('hero-india-value', hero(india.mv / (S.view.fx || FX_DEFAULT)));
+    setText('hero-total-value', hero(combined.totalUSD));
     setText('hero-total-return', sign(combined.returnPct) + pct(combined.returnPct) + ' ITD');
-    setClass('hero-total-return', 'mchg ' + pn(combined.returnPct));
-    setText('hero-total-pl', sign(combined.unrealPL_USD) + usd(combined.unrealPL_USD));
-    setClass('hero-total-pl', 'mval ' + pn(combined.unrealPL_USD));
-    setText('hero-day-pl', sign(combined.dayPL_USD) + usd(combined.dayPL_USD));
-    setClass('hero-day-pl', 'mval ' + pn(combined.dayPL_USD));
+    setClass('hero-total-return', 'mchg pv ' + pn(combined.returnPct));
+    setText('hero-total-pl', sign(combined.unrealPL_USD) + hero(Math.abs(combined.unrealPL_USD)));
+    setClass('hero-total-pl', 'mval pv ' + pn(combined.unrealPL_USD));
+    setText('hero-day-pl', sign(combined.dayPL_USD) + hero(Math.abs(combined.dayPL_USD)));
+    setClass('hero-day-pl', 'mval pv ' + pn(combined.dayPL_USD));
     const dayPct = combined.totalUSD ? (combined.dayPL_USD / (combined.totalUSD - combined.dayPL_USD)) * 100 : 0;
     setText('hero-day-pl-pct', sign(dayPct) + pct(dayPct));
-    setClass('hero-day-pl-pct', 'mchg ' + pn(dayPct));
-    setText('hero-cash-infused', usd(us.cashInfusion || 0));
+    setClass('hero-day-pl-pct', 'mchg pv ' + pn(dayPct));
+    setText('hero-cash-infused', hero(us.cashInfusion || 0));
   }
 
   function renderUSMetrics() {
@@ -1182,6 +1255,26 @@ const DASH = (() => {
     const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
   }
+  /* ── Currency toggle ──────────────────────────────────────────── */
+  function setCurrency(el) {
+    S.ui.currency = el.dataset.ccy;
+    document.querySelectorAll('.ccy-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    safe(renderHero, 'hero-ccy');   // only hero re-renders; portfolio pages keep native ccy
+  }
+
+  /* ── Privacy toggle ───────────────────────────────────────────── */
+  function togglePrivacy() {
+    S.ui.privacy = !S.ui.privacy;
+    document.body.classList.toggle('privacy', S.ui.privacy);
+    const btn = $('privacy-btn');
+    if (btn) {
+      btn.textContent  = S.ui.privacy ? '🙈' : '👁';
+      btn.classList.toggle('active', S.ui.privacy);
+      btn.title = S.ui.privacy ? 'Show portfolio values' : 'Hide portfolio values';
+    }
+  }
+
   function togglePill(el) {
     if (el.dataset.status) {
       // status pills — deactivate all status pills
@@ -1306,7 +1399,7 @@ const DASH = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   // public surface for inline handlers
-  return { togglePill, toggleMarket, filterTx, exportPL };
+  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL };
 })();
 </script>
 </body>

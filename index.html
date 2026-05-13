@@ -1475,8 +1475,8 @@ const DASH = (() => {
   /* ══ SIGNALS ENGINE ═════════════════════════════════════════════ */
   const SIG = { loaded: false, spy: null, results: {} };
   const SIG_CORS = [
-    s => `https://corsproxy.io/?${encodeURIComponent(s)}`,
-    s => `https://api.allorigins.win/raw?url=${encodeURIComponent(s)}`
+    s => `https://api.allorigins.win/raw?url=${encodeURIComponent(s)}`,
+    s => `https://corsproxy.io/?${encodeURIComponent(s)}`
   ];
 
   async function sigFetch(sym) {
@@ -1525,8 +1525,9 @@ const DASH = (() => {
     const ma200 = sigMA(cl,200), ma50 = sigMA(cl,50);
     const v200 = (px - ma200) / ma200 * 100;
     const rsi = sigRsi(cl);
-    // MACD
-    const macd = sigEwm(cl,12).map((v,i) => v - sigEwm(cl,26)[i]);
+    // MACD — pre-compute both EMAs once (avoids O(N²) recompute inside map)
+    const ema12 = sigEwm(cl,12), ema26 = sigEwm(cl,26);
+    const macd = ema12.map((v,i) => v - ema26[i]);
     const macdBull = macd.at(-1) > sigEwm(macd,9).at(-1);
     // Volume (last 20 days)
     let upV=0, dnV=0, upC=0, dnC=0;
@@ -1540,14 +1541,16 @@ const DASH = (() => {
       rs = ((px - cl.at(-p60))/cl.at(-p60) - (sc.at(-1) - sc.at(-p60))/sc.at(-p60)) * 100;
     }
     // 52w range
-    const hi52 = Math.max(...cl.slice(-252)), lo52 = Math.min(...cl.slice(-252));
+    const cl252 = cl.slice(-252);
+    const hi52 = Math.max(...cl252), lo52 = Math.min(...cl252);
     const rng = hi52 > lo52 ? (px - lo52) / (hi52 - lo52) * 100 : 50;
     // 1yr mean
     const mean1 = sigMA(cl,252), vsMean = (px - mean1) / mean1 * 100;
     // Weekly vs 10wk MA
     const wk = sigWeekly(data), wkAbove = wk.at(-1) > sigMA(wk,10);
-    // Regime
-    const regime = spy ? (spy.map(d=>d.c).at(-1) > sigMA(spy.map(d=>d.c),200) ? 'BULL' : 'BEAR') : 'BULL';
+    // Regime — compute spy closes once
+    const spyCl = spy ? spy.map(d=>d.c) : null;
+    const regime = spyCl ? (spyCl.at(-1) > sigMA(spyCl,200) ? 'BULL' : 'BEAR') : 'BULL';
 
     const sc = {
       vs200:   v200 > 5 ? 12 : v200 > 0 ? 8 : v200 > -5 ? 4 : 0,

@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "08-May-2026",
+  "as_of": "12-May-2026",
   "fx_inr_usd": 83.5,
   "us": {
     "broker": "Doha Bank Global",
-    "cash": 1571.8,
-    "cash_infusion_itd": 14875.07,
-    "account_value_statement": 17552.35,
-    "total_pl_statement": 2677.28,
+    "cash": 3188.07,
+    "cash_infusion_itd": 15875.07,
+    "account_value_statement": 18410.04,
+    "total_pl_statement": 2534.97,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -25,7 +25,7 @@
         1568.12,
         2016.07,
         268.16,
-        1571.8
+        3188.07
       ],
       "account_value": [
         0.0,
@@ -34,7 +34,7 @@
         14248.11,
         13692.49,
         16432.87,
-        17552.35
+        18410.04
       ],
       "monthly_pct_return": [
         0.0,
@@ -43,7 +43,7 @@
         -5.1,
         -6.8,
         20.0,
-        6.8
+        6.0
       ],
       "monthly_bench_return": [
         0.0,
@@ -61,7 +61,7 @@
         -766.0,
         -966.58,
         2740.38,
-        1119.48
+        977.17
       ],
       "monthly_cost": [
         0.0,
@@ -70,7 +70,7 @@
         -51.7,
         -54.91,
         -72.54,
-        -17.12
+        -39.22
       ],
       "port_return_cum_pct": [
         0.0,
@@ -79,7 +79,7 @@
         -0.24,
         -7.02,
         11.57,
-        19.16
+        18.27
       ],
       "snp_return_cum_pct": [
         0.0,
@@ -97,7 +97,7 @@
         14464.11,
         14875.07,
         14875.07,
-        14875.07
+        15875.07
       ]
     },
     "open": [
@@ -152,6 +152,16 @@
         "income": 0.0
       },
       {
+        "tk": "UNKNOWN_keelinfras",
+        "yf": "",
+        "name": "KeelInfrastructureCorp",
+        "cls": "Stock",
+        "qty": 200,
+        "avg": 4.02,
+        "fees": 0.0,
+        "income": 0.0
+      },
+      {
         "tk": "MU",
         "yf": "MU",
         "name": "MicronTechnologyInc.",
@@ -182,22 +192,22 @@
         "income": 0.0
       },
       {
+        "tk": "RKLB",
+        "yf": "RKLB",
+        "name": "RocketLabCorporation",
+        "cls": "Stock",
+        "qty": 5,
+        "avg": 104.5,
+        "fees": 0.0,
+        "income": 0.0
+      },
+      {
         "tk": "TTE",
         "yf": "TTE",
         "name": "TotalEnergiesSE",
         "cls": "Stock",
         "qty": 8,
         "avg": 82.84,
-        "fees": 0.0,
-        "income": 0.0
-      },
-      {
-        "tk": "EWY",
-        "yf": "EWY",
-        "name": "iSharesMSCISouthKorea",
-        "cls": "ETF",
-        "qty": 11,
-        "avg": 138.2222,
         "fees": 0.0,
         "income": 0.0
       },
@@ -219,8 +229,8 @@
         "cls": "Stock",
         "income": 0.63,
         "costs": -5.0,
-        "realised": 256.02,
-        "ret_pct": 27.33
+        "realised": 216.33,
+        "ret_pct": 23.09
       },
       {
         "tk": "GOOG",
@@ -228,8 +238,8 @@
         "cls": "Stock",
         "income": 0.0,
         "costs": -20.0,
-        "realised": 85.54,
-        "ret_pct": -0.41
+        "realised": 16.94,
+        "ret_pct": -2.92
       },
       {
         "tk": "COST",
@@ -255,8 +265,8 @@
         "cls": "Stock",
         "income": 0.0,
         "costs": -5.0,
-        "realised": -61.99,
-        "ret_pct": -5.61
+        "realised": -30.16,
+        "ret_pct": -2.71
       },
       {
         "tk": "IRS",
@@ -266,6 +276,15 @@
         "costs": -10.02,
         "realised": -25.29,
         "ret_pct": -3.35
+      },
+      {
+        "tk": "UNKNOWN_urecorp",
+        "name": "ureCorp",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": -12.0,
+        "realised": -2.0,
+        "ret_pct": -0.25
       },
       {
         "tk": "GOOG",
@@ -282,8 +301,8 @@
         "cls": "Stock",
         "income": 0.3,
         "costs": -25.03,
-        "realised": 591.56,
-        "ret_pct": 91.88
+        "realised": 611.33,
+        "ret_pct": 96.97
       },
       {
         "tk": "MSFT",
@@ -291,17 +310,17 @@
         "cls": "Stock",
         "income": 0.0,
         "costs": -5.0,
-        "realised": 139.3,
-        "ret_pct": 26.02
+        "realised": 120.9,
+        "ret_pct": 22.58
       },
       {
         "tk": "RKLB",
         "name": "rporation",
         "cls": "Stock",
         "income": 0.0,
-        "costs": -30.04,
-        "realised": 330.36,
-        "ret_pct": 79.24
+        "costs": -35.04,
+        "realised": 390.66,
+        "ret_pct": 99.93
       },
       {
         "tk": "GOOG",
@@ -318,8 +337,8 @@
         "cls": "Stock",
         "income": 8.01,
         "costs": -7.65,
-        "realised": 43.48,
-        "ret_pct": 6.49
+        "realised": 69.72,
+        "ret_pct": 10.44
       },
       {
         "tk": "SIVR",
@@ -353,9 +372,9 @@
         "name": "SouthKoreaETF",
         "cls": "ETF",
         "income": 0.0,
-        "costs": -11.79,
-        "realised": 561.76,
-        "ret_pct": 34.92
+        "costs": -16.89,
+        "realised": 429.33,
+        "ret_pct": 26.37
       },
       {
         "tk": "VOOG",
@@ -363,32 +382,11 @@
         "cls": "ETF",
         "income": 3.49,
         "costs": -5.0,
-        "realised": 142.41,
-        "ret_pct": 10.72
+        "realised": 142.23,
+        "ret_pct": 10.71
       }
     ],
-    "charges_breakdown": [
-      {
-        "type": "External Product Costs (implicit)",
-        "amt": -1.79
-      },
-      {
-        "type": "Custody Fee (ongoing)",
-        "amt": -7.14
-      },
-      {
-        "type": "Exchange Fee",
-        "amt": -0.2
-      },
-      {
-        "type": "Commission",
-        "amt": -317.2
-      },
-      {
-        "type": "French FTT",
-        "amt": -2.65
-      }
-    ]
+    "charges_breakdown": []
   },
   "india": {
     "cash": null,

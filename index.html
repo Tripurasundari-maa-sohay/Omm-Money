@@ -168,8 +168,9 @@
     color:#ffaa00;padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px}
 
   /* ── PRIVACY MODE ── */
-  .pv{transition:filter .25s,opacity .25s}
-  body.privacy .pv{filter:blur(7px);opacity:.5;user-select:none;pointer-events:none}
+  .pv{transition:opacity .2s}
+  /* table rows get blur (mixed HTML, can't text-replace per-cell) */
+  body.privacy tbody{filter:blur(6px);opacity:.5;user-select:none;pointer-events:none}
 
   /* ── BANNER CONTROLS (privacy + currency) ── */
   .banner-controls{display:flex;align-items:center;gap:10px}
@@ -343,12 +344,12 @@
     <div class="portfolio-metrics">
       <h2>USA Portfolio Metrics</h2>
       <div class="metrics-grid">
-        <div class="metric-card"><label>STOCKS VALUE</label><div class="mval loading" id="us-stocks-value">…</div><div class="mdesc" id="us-stocks-count">-- positions</div></div>
-        <div class="metric-card"><label>ETF VALUE</label><div class="mval loading" id="us-etf-value">…</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
-        <div class="metric-card"><label>CASH</label><div class="mval loading" id="us-cash-value">…</div><div class="mdesc">From broker statement</div></div>
-        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading" id="us-day-pl">…</div><div class="mchg" id="us-day-pl-pct">--</div></div>
-        <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div></div>
+        <div class="metric-card"><label>STOCKS VALUE</label><div class="mval loading pv" id="us-stocks-value">…</div><div class="mdesc" id="us-stocks-count">-- positions</div></div>
+        <div class="metric-card"><label>ETF VALUE</label><div class="mval loading pv" id="us-etf-value">…</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
+        <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mdesc">From broker statement</div></div>
+        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
+        <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div></div>
       </div>
     </div>
 
@@ -418,11 +419,9 @@
     <div class="portfolio-metrics">
       <h2>India Portfolio Metrics · Live</h2>
       <div class="metrics-grid">
-        <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
-        <div class="metric-card"><label>CASH DEPLOYED (ITD)</label><div class="mval" id="in-cash-infusion">…</div><div class="mdesc">Gross buys · all brokers ITD</div></div>
-        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label>REALISED P&amp;L (ITD)</label><div class="mval loading" id="in-realised-pl">…</div><div class="mdesc" id="in-realised-count">-- closed positions</div></div>
-        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading" id="in-day-pl">…</div><div class="mchg" id="in-day-pl-pct">--</div></div>
+        <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading pv" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
+        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading pv" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading pv" id="in-day-pl">…</div><div class="mchg pv" id="in-day-pl-pct">--</div></div>
       </div>
     </div>
 
@@ -608,8 +607,18 @@ const DASH = (() => {
 
   /* ══ DOM HELPERS ═════════════════════════════════════════════════ */
   const $        = id => document.getElementById(id);
-  const setText  = (id, v) => { const e=$(id); if(e) e.textContent=v; };
   const setClass = (id, c) => { const e=$(id); if(e) e.className=c; };
+  const MASK     = '● ● ●';
+
+  /* setText — privacy-aware: if element carries .pv and privacy is ON,
+     store the real value in data-real and show MASK instead.          */
+  function setText(id, v) {
+    const e = $(id);
+    if (!e) return;
+    const s = String(v);
+    e.dataset.real = s;
+    e.textContent  = (S.ui.privacy && e.classList.contains('pv')) ? MASK : s;
+  }
 
   /* ══ NUMBER FORMATTERS ════════════════════════════════════════════
      Native-currency formatters (for individual portfolio pages):
@@ -826,18 +835,12 @@ const DASH = (() => {
     const ind = S.view.india;
     setText('in-equities-value', inr(ind.mv));
     setText('in-equities-count', ind.open.length + ' positions');
-    if (ind.cashInfusion != null) {
-      setText('in-cash-infusion', inr(ind.cashInfusion));
-    }
     setText('in-unreal-pl',   sign(ind.unrealPL) + inr(ind.unrealPL));
-    setClass('in-unreal-pl', 'mval ' + pn(ind.unrealPL));
-    setText('in-realised-pl', sign(ind.realisedPL) + inr(ind.realisedPL));
-    setClass('in-realised-pl', 'mval ' + pn(ind.realisedPL));
-    setText('in-realised-count', ind.closed.length + ' closed positions');
+    setClass('in-unreal-pl', 'mval pv ' + pn(ind.unrealPL));
     setText('in-day-pl',      sign(ind.dayPL) + inr(ind.dayPL));
-    setClass('in-day-pl', 'mval ' + pn(ind.dayPL));
+    setClass('in-day-pl', 'mval pv ' + pn(ind.dayPL));
     setText('in-day-pl-pct', sign(ind.dayPct) + pct(ind.dayPct));
-    setClass('in-day-pl-pct', 'mchg ' + pn(ind.dayPct));
+    setClass('in-day-pl-pct', 'mchg pv ' + pn(ind.dayPct));
   }
 
   function renderUSHoldings() {
@@ -1155,7 +1158,8 @@ const DASH = (() => {
       plugins:{ legend:{ position:'top', labels:{ color:'#889aaa', boxWidth:12 } },
         tooltip:{ mode:'index', intersect:false, backgroundColor:'#0d2b47', borderColor:'#00ccff', borderWidth:1, ...extraTooltip } },
       scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556677'} },
-               y:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556677'} } }
+               y:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556677',
+                   callback: v => S.ui.privacy ? '***' : v } } }
     };
   }
 
@@ -1262,10 +1266,27 @@ const DASH = (() => {
   /* ── Privacy toggle ───────────────────────────────────────────── */
   function togglePrivacy() {
     S.ui.privacy = !S.ui.privacy;
+
+    // 1. Mask / restore all .pv metric-card values (set via setText)
+    document.querySelectorAll('.pv').forEach(el => {
+      if (S.ui.privacy) {
+        if (!el.dataset.real) el.dataset.real = el.textContent;
+        el.textContent = MASK;
+      } else {
+        if (el.dataset.real !== undefined) el.textContent = el.dataset.real;
+      }
+    });
+
+    // 2. Table rows — CSS blur via body class (mixed HTML, can't text-replace)
     document.body.classList.toggle('privacy', S.ui.privacy);
+
+    // 3. Charts — tick callbacks close over S.ui.privacy, just force redraw
+    Object.values(S.charts).forEach(c => { try { c.update('none'); } catch(_){} });
+
+    // 4. Button state
     const btn = $('privacy-btn');
     if (btn) {
-      btn.textContent  = S.ui.privacy ? '🙈' : '👁';
+      btn.textContent = S.ui.privacy ? '🙈' : '👁';
       btn.classList.toggle('active', S.ui.privacy);
       btn.title = S.ui.privacy ? 'Show portfolio values' : 'Hide portfolio values';
     }
@@ -1339,7 +1360,7 @@ const DASH = (() => {
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false},
           tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${inr(ctx.parsed.x)}` } } },
-        scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>inr(v)} },
+        scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>S.ui.privacy?'***':inr(v)} },
                  y:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} } } }
     });
 

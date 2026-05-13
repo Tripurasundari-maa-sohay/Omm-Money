@@ -389,15 +389,32 @@
       </div>
     </div>
 
-    <div class="pending-note" id="india-pending-note">⚠ India broker statement pending — only confirmed positions (Paramatrix, Ashalog) are shown. Cash &amp; transaction history not yet available.</div>
-
     <div class="portfolio-metrics">
       <h2>India Portfolio Metrics · Live</h2>
       <div class="metrics-grid">
         <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
-        <div class="metric-card"><label>CASH</label><div class="mval" id="in-cash-value">— pending</div><div class="mdesc">Broker statement awaited</div></div>
+        <div class="metric-card"><label>CASH DEPLOYED (ITD)</label><div class="mval" id="in-cash-infusion">…</div><div class="mdesc">Gross buys · all brokers ITD</div></div>
         <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>REALISED P&amp;L (ITD)</label><div class="mval loading" id="in-realised-pl">…</div><div class="mdesc" id="in-realised-count">-- closed positions</div></div>
         <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading" id="in-day-pl">…</div><div class="mchg" id="in-day-pl-pct">--</div></div>
+      </div>
+    </div>
+
+    <div class="analytics-section">
+      <div class="analytics-header"><h2>🇮🇳 INDIA PORTFOLIO · ANALYTICS</h2></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
+          <div style="height:260px;position:relative;"><canvas id="india-weight-chart"></canvas></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px;">Unrealised P&amp;L by Position (₹)</h3>
+          <div style="height:260px;position:relative;"><canvas id="india-upl-chart"></canvas></div>
+        </div>
+      </div>
+      <div style="margin-top:18px;">
+        <h3 style="margin-bottom:8px;">Realised P&amp;L · Closed Positions (₹) — top 15 by absolute P&amp;L</h3>
+        <div style="height:240px;position:relative;"><canvas id="india-rpnl-chart"></canvas></div>
       </div>
     </div>
 
@@ -432,18 +449,31 @@
     </div>
   </div><!-- /india-tab -->
 
-  <!-- ══════════ TAB 4 · TRANSACTIONS (US-ONLY) ══════════ -->
+  <!-- ══════════ TAB 4 · TRANSACTIONS (ALL PORTFOLIOS) ══════════ -->
   <div id="transactions-tab" class="tab-content">
 
-    <h2 style="margin-bottom:6px;">TRANSACTION HISTORY · 🇺🇸 US PORTFOLIO</h2>
-    <div style="font-size:11px;color:#556;margin-bottom:16px;">Source: Doha Bank Global statement · India transactions pending</div>
+    <h2 style="margin-bottom:6px;">TRANSACTION HISTORY · 🌍 ALL PORTFOLIOS</h2>
+    <div style="font-size:11px;color:#556;margin-bottom:16px;">🇺🇸 Doha Bank Global · 🇮🇳 Motilal Oswal, Upstox, Mirae Asset (FY24-26)</div>
 
-    <div class="txn-summary-strip">
-      <div class="txn-stat-card"><label>POSITIONS (OPEN + CLOSED)</label><span class="v" id="tx-count">--</span></div>
-      <div class="txn-stat-card"><label>TOTAL INVESTED (ITD)</label><span class="v" id="tx-invested">--</span></div>
-      <div class="txn-stat-card"><label>TOTAL DIVIDENDS</label><span class="v" id="tx-div">--</span></div>
-      <div class="txn-stat-card"><label>TOTAL CHARGES</label><span class="v" id="tx-charges">--</span></div>
-      <div class="txn-stat-card"><label>TOTAL REALISED P&amp;L</label><span class="v" id="tx-realised">--</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+      <div style="background:#0a1929;border:1px solid #00ccff;border-radius:8px;padding:14px;">
+        <div style="color:#00ccff;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">🇺🇸 US PORTFOLIO</div>
+        <div class="txn-summary-strip" style="grid-template-columns:repeat(3,1fr);">
+          <div class="txn-stat-card"><label>POSITIONS</label><span class="v" id="tx-count">--</span></div>
+          <div class="txn-stat-card"><label>INVESTED ITD</label><span class="v" id="tx-invested">--</span></div>
+          <div class="txn-stat-card"><label>DIVIDENDS</label><span class="v" id="tx-div">--</span></div>
+          <div class="txn-stat-card"><label>CHARGES</label><span class="v" id="tx-charges">--</span></div>
+          <div class="txn-stat-card"><label>REALISED P&amp;L</label><span class="v" id="tx-realised">--</span></div>
+        </div>
+      </div>
+      <div style="background:#0a1929;border:1px solid #ffaa00;border-radius:8px;padding:14px;">
+        <div style="color:#ffaa00;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">🇮🇳 INDIA PORTFOLIO</div>
+        <div class="txn-summary-strip" style="grid-template-columns:repeat(3,1fr);">
+          <div class="txn-stat-card"><label>CLOSED POSITIONS</label><span class="v" id="in-tx-count">--</span></div>
+          <div class="txn-stat-card"><label>GROSS BUYS ITD</label><span class="v" id="in-tx-invested">--</span></div>
+          <div class="txn-stat-card"><label>REALISED P&amp;L</label><span class="v" id="in-tx-realised">--</span></div>
+        </div>
+      </div>
     </div>
 
     <div class="txn-filter-bar">
@@ -452,6 +482,8 @@
         <div class="txn-pill active" data-status="ALL"    onclick="DASH.togglePill(this)">ALL</div>
         <div class="txn-pill" data-status="OPEN"          onclick="DASH.togglePill(this)">OPEN</div>
         <div class="txn-pill" data-status="CLOSED"        onclick="DASH.togglePill(this)">CLOSED</div>
+        <div class="txn-pill" data-market="US"            onclick="DASH.toggleMarket(this)">🇺🇸 US</div>
+        <div class="txn-pill" data-market="INDIA"         onclick="DASH.toggleMarket(this)">🇮🇳 INDIA</div>
         <div class="txn-pill" data-status="STOCK"         onclick="DASH.togglePill(this)">STOCK</div>
         <div class="txn-pill" data-status="ETF"           onclick="DASH.togglePill(this)">ETF</div>
       </div>
@@ -466,15 +498,15 @@
       <table>
         <thead>
           <tr>
-            <th>ASSET CLASS</th><th>TICKER · NAME</th><th>STATUS</th>
-            <th>INCOME</th><th>COSTS</th><th>REALISED P&amp;L</th>
+            <th>MKT</th><th>ASSET CLASS</th><th>TICKER · NAME</th><th>STATUS</th>
+            <th>INCOME / BUY AMT</th><th>COSTS / SELL AMT</th><th>REALISED P&amp;L</th>
             <th>UNREAL P&amp;L</th><th>TOTAL P&amp;L</th><th>RETURN %</th>
           </tr>
         </thead>
         <tbody id="pl-body"></tbody>
         <tfoot>
           <tr>
-            <td colspan="3" style="text-align:right;">TOTAL</td>
+            <td colspan="4" style="text-align:right;">TOTAL</td>
             <td id="pl-foot-income"></td>
             <td id="pl-foot-costs"></td>
             <td id="pl-foot-realised"></td>
@@ -510,10 +542,11 @@
           </table>
         </div>
         <div class="charges-panel">
-          <h4>🇮🇳 India Portfolio</h4>
-          <div style="color:#556;padding:14px;text-align:center;border:1px dashed #1a3a5a;border-radius:6px;">
-            Pending broker statement
-          </div>
+          <h4>🇮🇳 India Portfolio · Top Realized Wins/Losses</h4>
+          <table>
+            <thead><tr><th>Ticker</th><th>Scrip</th><th>Buy (₹)</th><th>Sell (₹)</th><th>Realised P&amp;L (₹)</th></tr></thead>
+            <tbody id="india-rpnl-body"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -637,12 +670,15 @@ const DASH = (() => {
     const inMV   = inOpen.reduce((s,p)=>s+p.mv,0);
     inOpen.forEach(p => p.wt = inMV ? (p.mv/inMV)*100 : 0);
     const india = {
-      cash:     S.cost.india && S.cost.india.cash,
-      open:     inOpen,
-      mv:       inMV,
-      unrealPL: inOpen.reduce((s,p)=>s+p.upl,0),
-      dayPL:    inOpen.reduce((s,p)=>s+p.dayPL,0),
+      cash:         S.cost.india && S.cost.india.cash,
+      cashInfusion: S.cost.india && S.cost.india.cash_infusion_itd,
+      open:         inOpen,
+      closed:       (S.cost.india && S.cost.india.closed) || [],
+      mv:           inMV,
+      unrealPL:     inOpen.reduce((s,p)=>s+p.upl,0),
+      dayPL:        inOpen.reduce((s,p)=>s+p.dayPL,0),
     };
+    india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
     india.dayPct = india.mv ? (india.dayPL / (india.mv - india.dayPL)) * 100 : 0;
 
     // Combined
@@ -720,14 +756,19 @@ const DASH = (() => {
     if (!S.view) return;
     const ind = S.view.india;
     setText('in-equities-value', inr(ind.mv));
-    setText('in-unreal-pl',      sign(ind.unrealPL) + inr(ind.unrealPL));
-    setClass('in-unreal-pl', 'mval ' + pn(ind.unrealPL));
-    setText('in-day-pl',         sign(ind.dayPL) + inr(ind.dayPL));
-    setClass('in-day-pl', 'mval ' + pn(ind.dayPL));
-    setText('in-day-pl-pct',     sign(ind.dayPct) + pct(ind.dayPct));
-    setClass('in-day-pl-pct', 'mchg ' + pn(ind.dayPct));
     setText('in-equities-count', ind.open.length + ' positions');
-    if (ind.cash != null) setText('in-cash-value', inr(ind.cash));
+    if (ind.cashInfusion != null) {
+      setText('in-cash-infusion', inr(ind.cashInfusion));
+    }
+    setText('in-unreal-pl',   sign(ind.unrealPL) + inr(ind.unrealPL));
+    setClass('in-unreal-pl', 'mval ' + pn(ind.unrealPL));
+    setText('in-realised-pl', sign(ind.realisedPL) + inr(ind.realisedPL));
+    setClass('in-realised-pl', 'mval ' + pn(ind.realisedPL));
+    setText('in-realised-count', ind.closed.length + ' closed positions');
+    setText('in-day-pl',      sign(ind.dayPL) + inr(ind.dayPL));
+    setClass('in-day-pl', 'mval ' + pn(ind.dayPL));
+    setText('in-day-pl-pct', sign(ind.dayPct) + pct(ind.dayPct));
+    setClass('in-day-pl-pct', 'mchg ' + pn(ind.dayPct));
   }
 
   function renderUSHoldings() {
@@ -816,7 +857,10 @@ const DASH = (() => {
 
   function renderTransactionsTab() {
     if (!S.view) return;
-    const us = S.view.us;
+    const us  = S.view.us;
+    const ind = S.view.india;
+
+    // US summary strip
     setText('tx-count',    us.open.length + us.closed.length);
     setText('tx-invested', usd(us.cashInfusion));
     setText('tx-div',      usd2(us.dividends));
@@ -824,14 +868,37 @@ const DASH = (() => {
     setText('tx-realised', sign(us.realisedPL)+usd2(us.realisedPL));
     setClass('tx-realised', 'v ' + pn(us.realisedPL));
 
-    // P/L breakdown body
-    const all = [
-      ...us.open.map(p => ({ cls:p.cls, tk:p.tk+' · '+p.name, status:'OPEN',
-        income:p.income||0, costs:p.fees, realised:0, unreal:p.upl, total:p.upl + (p.income||0) + p.fees, ret:p.ret })),
-      ...us.closed.map(p => ({ cls:p.cls, tk:p.tk+' · '+p.name, status:'CLOSED',
-        income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised + p.income + p.costs, ret:p.ret_pct }))
+    // India summary strip
+    setText('in-tx-count',    ind.closed.length);
+    setText('in-tx-invested', inr(ind.cashInfusion || 0));
+    const inRPNL = ind.realisedPL;
+    setText('in-tx-realised', sign(inRPNL)+inr(inRPNL));
+    setClass('in-tx-realised', 'v ' + pn(inRPNL));
+
+    // India P&L table in charges section
+    const irb = $('india-rpnl-body');
+    if (irb) {
+      const sorted = [...ind.closed].sort((a,b)=>Math.abs(b.rpnl||0)-Math.abs(a.rpnl||0)).slice(0,15);
+      irb.innerHTML = sorted.map(p => `<tr>
+        <td><strong>${p.tk}</strong></td>
+        <td style="font-size:10px;color:#8899aa;">${(p.scrip||'').slice(0,22)}</td>
+        <td>${inr(p.buy_amt||0)}</td>
+        <td>${inr(p.sell_amt||0)}</td>
+        <td class="${pn(p.rpnl||0)}">${sign(p.rpnl||0)}${inr(p.rpnl||0)}</td>
+      </tr>`).join('');
+    }
+
+    // P/L breakdown body — US rows (USD) + India rows (INR, shown separately)
+    const usRows = [
+      ...us.open.map(p => ({ mkt:'🇺🇸', cls:p.cls, tk:p.tk+' · '+p.name, status:'OPEN', market:'US',
+        income:p.income||0, costs:p.fees, realised:0, unreal:p.upl, total:p.upl+(p.income||0)+p.fees, ret:p.ret, ccy:'USD' })),
+      ...us.closed.map(p => ({ mkt:'🇺🇸', cls:p.cls, tk:p.tk+' · '+p.name, status:'CLOSED', market:'US',
+        income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised+p.income+p.costs, ret:p.ret_pct, ccy:'USD' }))
     ];
-    S.txRows = all;
+    const inRows = ind.closed.map(p => ({ mkt:'🇮🇳', cls:p.type||'Stock', tk:p.tk+' · '+(p.scrip||''), status:'CLOSED', market:'INDIA',
+      income: p.buy_amt||0, costs: p.sell_amt||0, realised: p.rpnl||0, unreal:0, total:p.rpnl||0, ret:0, ccy:'INR' }));
+
+    S.txRows = [...usRows, ...inRows];
     repaintTransactions();
 
     // Ticker summary
@@ -869,34 +936,44 @@ const DASH = (() => {
 
   function repaintTransactions() {
     const tbody = $('pl-body');
-    const cellUSD = v => `<span class="${pn(v)}">${sign(v)}${usd2(v)}</span>`;
-    const q = S.ui.search.toLowerCase();
+    const fmtAmt = (r, v) => r.ccy === 'INR'
+      ? `<span class="${pn(v)}">${sign(v)}${inr(v)}</span>`
+      : `<span class="${pn(v)}">${sign(v)}${usd2(v)}</span>`;
+    const q      = S.ui.search.toLowerCase();
     const status = S.ui.status;
+    const market = S.ui.market || 'ALL';
     const filtered = (S.txRows || []).filter(r => {
       if (status !== 'ALL' && status !== r.status && status !== r.cls.toUpperCase()) return false;
+      if (market !== 'ALL' && r.market !== market) return false;
       if (q && !r.tk.toLowerCase().includes(q)) return false;
       return true;
     });
     tbody.innerHTML = filtered.map(r => `<tr>
+      <td>${r.mkt}</td>
       <td>${r.cls}</td>
       <td>${r.tk}</td>
       <td><span class="badge ${r.status==='OPEN'?'badge-open':'badge-closed'}">${r.status}</span></td>
-      <td>${cellUSD(r.income)}</td>
-      <td>${cellUSD(r.costs)}</td>
-      <td>${cellUSD(r.realised)}</td>
-      <td>${cellUSD(r.unreal)}</td>
-      <td><strong>${cellUSD(r.total)}</strong></td>
-      <td class="${pn(r.ret)}">${sign(r.ret)}${pct(r.ret)}</td>
+      <td>${fmtAmt(r, r.income)}</td>
+      <td>${fmtAmt(r, r.costs)}</td>
+      <td>${fmtAmt(r, r.realised)}</td>
+      <td>${fmtAmt(r, r.unreal)}</td>
+      <td><strong>${fmtAmt(r, r.total)}</strong></td>
+      <td class="${pn(r.ret)}">${r.ccy==='INR' ? '—' : sign(r.ret)+pct(r.ret)}</td>
     </tr>`).join('');
 
-    const sum = k => filtered.reduce((s,r)=>s+r[k],0);
+    // Footer — US rows only for USD sums (India is INR, can't meaningfully combine)
+    const usFiltered = filtered.filter(r=>r.ccy==='USD');
+    const sum = k => usFiltered.reduce((s,r)=>s+r[k],0);
+    const inFiltered = filtered.filter(r=>r.ccy==='INR');
+    const inSum = k => inFiltered.reduce((s,r)=>s+r[k],0);
+    const footNote = inFiltered.length ? ` + ${inr(inSum('realised'))} 🇮🇳 realised` : '';
     setText('pl-foot-income',   usd2(sum('income')));
     setText('pl-foot-costs',    usd2(sum('costs')));
-    setText('pl-foot-realised', sign(sum('realised'))+usd2(sum('realised')));
+    setText('pl-foot-realised', sign(sum('realised'))+usd2(sum('realised'))+footNote);
     setText('pl-foot-unreal',   sign(sum('unreal'))+usd2(sum('unreal')));
     setText('pl-foot-total',    sign(sum('total'))+usd2(sum('total')));
-    const us = S.view.us;
-    const r = us.cashInfusion ? (sum('total')/us.cashInfusion)*100 : 0;
+    const ci = S.view && S.view.us.cashInfusion;
+    const r  = ci ? (sum('total')/ci)*100 : 0;
     setText('pl-foot-ret',      sign(r)+pct(r));
     setText('tx-shown', filtered.length);
     setText('tx-all',   (S.txRows||[]).length);
@@ -1106,9 +1183,19 @@ const DASH = (() => {
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
   }
   function togglePill(el) {
-    document.querySelectorAll('.txn-pill').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    S.ui.status = el.dataset.status;
+    if (el.dataset.status) {
+      // status pills — deactivate all status pills
+      document.querySelectorAll('.txn-pill[data-status]').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      S.ui.status = el.dataset.status;
+    }
+    repaintTransactions();
+  }
+  function toggleMarket(el) {
+    const wasActive = el.classList.contains('active');
+    document.querySelectorAll('.txn-pill[data-market]').forEach(p => p.classList.remove('active'));
+    if (!wasActive) { el.classList.add('active'); S.ui.market = el.dataset.market; }
+    else            { S.ui.market = 'ALL'; }
     repaintTransactions();
   }
   function filterTx() {
@@ -1116,15 +1203,74 @@ const DASH = (() => {
     repaintTransactions();
   }
   function exportPL() {
-    const rows = [['Asset Class','Ticker · Name','Status','Income','Costs','Realised','Unrealised','Total','Return %']];
+    const rows = [['Mkt','Asset Class','Ticker · Name','Status','Income/BuyAmt','Costs/SellAmt','Realised','Unrealised','Total','Return %']];
     $('pl-body').querySelectorAll('tr').forEach(tr => {
       rows.push(Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim()));
     });
     const csv = rows.map(r => r.map(c => `"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download = 'us_pl_breakdown.csv';
+    a.download = 'all_portfolios_pl.csv';
     a.click();
+  }
+
+  /* ── India Charts ─────────────────────────────────────────────── */
+  function renderIndiaCharts() {
+    if (!S.view) return;
+    const ind = S.view.india;
+    const COLORS = ['#00ff88','#00ccff','#ffaa00','#ff6644','#aa88ff',
+                    '#44ddaa','#ffcc44','#ff4488','#88ccff','#ccff88',
+                    '#ff8844','#4488ff','#88ff44','#cc44ff'];
+
+    // 1. Holdings weight donut
+    const sorted = [...ind.open].sort((a,b)=>b.mv-a.mv);
+    mkChart('india-weight-chart', { type:'doughnut',
+      data: {
+        labels:   sorted.map(p=>p.tk),
+        datasets: [{ data: sorted.map(p=>+p.mv.toFixed(0)),
+          backgroundColor: COLORS.slice(0, sorted.length),
+          borderColor: '#0a1929', borderWidth: 2 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'right', labels:{ color:'#c0d8f0', boxWidth:12, font:{size:10} } },
+          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/ind.mv*100)})` } } } }
+    });
+
+    // 2. Unrealised P&L bar (all positions, sorted by upl)
+    const uplSorted = [...ind.open].sort((a,b)=>b.upl-a.upl);
+    mkChart('india-upl-chart', { type:'bar',
+      data: {
+        labels: uplSorted.map(p=>p.tk),
+        datasets: [{ label:'Unrealised P&L (₹)',
+          data: uplSorted.map(p=>+p.upl.toFixed(0)),
+          backgroundColor: uplSorted.map(p=>p.upl>=0?'rgba(0,255,136,.7)':'rgba(255,68,68,.7)'),
+          borderColor:     uplSorted.map(p=>p.upl>=0?'#00ff88':'#ff4444'),
+          borderWidth:1 }]
+      },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${inr(ctx.parsed.x)}` } } },
+        scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>inr(v)} },
+                 y:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} } } }
+    });
+
+    // 3. Realised P&L bar — top 15 by absolute value
+    const rSorted = [...ind.closed].sort((a,b)=>Math.abs(b.rpnl||0)-Math.abs(a.rpnl||0)).slice(0,15);
+    mkChart('india-rpnl-chart', { type:'bar',
+      data: {
+        labels: rSorted.map(p=>p.tk),
+        datasets: [{ label:'Realised P&L (₹)',
+          data: rSorted.map(p=>+(p.rpnl||0).toFixed(0)),
+          backgroundColor: rSorted.map(p=>(p.rpnl||0)>=0?'rgba(0,255,136,.7)':'rgba(255,68,68,.7)'),
+          borderColor:     rSorted.map(p=>(p.rpnl||0)>=0?'#00ff88':'#ff4444'),
+          borderWidth:1 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.y)}${inr(ctx.parsed.y)}` } } },
+        scales:{ x:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} },
+                 y:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>inr(v)} } } }
+    });
   }
 
   /* ── 7. RENDER PIPELINE ────────────────────────────────────────── */
@@ -1135,6 +1281,7 @@ const DASH = (() => {
     safe(renderIndiaMetrics, 'india-metrics');
     safe(renderUSHoldings,   'us-holdings');
     safe(renderIndiaHoldings,'india-holdings');
+    safe(renderIndiaCharts,  'india-charts');
     safe(renderTopHoldings,  'top-holdings');
     safe(renderTransactionsTab, 'tx-tab');
     safe(renderIndices,      'indices');
@@ -1159,7 +1306,7 @@ const DASH = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   // public surface for inline handlers
-  return { togglePill, filterTx, exportPL };
+  return { togglePill, toggleMarket, filterTx, exportPL };
 })();
 </script>
 </body>

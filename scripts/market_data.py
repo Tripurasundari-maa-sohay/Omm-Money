@@ -18,7 +18,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import time
+
 import pytz
+import requests
 import yfinance as yf
 
 # ── PATHS ────────────────────────────────────────────────────────────────
@@ -85,6 +88,68 @@ def fetch_quote(yf_symbol: str) -> dict | None:
         return None
 
 
+def fetch_quote_india_sme(yf_symbol: str) -> dict | None:
+    """
+    Fallback price fetcher for NSE SME/Emerge stocks that yfinance cannot
+    resolve.  Tries two sources in order:
+
+      1. NSE India quote-equity API  (may be blocked from GitHub Actions IPs)
+      2. Screener.in company API     (public, no login required)
+
+    Returns {'ltp': float, 'pc': float} or None if both fail.
+    """
+    base = yf_symbol.replace(".NS", "").replace(".BO", "").upper()
+
+    # ── attempt 1: NSE India API ─────────────────────────────────────────
+    _HEADERS = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.nseindia.com/",
+    }
+    try:
+        session = requests.Session()
+        session.get("https://www.nseindia.com/", headers=_HEADERS, timeout=8)
+        time.sleep(1)
+        r = session.get(
+            f"https://www.nseindia.com/api/quote-equity?symbol={base}",
+            headers=_HEADERS,
+            timeout=8,
+        )
+        if r.status_code == 200:
+            data = r.json()
+            ltp = float(data["priceInfo"]["lastPrice"])
+            pc  = float(data["priceInfo"]["previousClose"])
+            print(f"  SME/NSE  {base} → {ltp:.2f}")
+            return {"ltp": round(ltp, 4), "pc": round(pc, 4)}
+    except Exception as exc:
+        print(f"  WARN  NSE API {base}: {exc}", file=sys.stderr)
+
+    # ── attempt 2: Screener.in ───────────────────────────────────────────
+    try:
+        r = requests.get(
+            f"https://www.screener.in/api/company/{base}/",
+            headers={"User-Agent": _HEADERS["User-Agent"]},
+            timeout=8,
+        )
+        if r.status_code == 200:
+            data = r.json()
+            ltp = data.get("current_price")
+            if ltp:
+                ltp = round(float(ltp), 4)
+                print(f"  SME/Screener  {base} → {ltp:.2f}")
+                # Screener doesn't expose prev-close directly; use ltp as proxy
+                return {"ltp": ltp, "pc": ltp}
+    except Exception as exc:
+        print(f"  WARN  Screener {base}: {exc}", file=sys.stderr)
+
+    return None
+
+
 # ── INDICES ──────────────────────────────────────────────────────────────
 def build_indices_json() -> dict:
     print("Fetching index quotes…")
@@ -129,6 +194,9 @@ def build_holdings_json() -> dict:
     prices: dict[str, dict] = {}
     for tk, yf_sym in tickers:
         q = fetch_quote(yf_sym)
+        if q is None and yf_sym.endswith(".NS"):
+            print(f"  INFO  {tk}: yfinance empty — trying SME fallback…", file=sys.stderr)
+            q = fetch_quote_india_sme(yf_sym)
         if q is None:
             continue
         change     = q["ltp"] - q["pc"]

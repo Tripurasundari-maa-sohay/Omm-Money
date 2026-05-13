@@ -554,6 +554,7 @@ const DASH = (() => {
   const inr2    = v => '₹'  + Number(v).toFixed(2);
   const pct     = v => Number(v).toFixed(2) + '%';
   const fmBadge = fm => 'badge-' + ({BUY:'buy',SELL:'sell',HOLD:'hold',TRIM:'trim'}[fm] || 'hold');
+  const FREE_TAG = '<span style="color:#00ff88;font-size:11px;letter-spacing:.5px;">★ FREE</span>';
 
   /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
   async function load() {
@@ -599,8 +600,9 @@ const DASH = (() => {
     const upl    = (ltp - holding.avg) * holding.qty;
     const dayPL  = (ltp - pc) * holding.qty;
     const dayPct = pc ? ((ltp - pc) / pc) * 100 : 0;
-    const ret    = holding.avg ? ((ltp - holding.avg) / holding.avg) * 100 : 0;
-    return { ...holding, ltp, pc, live, mv, upl, dayPL, dayPct, ret };
+    const ret       = holding.avg ? ((ltp - holding.avg) / holding.avg) * 100 : 0;
+    const houseMoney = !holding.avg;
+    return { ...holding, ltp, pc, live, mv, upl, dayPL, dayPct, ret, houseMoney };
   }
   function build() {
     if (!S.cost) { S.view = null; return; }
@@ -661,6 +663,23 @@ const DASH = (() => {
 
   /* ── 3. RENDERERS ─────────────────────────────────────────────── */
   function safe(fn, label){ try { fn(); } catch(e) { console.error(`[render:${label}]`, e); } }
+
+  function setLiveBadge(elId, positions) {
+    const badge = $(elId);
+    if (!badge) return;
+    const total      = positions.length;
+    const staleCount = positions.filter(p => !p.live).length;
+    if (staleCount === 0) {
+      badge.textContent = '● LIVE';
+      badge.className   = 'live-badge';
+    } else if (staleCount === total) {
+      badge.textContent = '○ STALE (cost basis)';
+      badge.className   = 'live-badge stale';
+    } else {
+      badge.textContent = `◑ LIVE · ${staleCount} of ${total} stale`;
+      badge.className   = 'live-badge stale';
+    }
+  }
 
   function renderHero() {
     if (!S.view) return;
@@ -729,7 +748,7 @@ const DASH = (() => {
         <td>${usd2(p.mv)}</td>
         <td>${usd2(p.fees)}</td>
         <td class="${pn(p.upl)}">${sign(p.upl)}${usd2(p.upl)}</td>
-        <td class="${pn(p.ret)}">${sign(p.ret)}${pct(p.ret)}</td>
+        <td class="${pn(p.ret)}">${p.houseMoney ? FREE_TAG : sign(p.ret)+pct(p.ret)}</td>
       </tr>`;
     }).join('');
     const totRet = totCost ? (totPL/totCost)*100 : 0;
@@ -738,9 +757,7 @@ const DASH = (() => {
     setText('us-foot-fees', usd2(totFee));
     setText('us-foot-pl',   sign(totPL)+usd2(totPL));     setClass('us-foot-pl',  pn(totPL));
     setText('us-foot-ret',  sign(totRet)+pct(totRet));    setClass('us-foot-ret', pn(totRet));
-    const stale = us.open.some(p => !p.live);
-    const badge = $('us-live-badge');
-    if (badge) { badge.textContent = stale ? '○ STALE (cost basis)' : '● LIVE'; badge.className = 'live-badge' + (stale?' stale':''); }
+    setLiveBadge('us-live-badge', us.open);
     setText('us-asof', 'as of ' + (S.view.asOf || '—'));
   }
 
@@ -757,7 +774,7 @@ const DASH = (() => {
         <td>${p.broker}</td>
         <td>${p.exch}</td>
         <td>${p.qty.toLocaleString('en-IN')}</td>
-        <td>${inr2(p.avg)}</td>
+        <td>${p.houseMoney ? FREE_TAG : inr2(p.avg)}</td>
         <td><strong>${inr2(p.ltp)}</strong></td>
         <td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>
         <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${inr(p.dayPL)}</td>
@@ -772,9 +789,7 @@ const DASH = (() => {
     setText('in-foot-daypct', sign(ind.dayPct)+pct(ind.dayPct)); setClass('in-foot-daypct', pn(ind.dayPct));
     setText('in-foot-pl',     sign(totPL)+inr(totPL));     setClass('in-foot-pl',     pn(totPL));
     setText('in-foot-mv',     inr(totMV));
-    const stale = ind.open.some(p => !p.live);
-    const badge = $('in-live-badge');
-    if (badge) { badge.textContent = stale ? '○ STALE (cost basis)' : '● LIVE'; badge.className = 'live-badge' + (stale?' stale':''); }
+    setLiveBadge('in-live-badge', ind.open);
     setText('in-asof', 'as of ' + (S.view.asOf || '—'));
   }
 
@@ -794,7 +809,7 @@ const DASH = (() => {
       <td>${p.pf.includes('US') ? usd2(p.ltp) : inr2(p.ltp)}</td>
       <td>${usd(p.mvUSD)}</td>
       <td>${pct(p.wt)}</td>
-      <td class="${pn(p.ret)}">${sign(p.ret)}${pct(p.ret)}</td>
+      <td class="${pn(p.ret)}">${p.houseMoney ? FREE_TAG : sign(p.ret)+pct(p.ret)}</td>
       <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
     </tr>`).join('');
   }

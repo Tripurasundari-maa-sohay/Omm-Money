@@ -186,6 +186,31 @@
   .ccy-btn:hover{background:rgba(0,204,255,.1);color:#00ccff}
   .ccy-btn.active{background:rgba(0,255,136,.15);color:#00ff88}
 
+  /* ── SIGNALS TAB ── */
+  .sig-card{background:#0a1929;border:1px solid #1a3a5a;border-radius:8px;padding:16px;transition:border-color .2s}
+  .sig-card:hover{border-color:#00ccff}
+  .sig-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+  .sig-ticker{color:#00ff88;font-weight:700;font-size:14px;font-family:Monaco,monospace}
+  .sig-name{color:#556;font-size:10px;margin-top:2px}
+  .sig-badge{padding:3px 10px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.5px}
+  .sig-badge.BUY{background:rgba(0,255,136,.15);color:#00ff88;border:1px solid #00ff88}
+  .sig-badge.HOLD{background:rgba(255,170,0,.15);color:#ffaa00;border:1px solid #ffaa00}
+  .sig-badge.REDUCE{background:rgba(255,68,68,.15);color:#ff4444;border:1px solid #ff4444}
+  .sig-score-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .sig-score-num{font-size:26px;font-weight:700;font-family:Monaco,monospace;min-width:44px}
+  .sig-score-num.BUY{color:#00ff88} .sig-score-num.HOLD{color:#ffaa00} .sig-score-num.REDUCE{color:#ff4444}
+  .sig-bar-track{flex:1;height:6px;background:#1a2a3a;border-radius:3px;overflow:hidden}
+  .sig-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+  .sig-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:10px;color:#556}
+  .sig-meta span{display:flex;flex-direction:column;gap:1px}
+  .sig-meta strong{color:#c0d8f0;font-size:11px}
+  .sig-regime-banner{background:#0a1929;border:2px solid #1a3a5a;border-radius:8px;
+    padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .sig-legend-row{display:flex;justify-content:space-between;align-items:center;
+    padding:5px 8px;border-radius:3px;background:#0d2b47;font-size:11px;gap:8px}
+  .sig-legend-row:nth-child(odd){background:#0a1929}
+  .sig-loading{text-align:center;padding:40px 20px;color:#556;font-size:12px;grid-column:1/-1}
+
   @media (max-width:900px){
     .markets-status,.analytics-two-col,.charges-grid{grid-template-columns:1fr}
     .banner-tabs{gap:5px}
@@ -205,6 +230,7 @@
       <button class="tab-button" data-tab="us">US PORTFOLIO</button>
       <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
       <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
+      <button class="tab-button" data-tab="signals">📡 SIGNALS</button>
     </div>
     <div class="banner-controls">
       <div class="ccy-group">
@@ -573,6 +599,65 @@
     </div>
 
   </div><!-- /transactions-tab -->
+
+  <!-- ══════════ TAB 5 · SIGNALS ══════════ -->
+  <div id="signals-tab" class="tab-content">
+
+    <!-- Regime banner -->
+    <div class="sig-regime-banner" id="sig-regime-banner">
+      <div>
+        <div style="color:#556;font-size:10px;font-weight:700;letter-spacing:1.5px;margin-bottom:4px">MARKET REGIME · SPY vs 200MA</div>
+        <div id="sig-regime-val" style="font-size:20px;font-weight:700;color:#556">Loading…</div>
+      </div>
+      <div id="sig-regime-sub" style="font-size:11px;color:#556;text-align:right"></div>
+    </div>
+
+    <!-- Holdings signal cards -->
+    <h2 style="margin-bottom:14px">US HOLDINGS · SIGNAL SCORES</h2>
+    <div id="sig-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-bottom:28px">
+      <div class="sig-loading">Click <strong style="color:#00ff88">📡 SIGNALS</strong> to load…</div>
+    </div>
+
+    <!-- Pre-entry screener -->
+    <div class="tab-section">
+      <h2 style="margin-bottom:14px">PRE-ENTRY SCREENER · ANY US TICKER</h2>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+        <input type="text" id="sig-input" placeholder="e.g. NVDA, TSLA, META"
+          onkeydown="if(event.key==='Enter')DASH.sigRunScreener()"
+          style="background:#0d2b47;border:1px solid #1a4a6a;color:#c0d8f0;padding:8px 14px;
+                 border-radius:4px;font-size:13px;width:210px;font-family:Monaco,monospace;outline:none;
+                 transition:border-color .2s"
+          onfocus="this.style.borderColor='#00ccff'" onblur="this.style.borderColor='#1a4a6a'"/>
+        <button onclick="DASH.sigRunScreener()"
+          style="background:#00ff88;color:#0a1929;border:none;border-radius:4px;padding:9px 22px;
+                 font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer">ANALYZE</button>
+      </div>
+      <div id="sig-screener-out"></div>
+    </div>
+
+    <!-- Model legend -->
+    <div class="tab-section">
+      <h3 style="margin-bottom:12px">SIGNAL MODEL · 9 COMPONENTS (0–100 SCORE)</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px;margin-bottom:14px">
+        <div class="sig-legend-row"><span>Price vs 200-day MA</span><strong style="color:#00ccff">12 pts</strong></div>
+        <div class="sig-legend-row"><span>Golden / Death Cross (50/200)</span><strong style="color:#00ccff">8 pts</strong></div>
+        <div class="sig-legend-row"><span>Weekly trend vs 10-week MA</span><strong style="color:#00ccff">10 pts</strong></div>
+        <div class="sig-legend-row"><span>RSI-14 (EWM)</span><strong style="color:#00ccff">12 pts</strong></div>
+        <div class="sig-legend-row"><span>MACD vs Signal line</span><strong style="color:#00ccff">10 pts</strong></div>
+        <div class="sig-legend-row"><span>Volume — up-day vs down-day</span><strong style="color:#00ccff">8 pts</strong></div>
+        <div class="sig-legend-row"><span>Relative Strength vs SPY (60d)</span><strong style="color:#00ccff">15 pts</strong></div>
+        <div class="sig-legend-row"><span>52-week range position</span><strong style="color:#00ccff">8 pts</strong></div>
+        <div class="sig-legend-row"><span>Valuation vs 1-year mean</span><strong style="color:#00ccff">10 pts</strong></div>
+      </div>
+      <div style="padding:10px 14px;background:#0d2b47;border-radius:4px;font-size:11px;display:flex;gap:20px;flex-wrap:wrap">
+        <span><strong style="color:#00ff88">BUY ≥ 65</strong></span>
+        <span><strong style="color:#ffaa00">HOLD 40–64</strong></span>
+        <span><strong style="color:#ff4444">REDUCE &lt; 40</strong></span>
+        <span style="color:#556">Bear regime (SPY &lt; 200MA) applies ×0.75 multiplier · 2-week stability filter before acting</span>
+      </div>
+    </div>
+
+  </div><!-- /signals-tab -->
 
   </div><!-- /main-content -->
 </div><!-- /dashboard-container -->
@@ -1254,6 +1339,7 @@ const DASH = (() => {
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
     const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
+    if (name === 'signals') loadSignals();
   }
   /* ── Currency toggle ──────────────────────────────────────────── */
   function setCurrency(el) {
@@ -1386,6 +1472,226 @@ const DASH = (() => {
     render();
   }
 
+  /* ══ SIGNALS ENGINE ═════════════════════════════════════════════ */
+  const SIG = { loaded: false, spy: null, results: {} };
+  const SIG_CORS = [
+    s => `https://corsproxy.io/?${encodeURIComponent(s)}`,
+    s => `https://api.allorigins.win/raw?url=${encodeURIComponent(s)}`
+  ];
+
+  async function sigFetch(sym) {
+    for (const base of ['https://query1.finance.yahoo.com','https://query2.finance.yahoo.com']) {
+      const url = `${base}/v8/finance/chart/${sym}?interval=1d&range=2y`;
+      for (const wrap of [s=>s, ...SIG_CORS]) {
+        try {
+          const r = await fetch(wrap(url)); if (!r.ok) continue;
+          const d = sigParse(await r.json()); if (d) return d;
+        } catch {}
+      }
+    }
+    return null;
+  }
+
+  function sigParse(j) {
+    const res = j?.chart?.result?.[0];
+    const ts = res?.timestamp, q = res?.indicators?.quote?.[0];
+    const ac = res?.indicators?.adjclose?.[0]?.adjclose;
+    if (!ts || !q?.close) return null;
+    const cl = ac || q.close, out = [];
+    for (let i = 0; i < ts.length; i++)
+      if (cl[i] != null) out.push({ t: ts[i], c: cl[i], v: q.volume?.[i] || 0 });
+    return out.length >= 50 ? out : null;
+  }
+
+  function sigEwm(data, span) {
+    const k = 2 / (span + 1); let ema = data[0];
+    return data.map(v => (ema = v * k + ema * (1 - k)));
+  }
+  function sigRsi(cl, n = 14) {
+    const g = [], l = [];
+    for (let i = 1; i < cl.length; i++) { const d = cl[i]-cl[i-1]; g.push(d>0?d:0); l.push(d<0?-d:0); }
+    const ag = sigEwm(g,n).at(-1), al = sigEwm(l,n).at(-1);
+    return al === 0 ? 100 : 100 - 100 / (1 + ag/al);
+  }
+  function sigWeekly(data) {
+    const m = {};
+    data.forEach(d => { const dt = new Date(d.t*1000); dt.setDate(dt.getDate()-dt.getDay()+1); m[dt.toISOString().slice(0,10)] = d.c; });
+    return Object.values(m);
+  }
+  function sigMA(arr, p) { return arr.slice(-p).reduce((s,v)=>s+v,0) / Math.min(p, arr.length); }
+
+  function sigScore(data, spy) {
+    const cl = data.map(d=>d.c), n = cl.length, px = cl.at(-1);
+    const ma200 = sigMA(cl,200), ma50 = sigMA(cl,50);
+    const v200 = (px - ma200) / ma200 * 100;
+    const rsi = sigRsi(cl);
+    // MACD
+    const macd = sigEwm(cl,12).map((v,i) => v - sigEwm(cl,26)[i]);
+    const macdBull = macd.at(-1) > sigEwm(macd,9).at(-1);
+    // Volume (last 20 days)
+    let upV=0, dnV=0, upC=0, dnC=0;
+    for (let i=1; i<Math.min(20,n); i++) {
+      if (cl[n-i] >= cl[n-i-1]) { upV+=data[n-i].v; upC++; } else { dnV+=data[n-i].v; dnC++; }
+    }
+    // RS vs SPY 60d
+    let rs = 0;
+    if (spy) {
+      const sc = spy.map(d=>d.c), p60 = Math.min(60, sc.length, cl.length);
+      rs = ((px - cl.at(-p60))/cl.at(-p60) - (sc.at(-1) - sc.at(-p60))/sc.at(-p60)) * 100;
+    }
+    // 52w range
+    const hi52 = Math.max(...cl.slice(-252)), lo52 = Math.min(...cl.slice(-252));
+    const rng = hi52 > lo52 ? (px - lo52) / (hi52 - lo52) * 100 : 50;
+    // 1yr mean
+    const mean1 = sigMA(cl,252), vsMean = (px - mean1) / mean1 * 100;
+    // Weekly vs 10wk MA
+    const wk = sigWeekly(data), wkAbove = wk.at(-1) > sigMA(wk,10);
+    // Regime
+    const regime = spy ? (spy.map(d=>d.c).at(-1) > sigMA(spy.map(d=>d.c),200) ? 'BULL' : 'BEAR') : 'BULL';
+
+    const sc = {
+      vs200:   v200 > 5 ? 12 : v200 > 0 ? 8 : v200 > -5 ? 4 : 0,
+      cross:   ma50 > ma200 ? 8 : 0,
+      wk:      wkAbove ? 10 : 0,
+      rsi:     rsi < 30 ? 12 : rsi < 50 ? 10 : rsi < 65 ? 8 : rsi < 73 ? 5 : 0,
+      macd:    macdBull ? 10 : 0,
+      vol:     (upC && dnC && (upV/upC) > (dnV/dnC)) ? 8 : 0,
+      rs:      rs > 10 ? 15 : rs > 3 ? 10 : rs > 0 ? 6 : rs > -5 ? 3 : 0,
+      w52:     rng > 75 ? 8 : rng > 50 ? 6 : rng > 25 ? 3 : 0,
+      val:     vsMean < -10 ? 10 : vsMean < 0 ? 8 : vsMean < 10 ? 6 : vsMean < 20 ? 3 : 0,
+    };
+    const raw = Object.values(sc).reduce((s,v)=>s+v,0);
+    const score = regime === 'BEAR' ? Math.round(raw * 0.75) : raw;
+    const action = score >= 65 ? 'BUY' : score >= 40 ? 'HOLD' : 'REDUCE';
+    return { score, action, regime, rsi: +rsi.toFixed(1), v200: +v200.toFixed(1),
+             rs: +rs.toFixed(1), hi52, lo52, rng: +rng.toFixed(0), vsMean: +vsMean.toFixed(1), px, sc };
+  }
+
+  function sigRenderCard(sym, name, res) {
+    const col = res.action==='BUY' ? '#00ff88' : res.action==='HOLD' ? '#ffaa00' : '#ff4444';
+    const barW = Math.min(100, res.score);
+    const prv = S.ui.privacy;
+    return `<div class="sig-card">
+      <div class="sig-card-header">
+        <div><div class="sig-ticker">${sym}</div><div class="sig-name">${name||''}</div></div>
+        <span class="sig-badge ${res.action}">${res.action}</span>
+      </div>
+      <div class="sig-score-row">
+        <div class="sig-score-num ${res.action}">${prv ? '●●' : res.score}</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:${barW}%;background:${col}"></div></div>
+        <div style="font-size:10px;color:#556;min-width:36px;text-align:right">${prv ? '●●' : res.score+'/100'}</div>
+      </div>
+      <div class="sig-meta">
+        <span>RSI<strong>${prv ? '●●' : res.rsi}</strong></span>
+        <span>vs 200MA<strong style="color:${res.v200>=0?'#00ff88':'#ff4444'}">${prv ? '●●' : (res.v200>=0?'+':'')+res.v200+'%'}</strong></span>
+        <span>RS/SPY<strong style="color:${res.rs>=0?'#00ff88':'#ff4444'}">${prv ? '●●' : (res.rs>=0?'+':'')+res.rs+'%'}</strong></span>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:#556">
+        Regime: <strong style="color:${res.regime==='BULL'?'#00ff88':'#ff4444'}">${res.regime==='BULL'?'🟢 BULL':'🔴 BEAR'}</strong>
+        <span style="margin-left:10px">52w rng: <strong style="color:#c0d8f0">${prv ? '●●' : res.rng+'%'}</strong></span>
+      </div>
+    </div>`;
+  }
+
+  function sigRenderRegime(spyData) {
+    if (!spyData) return;
+    const cl = spyData.map(d=>d.c);
+    const px = cl.at(-1), ma200 = sigMA(cl,200);
+    const isBull = px > ma200;
+    const pct = ((px-ma200)/ma200*100).toFixed(1);
+    const banner = $('sig-regime-banner');
+    if (banner) banner.style.borderColor = isBull ? '#00ff88' : '#ff4444';
+    const rv = $('sig-regime-val');
+    if (rv) { rv.textContent = isBull ? '🟢 BULL MARKET' : '🔴 BEAR MARKET'; rv.style.color = isBull ? '#00ff88' : '#ff4444'; }
+    const rs = $('sig-regime-sub');
+    if (rs) rs.innerHTML = `SPY: ${S.ui.privacy ? '●●●' : '$'+px.toFixed(2)}<br>vs 200MA: <strong style="color:${isBull?'#00ff88':'#ff4444'}">${isBull?'+':''}${pct}%</strong>`;
+  }
+
+  async function loadSignals() {
+    if (SIG.loaded) return;
+    SIG.loaded = true;
+    const grid = $('sig-cards-grid');
+    if (grid) grid.innerHTML = '<div class="sig-loading">⟳ Fetching market data… (may take 20–30s)</div>';
+
+    SIG.spy = await sigFetch('SPY');
+    sigRenderRegime(SIG.spy);
+
+    const holdings = S.cost ? (S.cost.us.open || []) : [];
+    if (!holdings.length) {
+      if (grid) grid.innerHTML = '<div class="sig-loading">No US holdings found — ensure data/holdings_cost.json is loaded.</div>';
+      return;
+    }
+
+    const cards = [];
+    for (const h of holdings) {
+      const data = await sigFetch(h.tk);
+      if (data) {
+        const res = sigScore(data, SIG.spy);
+        SIG.results[h.tk] = res;
+        cards.push(sigRenderCard(h.tk, h.name, res));
+      } else {
+        cards.push(`<div class="sig-card"><div class="sig-ticker">${h.tk}</div><div style="color:#556;font-size:11px;margin-top:8px">Data unavailable</div></div>`);
+      }
+    }
+    // Sort: REDUCE first, then HOLD, then BUY (descending score within each)
+    const order = {REDUCE:0,HOLD:1,BUY:2};
+    const sorted = holdings.map((h,i)=>({h,i,res:SIG.results[h.tk]}))
+      .sort((a,b)=> a.res && b.res ? (order[a.res.action]-order[b.res.action]) || (b.res.score-a.res.score) : 0);
+    if (grid) grid.innerHTML = sorted.map(({h,i}) => SIG.results[h.tk] ? sigRenderCard(h.tk, h.name, SIG.results[h.tk]) : cards[i]).join('');
+  }
+
+  async function sigRunScreener() {
+    const sym = ($('sig-input')?.value || '').trim().toUpperCase();
+    const out = $('sig-screener-out');
+    if (!sym || !out) return;
+    out.innerHTML = `<div style="color:#556;font-size:12px">⟳ Fetching data for <strong style="color:#00ccff">${sym}</strong>…</div>`;
+    if (!SIG.spy) SIG.spy = await sigFetch('SPY');
+    const data = await sigFetch(sym);
+    if (!data) { out.innerHTML = `<div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.3);border-radius:6px;padding:14px;color:#ff4444;font-size:12px">⚠ No data for <strong>${sym}</strong>. Check the ticker is valid on US markets.</div>`; return; }
+    const res = sigScore(data, SIG.spy);
+    const prv = S.ui.privacy;
+    const col = res.action==='BUY'?'#00ff88':res.action==='HOLD'?'#ffaa00':'#ff4444';
+    // Position sizing
+    const acctVal = S.view ? S.view.us.totalValue : 15000;
+    const stop = +(res.px * 0.93).toFixed(2);
+    const risk = acctVal * 0.01;
+    const rawShares = Math.floor(risk / (res.px - stop));
+    const maxPos = acctVal * 0.12;
+    const shares = Math.min(rawShares, Math.floor(maxPos / res.px));
+    const posSz = prv ? '●●●' : `${shares} shares (~$${Math.round(shares*res.px).toLocaleString('en-US')})`;
+    const verdict = res.action==='BUY' && res.rsi<73 && res.v200<30 ? 'GO' : res.action==='REDUCE' ? 'NO-GO' : 'WAIT';
+    const vCol = verdict==='GO'?'#00ff88':verdict==='NO-GO'?'#ff4444':'#ffaa00';
+
+    out.innerHTML = `<div style="background:#0a1929;border:2px solid ${col};border-radius:8px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div><span style="font-size:22px;font-weight:700;color:#00ff88;font-family:Monaco,monospace">${sym}</span>
+          <span style="margin-left:12px;font-size:13px;color:#556">@ ${prv?'●●●':'$'+res.px.toFixed(2)}</span></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="sig-badge ${res.action}">${res.action}</span>
+          <span style="padding:4px 14px;border-radius:4px;font-weight:700;font-size:14px;background:rgba(0,0,0,.3);border:2px solid ${vCol};color:${vCol}">${verdict}</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">
+        <div style="background:#0d2b47;border-radius:4px;padding:10px"><div style="color:#556;font-size:9px;letter-spacing:1px;margin-bottom:4px">SCORE</div><div style="font-size:20px;font-weight:700;color:${col};font-family:Monaco,monospace">${prv?'●●':res.score}<span style="font-size:11px;color:#556">/100</span></div></div>
+        <div style="background:#0d2b47;border-radius:4px;padding:10px"><div style="color:#556;font-size:9px;letter-spacing:1px;margin-bottom:4px">POSITION SIZE</div><div style="font-size:13px;font-weight:700;color:#00ff88">${posSz}</div></div>
+        <div style="background:#0d2b47;border-radius:4px;padding:10px"><div style="color:#556;font-size:9px;letter-spacing:1px;margin-bottom:4px">STOP LOSS</div><div style="font-size:13px;font-weight:700;color:#ff4444">${prv?'●●●':'$'+stop}</div></div>
+        <div style="background:#0d2b47;border-radius:4px;padding:10px"><div style="color:#556;font-size:9px;letter-spacing:1px;margin-bottom:4px">52W HIGH (TRIM)</div><div style="font-size:13px;font-weight:700;color:#00ccff">${prv?'●●●':'$'+res.hi52.toFixed(2)}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px;font-family:Monaco,monospace">
+        ${[['vs 200MA', (res.v200>=0?'+':'')+res.v200+'%', res.v200>=0],
+           ['50/200 Cross', res.sc.cross?'Golden✓':'Death✗', !!res.sc.cross],
+           ['RSI-14', res.rsi, res.rsi<73&&res.rsi>30],
+           ['MACD', res.sc.macd?'Bull✓':'Bear✗', !!res.sc.macd],
+           ['RS vs SPY', (res.rs>=0?'+':'')+res.rs+'%', res.rs>=0],
+           ['Regime', res.regime, res.regime==='BULL']]
+          .map(([l,v,ok])=>`<div style="background:#0d2b47;border-radius:3px;padding:6px 8px;display:flex;gap:6px;align-items:center">
+            <div style="width:6px;height:6px;border-radius:50%;background:${ok?'#00ff88':'#ff4444'};flex-shrink:0"></div>
+            <div><div style="font-size:9px;color:#556">${l}</div><div style="color:#c0d8f0">${prv&&l!=='50/200 Cross'&&l!=='MACD'&&l!=='Regime'?'●●':v}</div></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
   /* ── INIT ── */
   function init() {
     document.querySelectorAll('.tab-button').forEach(btn => {
@@ -1399,7 +1705,7 @@ const DASH = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   // public surface for inline handlers
-  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL };
+  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, sigRunScreener };
 })();
 </script>
 </body>

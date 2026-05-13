@@ -38,6 +38,7 @@ jobs:
             git config user.email "github-actions@github.com"
             git add data/processed
             git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git pull --rebase origin main
             git push
           else
             echo "no changes"

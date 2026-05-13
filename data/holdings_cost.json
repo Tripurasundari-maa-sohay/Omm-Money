@@ -152,8 +152,8 @@
         "income": 0.0
       },
       {
-        "tk": "UNKNOWN_keelinfras",
-        "yf": "",
+        "tk": "KEEL",
+        "yf": "KEEL",
         "name": "KeelInfrastructureCorp",
         "cls": "Stock",
         "qty": 200,
@@ -224,24 +224,6 @@
     ],
     "closed": [
       {
-        "tk": "GOOG",
-        "name": "ClassC",
-        "cls": "Stock",
-        "income": 0.63,
-        "costs": -5.0,
-        "realised": 216.33,
-        "ret_pct": 23.09
-      },
-      {
-        "tk": "GOOG",
-        "name": "nc.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -20.0,
-        "realised": 16.94,
-        "ret_pct": -2.92
-      },
-      {
         "tk": "COST",
         "name": "aleCorp.",
         "cls": "Stock",
@@ -260,15 +242,6 @@
         "ret_pct": 40.14
       },
       {
-        "tk": "GOOG",
-        "name": "c",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -5.0,
-        "realised": -30.16,
-        "ret_pct": -2.71
-      },
-      {
         "tk": "IRS",
         "name": "RepresentacionesSA-ADR",
         "cls": "Stock",
@@ -276,69 +249,6 @@
         "costs": -10.02,
         "realised": -25.29,
         "ret_pct": -3.35
-      },
-      {
-        "tk": "UNKNOWN_urecorp",
-        "name": "ureCorp",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -12.0,
-        "realised": -2.0,
-        "ret_pct": -0.25
-      },
-      {
-        "tk": "GOOG",
-        "name": "Inc.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -15.0,
-        "realised": -178.54,
-        "ret_pct": -7.07
-      },
-      {
-        "tk": "MU",
-        "name": "ogyInc.",
-        "cls": "Stock",
-        "income": 0.3,
-        "costs": -25.03,
-        "realised": 611.33,
-        "ret_pct": 96.97
-      },
-      {
-        "tk": "MSFT",
-        "name": "Corp.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -5.0,
-        "realised": 120.9,
-        "ret_pct": 22.58
-      },
-      {
-        "tk": "RKLB",
-        "name": "rporation",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -35.04,
-        "realised": 390.66,
-        "ret_pct": 99.93
-      },
-      {
-        "tk": "GOOG",
-        "name": "c.",
-        "cls": "Stock",
-        "income": 2.04,
-        "costs": -10.02,
-        "realised": 21.53,
-        "ret_pct": 3.85
-      },
-      {
-        "tk": "TTE",
-        "name": "SE",
-        "cls": "Stock",
-        "income": 8.01,
-        "costs": -7.65,
-        "realised": 69.72,
-        "ret_pct": 10.44
       },
       {
         "tk": "SIVR",

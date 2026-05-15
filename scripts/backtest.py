@@ -307,6 +307,31 @@ def score_ticker_b(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# MODEL C — hybrid: B's BUY signal, A's HOLD/REDUCE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def score_ticker_hybrid(
+    ts: list[int],
+    cl: list[float],
+    vol: list[float],
+    spy_cl: list[float] | None,
+) -> dict:
+    """
+    Model C — hybrid of A and B.
+    If Model B fires BUY (score >= 68) → take that BUY call.
+    Otherwise fall back to Model A's HOLD / REDUCE.
+
+    Rationale: B's BUY precision = 72% vs A's 70.1%.
+    B over-calls REDUCE (163 wrong downgrades), so we discard B's REDUCE.
+    """
+    res_a = score_ticker(ts, cl, vol, spy_cl)
+    res_b = score_ticker_b(ts, cl, vol, spy_cl)
+    if res_b["action"] == "BUY":
+        return {**res_b, "model_used": "B"}
+    return {**res_a, "model_used": "A"}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # ACCURACY
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -327,68 +352,70 @@ def _pct(n: int, d: int) -> str:
 
 
 def print_summary(results: list[dict], test_dates: list[date], forward_days: list[int]) -> None:
-    sep = "═" * 65
+    sep = "═" * 75
     total = len(results)
     print(f"\n{sep}")
-    print("BACKTEST  —  Model A (9-factor Technical) vs Model B (Enhanced)")
+    print("BACKTEST  —  Model A vs Model B vs Model C (Hybrid: B-BUY + A-HOLD/REDUCE)")
     print(f"Universe: point-in-time SP500  |  Dates: {len(test_dates)}  |  Calls: {total:,}")
     print(sep)
 
     print("\nOVERALL ACCURACY (all dates, all calls)")
-    print(f"{'':20s}" + "".join(f"{d}-day".center(16) for d in forward_days))
-    for model, label in [("a", "Model A:"), ("b", "Model B:")]:
-        row = f"{label:20s}"
+    print(f"{'':22s}" + "".join(f"{d}-day".center(16) for d in forward_days))
+    for model, label in [("a", "Model A (Technical):"), ("b", "Model B (Enhanced):"), ("c", "Model C (Hybrid):  ")]:
+        row = f"{label:22s}"
         for d in forward_days:
             key  = f"correct_{model}_{d}"
             vals = [r[key] for r in results if r[key] is not None]
             row += _pct(sum(vals), len(vals)).center(16)
         print(row)
 
-    row = f"{'Delta (B−A):':20s}"
-    for d in forward_days:
-        va = [r[f"correct_a_{d}"] for r in results if r[f"correct_a_{d}"] is not None]
-        vb = [r[f"correct_b_{d}"] for r in results if r[f"correct_b_{d}"] is not None]
-        if va and vb:
-            row += f"{sum(vb)/len(vb)*100 - sum(va)/len(va)*100:+.1f}%".center(16)
-        else:
-            row += "N/A".center(16)
-    print(row)
+    for label, ma, mb in [("C−A:", "a", "c"), ("C−B:", "b", "c")]:
+        row = f"{'  Delta '+label:22s}"
+        for d in forward_days:
+            va = [r[f"correct_{ma}_{d}"] for r in results if r[f"correct_{ma}_{d}"] is not None]
+            vc = [r[f"correct_{mb}_{d}"] for r in results if r[f"correct_{mb}_{d}"] is not None]
+            row += (f"{sum(vc)/len(vc)*100 - sum(va)/len(va)*100:+.1f}%".center(16) if va and vc else "N/A".center(16))
+        print(row)
 
     fwd_mid = 60 if 60 in forward_days else forward_days[len(forward_days) // 2]
     print(f"\nBY SIGNAL TYPE ({fwd_mid}-day, all dates)")
-    print(f"{'':12s}{'Model A calls':>14}{'Correct':>10}{'Model B calls':>16}{'Correct':>10}")
+    print(f"{'':10s}{'A calls':>9}{'Acc':>7}{'B calls':>9}{'Acc':>7}{'C calls':>9}{'Acc':>7}")
     for action in ["BUY", "HOLD", "REDUCE"]:
         ra = [r for r in results if r["action_a"] == action and r[f"correct_a_{fwd_mid}"] is not None]
         rb = [r for r in results if r["action_b"] == action and r[f"correct_b_{fwd_mid}"] is not None]
+        rc = [r for r in results if r["action_c"] == action and r[f"correct_c_{fwd_mid}"] is not None]
         print(
-            f"{action+':':12s}{len(ra):>14}{_pct(sum(r[f'correct_a_{fwd_mid}'] for r in ra), len(ra)):>10}"
-            f"{len(rb):>16}{_pct(sum(r[f'correct_b_{fwd_mid}'] for r in rb), len(rb)):>10}"
+            f"{action+':':10s}{len(ra):>9}{_pct(sum(r[f'correct_a_{fwd_mid}'] for r in ra), len(ra)):>7}"
+            f"{len(rb):>9}{_pct(sum(r[f'correct_b_{fwd_mid}'] for r in rb), len(rb)):>7}"
+            f"{len(rc):>9}{_pct(sum(r[f'correct_c_{fwd_mid}'] for r in rc), len(rc)):>7}"
         )
 
     print(f"\nBY DATE ({fwd_mid}-day)")
-    print(f"{'Date':16s}{'Model A':>10}{'Model B':>10}{'Delta':>10}{'Tickers':>10}")
+    print(f"{'Date':16s}{'Model A':>10}{'Model B':>10}{'Model C':>10}{'Tickers':>10}")
     for td in test_dates:
         td_str = str(td)
         subset = [r for r in results if r["test_date"] == td_str]
-        va = [r[f"correct_a_{fwd_mid}"] for r in subset if r[f"correct_a_{fwd_mid}"] is not None]
-        vb = [r[f"correct_b_{fwd_mid}"] for r in subset if r[f"correct_b_{fwd_mid}"] is not None]
-        if va and vb:
-            aa, ab = sum(va)/len(va)*100, sum(vb)/len(vb)*100
-            print(f"{td_str:16s}{aa:>9.1f}%{ab:>9.1f}%{ab-aa:>+9.1f}%{len(subset):>10,}")
+        def acc(model):
+            vals = [r[f"correct_{model}_{fwd_mid}"] for r in subset if r[f"correct_{model}_{fwd_mid}"] is not None]
+            return sum(vals)/len(vals)*100 if vals else None
+        aa, ab, ac = acc("a"), acc("b"), acc("c")
+        if aa and ab and ac:
+            print(f"{td_str:16s}{aa:>9.1f}%{ab:>9.1f}%{ac:>9.1f}%{len(subset):>10,}")
         else:
             print(f"{td_str:16s}{'N/A':>10}{'N/A':>10}{'N/A':>10}{len(subset):>10,}")
 
-    agree   = sum(1 for r in results if r["agreement"])
+    # Model C source breakdown (how often B-BUY fired vs A fallback)
+    c_from_b = sum(1 for r in results if r.get("c_source") == "B")
+    c_from_a = sum(1 for r in results if r.get("c_source") == "A")
+    print(f"\nModel C composition: B-BUY used {c_from_b:,} times ({_pct(c_from_b, total)})  |  A fallback {c_from_a:,} times ({_pct(c_from_a, total)})")
+
     upgrades   = [r for r in results if r["action_a"] == "HOLD" and r["action_b"] == "BUY"]
     downgrades = [r for r in results if r["action_a"] == "HOLD" and r["action_b"] == "REDUCE"]
-
     def avg_ret(rows, d):
         vals = [r[f"fwd_{d}"] for r in rows if r.get(f"fwd_{d}") is not None]
         return f"{sum(vals)/len(vals):+.1f}%" if vals else "N/A"
-
-    print(f"\nAGREEMENT: {_pct(agree, total)} of calls ({agree:,}/{total:,})")
-    print(f"B upgraded  HOLD→BUY:    {len(upgrades):>4}  avg {fwd_mid}d: {avg_ret(upgrades,   fwd_mid)}")
-    print(f"B downgraded HOLD→REDUCE: {len(downgrades):>4}  avg {fwd_mid}d: {avg_ret(downgrades, fwd_mid)}")
+    print(f"B HOLD→BUY upgrades:    {len(upgrades):>4}  avg {fwd_mid}d: {avg_ret(upgrades,   fwd_mid)}")
+    print(f"B HOLD→REDUCE downgrades:{len(downgrades):>4}  avg {fwd_mid}d: {avg_ret(downgrades, fwd_mid)}")
     print(sep + "\n")
 
 
@@ -406,7 +433,7 @@ def write_output(results: list[dict], test_dates: list[date], forward_days: list
 
     out = {
         "run_at":        datetime.utcnow().isoformat() + "Z",
-        "version":       "v2-point-in-time",
+        "version":       "v2-point-in-time-hybrid",
         "test_dates":    [str(d) for d in test_dates],
         "forward_days":  forward_days,
         "universe_size": len({r["tk"] for r in results}),
@@ -414,6 +441,7 @@ def write_output(results: list[dict], test_dates: list[date], forward_days: list
         "summary": {
             "model_a": {f"accuracy_{d}": _acc("a", d) for d in forward_days},
             "model_b": {f"accuracy_{d}": _acc("b", d) for d in forward_days},
+            "model_c": {f"accuracy_{d}": _acc("c", d) for d in forward_days},
         },
         "calls": results,
     }
@@ -523,8 +551,9 @@ def main() -> int:
             ts, cl, vol = sliced
 
             try:
-                res_a    = score_ticker(ts, cl, vol, spy_cl)
-                res_b    = score_ticker_b(ts, cl, vol, spy_cl)
+                res_a = score_ticker(ts, cl, vol, spy_cl)
+                res_b = score_ticker_b(ts, cl, vol, spy_cl)
+                res_c = score_ticker_hybrid(ts, cl, vol, spy_cl)
             except Exception as exc:
                 print(f"  WARN  scoring {tk}: {exc}", file=sys.stderr)
                 continue
@@ -539,9 +568,12 @@ def main() -> int:
                 "test_date": td_str,
                 "score_a":   res_a["score"],  "action_a": res_a["action"],
                 "score_b":   res_b["score"],  "action_b": res_b["action"],
+                "score_c":   res_c["score"],  "action_c": res_c["action"],
+                "c_source":  res_c.get("model_used", "A"),
                 **{f"fwd_{d}":       fwd[d]                          for d in forward_days},
                 **{f"correct_a_{d}": call_correct(res_a["action"], fwd[d]) for d in forward_days},
                 **{f"correct_b_{d}": call_correct(res_b["action"], fwd[d]) for d in forward_days},
+                **{f"correct_c_{d}": call_correct(res_c["action"], fwd[d]) for d in forward_days},
                 "agreement": res_a["action"] == res_b["action"],
             })
             date_count += 1

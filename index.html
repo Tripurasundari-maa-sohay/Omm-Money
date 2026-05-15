@@ -196,6 +196,10 @@
   .sig-badge.BUY{background:rgba(0,255,136,.15);color:#00ff88;border:1px solid #00ff88}
   .sig-badge.HOLD{background:rgba(255,170,0,.15);color:#ffaa00;border:1px solid #ffaa00}
   .sig-badge.REDUCE{background:rgba(255,68,68,.15);color:#ff4444;border:1px solid #ff4444}
+  th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+  th.sortable:hover{color:#00ccff}
+  th.sort-asc::after{content:' ▲';color:#00ccff;font-size:9px}
+  th.sort-desc::after{content:' ▼';color:#00ccff;font-size:9px}
   .sig-score-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
   .sig-score-num{font-size:26px;font-weight:700;font-family:Monaco,monospace;min-width:44px}
   .sig-score-num.BUY{color:#00ff88} .sig-score-num.HOLD{color:#ffaa00} .sig-score-num.REDUCE{color:#ff4444}
@@ -388,21 +392,28 @@
       <table id="us-holdings-table">
         <thead>
           <tr>
-            <th>TICKER</th><th>QTY</th><th>AVG</th><th>LTP</th>
-            <th>PREV CLOSE</th><th>DAY P&amp;L</th>
-            <th>MKT VALUE</th><th>FEES</th>
-            <th>UNREAL P&amp;L</th><th>RETURN %</th>
+            <th class="sortable" data-sc="tk">TICKER</th>
+            <th class="sortable" data-sc="qty">QTY</th>
+            <th class="sortable" data-sc="avg">AVG</th>
+            <th class="sortable" data-sc="ltp">LTP</th>
+            <th class="sortable" data-sc="dayPL">DAY P&amp;L</th>
+            <th class="sortable" data-sc="mv">MKT VALUE</th>
+            <th class="sortable" data-sc="fees">FEES</th>
+            <th class="sortable" data-sc="upl">UNREAL P&amp;L</th>
+            <th class="sortable" data-sc="ret">RETURN %</th>
+            <th class="sortable" data-sc="signal">SIGNAL</th>
           </tr>
         </thead>
         <tbody id="us-holdings-body"></tbody>
         <tfoot>
           <tr>
-            <td colspan="5" style="text-align:right;">TOTAL</td>
+            <td colspan="4" style="text-align:right;">TOTAL</td>
             <td id="us-foot-day"></td>
             <td id="us-foot-mv"></td>
             <td id="us-foot-fees"></td>
             <td id="us-foot-pl"></td>
             <td id="us-foot-ret"></td>
+            <td></td>
           </tr>
         </tfoot>
       </table>
@@ -929,27 +940,57 @@ const DASH = (() => {
     setClass('in-day-pl-pct', 'mchg pv ' + pn(ind.dayPct));
   }
 
+  const US_SORT = { col: null, dir: 1 };
+  const US_SORT_KEY = {
+    tk: p => p.tk, qty: p => p.qty, avg: p => p.avg, ltp: p => p.ltp,
+    dayPL: p => p.dayPL, mv: p => p.mv, fees: p => p.fees,
+    upl: p => p.upl, ret: p => p.ret,
+    signal: p => SIG.results[p.tk]?.score ?? -1,
+  };
+
   function renderUSHoldings() {
     if (!S.view) return;
     const tbody = $('us-holdings-body');
     const us = S.view.us;
+
+    // Apply sort
+    let rows = [...us.open];
+    if (US_SORT.col && US_SORT_KEY[US_SORT.col]) {
+      const fn = US_SORT_KEY[US_SORT.col];
+      rows.sort((a, b) => {
+        const av = fn(a), bv = fn(b);
+        return (av < bv ? -1 : av > bv ? 1 : 0) * US_SORT.dir;
+      });
+    }
+
+    // Update sort arrows in headers
+    document.querySelectorAll('#us-holdings-table th.sortable').forEach(th => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (th.dataset.sc === US_SORT.col)
+        th.classList.add(US_SORT.dir === 1 ? 'sort-asc' : 'sort-desc');
+    });
+
     let totDay=0, totFee=0, totMV=0, totPL=0, totCost=0;
-    tbody.innerHTML = us.open.map(p => {
+    tbody.innerHTML = rows.map(p => {
       totDay += p.dayPL; totFee += p.fees; totMV += p.mv; totPL += p.upl; totCost += p.qty*p.avg;
-      const pcCls = p.pc > p.ltp ? 'positive' : p.pc < p.ltp ? 'negative' : '';
+      const sig = SIG.results[p.tk];
+      const sigHtml = sig
+        ? `<span class="sig-badge ${sig.action}">${S.ui.privacy ? '●●' : sig.action}</span>`
+        : '<span style="color:#334;font-size:10px">—</span>';
       return `<tr>
-        <td><strong>${p.tk}</strong><br><span style="color:#556;font-size:10px;">${p.name}</span>${p.live?'':' <span class="preopen-tag" style="color:#ffaa00;">STALE</span>'}</td>
+        <td><strong>${p.tk}</strong><br><span style="color:#556;font-size:10px">${p.name}</span>${p.live?'':' <span class="preopen-tag" style="color:#ffaa00">STALE</span>'}</td>
         <td>${p.qty}</td>
         <td>${usd2(p.avg)}</td>
         <td><strong>${usd2(p.ltp)}</strong></td>
-        <td class="${pcCls}"><span class="preopen-tag">PC</span> ${usd2(p.pc)}</td>
         <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${usd2(p.dayPL)} (${sign(p.dayPct)}${pct(p.dayPct)})</td>
         <td>${usd2(p.mv)}</td>
         <td>${usd2(p.fees)}</td>
         <td class="${pn(p.upl)}">${sign(p.upl)}${usd2(p.upl)}</td>
         <td class="${pn(p.ret)}">${p.houseMoney ? FREE_TAG : sign(p.ret)+pct(p.ret)}</td>
+        <td>${sigHtml}</td>
       </tr>`;
     }).join('');
+
     const totRet = totCost ? (totPL/totCost)*100 : 0;
     setText('us-foot-day',  sign(totDay)+usd2(totDay));   setClass('us-foot-day', pn(totDay));
     setText('us-foot-mv',   usd2(totMV));
@@ -1618,6 +1659,7 @@ const DASH = (() => {
     // Called on first load and whenever Actions pushes a new generated timestamp.
     sigRenderRegimeBanner(data.regime, data.spy, data.generated);
     Object.assign(SIG.results, data.holdings);
+    safe(renderUSHoldings, 'us-holdings'); // refresh signal badges in US table
 
     const grid = $('sig-cards-grid');
     if (!grid) return;
@@ -1725,6 +1767,15 @@ const DASH = (() => {
   function init() {
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', e => switchTab(e.currentTarget.getAttribute('data-tab')));
+    });
+    // Sortable US holdings table
+    document.querySelectorAll('#us-holdings-table th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sc;
+        if (US_SORT.col === col) US_SORT.dir *= -1;
+        else { US_SORT.col = col; US_SORT.dir = 1; }
+        renderUSHoldings();
+      });
     });
     tickCountdowns();
     setInterval(tickCountdowns, 1000);

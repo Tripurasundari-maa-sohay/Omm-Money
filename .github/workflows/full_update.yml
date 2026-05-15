@@ -3,7 +3,11 @@ name: Refresh market data (indices + holdings + signals)
 on:
   schedule:
     - cron: "*/15 * * * *"          # every 15 minutes
-  workflow_dispatch:                  # also runs on manual trigger
+  workflow_dispatch:                  # manual trigger
+  push:
+    branches: [main]
+    paths:
+      - "data/holdings_cost.json"    # new position added → fetch prices immediately
 
 permissions:
   contents: write                     # needed to commit the updated JSON back

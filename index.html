@@ -415,6 +415,15 @@
             <td id="us-foot-ret"></td>
             <td></td>
           </tr>
+          <tr style="font-size:11px;color:#778;font-weight:400;">
+            <td colspan="4" style="text-align:right;font-style:italic;">NET IF CLOSED (exit fees)</td>
+            <td></td>
+            <td></td>
+            <td id="us-foot-exit-cost" style="color:#ff6b6b;"></td>
+            <td id="us-foot-net-pl"></td>
+            <td id="us-foot-net-ret"></td>
+            <td></td>
+          </tr>
         </tfoot>
       </table>
     </div>
@@ -795,13 +804,17 @@ const DASH = (() => {
   }
   function enrich(holding) {
     const { ltp, pc, live } = priceFor(holding);
-    const mv     = holding.qty * ltp;
-    const upl    = (ltp - holding.avg) * holding.qty;
-    const dayPL  = (ltp - pc) * holding.qty;
-    const dayPct = pc ? ((ltp - pc) / pc) * 100 : 0;
-    const ret       = holding.avg ? ((ltp - holding.avg) / holding.avg) * 100 : 0;
+    const mv      = holding.qty * ltp;
+    const fees    = holding.fees || 0;
+    const upl     = (ltp - holding.avg) * holding.qty;   // raw price gain
+    const uplNet  = upl + fees;                           // net of buy fees already paid
+    const exitFee = -5;                                   // cost to close in 1 trade
+    const dayPL   = (ltp - pc) * holding.qty;
+    const dayPct  = pc ? ((ltp - pc) / pc) * 100 : 0;
+    const cost    = (holding.avg || 0) * holding.qty;
+    const ret     = cost ? (uplNet / cost) * 100 : 0;    // true net return %
     const houseMoney = !holding.avg;
-    return { ...holding, ltp, pc, live, mv, upl, dayPL, dayPct, ret, houseMoney };
+    return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, houseMoney };
   }
   function build() {
     if (!S.cost) { S.view = null; return; }
@@ -821,8 +834,9 @@ const DASH = (() => {
       stocksMV:     usOpen.filter(p=>p.cls==='Stock').reduce((s,p)=>s+p.mv,0),
       etfsMV:       usOpen.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
       mv:           usMV,
-      unrealPL:     usOpen.reduce((s,p)=>s+p.upl,0),
+      unrealPL:     usOpen.reduce((s,p)=>s+p.uplNet,0),  // net of buy fees
       dayPL:        usOpen.reduce((s,p)=>s+p.dayPL,0),
+      exitCost:     usOpen.length * -5,                   // -$5 per position to close
     };
     us.totalValue = us.mv + (us.cash||0);
     us.dayPct     = us.totalValue ? (us.dayPL / (us.totalValue - us.dayPL)) * 100 : 0;
@@ -841,7 +855,7 @@ const DASH = (() => {
       open:         inOpen,
       closed:       (S.cost.india && S.cost.india.closed) || [],
       mv:           inMV,
-      unrealPL:     inOpen.reduce((s,p)=>s+p.upl,0),
+      unrealPL:     inOpen.reduce((s,p)=>s+p.uplNet,0),
       dayPL:        inOpen.reduce((s,p)=>s+p.dayPL,0),
     };
     india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
@@ -851,7 +865,7 @@ const DASH = (() => {
     const totalUSD = us.totalValue + india.mv / fx;
     const combined = {
       totalUSD,
-      unrealPL_USD: us.unrealPL + india.unrealPL / fx,
+      unrealPL_USD: us.unrealPL + india.unrealPL / fx,  // both already net of fees
       dayPL_USD:    us.dayPL    + india.dayPL    / fx,
       returnPct:    us.cashInfusion ? ((totalUSD - us.cashInfusion) / us.cashInfusion) * 100 : 0
     };
@@ -944,7 +958,7 @@ const DASH = (() => {
   const US_SORT_KEY = {
     tk: p => p.tk, qty: p => p.qty, avg: p => p.avg, ltp: p => p.ltp,
     dayPL: p => p.dayPL, mv: p => p.mv, fees: p => p.fees,
-    upl: p => p.upl, ret: p => p.ret,
+    upl: p => p.uplNet, ret: p => p.ret,
     signal: p => SIG.results[p.tk]?.score ?? -1,
   };
 
@@ -972,7 +986,7 @@ const DASH = (() => {
 
     let totDay=0, totFee=0, totMV=0, totPL=0, totCost=0;
     tbody.innerHTML = rows.map(p => {
-      totDay += p.dayPL; totFee += p.fees; totMV += p.mv; totPL += p.upl; totCost += p.qty*p.avg;
+      totDay += p.dayPL; totFee += p.fees; totMV += p.mv; totPL += p.uplNet; totCost += p.qty*(p.avg||0);
       const sig = SIG.results[p.tk];
       const sigHtml = sig
         ? `<span class="sig-badge ${sig.action}">${S.ui.privacy ? '●●' : sig.action}</span>`
@@ -985,18 +999,29 @@ const DASH = (() => {
         <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${usd2(p.dayPL)} (${sign(p.dayPct)}${pct(p.dayPct)})</td>
         <td>${usd2(p.mv)}</td>
         <td>${usd2(p.fees)}</td>
-        <td class="${pn(p.upl)}">${sign(p.upl)}${usd2(p.upl)}</td>
+        <td class="${pn(p.uplNet)}">${sign(p.uplNet)}${usd2(p.uplNet)}</td>
         <td class="${pn(p.ret)}">${p.houseMoney ? FREE_TAG : sign(p.ret)+pct(p.ret)}</td>
         <td>${sigHtml}</td>
       </tr>`;
     }).join('');
 
-    const totRet = totCost ? (totPL/totCost)*100 : 0;
+    const totRet     = totCost ? (totPL/totCost)*100 : 0;
+    const totExit    = us.open.length * -5;               // -$5 per position
+    const totNetIfClosed = totPL + totExit;
+    const totNetRet  = totCost ? (totNetIfClosed/totCost)*100 : 0;
+
     setText('us-foot-day',  sign(totDay)+usd2(totDay));   setClass('us-foot-day', pn(totDay));
     setText('us-foot-mv',   usd2(totMV));
     setText('us-foot-fees', usd2(totFee));
     setText('us-foot-pl',   sign(totPL)+usd2(totPL));     setClass('us-foot-pl',  pn(totPL));
     setText('us-foot-ret',  sign(totRet)+pct(totRet));    setClass('us-foot-ret', pn(totRet));
+
+    // Exit cost row
+    setText('us-foot-exit-cost', usd2(totExit));
+    setText('us-foot-net-pl',    sign(totNetIfClosed)+usd2(totNetIfClosed));
+    setClass('us-foot-net-pl', pn(totNetIfClosed));
+    setText('us-foot-net-ret',   sign(totNetRet)+pct(totNetRet));
+    setClass('us-foot-net-ret', pn(totNetRet));
     setLiveBadge('us-live-badge', us.open);
     setText('us-asof', 'as of ' + (S.view.asOf || '—'));
   }
@@ -1007,7 +1032,7 @@ const DASH = (() => {
     const ind = S.view.india;
     let totDay=0, totPL=0, totMV=0;
     tbody.innerHTML = ind.open.map(p => {
-      totDay += p.dayPL; totPL += p.upl; totMV += p.mv;
+      totDay += p.dayPL; totPL += p.uplNet; totMV += p.mv;
       return `<tr>
         <td><strong>${p.tk}</strong>${p.live?'':' <span class="preopen-tag" style="color:#ffaa00;">STALE</span>'}</td>
         <td>${p.name}</td>
@@ -1019,7 +1044,7 @@ const DASH = (() => {
         <td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>
         <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${inr(p.dayPL)}</td>
         <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
-        <td class="${pn(p.upl)}">${sign(p.upl)}${inr(p.upl)}</td>
+        <td class="${pn(p.uplNet)}">${sign(p.uplNet)}${inr(p.uplNet)}</td>
         <td>${inr(p.mv)}</td>
         <td>${pct(p.wt)}</td>
         <td><span class="badge ${fmBadge(p.fm)}">${p.fm}</span></td>
@@ -1090,7 +1115,7 @@ const DASH = (() => {
     // P/L breakdown body — US rows (USD) + India rows (INR, shown separately)
     const usRows = [
       ...us.open.map(p => ({ mkt:'🇺🇸', cls:p.cls, tk:p.tk+' · '+p.name, status:'OPEN', market:'US',
-        income:p.income||0, costs:p.fees, realised:0, unreal:p.upl, total:p.upl+(p.income||0)+p.fees, ret:p.ret, ccy:'USD' })),
+        income:p.income||0, costs:p.fees, realised:0, unreal:p.uplNet, total:p.uplNet+(p.income||0), ret:p.ret, ccy:'USD' })),
       ...us.closed.map(p => ({ mkt:'🇺🇸', cls:p.cls, tk:p.tk+' · '+p.name, status:'CLOSED', market:'US',
         income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised+p.income+p.costs, ret:p.ret_pct, ccy:'USD' }))
     ];
@@ -1108,7 +1133,7 @@ const DASH = (() => {
         <td><span class="badge badge-open">OPEN</span></td>
         <td>${p.qty}</td><td>${usd2(p.avg)}</td><td>${usd2(p.ltp)}</td>
         <td>${usd2(p.mv)}</td><td>${usd2(p.income||0)}</td><td>${usd2(p.fees)}</td>
-        <td class="${pn(p.upl)}">${sign(p.upl)}${usd2(p.upl)}</td>
+        <td class="${pn(p.uplNet)}">${sign(p.uplNet)}${usd2(p.uplNet)}</td>
       </tr>`),
       ...us.closed.map(p => `<tr>
         <td><strong>${p.tk}</strong></td><td>${p.name}</td>

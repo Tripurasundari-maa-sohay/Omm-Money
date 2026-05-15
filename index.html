@@ -177,8 +177,11 @@
 
   /* ── PRIVACY MODE ── */
   .pv{transition:opacity .2s}
-  /* table rows get blur (mixed HTML, can't text-replace per-cell) */
-  body.privacy tbody{filter:blur(6px);opacity:.5;user-select:none;pointer-events:none}
+  /* table rows + totals + stat bars get blur */
+  body.privacy tbody,
+  body.privacy tfoot,
+  body.privacy .chart-stat-bar,
+  body.privacy .txn-stat-card .v{filter:blur(6px);opacity:.5;user-select:none;pointer-events:none}
 
   /* ── BANNER CONTROLS (privacy + currency) ── */
   .banner-controls{display:flex;align-items:center;gap:10px}

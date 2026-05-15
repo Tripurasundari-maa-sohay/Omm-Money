@@ -1,0 +1,97 @@
+name: Watchdog — auto-heal stale market data
+
+# Runs every 30 min during market hours.
+# Checks holdings_prices.json age — if >20 min AND market open → runs full
+# update pipeline automatically. No laptop needed.
+
+on:
+  schedule:
+    - cron: "*/30 4-10 * * 1-5"    # India hours  04:00–10:59 UTC
+    - cron: "*/30 13-20 * * 1-5"   # US hours     13:00–20:59 UTC
+  workflow_dispatch:                 # manual trigger for testing
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data          # shared with full_update — won't double-run
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Check data staleness
+        id: stale_check
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, sys
+          from datetime import datetime, timezone
+
+          try:
+              with open("data/processed/holdings_prices.json") as f:
+                  d = json.load(f)
+              generated = d.get("generated", "")
+              ts  = datetime.fromisoformat(generated.replace("Z", "+00:00"))
+              age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
+              print(f"Data age: {age:.1f} min  (generated: {generated})")
+              stale = age > 20
+          except Exception as e:
+              print(f"Could not read prices file: {e} — treating as stale")
+              stale = True
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"stale={'true' if stale else 'false'}\n")
+              fh.write(f"age_min={int(age if 'age' in dir() else 999)}\n")
+
+          if stale:
+              print("⚠ STALE — triggering heal")
+          else:
+              print("✓ Fresh — no action needed")
+          PYEOF
+
+      - name: Install deps (only if healing needed)
+        if: steps.stale_check.outputs.stale == 'true'
+        run: pip install yfinance pytz requests beautifulsoup4
+
+      - name: Heal — fetch live prices
+        if: steps.stale_check.outputs.stale == 'true'
+        run: |
+          echo "Watchdog healing at $(date -u +%Y-%m-%dT%H:%M:%SZ)  (data was ${{ steps.stale_check.outputs.age_min }}m old)"
+          python scripts/market_data.py
+
+      - name: Heal — recompute signals
+        if: steps.stale_check.outputs.stale == 'true'
+        run: python scripts/signals_update.py || echo "signals failed — prices still updated"
+
+      - name: Commit healed data
+        if: steps.stale_check.outputs.stale == 'true'
+        run: |
+          git add data/processed data/holdings_cost.json
+          if [[ -n "$(git diff --cached --name-only)" ]]; then
+            git config user.name  "github-actions"
+            git config user.email "github-actions@github.com"
+            git commit -m "data: watchdog heal $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "push attempt $attempt failed — retrying…"
+              sleep 5
+            done
+          else
+            echo "no data changes after heal"
+          fi
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "Stale: ${{ steps.stale_check.outputs.stale }}"
+          echo "Age:   ${{ steps.stale_check.outputs.age_min }} min"

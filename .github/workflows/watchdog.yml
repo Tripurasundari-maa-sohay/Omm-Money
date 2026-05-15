@@ -6,8 +6,8 @@ name: Watchdog — auto-heal stale market data
 
 on:
   schedule:
-    - cron: "*/30 4-10 * * 1-5"    # India hours  04:00–10:59 UTC
-    - cron: "*/30 13-20 * * 1-5"   # US hours     13:00–20:59 UTC
+    - cron: "*/5 4-10 * * 1-5"    # India hours  04:00–10:59 UTC
+    - cron: "*/5 13-20 * * 1-5"   # US hours     13:00–20:59 UTC
   workflow_dispatch:                 # manual trigger for testing
 
 permissions:
@@ -44,7 +44,7 @@ jobs:
               ts  = datetime.fromisoformat(generated.replace("Z", "+00:00"))
               age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
               print(f"Data age: {age:.1f} min  (generated: {generated})")
-              stale = age > 20
+              stale = age > 3
           except Exception as e:
               print(f"Could not read prices file: {e} — treating as stale")
               stale = True

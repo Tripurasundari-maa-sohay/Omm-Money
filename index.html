@@ -221,6 +221,20 @@
   .sig-legend-row:nth-child(odd){background:#0a1929}
   .sig-loading{text-align:center;padding:40px 20px;color:#556;font-size:12px;grid-column:1/-1}
 
+  /* ── SIGNAL HOLDINGS TABLE ── */
+  #sig-holdings-table, #sig-watchlist-table { width:100%; border-collapse:collapse; font-size:12px; }
+  #sig-holdings-table thead th, #sig-watchlist-table thead th { background:#0d2b47; color:#00ccff; padding:8px 10px; text-align:left;
+    font-weight:700; font-size:11px; letter-spacing:.5px; white-space:nowrap;
+    border-bottom:1px solid #1a4a6a; cursor:pointer; user-select:none; }
+  #sig-holdings-table thead th:hover, #sig-watchlist-table thead th:hover { color:#00ff88; }
+  #sig-holdings-table tbody td, #sig-watchlist-table tbody td { padding:7px 10px; border-bottom:1px solid #0d2b47; vertical-align:middle; color:#b0c8e0; white-space:nowrap; }
+  #sig-holdings-table tbody tr:hover, #sig-watchlist-table tbody tr:hover { background:#0d2b47; }
+  .sig-score-bar { height:3px; border-radius:2px; margin-top:3px; }
+  .wl-input { background:#0d2b47; border:1px solid #1a4a6a; color:#c0d8f0; padding:7px 10px;
+    border-radius:4px; font-size:12px; width:90px; font-family:Monaco,monospace;
+    text-transform:uppercase; outline:none; }
+  .wl-input:focus { border-color:#00ccff; }
+
   @media (max-width:900px){
     .markets-status,.analytics-two-col,.charges-grid{grid-template-columns:1fr}
     .banner-tabs{gap:5px}
@@ -640,27 +654,47 @@
       <div id="sig-regime-sub" style="font-size:11px;color:#556;text-align:right"></div>
     </div>
 
-    <!-- Holdings signal cards -->
-    <h2 style="margin-bottom:14px">US HOLDINGS · SIGNAL SCORES</h2>
-    <div id="sig-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-bottom:28px">
-      <div class="sig-loading">Click <strong style="color:#00ff88">📡 SIGNALS</strong> to load…</div>
+    <!-- Holdings signal table -->
+    <div class="tab-section">
+      <h2 style="margin-bottom:14px">US HOLDINGS · SIGNAL SCORES</h2>
+      <div style="overflow-x:auto">
+        <table id="sig-holdings-table">
+          <thead>
+            <tr>
+              <th class="sortable" data-col="ticker">TICKER</th>
+              <th class="sortable sort-desc" data-col="score">SCORE</th>
+              <th>ACTION</th>
+              <th class="sortable" data-col="rsi">RSI</th>
+              <th class="sortable" data-col="v200">vs 200MA</th>
+              <th class="sortable" data-col="rs">RS/SPY</th>
+              <th class="sortable" data-col="rng">52W%</th>
+              <th class="sortable" data-col="vsMean">vsMEAN</th>
+              <th>MACD</th>
+              <th>VOL</th>
+              <th>REGIME</th>
+            </tr>
+          </thead>
+          <tbody id="sig-holdings-tbody">
+            <tr><td colspan="11" class="sig-loading">Click <strong style="color:#00ff88">📡 SIGNALS</strong> to load…</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Pre-entry screener -->
+    <!-- Watchlist -->
     <div class="tab-section">
-      <h2 style="margin-bottom:14px">PRE-ENTRY SCREENER · ANY US TICKER</h2>
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-        <input type="text" id="sig-input" placeholder="e.g. NVDA, TSLA, META"
-          onkeydown="if(event.key==='Enter')DASH.sigRunScreener()"
-          style="background:#0d2b47;border:1px solid #1a4a6a;color:#c0d8f0;padding:8px 14px;
-                 border-radius:4px;font-size:13px;width:210px;font-family:Monaco,monospace;outline:none;
-                 transition:border-color .2s"
-          onfocus="this.style.borderColor='#00ccff'" onblur="this.style.borderColor='#1a4a6a'"/>
-        <button onclick="DASH.sigRunScreener()"
-          style="background:#00ff88;color:#0a1929;border:none;border-radius:4px;padding:9px 22px;
-                 font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer">ANALYZE</button>
+      <h2>WATCHLIST · SIGNAL TRACKER</h2>
+      <div id="sig-watchlist-inputs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+        <!-- 5 inputs injected by JS -->
+        <button id="sig-watchlist-run"
+          style="background:#00ff88;color:#0a1929;border:none;border-radius:4px;padding:8px 18px;
+                 font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer">▶ ANALYZE</button>
+        <button id="sig-watchlist-clear"
+          style="background:transparent;color:#556;border:1px solid #1a4a6a;border-radius:4px;
+                 padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px">CLEAR</button>
       </div>
-      <div id="sig-screener-out"></div>
+      <div id="sig-watchlist-status" style="font-size:11px;color:#556;margin-bottom:10px"></div>
+      <div id="sig-watchlist-out"></div>
     </div>
 
     <!-- Model legend -->
@@ -1708,44 +1742,229 @@ const DASH = (() => {
     }
   }
 
+  /* ── SIGNAL HOLDINGS TABLE ───────────────────────────────────────── */
+  const SIG_SORT = { col: 'score', dir: -1 }; // default: score high→low
+
+  function renderSigHoldingsTable(holdingsData) {
+    const tbody = $('sig-holdings-tbody');
+    if (!tbody) return;
+    const prv = S.ui.privacy;
+    const holdings = S.cost ? (S.cost.us.open || []) : [];
+
+    // Build rows: holdings that have signal data
+    const rows = [];
+    holdings.forEach(h => {
+      const r = holdingsData[h.tk];
+      if (r) rows.push({ sym: h.tk, name: h.name || '', res: r });
+    });
+    // Also include any holdings missing data
+    const missing = holdings.filter(h => !holdingsData[h.tk]);
+
+    // Sort
+    rows.sort((a, b) => {
+      let va, vb;
+      switch (SIG_SORT.col) {
+        case 'ticker':  va = a.sym;      vb = b.sym;      return va < vb ? SIG_SORT.dir : va > vb ? -SIG_SORT.dir : 0;
+        case 'rsi':     va = a.res.rsi;  vb = b.res.rsi;  break;
+        case 'v200':    va = a.res.v200; vb = b.res.v200; break;
+        case 'rs':      va = a.res.rs;   vb = b.res.rs;   break;
+        case 'rng':     va = a.res.rng;  vb = b.res.rng;  break;
+        case 'vsMean':  va = a.res.vsMean; vb = b.res.vsMean; break;
+        default:        va = a.res.score; vb = b.res.score;
+      }
+      return (va - vb) * SIG_SORT.dir;
+    });
+
+    const scoreBarColor = s => s >= 65 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';
+
+    let html = rows.map(({ sym, name, res }) => {
+      const rsiCol = (res.rsi < 30 || res.rsi > 73) ? 'color:#ff4444' : '';
+      const v200sign = res.v200 >= 0 ? '+' : '';
+      const rssign = res.rs >= 0 ? '+' : '';
+      const meanSign = res.vsMean >= 0 ? '+' : '';
+      const macdOk = res.sc.macd > 0;
+      const volOk  = res.sc.vol  > 0;
+      const isBull = res.regime === 'BULL';
+      const barCol = scoreBarColor(res.score);
+      const barW   = Math.min(100, res.score);
+      return `<tr>
+        <td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:#445;font-size:10px">${name}</span></td>
+        <td>
+          <span style="font-weight:700;font-family:Monaco,monospace;color:${barCol}">${prv ? '●●' : res.score}</span>
+          <div class="sig-score-bar" style="width:${prv?0:barW}%;background:${barCol}"></div>
+        </td>
+        <td><span class="sig-badge ${res.action}">${res.action}</span></td>
+        <td style="${rsiCol}">${prv ? '●●' : res.rsi}</td>
+        <td class="${pn(res.v200)}">${prv ? '●●' : v200sign+res.v200+'%'}</td>
+        <td class="${pn(res.rs)}">${prv ? '●●' : rssign+res.rs+'%'}</td>
+        <td>${prv ? '●●' : res.rng+'%'}</td>
+        <td class="${pn(res.vsMean)}">${prv ? '●●' : meanSign+res.vsMean+'%'}</td>
+        <td style="color:${macdOk?'#00ff88':'#ff4444'}">${macdOk ? '✓' : '✗'}</td>
+        <td style="color:${volOk?'#00ff88':'#ff4444'}">${volOk ? '✓' : '✗'}</td>
+        <td>${isBull ? '🟢' : '🔴'}</td>
+      </tr>`;
+    }).join('');
+
+    html += missing.map(h =>
+      `<tr><td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${h.tk}</span><br><span style="color:#445;font-size:10px">${h.name||''}</span></td>`
+      + `<td colspan="10" style="color:#556;font-size:11px">Data unavailable</td></tr>`
+    ).join('');
+
+    tbody.innerHTML = html || '<tr><td colspan="11" class="sig-loading">No signal data available.</td></tr>';
+  }
+
+  // Wire up column-sort clicks on sig-holdings-table headers
+  function initSigTableSort() {
+    const tbl = document.querySelector('#sig-holdings-table');
+    if (!tbl) return;
+    tbl.querySelectorAll('th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (SIG_SORT.col === col) SIG_SORT.dir *= -1;
+        else { SIG_SORT.col = col; SIG_SORT.dir = -1; }
+        tbl.querySelectorAll('th').forEach(t => t.classList.remove('sort-asc','sort-desc'));
+        th.classList.add(SIG_SORT.dir === 1 ? 'sort-asc' : 'sort-desc');
+        if (SIG._lastData) renderSigHoldingsTable(SIG._lastData);
+      });
+    });
+  }
+
+  /* ── WATCHLIST ────────────────────────────────────────────────────── */
+  const WL_KEY = 'wl_tickers';
+  const WL_COUNT = 5;
+
+  function sigWatchlistInit() {
+    const container = $('sig-watchlist-inputs');
+    if (!container) return;
+    const saved = (() => { try { return JSON.parse(localStorage.getItem(WL_KEY)) || []; } catch { return []; } })();
+    // Insert inputs before the first button
+    const runBtn = $('sig-watchlist-run');
+    for (let i = 0; i < WL_COUNT; i++) {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.className = 'wl-input';
+      inp.placeholder = 'TICKER';
+      inp.maxLength = 6;
+      inp.dataset.idx = i;
+      inp.value = (saved[i] || '').toUpperCase();
+      inp.addEventListener('input', () => { inp.value = inp.value.toUpperCase(); });
+      inp.addEventListener('blur', sigWatchlistSave);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') sigRunWatchlist(); });
+      container.insertBefore(inp, runBtn);
+    }
+    $('sig-watchlist-run').addEventListener('click', sigRunWatchlist);
+    $('sig-watchlist-clear').addEventListener('click', () => {
+      container.querySelectorAll('.wl-input').forEach(inp => { inp.value = ''; });
+      localStorage.removeItem(WL_KEY);
+      const out = $('sig-watchlist-out'); if (out) out.innerHTML = '';
+      const st = $('sig-watchlist-status'); if (st) st.textContent = '';
+    });
+  }
+
+  function sigWatchlistSave() {
+    const container = $('sig-watchlist-inputs');
+    if (!container) return;
+    const vals = [...container.querySelectorAll('.wl-input')].map(i => i.value.trim().toUpperCase());
+    localStorage.setItem(WL_KEY, JSON.stringify(vals));
+  }
+
+  function sigWatchlistTableHtml(rows) {
+    const prv = S.ui.privacy;
+    const scoreBarColor = s => s >= 65 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';
+    const rowHtml = rows.map(({ sym, name, res }) => {
+      if (!res) return `<tr>
+        <td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${sym}</span></td>
+        <td colspan="10" style="color:#ff4444;font-size:11px">⚠ Fetch failed</td></tr>`;
+      const rsiCol = (res.rsi < 30 || res.rsi > 73) ? 'color:#ff4444' : '';
+      const v200sign = res.v200 >= 0 ? '+' : '';
+      const rssign = res.rs >= 0 ? '+' : '';
+      const meanSign = res.vsMean >= 0 ? '+' : '';
+      const macdOk = res.sc.macd > 0, volOk = res.sc.vol > 0, isBull = res.regime === 'BULL';
+      const barCol = scoreBarColor(res.score), barW = Math.min(100, res.score);
+      return `<tr>
+        <td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:#445;font-size:10px">${name}</span></td>
+        <td><span style="font-weight:700;font-family:Monaco,monospace;color:${barCol}">${prv?'●●':res.score}</span>
+            <div class="sig-score-bar" style="width:${prv?0:barW}%;background:${barCol}"></div></td>
+        <td><span class="sig-badge ${res.action}">${res.action}</span></td>
+        <td style="${rsiCol}">${prv?'●●':res.rsi}</td>
+        <td class="${pn(res.v200)}">${prv?'●●':v200sign+res.v200+'%'}</td>
+        <td class="${pn(res.rs)}">${prv?'●●':rssign+res.rs+'%'}</td>
+        <td>${prv?'●●':res.rng+'%'}</td>
+        <td class="${pn(res.vsMean)}">${prv?'●●':meanSign+res.vsMean+'%'}</td>
+        <td style="color:${macdOk?'#00ff88':'#ff4444'}">${macdOk?'✓':'✗'}</td>
+        <td style="color:${volOk?'#00ff88':'#ff4444'}">${volOk?'✓':'✗'}</td>
+        <td>${isBull?'🟢':'🔴'}</td>
+      </tr>`;
+    }).join('');
+    return `<div style="overflow-x:auto"><table id="sig-watchlist-table">
+      <thead><tr>
+        <th>TICKER</th><th>SCORE</th><th>ACTION</th><th>RSI</th>
+        <th>vs 200MA</th><th>RS/SPY</th><th>52W%</th><th>vsMEAN</th>
+        <th>MACD</th><th>VOL</th><th>REGIME</th>
+      </tr></thead>
+      <tbody>${rowHtml}</tbody>
+    </table></div>`;
+  }
+
+  async function sigRunWatchlist() {
+    const container = $('sig-watchlist-inputs');
+    const out = $('sig-watchlist-out');
+    const status = $('sig-watchlist-status');
+    if (!container || !out) return;
+    sigWatchlistSave();
+    const tickers = [...container.querySelectorAll('.wl-input')]
+      .map(i => i.value.trim().toUpperCase()).filter(Boolean);
+    if (!tickers.length) { if (status) status.textContent = 'Enter at least one ticker.'; return; }
+
+    if (status) status.textContent = `⟳ Fetching ${tickers.length} ticker(s)…`;
+    out.innerHTML = `<div style="color:#556;font-size:12px;padding:16px 0">⟳ Analyzing ${tickers.join(', ')}…</div>`;
+
+    // Ensure SPY is cached
+    if (!SIG.spy) SIG.spy = await sigFetch('SPY');
+
+    const results = [];
+    for (const sym of tickers) {
+      if (status) status.textContent = `⟳ Fetching ${sym}…`;
+      const data = await sigFetch(sym);
+      if (!data) { results.push({ sym, name: '', res: null }); continue; }
+      const meta = data; // raw array — name not available from Yahoo chart endpoint
+      const res = sigScore(data, SIG.spy);
+      results.push({ sym, name: '', res });
+    }
+
+    if (status) status.textContent = `✓ Done — ${results.filter(r=>r.res).length}/${tickers.length} succeeded.`;
+    out.innerHTML = sigWatchlistTableHtml(results);
+    // Apply sig-holdings-table style to watchlist table
+    const wlTbl = document.querySelector('#sig-watchlist-table');
+    if (wlTbl) {
+      wlTbl.style.width = '100%';
+      wlTbl.style.borderCollapse = 'collapse';
+      wlTbl.style.fontSize = '12px';
+    }
+  }
+
   function sigApplyData(data) {
-    // Render regime banner + cards from a signals JSON object.
+    // Render regime banner + holdings table from a signals JSON object.
     // Called on first load and whenever Actions pushes a new generated timestamp.
     sigRenderRegimeBanner(data.regime, data.spy, data.generated);
     Object.assign(SIG.results, data.holdings);
+    SIG._lastData = data.holdings;
     safe(renderUSHoldings, 'us-holdings'); // refresh signal badges in US table
-
-    const grid = $('sig-cards-grid');
-    if (!grid) return;
-    const holdings = S.cost ? (S.cost.us.open || []) : [];
-    const order = { REDUCE: 0, HOLD: 1, BUY: 2 };
-    const sorted = holdings
-      .filter(h => data.holdings[h.tk])
-      .sort((a, b) => {
-        const ra = data.holdings[a.tk], rb = data.holdings[b.tk];
-        return (order[ra.action] - order[rb.action]) || (rb.score - ra.score);
-      });
-    const missing = holdings.filter(h => !data.holdings[h.tk]);
-    const missingHtml = missing.map(h =>
-      `<div class="sig-card"><div class="sig-ticker">${h.tk}</div><div style="color:#556;font-size:11px;margin-top:8px">Data unavailable</div></div>`
-    ).join('');
-    grid.innerHTML =
-      sorted.map(h => sigRenderCard(h.tk, h.name, data.holdings[h.tk])).join('') + missingHtml
-      || '<div class="sig-loading">No signal data available.</div>';
+    renderSigHoldingsTable(data.holdings);
   }
 
   async function loadSignals() {
     // Called on tab switch — shows spinner only on very first load.
     if (SIG.fetching) return;
     SIG.fetching = true;
-    const grid = $('sig-cards-grid');
-    if (!SIG.generatedAt && grid) grid.innerHTML = '<div class="sig-loading">⟳ Loading signals…</div>';
+    const tbody = $('sig-holdings-tbody');
+    if (!SIG.generatedAt && tbody) tbody.innerHTML = '<tr><td colspan="11" class="sig-loading">⟳ Loading signals…</td></tr>';
 
     const data = await fetchJSON('data/processed/stock_signals.json');
     SIG.fetching = false;
     if (!data || !data.holdings) {
-      if (!SIG.generatedAt && grid)
-        grid.innerHTML = '<div class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</div>';
+      if (!SIG.generatedAt && tbody)
+        tbody.innerHTML = '<tr><td colspan="11" class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</td></tr>';
       return;
     }
     if (data.generated === SIG.generatedAt) return;   // nothing changed
@@ -1831,6 +2050,9 @@ const DASH = (() => {
         renderUSHoldings();
       });
     });
+    // Signal holdings table sort + watchlist
+    initSigTableSort();
+    sigWatchlistInit();
     tickCountdowns();
     setInterval(tickCountdowns, 1000);
     refresh();

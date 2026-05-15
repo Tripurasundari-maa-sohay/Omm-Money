@@ -1,0 +1,7324 @@
+{
+  "generated": "2026-05-15T14:53:38Z",
+  "regime": "BULL",
+  "spy": {
+    "px": 742.02,
+    "ma200": 673.35,
+    "pct_vs_200": 10.2
+  },
+  "count": 516,
+  "tickers": [
+    {
+      "tk": "ADI",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 59.0,
+      "v200": 44.8,
+      "rs": 10.4,
+      "rng": 94,
+      "vsMean": 51.4
+    },
+    {
+      "tk": "ADM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 64.5,
+      "v200": 25.8,
+      "rs": 10.5,
+      "rng": 93,
+      "vsMean": 31.4
+    },
+    {
+      "tk": "CASY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 64.8,
+      "v200": 41.9,
+      "rs": 22.9,
+      "rng": 96,
+      "vsMean": 48.1
+    },
+    {
+      "tk": "COHR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 61.9,
+      "v200": 99.8,
+      "rs": 46.2,
+      "rng": 93,
+      "vsMean": 125.1
+    },
+    {
+      "tk": "GLW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 62.4,
+      "v200": 86.5,
+      "rs": 35.0,
+      "rng": 94,
+      "vsMean": 108.9
+    },
+    {
+      "tk": "DELL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 58.8,
+      "v200": 64.9,
+      "rs": 90.0,
+      "rng": 88,
+      "vsMean": 71.8
+    },
+    {
+      "tk": "INTC",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 52.6,
+      "v200": 143.3,
+      "rs": 139.1,
+      "rng": 81,
+      "vsMean": 172.4
+    },
+    {
+      "tk": "LITE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 50.4,
+      "v200": 125.9,
+      "rs": 35.0,
+      "rng": 90,
+      "vsMean": 169.9
+    },
+    {
+      "tk": "LYB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 57.5,
+      "v200": 37.1,
+      "rs": 26.0,
+      "rng": 82,
+      "vsMean": 36.4
+    },
+    {
+      "tk": "MU",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 62.7,
+      "v200": 139.4,
+      "rs": 63.8,
+      "rng": 90,
+      "vsMean": 175.5
+    },
+    {
+      "tk": "ON",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 63.7,
+      "v200": 85.3,
+      "rs": 54.5,
+      "rng": 92,
+      "vsMean": 90.5
+    },
+    {
+      "tk": "PWR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 64.3,
+      "v200": 58.1,
+      "rs": 31.2,
+      "rng": 96,
+      "vsMean": 66.3
+    },
+    {
+      "tk": "Q",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 56.5,
+      "v200": 46.2,
+      "rs": 29.7,
+      "rng": 87,
+      "vsMean": 46.2
+    },
+    {
+      "tk": "SNDK",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 57.9,
+      "v200": 227.4,
+      "rs": 104.5,
+      "rng": 88,
+      "vsMean": 302.0
+    },
+    {
+      "tk": "STX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 79,
+      "action": "BUY",
+      "rsi": 61.0,
+      "v200": 131.1,
+      "rs": 81.8,
+      "rng": 92,
+      "vsMean": 164.1
+    },
+    {
+      "tk": "AMD",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 65.3,
+      "v200": 93.3,
+      "rs": 108.7,
+      "rng": 93,
+      "vsMean": 110.7
+    },
+    {
+      "tk": "GOOGL",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 67.9,
+      "v200": 36.8,
+      "rs": 18.6,
+      "rng": 98,
+      "vsMean": 48.9
+    },
+    {
+      "tk": "GOOG",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 66.9,
+      "v200": 35.5,
+      "rs": 17.4,
+      "rng": 98,
+      "vsMean": 47.4
+    },
+    {
+      "tk": "CBOE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 72.8,
+      "v200": 35.5,
+      "rs": 17.6,
+      "rng": 96,
+      "vsMean": 39.5
+    },
+    {
+      "tk": "DVA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 72.2,
+      "v200": 43.8,
+      "rs": 21.0,
+      "rng": 94,
+      "vsMean": 42.6
+    },
+    {
+      "tk": "HPE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 68.8,
+      "v200": 41.0,
+      "rs": 47.8,
+      "rng": 94,
+      "vsMean": 47.2
+    },
+    {
+      "tk": "NVDA",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 76,
+      "action": "BUY",
+      "rsi": 65.8,
+      "v200": 21.9,
+      "rs": 11.5,
+      "rng": 91,
+      "vsMean": 26.6
+    },
+    {
+      "tk": "AMZN",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 74,
+      "action": "BUY",
+      "rsi": 44.6,
+      "v200": 14.7,
+      "rs": 17.3,
+      "rng": 84,
+      "vsMean": 16.0
+    },
+    {
+      "tk": "CMI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 74,
+      "action": "BUY",
+      "rsi": 58.0,
+      "v200": 37.1,
+      "rs": 9.7,
+      "rng": 95,
+      "vsMean": 47.9
+    },
+    {
+      "tk": "GNRC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 74,
+      "action": "BUY",
+      "rsi": 53.9,
+      "v200": 39.6,
+      "rs": 6.1,
+      "rng": 90,
+      "vsMean": 47.5
+    },
+    {
+      "tk": "LRCX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 74,
+      "action": "BUY",
+      "rsi": 52.2,
+      "v200": 54.9,
+      "rs": 8.2,
+      "rng": 93,
+      "vsMean": 72.6
+    },
+    {
+      "tk": "ROK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 74,
+      "action": "BUY",
+      "rsi": 58.4,
+      "v200": 17.7,
+      "rs": 4.3,
+      "rng": 92,
+      "vsMean": 21.1
+    },
+    {
+      "tk": "WST",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 74,
+      "action": "BUY",
+      "rsi": 47.5,
+      "v200": 15.3,
+      "rs": 17.6,
+      "rng": 81,
+      "vsMean": 19.1
+    },
+    {
+      "tk": "AKAM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 73.3,
+      "v200": 68.1,
+      "rs": 55.0,
+      "rng": 92,
+      "vsMean": 73.1
+    },
+    {
+      "tk": "CNC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 85.4,
+      "v200": 54.1,
+      "rs": 28.2,
+      "rng": 92,
+      "vsMean": 47.9
+    },
+    {
+      "tk": "CF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 51.1,
+      "v200": 30.3,
+      "rs": 19.8,
+      "rng": 78,
+      "vsMean": 31.3
+    },
+    {
+      "tk": "CIEN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 58.5,
+      "v200": 118.5,
+      "rs": 62.3,
+      "rng": 96,
+      "vsMean": 154.9
+    },
+    {
+      "tk": "CSCO",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 93.4,
+      "v200": 54.1,
+      "rs": 40.8,
+      "rng": 100,
+      "vsMean": 58.8
+    },
+    {
+      "tk": "FIX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 59.2,
+      "v200": 76.9,
+      "rs": 27.6,
+      "rng": 96,
+      "vsMean": 98.8
+    },
+    {
+      "tk": "CVS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 83.4,
+      "v200": 27.9,
+      "rs": 19.9,
+      "rng": 98,
+      "vsMean": 33.0
+    },
+    {
+      "tk": "FFIV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 79.0,
+      "v200": 24.9,
+      "rs": 22.5,
+      "rng": 99,
+      "vsMean": 24.7
+    },
+    {
+      "tk": "FTNT",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 90.4,
+      "v200": 46.2,
+      "rs": 44.3,
+      "rng": 100,
+      "vsMean": 39.2
+    },
+    {
+      "tk": "BEN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 70.8,
+      "v200": 30.1,
+      "rs": 8.9,
+      "rng": 96,
+      "vsMean": 32.8
+    },
+    {
+      "tk": "JBL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 46.7,
+      "v200": 40.7,
+      "rs": 18.4,
+      "rng": 86,
+      "vsMean": 46.3
+    },
+    {
+      "tk": "MPC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 64.4,
+      "v200": 29.8,
+      "rs": 21.4,
+      "rng": 94,
+      "vsMean": 34.1
+    },
+    {
+      "tk": "MPWR",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 46.0,
+      "v200": 47.3,
+      "rs": 21.6,
+      "rng": 90,
+      "vsMean": 58.1
+    },
+    {
+      "tk": "STLD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 47.3,
+      "v200": 36.1,
+      "rs": 10.7,
+      "rng": 89,
+      "vsMean": 42.8
+    },
+    {
+      "tk": "TXN",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 77.1,
+      "v200": 56.1,
+      "rs": 31.7,
+      "rng": 98,
+      "vsMean": 56.4
+    },
+    {
+      "tk": "UNH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 80.3,
+      "v200": 25.1,
+      "rs": 30.0,
+      "rng": 97,
+      "vsMean": 27.2
+    },
+    {
+      "tk": "VRT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 63.5,
+      "v200": 79.6,
+      "rs": 41.7,
+      "rng": 96,
+      "vsMean": 96.3
+    },
+    {
+      "tk": "GWW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 71,
+      "action": "BUY",
+      "rsi": 71.6,
+      "v200": 21.7,
+      "rs": 4.5,
+      "rng": 95,
+      "vsMean": 21.5
+    },
+    {
+      "tk": "MO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 70,
+      "action": "BUY",
+      "rsi": 65.6,
+      "v200": 16.2,
+      "rs": 1.1,
+      "rng": 90,
+      "vsMean": 18.7
+    },
+    {
+      "tk": "GS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 70,
+      "action": "BUY",
+      "rsi": 58.6,
+      "v200": 13.7,
+      "rs": -4.2,
+      "rng": 95,
+      "vsMean": 19.2
+    },
+    {
+      "tk": "IFF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 70,
+      "action": "BUY",
+      "rsi": 43.1,
+      "v200": 7.7,
+      "rs": -17.0,
+      "rng": 61,
+      "vsMean": 5.8
+    },
+    {
+      "tk": "SBUX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 70,
+      "action": "BUY",
+      "rsi": 69.7,
+      "v200": 19.1,
+      "rs": 2.1,
+      "rng": 100,
+      "vsMean": 19.3
+    },
+    {
+      "tk": "WELL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 70,
+      "action": "BUY",
+      "rsi": 54.6,
+      "v200": 14.6,
+      "rs": -3.4,
+      "rng": 95,
+      "vsMean": 19.4
+    },
+    {
+      "tk": "AVGO",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 55.5,
+      "v200": 23.5,
+      "rs": 20.7,
+      "rng": 94,
+      "vsMean": 30.2
+    },
+    {
+      "tk": "EOG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 62.4,
+      "v200": 18.8,
+      "rs": 5.8,
+      "rng": 80,
+      "vsMean": 19.4
+    },
+    {
+      "tk": "HAL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 58.5,
+      "v200": 38.4,
+      "rs": 10.6,
+      "rng": 96,
+      "vsMean": 47.6
+    },
+    {
+      "tk": "DOC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 75.6,
+      "v200": 14.3,
+      "rs": 8.0,
+      "rng": 93,
+      "vsMean": 14.9
+    },
+    {
+      "tk": "IVZ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 48.8,
+      "v200": 10.5,
+      "rs": -6.3,
+      "rng": 85,
+      "vsMean": 18.9
+    },
+    {
+      "tk": "KLAC",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 51.6,
+      "v200": 39.9,
+      "rs": 14.0,
+      "rng": 91,
+      "vsMean": 50.5
+    },
+    {
+      "tk": "NUE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 54.6,
+      "v200": 38.5,
+      "rs": 18.9,
+      "rng": 95,
+      "vsMean": 45.4
+    },
+    {
+      "tk": "NXPI",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 57.7,
+      "v200": 31.0,
+      "rs": 18.2,
+      "rng": 88,
+      "vsMean": 32.3
+    },
+    {
+      "tk": "QCOM",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 58.9,
+      "v200": 30.2,
+      "rs": 36.7,
+      "rng": 72,
+      "vsMean": 31.2
+    },
+    {
+      "tk": "TTWO",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 86.0,
+      "v200": 5.8,
+      "rs": 14.8,
+      "rng": 76,
+      "vsMean": 5.6
+    },
+    {
+      "tk": "WDC",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 55.9,
+      "v200": 123.6,
+      "rs": 57.7,
+      "rng": 91,
+      "vsMean": 162.3
+    },
+    {
+      "tk": "ARM",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 50.9,
+      "v200": 47.3,
+      "rs": 61.0,
+      "rng": 81,
+      "vsMean": 47.0
+    },
+    {
+      "tk": "MRVL",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 69,
+      "action": "BUY",
+      "rsi": 63.6,
+      "v200": 91.1,
+      "rs": 116.1,
+      "rng": 96,
+      "vsMean": 101.4
+    },
+    {
+      "tk": "CL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 68,
+      "action": "BUY",
+      "rsi": 64.9,
+      "v200": 6.8,
+      "rs": -14.1,
+      "rng": 60,
+      "vsMean": 5.6
+    },
+    {
+      "tk": "SATS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 68,
+      "action": "BUY",
+      "rsi": 71.8,
+      "v200": 46.8,
+      "rs": 15.2,
+      "rng": 100,
+      "vsMean": 73.0
+    },
+    {
+      "tk": "CDNS",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 54.9,
+      "v200": 8.5,
+      "rs": 10.3,
+      "rng": 78,
+      "vsMean": 9.2
+    },
+    {
+      "tk": "HWM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 58.1,
+      "v200": 24.5,
+      "rs": -4.8,
+      "rng": 93,
+      "vsMean": 29.2
+    },
+    {
+      "tk": "LIN",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Materials",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 57.7,
+      "v200": 10.4,
+      "rs": -5.0,
+      "rng": 97,
+      "vsMean": 10.4
+    },
+    {
+      "tk": "LYV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 69.0,
+      "v200": 10.9,
+      "rs": -3.8,
+      "rng": 90,
+      "vsMean": 11.8
+    },
+    {
+      "tk": "VTR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 60.9,
+      "v200": 15.8,
+      "rs": -3.8,
+      "rng": 95,
+      "vsMean": 20.4
+    },
+    {
+      "tk": "VTRS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 60.1,
+      "v200": 37.9,
+      "rs": -1.9,
+      "rng": 93,
+      "vsMean": 46.5
+    },
+    {
+      "tk": "WMT",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 67,
+      "action": "BUY",
+      "rsi": 62.3,
+      "v200": 16.4,
+      "rs": -0.0,
+      "rng": 97,
+      "vsMean": 20.2
+    },
+    {
+      "tk": "APO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 63.7,
+      "v200": 3.7,
+      "rs": 3.9,
+      "rng": 62,
+      "vsMean": 2.1
+    },
+    {
+      "tk": "AAPL",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 83.9,
+      "v200": 16.3,
+      "rs": 5.9,
+      "rng": 100,
+      "vsMean": 21.5
+    },
+    {
+      "tk": "AMAT",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 59.6,
+      "v200": 54.5,
+      "rs": 7.6,
+      "rng": 97,
+      "vsMean": 67.2
+    },
+    {
+      "tk": "CAT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 49.1,
+      "v200": 44.0,
+      "rs": 8.4,
+      "rng": 92,
+      "vsMean": 56.4
+    },
+    {
+      "tk": "EQIX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 38.7,
+      "v200": 24.3,
+      "rs": 7.3,
+      "rng": 87,
+      "vsMean": 25.3
+    },
+    {
+      "tk": "FOXA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 53.8,
+      "v200": 3.3,
+      "rs": 6.5,
+      "rng": 52,
+      "vsMean": 6.0
+    },
+    {
+      "tk": "FOX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 52.5,
+      "v200": 2.7,
+      "rs": 4.0,
+      "rng": 51,
+      "vsMean": 5.1
+    },
+    {
+      "tk": "NTAP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 71.6,
+      "v200": 10.0,
+      "rs": 9.2,
+      "rng": 83,
+      "vsMean": 11.4
+    },
+    {
+      "tk": "PSX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 58.4,
+      "v200": 21.8,
+      "rs": 5.7,
+      "rng": 84,
+      "vsMean": 26.4
+    },
+    {
+      "tk": "STT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 66.6,
+      "v200": 24.2,
+      "rs": 12.9,
+      "rng": 99,
+      "vsMean": 29.2
+    },
+    {
+      "tk": "VRSN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 76.8,
+      "v200": 16.0,
+      "rs": 29.3,
+      "rng": 93,
+      "vsMean": 13.8
+    },
+    {
+      "tk": "ASML",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 66,
+      "action": "BUY",
+      "rsi": 49.4,
+      "v200": 30.7,
+      "rs": -5.2,
+      "rng": 91,
+      "vsMean": 40.7
+    },
+    {
+      "tk": "CTVA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 65,
+      "action": "BUY",
+      "rsi": 57.0,
+      "v200": 15.1,
+      "rs": 0.9,
+      "rng": 89,
+      "vsMean": 15.1
+    },
+    {
+      "tk": "DLR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 65,
+      "action": "BUY",
+      "rsi": 27.8,
+      "v200": 10.8,
+      "rs": 0.4,
+      "rng": 74,
+      "vsMean": 11.0
+    },
+    {
+      "tk": "DD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 53.6,
+      "v200": 22.9,
+      "rs": -9.6,
+      "rng": 92,
+      "vsMean": 30.3
+    },
+    {
+      "tk": "EME",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 52.7,
+      "v200": 30.2,
+      "rs": 4.2,
+      "rng": 93,
+      "vsMean": 37.7
+    },
+    {
+      "tk": "IRM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 50.4,
+      "v200": 27.2,
+      "rs": 6.5,
+      "rng": 87,
+      "vsMean": 27.6
+    },
+    {
+      "tk": "LLY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 67.5,
+      "v200": 9.9,
+      "rs": -7.8,
+      "rng": 80,
+      "vsMean": 13.8
+    },
+    {
+      "tk": "NTRS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 58.8,
+      "v200": 18.8,
+      "rs": 6.0,
+      "rng": 89,
+      "vsMean": 22.9
+    },
+    {
+      "tk": "VRTX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 57.5,
+      "v200": 2.0,
+      "rs": -14.9,
+      "rng": 58,
+      "vsMean": 1.1
+    },
+    {
+      "tk": "WMB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 64,
+      "action": "HOLD",
+      "rsi": 68.8,
+      "v200": 20.6,
+      "rs": -1.1,
+      "rng": 99,
+      "vsMean": 23.2
+    },
+    {
+      "tk": "CRWD",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 90.7,
+      "v200": 27.4,
+      "rs": 43.0,
+      "rng": 100,
+      "vsMean": 26.5
+    },
+    {
+      "tk": "DDOG",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 86.5,
+      "v200": 47.7,
+      "rs": 70.8,
+      "rng": 100,
+      "vsMean": 49.7
+    },
+    {
+      "tk": "EBAY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 75.9,
+      "v200": 25.4,
+      "rs": 22.5,
+      "rng": 100,
+      "vsMean": 30.0
+    },
+    {
+      "tk": "EQR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 44.4,
+      "v200": 5.4,
+      "rs": -3.4,
+      "rng": 66,
+      "vsMean": 3.9
+    },
+    {
+      "tk": "GEV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 44.6,
+      "v200": 43.2,
+      "rs": 18.3,
+      "rng": 86,
+      "vsMean": 52.5
+    },
+    {
+      "tk": "HUM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 84.0,
+      "v200": 24.1,
+      "rs": 50.3,
+      "rng": 93,
+      "vsMean": 25.1
+    },
+    {
+      "tk": "IBKR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 68.4,
+      "v200": 25.6,
+      "rs": 9.3,
+      "rng": 97,
+      "vsMean": 31.0
+    },
+    {
+      "tk": "KEYS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 46.1,
+      "v200": 55.4,
+      "rs": 36.1,
+      "rng": 92,
+      "vsMean": 64.8
+    },
+    {
+      "tk": "MCHP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 48.8,
+      "v200": 37.1,
+      "rs": 14.1,
+      "rng": 84,
+      "vsMean": 38.1
+    },
+    {
+      "tk": "NDAQ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 68.3,
+      "v200": 1.7,
+      "rs": 4.2,
+      "rng": 58,
+      "vsMean": 2.5
+    },
+    {
+      "tk": "PANW",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 63,
+      "action": "HOLD",
+      "rsi": 92.6,
+      "v200": 28.1,
+      "rs": 51.9,
+      "rng": 99,
+      "vsMean": 26.6
+    },
+    {
+      "tk": "ALB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 34.8,
+      "v200": 35.1,
+      "rs": 1.0,
+      "rng": 80,
+      "vsMean": 51.5
+    },
+    {
+      "tk": "CINF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 72.0,
+      "v200": 5.3,
+      "rs": -4.5,
+      "rng": 87,
+      "vsMean": 7.2
+    },
+    {
+      "tk": "COST",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 72.8,
+      "v200": 10.1,
+      "rs": -1.4,
+      "rng": 99,
+      "vsMean": 9.3
+    },
+    {
+      "tk": "FRT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 44.3,
+      "v200": 12.7,
+      "rs": -1.4,
+      "rng": 88,
+      "vsMean": 14.8
+    },
+    {
+      "tk": "NEE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 47.2,
+      "v200": 12.8,
+      "rs": -4.9,
+      "rng": 89,
+      "vsMean": 16.5
+    },
+    {
+      "tk": "ORCL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 63.9,
+      "v200": -7.0,
+      "rs": 23.4,
+      "rng": 30,
+      "vsMean": -6.6
+    },
+    {
+      "tk": "PM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 86.5,
+      "v200": 17.8,
+      "rs": -2.6,
+      "rng": 99,
+      "vsMean": 16.4
+    },
+    {
+      "tk": "TSN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 62,
+      "action": "HOLD",
+      "rsi": 48.7,
+      "v200": 13.9,
+      "rs": -3.1,
+      "rng": 88,
+      "vsMean": 15.8
+    },
+    {
+      "tk": "AIZ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 61,
+      "action": "HOLD",
+      "rsi": 81.3,
+      "v200": 15.2,
+      "rs": 6.2,
+      "rng": 100,
+      "vsMean": 18.5
+    },
+    {
+      "tk": "XYZ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 61,
+      "action": "HOLD",
+      "rsi": 50.6,
+      "v200": 4.9,
+      "rs": 25.9,
+      "rng": 69,
+      "vsMean": 5.3
+    },
+    {
+      "tk": "BK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 61,
+      "action": "HOLD",
+      "rsi": 70.6,
+      "v200": 19.8,
+      "rs": 8.5,
+      "rng": 99,
+      "vsMean": 25.1
+    },
+    {
+      "tk": "DOW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 61,
+      "action": "HOLD",
+      "rsi": 52.4,
+      "v200": 40.0,
+      "rs": 21.7,
+      "rng": 87,
+      "vsMean": 40.9
+    },
+    {
+      "tk": "ELV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 61,
+      "action": "HOLD",
+      "rsi": 80.6,
+      "v200": 21.1,
+      "rs": 8.4,
+      "rng": 94,
+      "vsMean": 19.3
+    },
+    {
+      "tk": "VLO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 61,
+      "action": "HOLD",
+      "rsi": 59.1,
+      "v200": 33.2,
+      "rs": 16.2,
+      "rng": 96,
+      "vsMean": 41.3
+    },
+    {
+      "tk": "CARR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 49.6,
+      "v200": 10.0,
+      "rs": -6.1,
+      "rng": 51,
+      "vsMean": 5.0
+    },
+    {
+      "tk": "CPAY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 58.7,
+      "v200": 7.1,
+      "rs": -14.3,
+      "rng": 74,
+      "vsMean": 5.4
+    },
+    {
+      "tk": "CSX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 62.8,
+      "v200": 21.7,
+      "rs": 0.5,
+      "rng": 97,
+      "vsMean": 25.2
+    },
+    {
+      "tk": "MS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 57.7,
+      "v200": 15.8,
+      "rs": 2.6,
+      "rng": 98,
+      "vsMean": 20.9
+    },
+    {
+      "tk": "PFG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 53.7,
+      "v200": 15.7,
+      "rs": -2.4,
+      "rng": 95,
+      "vsMean": 18.6
+    },
+    {
+      "tk": "SLB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 55.7,
+      "v200": 31.8,
+      "rs": 1.2,
+      "rng": 94,
+      "vsMean": 37.3
+    },
+    {
+      "tk": "TRV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 60,
+      "action": "HOLD",
+      "rsi": 54.4,
+      "v200": 5.8,
+      "rs": -8.8,
+      "rng": 84,
+      "vsMean": 7.6
+    },
+    {
+      "tk": "AFL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 68.4,
+      "v200": 7.1,
+      "rs": -5.1,
+      "rng": 100,
+      "vsMean": 8.7
+    },
+    {
+      "tk": "AME",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 38.7,
+      "v200": 10.4,
+      "rs": -10.1,
+      "rng": 80,
+      "vsMean": 13.6
+    },
+    {
+      "tk": "BKR",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Energy",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 43.2,
+      "v200": 22.9,
+      "rs": -3.9,
+      "rng": 85,
+      "vsMean": 30.0
+    },
+    {
+      "tk": "CI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 57.5,
+      "v200": 4.6,
+      "rs": -2.9,
+      "rng": 58,
+      "vsMean": 2.6
+    },
+    {
+      "tk": "C",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 36.0,
+      "v200": 14.3,
+      "rs": -1.0,
+      "rng": 85,
+      "vsMean": 20.5
+    },
+    {
+      "tk": "KO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 77.8,
+      "v200": 12.9,
+      "rs": -5.7,
+      "rng": 100,
+      "vsMean": 13.8
+    },
+    {
+      "tk": "EIX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 47.2,
+      "v200": 14.5,
+      "rs": -12.2,
+      "rng": 80,
+      "vsMean": 19.0
+    },
+    {
+      "tk": "EVRG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 44.0,
+      "v200": 7.0,
+      "rs": -5.4,
+      "rng": 87,
+      "vsMean": 10.1
+    },
+    {
+      "tk": "EXPD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 62.4,
+      "v200": 12.3,
+      "rs": -7.8,
+      "rng": 84,
+      "vsMean": 16.8
+    },
+    {
+      "tk": "F",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 63.1,
+      "v200": 9.8,
+      "rs": -10.2,
+      "rng": 81,
+      "vsMean": 13.5
+    },
+    {
+      "tk": "HST",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 44.5,
+      "v200": 18.6,
+      "rs": -2.7,
+      "rng": 88,
+      "vsMean": 22.6
+    },
+    {
+      "tk": "IEX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 40.9,
+      "v200": 14.9,
+      "rs": -6.9,
+      "rng": 86,
+      "vsMean": 15.3
+    },
+    {
+      "tk": "MAR",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 48.2,
+      "v200": 16.0,
+      "rs": -6.1,
+      "rng": 80,
+      "vsMean": 19.0
+    },
+    {
+      "tk": "MRK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 44.4,
+      "v200": 11.6,
+      "rs": -15.6,
+      "rng": 78,
+      "vsMean": 17.1
+    },
+    {
+      "tk": "MDLZ",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 49.1,
+      "v200": 4.3,
+      "rs": -3.9,
+      "rng": 54,
+      "vsMean": 1.6
+    },
+    {
+      "tk": "MNST",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 80.1,
+      "v200": 19.6,
+      "rs": -3.6,
+      "rng": 100,
+      "vsMean": 23.4
+    },
+    {
+      "tk": "MSCI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 38.7,
+      "v200": 1.9,
+      "rs": -2.7,
+      "rng": 56,
+      "vsMean": 2.0
+    },
+    {
+      "tk": "PLD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 44.1,
+      "v200": 12.2,
+      "rs": -7.6,
+      "rng": 90,
+      "vsMean": 16.2
+    },
+    {
+      "tk": "SPG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 46.0,
+      "v200": 9.3,
+      "rs": -7.3,
+      "rng": 88,
+      "vsMean": 12.9
+    },
+    {
+      "tk": "TGT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 44.2,
+      "v200": 19.3,
+      "rs": -2.2,
+      "rng": 82,
+      "vsMean": 21.0
+    },
+    {
+      "tk": "TSLA",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 57.8,
+      "v200": 4.6,
+      "rs": -4.4,
+      "rng": 69,
+      "vsMean": 9.2
+    },
+    {
+      "tk": "TT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 46.3,
+      "v200": 10.6,
+      "rs": -6.8,
+      "rng": 82,
+      "vsMean": 10.2
+    },
+    {
+      "tk": "VZ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 59,
+      "action": "HOLD",
+      "rsi": 49.9,
+      "v200": 10.1,
+      "rs": -10.5,
+      "rng": 75,
+      "vsMean": 11.5
+    },
+    {
+      "tk": "COIN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 58,
+      "action": "HOLD",
+      "rsi": 47.8,
+      "v200": -22.0,
+      "rs": 7.9,
+      "rng": 21,
+      "vsMean": -25.9
+    },
+    {
+      "tk": "D",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 58,
+      "action": "HOLD",
+      "rsi": 49.2,
+      "v200": 3.8,
+      "rs": -12.1,
+      "rng": 77,
+      "vsMean": 5.9
+    },
+    {
+      "tk": "TRGP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 58,
+      "action": "HOLD",
+      "rsi": 75.5,
+      "v200": 40.2,
+      "rs": 9.9,
+      "rng": 100,
+      "vsMean": 44.8
+    },
+    {
+      "tk": "APD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 43.3,
+      "v200": 9.3,
+      "rs": -1.6,
+      "rng": 89,
+      "vsMean": 8.8
+    },
+    {
+      "tk": "GM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 43.4,
+      "v200": 6.4,
+      "rs": -14.7,
+      "rng": 74,
+      "vsMean": 13.3
+    },
+    {
+      "tk": "INVH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 43.5,
+      "v200": 2.9,
+      "rs": 4.3,
+      "rng": 44,
+      "vsMean": -0.5
+    },
+    {
+      "tk": "KEY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 34.2,
+      "v200": 6.5,
+      "rs": -13.2,
+      "rng": 73,
+      "vsMean": 10.0
+    },
+    {
+      "tk": "NSC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 59.6,
+      "v200": 8.8,
+      "rs": -7.6,
+      "rng": 95,
+      "vsMean": 11.8
+    },
+    {
+      "tk": "SNPS",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 53.2,
+      "v200": 5.6,
+      "rs": 5.9,
+      "rng": 45,
+      "vsMean": 3.3
+    },
+    {
+      "tk": "UNP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 57,
+      "action": "HOLD",
+      "rsi": 64.4,
+      "v200": 14.4,
+      "rs": -6.2,
+      "rng": 97,
+      "vsMean": 15.7
+    },
+    {
+      "tk": "AMGN",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 37.9,
+      "v200": 1.5,
+      "rs": -20.2,
+      "rng": 52,
+      "vsMean": 4.2
+    },
+    {
+      "tk": "BIIB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 50.3,
+      "v200": 14.8,
+      "rs": -7.7,
+      "rng": 85,
+      "vsMean": 20.5
+    },
+    {
+      "tk": "BLK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 59.6,
+      "v200": 1.4,
+      "rs": -7.9,
+      "rng": 62,
+      "vsMean": 2.6
+    },
+    {
+      "tk": "CHD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 49.7,
+      "v200": 3.2,
+      "rs": -16.5,
+      "rng": 54,
+      "vsMean": 2.1
+    },
+    {
+      "tk": "FANG",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Energy",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 61.7,
+      "v200": 28.0,
+      "rs": 8.9,
+      "rng": 89,
+      "vsMean": 31.4
+    },
+    {
+      "tk": "XOM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 65.0,
+      "v200": 20.9,
+      "rs": -2.1,
+      "rng": 78,
+      "vsMean": 25.4
+    },
+    {
+      "tk": "FDX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 47.9,
+      "v200": 26.2,
+      "rs": -10.8,
+      "rng": 86,
+      "vsMean": 33.1
+    },
+    {
+      "tk": "FCX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 50.3,
+      "v200": 22.5,
+      "rs": -9.8,
+      "rng": 79,
+      "vsMean": 27.5
+    },
+    {
+      "tk": "GD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 42.8,
+      "v200": 0.1,
+      "rs": -11.2,
+      "rng": 72,
+      "vsMean": 3.4
+    },
+    {
+      "tk": "INCY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 40.1,
+      "v200": 1.2,
+      "rs": -13.2,
+      "rng": 70,
+      "vsMean": 7.5
+    },
+    {
+      "tk": "OKE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 68.6,
+      "v200": 20.8,
+      "rs": -1.7,
+      "rng": 96,
+      "vsMean": 20.3
+    },
+    {
+      "tk": "PKG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 40.3,
+      "v200": 2.1,
+      "rs": -16.9,
+      "rng": 51,
+      "vsMean": 3.9
+    },
+    {
+      "tk": "TXT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 46.7,
+      "v200": 4.3,
+      "rs": -17.7,
+      "rng": 65,
+      "vsMean": 6.4
+    },
+    {
+      "tk": "WAB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 45.9,
+      "v200": 18.4,
+      "rs": -8.3,
+      "rng": 92,
+      "vsMean": 20.4
+    },
+    {
+      "tk": "WBD",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 56,
+      "action": "HOLD",
+      "rsi": 41.0,
+      "v200": 15.3,
+      "rs": -13.9,
+      "rng": 86,
+      "vsMean": 29.6
+    },
+    {
+      "tk": "ALL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 55,
+      "action": "HOLD",
+      "rsi": 63.3,
+      "v200": 6.6,
+      "rs": -1.3,
+      "rng": 97,
+      "vsMean": 7.6
+    },
+    {
+      "tk": "ESS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 55,
+      "action": "HOLD",
+      "rsi": 55.8,
+      "v200": 5.5,
+      "rs": -1.8,
+      "rng": 65,
+      "vsMean": 3.7
+    },
+    {
+      "tk": "EG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 55,
+      "action": "HOLD",
+      "rsi": 56.2,
+      "v200": 5.7,
+      "rs": -4.8,
+      "rng": 81,
+      "vsMean": 5.4
+    },
+    {
+      "tk": "GL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 55,
+      "action": "HOLD",
+      "rsi": 62.9,
+      "v200": 10.8,
+      "rs": 0.0,
+      "rng": 100,
+      "vsMean": 13.9
+    },
+    {
+      "tk": "APP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 59.4,
+      "v200": -6.8,
+      "rs": 10.5,
+      "rng": 42,
+      "vsMean": -0.2
+    },
+    {
+      "tk": "EW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 54.0,
+      "v200": 0.9,
+      "rs": -5.1,
+      "rng": 64,
+      "vsMean": 2.1
+    },
+    {
+      "tk": "JCI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 52.0,
+      "v200": 17.7,
+      "rs": -8.3,
+      "rng": 94,
+      "vsMean": 21.4
+    },
+    {
+      "tk": "KMI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 73.9,
+      "v200": 16.9,
+      "rs": -4.6,
+      "rng": 97,
+      "vsMean": 18.5
+    },
+    {
+      "tk": "MRNA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 41.3,
+      "v200": 32.1,
+      "rs": -11.1,
+      "rng": 73,
+      "vsMean": 38.1
+    },
+    {
+      "tk": "NEM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 37.8,
+      "v200": 11.5,
+      "rs": -18.2,
+      "rng": 73,
+      "vsMean": 22.2
+    },
+    {
+      "tk": "OXY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 59.7,
+      "v200": 23.4,
+      "rs": 5.6,
+      "rng": 72,
+      "vsMean": 26.0
+    },
+    {
+      "tk": "PCG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 51.0,
+      "v200": 2.5,
+      "rs": -17.3,
+      "rng": 60,
+      "vsMean": 4.6
+    },
+    {
+      "tk": "TROW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 54,
+      "action": "HOLD",
+      "rsi": 47.3,
+      "v200": 2.9,
+      "rs": 0.7,
+      "rng": 75,
+      "vsMean": 4.0
+    },
+    {
+      "tk": "APA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 49.9,
+      "v200": 37.6,
+      "rs": 23.2,
+      "rng": 78,
+      "vsMean": 48.1
+    },
+    {
+      "tk": "FSLR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 70.0,
+      "v200": 3.8,
+      "rs": -11.8,
+      "rng": 63,
+      "vsMean": 9.7
+    },
+    {
+      "tk": "HON",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 40.5,
+      "v200": 1.5,
+      "rs": -20.1,
+      "rng": 43,
+      "vsMean": 1.3
+    },
+    {
+      "tk": "JBHT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 71.4,
+      "v200": 39.6,
+      "rs": 6.1,
+      "rng": 100,
+      "vsMean": 46.7
+    },
+    {
+      "tk": "KDP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 61.1,
+      "v200": 4.4,
+      "rs": -8.6,
+      "rng": 45,
+      "vsMean": 1.1
+    },
+    {
+      "tk": "RVTY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 52.3,
+      "v200": 1.0,
+      "rs": -13.0,
+      "rng": 37,
+      "vsMean": 0.8
+    },
+    {
+      "tk": "LUV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 39.1,
+      "v200": 2.0,
+      "rs": -33.5,
+      "rng": 38,
+      "vsMean": 4.9
+    },
+    {
+      "tk": "UDR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 66.0,
+      "v200": 4.1,
+      "rs": -6.5,
+      "rng": 58,
+      "vsMean": 2.1
+    },
+    {
+      "tk": "WAT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 48.9,
+      "v200": -1.5,
+      "rs": -8.3,
+      "rng": 40,
+      "vsMean": -1.4
+    },
+    {
+      "tk": "MSTR",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 53,
+      "action": "HOLD",
+      "rsi": 46.8,
+      "v200": -19.6,
+      "rs": 25.8,
+      "rng": 20,
+      "vsMean": -31.2
+    },
+    {
+      "tk": "LNT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 39.9,
+      "v200": 6.6,
+      "rs": -6.4,
+      "rng": 84,
+      "vsMean": 9.0
+    },
+    {
+      "tk": "ARES",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 59.0,
+      "v200": -13.9,
+      "rs": -5.0,
+      "rng": 32,
+      "vsMean": -16.5
+    },
+    {
+      "tk": "CME",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 73.8,
+      "v200": 8.8,
+      "rs": -7.8,
+      "rng": 74,
+      "vsMean": 9.6
+    },
+    {
+      "tk": "DVN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 56.8,
+      "v200": 24.2,
+      "rs": 1.8,
+      "rng": 84,
+      "vsMean": 28.9
+    },
+    {
+      "tk": "DOV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 28.2,
+      "v200": 7.9,
+      "rs": -17.3,
+      "rng": 70,
+      "vsMean": 9.5
+    },
+    {
+      "tk": "ETN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 42.2,
+      "v200": 10.1,
+      "rs": -0.6,
+      "rng": 72,
+      "vsMean": 11.3
+    },
+    {
+      "tk": "KIM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 33.4,
+      "v200": 7.3,
+      "rs": -7.4,
+      "rng": 76,
+      "vsMean": 8.3
+    },
+    {
+      "tk": "RTX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 35.1,
+      "v200": -2.6,
+      "rs": -22.8,
+      "rng": 54,
+      "vsMean": 1.7
+    },
+    {
+      "tk": "URI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 52,
+      "action": "HOLD",
+      "rsi": 61.2,
+      "v200": 10.9,
+      "rs": -1.9,
+      "rng": 85,
+      "vsMean": 14.1
+    },
+    {
+      "tk": "AVB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 46.4,
+      "v200": 2.4,
+      "rs": -4.1,
+      "rng": 55,
+      "vsMean": 0.2
+    },
+    {
+      "tk": "EL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 45.4,
+      "v200": -14.0,
+      "rs": -37.3,
+      "rng": 31,
+      "vsMean": -10.7
+    },
+    {
+      "tk": "FTV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 38.1,
+      "v200": 10.6,
+      "rs": -6.3,
+      "rng": 82,
+      "vsMean": 10.9
+    },
+    {
+      "tk": "HAS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 48.6,
+      "v200": 12.1,
+      "rs": -14.3,
+      "rng": 75,
+      "vsMean": 16.3
+    },
+    {
+      "tk": "HPQ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 46.3,
+      "v200": -8.8,
+      "rs": 5.2,
+      "rng": 27,
+      "vsMean": -10.4
+    },
+    {
+      "tk": "KHC",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 54.6,
+      "v200": -3.6,
+      "rs": -11.3,
+      "rng": 31,
+      "vsMean": -4.9
+    },
+    {
+      "tk": "NDSN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 36.9,
+      "v200": 10.6,
+      "rs": -12.3,
+      "rng": 80,
+      "vsMean": 14.3
+    },
+    {
+      "tk": "SJM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 60.6,
+      "v200": -3.1,
+      "rs": -17.6,
+      "rng": 38,
+      "vsMean": -3.0
+    },
+    {
+      "tk": "SOLV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 77.5,
+      "v200": 2.0,
+      "rs": -4.7,
+      "rng": 54,
+      "vsMean": 1.9
+    },
+    {
+      "tk": "TER",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 51,
+      "action": "HOLD",
+      "rsi": 40.0,
+      "v200": 52.8,
+      "rs": -3.3,
+      "rng": 77,
+      "vsMean": 74.6
+    },
+    {
+      "tk": "DE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 50,
+      "action": "HOLD",
+      "rsi": 36.0,
+      "v200": 8.5,
+      "rs": -22.9,
+      "rng": 56,
+      "vsMean": 9.0
+    },
+    {
+      "tk": "FER",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 50,
+      "action": "HOLD",
+      "rsi": 35.1,
+      "v200": 5.0,
+      "rs": -15.6,
+      "rng": 71,
+      "vsMean": 9.4
+    },
+    {
+      "tk": "ABNB",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 30.3,
+      "v200": 3.7,
+      "rs": -3.9,
+      "rng": 66,
+      "vsMean": 2.6
+    },
+    {
+      "tk": "CFG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 29.5,
+      "v200": 6.9,
+      "rs": -15.2,
+      "rng": 74,
+      "vsMean": 12.5
+    },
+    {
+      "tk": "DAL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 50.1,
+      "v200": 10.4,
+      "rs": -5.8,
+      "rng": 84,
+      "vsMean": 15.4
+    },
+    {
+      "tk": "ES",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 45.0,
+      "v200": -0.4,
+      "rs": -14.7,
+      "rng": 50,
+      "vsMean": 1.3
+    },
+    {
+      "tk": "HSY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 45.7,
+      "v200": -2.1,
+      "rs": -23.1,
+      "rng": 45,
+      "vsMean": 0.9
+    },
+    {
+      "tk": "HLT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 49.3,
+      "v200": 10.0,
+      "rs": -7.3,
+      "rng": 75,
+      "vsMean": 12.4
+    },
+    {
+      "tk": "IQV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 47.5,
+      "v200": -13.3,
+      "rs": -5.2,
+      "rng": 31,
+      "vsMean": -9.8
+    },
+    {
+      "tk": "JNJ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 59.3,
+      "v200": 10.6,
+      "rs": -12.6,
+      "rng": 82,
+      "vsMean": 16.9
+    },
+    {
+      "tk": "KR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 50.2,
+      "v200": -0.4,
+      "rs": -7.6,
+      "rng": 46,
+      "vsMean": -0.9
+    },
+    {
+      "tk": "NWS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 45.3,
+      "v200": 0.2,
+      "rs": 5.8,
+      "rng": 48,
+      "vsMean": -1.8
+    },
+    {
+      "tk": "NI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 40.7,
+      "v200": 7.9,
+      "rs": -6.1,
+      "rng": 87,
+      "vsMean": 10.3
+    },
+    {
+      "tk": "SMCI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 49,
+      "action": "HOLD",
+      "rsi": 50.1,
+      "v200": -15.0,
+      "rs": -11.8,
+      "rng": 26,
+      "vsMean": -19.6
+    },
+    {
+      "tk": "AES",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 76.9,
+      "v200": 4.4,
+      "rs": -19.2,
+      "rng": 67,
+      "vsMean": 9.1
+    },
+    {
+      "tk": "BA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 39.5,
+      "v200": 2.1,
+      "rs": -11.3,
+      "rng": 62,
+      "vsMean": 2.6
+    },
+    {
+      "tk": "EXR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 33.0,
+      "v200": 0.8,
+      "rs": -16.4,
+      "rng": 53,
+      "vsMean": -0.2
+    },
+    {
+      "tk": "GRMN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 29.0,
+      "v200": 1.2,
+      "rs": -15.3,
+      "rng": 54,
+      "vsMean": 2.9
+    },
+    {
+      "tk": "GILD",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 38.0,
+      "v200": 2.6,
+      "rs": -21.5,
+      "rng": 57,
+      "vsMean": 6.0
+    },
+    {
+      "tk": "MET",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 58.4,
+      "v200": 3.4,
+      "rs": -7.4,
+      "rng": 83,
+      "vsMean": 3.4
+    },
+    {
+      "tk": "PSA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 34.8,
+      "v200": 4.9,
+      "rs": -9.9,
+      "rng": 71,
+      "vsMean": 4.7
+    },
+    {
+      "tk": "REGN",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 37.0,
+      "v200": 1.5,
+      "rs": -18.0,
+      "rng": 67,
+      "vsMean": 6.2
+    },
+    {
+      "tk": "SWKS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 53.2,
+      "v200": 3.1,
+      "rs": 5.3,
+      "rng": 51,
+      "vsMean": 1.4
+    },
+    {
+      "tk": "TFC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 28.8,
+      "v200": 0.1,
+      "rs": -18.2,
+      "rng": 53,
+      "vsMean": 2.8
+    },
+    {
+      "tk": "XEL",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Utilities",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 37.7,
+      "v200": 2.5,
+      "rs": -10.5,
+      "rng": 77,
+      "vsMean": 5.1
+    },
+    {
+      "tk": "ZBRA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 48,
+      "action": "HOLD",
+      "rsi": 71.5,
+      "v200": -2.5,
+      "rs": -8.2,
+      "rng": 39,
+      "vsMean": -6.0
+    },
+    {
+      "tk": "ALGN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 47,
+      "action": "HOLD",
+      "rsi": 24.9,
+      "v200": 1.7,
+      "rs": -24.0,
+      "rng": 42,
+      "vsMean": -2.4
+    },
+    {
+      "tk": "BMY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 47,
+      "action": "HOLD",
+      "rsi": 40.9,
+      "v200": 9.2,
+      "rs": -14.2,
+      "rng": 73,
+      "vsMean": 11.9
+    },
+    {
+      "tk": "CVX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 47,
+      "action": "HOLD",
+      "rsi": 57.5,
+      "v200": 13.7,
+      "rs": -5.1,
+      "rng": 73,
+      "vsMean": 17.4
+    },
+    {
+      "tk": "SBAC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 47,
+      "action": "HOLD",
+      "rsi": 18.7,
+      "v200": 1.3,
+      "rs": -7.4,
+      "rng": 49,
+      "vsMean": -1.8
+    },
+    {
+      "tk": "TDY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 47,
+      "action": "HOLD",
+      "rsi": 41.1,
+      "v200": 8.0,
+      "rs": -14.3,
+      "rng": 69,
+      "vsMean": 10.6
+    },
+    {
+      "tk": "ARE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 51.6,
+      "v200": -21.3,
+      "rs": -21.6,
+      "rng": 12,
+      "vsMean": -24.6
+    },
+    {
+      "tk": "ATO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 30.6,
+      "v200": 3.4,
+      "rs": -8.4,
+      "rng": 70,
+      "vsMean": 6.1
+    },
+    {
+      "tk": "ADP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 58.7,
+      "v200": -14.5,
+      "rs": -7.8,
+      "rng": 19,
+      "vsMean": -18.3
+    },
+    {
+      "tk": "BAX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 50.5,
+      "v200": -12.7,
+      "rs": -26.4,
+      "rng": 11,
+      "vsMean": -20.5
+    },
+    {
+      "tk": "BG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 37.4,
+      "v200": 20.2,
+      "rs": -7.5,
+      "rng": 87,
+      "vsMean": 26.7
+    },
+    {
+      "tk": "CAH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 57.7,
+      "v200": 3.2,
+      "rs": -20.2,
+      "rng": 61,
+      "vsMean": 7.0
+    },
+    {
+      "tk": "CNP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 37.9,
+      "v200": 4.8,
+      "rs": -10.7,
+      "rng": 74,
+      "vsMean": 6.8
+    },
+    {
+      "tk": "ED",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 43.9,
+      "v200": 4.3,
+      "rs": -10.1,
+      "rng": 62,
+      "vsMean": 5.0
+    },
+    {
+      "tk": "FITB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 30.0,
+      "v200": 2.6,
+      "rs": -19.3,
+      "rng": 60,
+      "vsMean": 5.7
+    },
+    {
+      "tk": "HIG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 56.5,
+      "v200": 1.6,
+      "rs": -12.4,
+      "rng": 69,
+      "vsMean": 3.1
+    },
+    {
+      "tk": "ODFL",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 51.8,
+      "v200": 20.4,
+      "rs": -7.8,
+      "rng": 77,
+      "vsMean": 21.1
+    },
+    {
+      "tk": "PCAR",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 30.5,
+      "v200": 2.6,
+      "rs": -20.7,
+      "rng": 57,
+      "vsMean": 5.7
+    },
+    {
+      "tk": "PFE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 32.0,
+      "v200": 2.2,
+      "rs": -10.6,
+      "rng": 63,
+      "vsMean": 4.2
+    },
+    {
+      "tk": "PNC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 35.7,
+      "v200": 4.0,
+      "rs": -16.4,
+      "rng": 61,
+      "vsMean": 6.6
+    },
+    {
+      "tk": "SRE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 41.6,
+      "v200": 3.2,
+      "rs": -9.0,
+      "rng": 72,
+      "vsMean": 6.8
+    },
+    {
+      "tk": "SNA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 32.9,
+      "v200": 3.2,
+      "rs": -13.5,
+      "rng": 68,
+      "vsMean": 5.5
+    },
+    {
+      "tk": "SO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 46,
+      "action": "HOLD",
+      "rsi": 44.8,
+      "v200": 1.5,
+      "rs": -9.0,
+      "rng": 63,
+      "vsMean": 2.2
+    },
+    {
+      "tk": "BALL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 45,
+      "action": "HOLD",
+      "rsi": 24.7,
+      "v200": 1.5,
+      "rs": -23.8,
+      "rng": 45,
+      "vsMean": 1.3
+    },
+    {
+      "tk": "MTB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 45,
+      "action": "HOLD",
+      "rsi": 28.9,
+      "v200": 1.4,
+      "rs": -19.5,
+      "rng": 48,
+      "vsMean": 3.1
+    },
+    {
+      "tk": "NWSA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 45,
+      "action": "HOLD",
+      "rsi": 46.7,
+      "v200": -0.5,
+      "rs": 3.5,
+      "rng": 46,
+      "vsMean": -2.2
+    },
+    {
+      "tk": "SWK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 45,
+      "action": "HOLD",
+      "rsi": 37.8,
+      "v200": 1.4,
+      "rs": -25.5,
+      "rng": 47,
+      "vsMean": 3.7
+    },
+    {
+      "tk": "AEP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Utilities",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 29.0,
+      "v200": 5.8,
+      "rs": -9.7,
+      "rng": 74,
+      "vsMean": 9.2
+    },
+    {
+      "tk": "AON",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 59.0,
+      "v200": -6.2,
+      "rs": -9.0,
+      "rng": 19,
+      "vsMean": -7.0
+    },
+    {
+      "tk": "ACGL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 51.0,
+      "v200": 1.4,
+      "rs": -11.9,
+      "rng": 57,
+      "vsMean": 1.9
+    },
+    {
+      "tk": "ETR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 35.4,
+      "v200": 13.7,
+      "rs": -0.9,
+      "rng": 83,
+      "vsMean": 17.7
+    },
+    {
+      "tk": "GEN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 78.0,
+      "v200": -7.7,
+      "rs": -4.2,
+      "rng": 38,
+      "vsMean": -10.5
+    },
+    {
+      "tk": "LHX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 40.3,
+      "v200": -1.1,
+      "rs": -21.4,
+      "rng": 54,
+      "vsMean": 3.2
+    },
+    {
+      "tk": "PNW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 40.5,
+      "v200": 8.1,
+      "rs": -5.9,
+      "rng": 80,
+      "vsMean": 9.3
+    },
+    {
+      "tk": "REG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 26.2,
+      "v200": 5.5,
+      "rs": -7.9,
+      "rng": 67,
+      "vsMean": 6.5
+    },
+    {
+      "tk": "WM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 44,
+      "action": "HOLD",
+      "rsi": 49.1,
+      "v200": -0.2,
+      "rs": -11.6,
+      "rng": 51,
+      "vsMean": -0.9
+    },
+    {
+      "tk": "SCHW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 57.3,
+      "v200": -3.1,
+      "rs": -9.8,
+      "rng": 29,
+      "vsMean": -2.0
+    },
+    {
+      "tk": "CCI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 36.3,
+      "v200": -3.3,
+      "rs": -8.5,
+      "rng": 29,
+      "vsMean": -5.3
+    },
+    {
+      "tk": "GE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 38.7,
+      "v200": -4.6,
+      "rs": -24.7,
+      "rng": 49,
+      "vsMean": -1.2
+    },
+    {
+      "tk": "ICE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 45.2,
+      "v200": -4.4,
+      "rs": -6.6,
+      "rng": 26,
+      "vsMean": -6.3
+    },
+    {
+      "tk": "LII",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 43.1,
+      "v200": -2.4,
+      "rs": -17.7,
+      "rng": 31,
+      "vsMean": -4.8
+    },
+    {
+      "tk": "MAS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 30.8,
+      "v200": -2.3,
+      "rs": -20.3,
+      "rng": 39,
+      "vsMean": -1.2
+    },
+    {
+      "tk": "PRU",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 61.3,
+      "v200": -0.8,
+      "rs": -9.4,
+      "rng": 39,
+      "vsMean": -0.4
+    },
+    {
+      "tk": "TPR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 32.2,
+      "v200": 3.6,
+      "rs": -25.1,
+      "rng": 64,
+      "vsMean": 10.3
+    },
+    {
+      "tk": "V",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 63.1,
+      "v200": -0.4,
+      "rs": -5.3,
+      "rng": 45,
+      "vsMean": -1.8
+    },
+    {
+      "tk": "DIS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 49.1,
+      "v200": -3.7,
+      "rs": -8.9,
+      "rng": 39,
+      "vsMean": -5.2
+    },
+    {
+      "tk": "YUM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 43.5,
+      "v200": 0.4,
+      "rs": -14.7,
+      "rng": 50,
+      "vsMean": 1.5
+    },
+    {
+      "tk": "ZS",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 43,
+      "action": "HOLD",
+      "rsi": 72.8,
+      "v200": -29.9,
+      "rs": -8.5,
+      "rng": 19,
+      "vsMean": -33.7
+    },
+    {
+      "tk": "APH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 42,
+      "action": "HOLD",
+      "rsi": 35.5,
+      "v200": -4.8,
+      "rs": -24.4,
+      "rng": 51,
+      "vsMean": 1.1
+    },
+    {
+      "tk": "CB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 42,
+      "action": "HOLD",
+      "rsi": 56.2,
+      "v200": 7.7,
+      "rs": -9.6,
+      "rng": 78,
+      "vsMean": 9.1
+    },
+    {
+      "tk": "COP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 42,
+      "action": "HOLD",
+      "rsi": 58.2,
+      "v200": 20.4,
+      "rs": 3.0,
+      "rng": 78,
+      "vsMean": 23.6
+    },
+    {
+      "tk": "TJX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 42,
+      "action": "HOLD",
+      "rsi": 31.2,
+      "v200": -0.2,
+      "rs": -14.0,
+      "rng": 63,
+      "vsMean": 3.3
+    },
+    {
+      "tk": "TKO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 42,
+      "action": "HOLD",
+      "rsi": 58.1,
+      "v200": -2.2,
+      "rs": -17.5,
+      "rng": 52,
+      "vsMean": 0.8
+    },
+    {
+      "tk": "ABBV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 68.1,
+      "v200": -1.7,
+      "rs": -12.8,
+      "rng": 57,
+      "vsMean": 1.5
+    },
+    {
+      "tk": "AIG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 54.4,
+      "v200": -1.0,
+      "rs": -11.8,
+      "rng": 37,
+      "vsMean": -2.0
+    },
+    {
+      "tk": "ANET",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 40.9,
+      "v200": 4.3,
+      "rs": 1.4,
+      "rng": 64,
+      "vsMean": 10.7
+    },
+    {
+      "tk": "BXP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 44.8,
+      "v200": -9.5,
+      "rs": -11.2,
+      "rng": 29,
+      "vsMean": -10.3
+    },
+    {
+      "tk": "DUK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 26.8,
+      "v200": -0.5,
+      "rs": -11.5,
+      "rng": 49,
+      "vsMean": 0.9
+    },
+    {
+      "tk": "EMR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 34.1,
+      "v200": -2.5,
+      "rs": -18.2,
+      "rng": 40,
+      "vsMean": -1.5
+    },
+    {
+      "tk": "FAST",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 39.5,
+      "v200": -1.7,
+      "rs": -13.2,
+      "rng": 45,
+      "vsMean": -0.7
+    },
+    {
+      "tk": "HSIC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 49.8,
+      "v200": -0.4,
+      "rs": -17.1,
+      "rng": 48,
+      "vsMean": -0.2
+    },
+    {
+      "tk": "HII",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 41.8,
+      "v200": -2.0,
+      "rs": -31.3,
+      "rng": 49,
+      "vsMean": 4.6
+    },
+    {
+      "tk": "LMT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 41.2,
+      "v200": -1.3,
+      "rs": -28.9,
+      "rng": 42,
+      "vsMean": 1.5
+    },
+    {
+      "tk": "NOC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 23.3,
+      "v200": -11.6,
+      "rs": -32.2,
+      "rng": 28,
+      "vsMean": -8.0
+    },
+    {
+      "tk": "ROST",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 32.8,
+      "v200": 17.9,
+      "rs": -1.7,
+      "rng": 85,
+      "vsMean": 24.4
+    },
+    {
+      "tk": "TPL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 25.4,
+      "v200": 7.2,
+      "rs": -30.3,
+      "rng": 43,
+      "vsMean": 7.0
+    },
+    {
+      "tk": "UAL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 41,
+      "action": "HOLD",
+      "rsi": 43.5,
+      "v200": -7.2,
+      "rs": -25.0,
+      "rng": 46,
+      "vsMean": -3.4
+    },
+    {
+      "tk": "BRK-B",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 71.0,
+      "v200": -0.8,
+      "rs": -10.3,
+      "rng": 49,
+      "vsMean": -0.7
+    },
+    {
+      "tk": "DRI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 47.1,
+      "v200": 0.6,
+      "rs": -17.5,
+      "rng": 54,
+      "vsMean": -0.8
+    },
+    {
+      "tk": "EA",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 33.7,
+      "v200": 2.7,
+      "rs": -7.8,
+      "rng": 93,
+      "vsMean": 7.8
+    },
+    {
+      "tk": "HUBB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 19.1,
+      "v200": 3.3,
+      "rs": -16.6,
+      "rng": 57,
+      "vsMean": 6.2
+    },
+    {
+      "tk": "MAA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 34.6,
+      "v200": -3.4,
+      "rs": -12.0,
+      "rng": 20,
+      "vsMean": -5.5
+    },
+    {
+      "tk": "PGR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 62.3,
+      "v200": -4.8,
+      "rs": -8.8,
+      "rng": 13,
+      "vsMean": -7.9
+    },
+    {
+      "tk": "USB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 28.0,
+      "v200": 3.5,
+      "rs": -17.3,
+      "rng": 61,
+      "vsMean": 6.7
+    },
+    {
+      "tk": "WRB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 57.9,
+      "v200": -4.4,
+      "rs": -13.5,
+      "rng": 20,
+      "vsMean": -4.4
+    },
+    {
+      "tk": "CCEP",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 40,
+      "action": "HOLD",
+      "rsi": 28.0,
+      "v200": -2.7,
+      "rs": -22.9,
+      "rng": 20,
+      "vsMean": -2.6
+    },
+    {
+      "tk": "CHRW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 39,
+      "action": "REDUCE",
+      "rsi": 42.8,
+      "v200": 6.4,
+      "rs": -20.3,
+      "rng": 69,
+      "vsMean": 15.7
+    },
+    {
+      "tk": "HCA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 39,
+      "action": "REDUCE",
+      "rsi": 40.9,
+      "v200": -6.5,
+      "rs": -26.9,
+      "rng": 46,
+      "vsMean": -2.5
+    },
+    {
+      "tk": "OMC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 39,
+      "action": "REDUCE",
+      "rsi": 21.7,
+      "v200": -5.8,
+      "rs": -21.4,
+      "rng": 26,
+      "vsMean": -4.5
+    },
+    {
+      "tk": "AMCR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 32.0,
+      "v200": -11.1,
+      "rs": -33.1,
+      "rng": 3,
+      "vsMean": -12.9
+    },
+    {
+      "tk": "AEE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 32.2,
+      "v200": 3.7,
+      "rs": -9.3,
+      "rng": 70,
+      "vsMean": 5.7
+    },
+    {
+      "tk": "APTV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 40.2,
+      "v200": -27.0,
+      "rs": -38.8,
+      "rng": 2,
+      "vsMean": -25.7
+    },
+    {
+      "tk": "BX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 40.9,
+      "v200": -16.4,
+      "rs": -8.9,
+      "rng": 22,
+      "vsMean": -16.8
+    },
+    {
+      "tk": "CAG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 33.7,
+      "v200": -18.8,
+      "rs": -32.5,
+      "rng": 0,
+      "vsMean": -21.4
+    },
+    {
+      "tk": "DG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 29.5,
+      "v200": -13.1,
+      "rs": -38.2,
+      "rng": 21,
+      "vsMean": -11.1
+    },
+    {
+      "tk": "DTE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 42.0,
+      "v200": 3.3,
+      "rs": -9.0,
+      "rng": 63,
+      "vsMean": 4.4
+    },
+    {
+      "tk": "FICO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 57.4,
+      "v200": -24.8,
+      "rs": -27.2,
+      "rng": 13,
+      "vsMean": -27.7
+    },
+    {
+      "tk": "GEHC",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 38.6,
+      "v200": -18.5,
+      "rs": -34.7,
+      "rng": 8,
+      "vsMean": -18.0
+    },
+    {
+      "tk": "IP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 31.8,
+      "v200": -24.9,
+      "rs": -41.7,
+      "rng": 1,
+      "vsMean": -27.4
+    },
+    {
+      "tk": "KKR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 42.0,
+      "v200": -16.6,
+      "rs": -10.6,
+      "rng": 22,
+      "vsMean": -18.4
+    },
+    {
+      "tk": "L",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 50.5,
+      "v200": 2.7,
+      "rs": -10.8,
+      "rng": 76,
+      "vsMean": 5.7
+    },
+    {
+      "tk": "MGM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 36.4,
+      "v200": 3.7,
+      "rs": -7.6,
+      "rng": 63,
+      "vsMean": 4.2
+    },
+    {
+      "tk": "MOS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 35.5,
+      "v200": -20.1,
+      "rs": -32.2,
+      "rng": 2,
+      "vsMean": -24.3
+    },
+    {
+      "tk": "PH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 30.6,
+      "v200": 1.1,
+      "rs": -23.0,
+      "rng": 59,
+      "vsMean": 5.5
+    },
+    {
+      "tk": "PEP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Staples",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 34.0,
+      "v200": 0.3,
+      "rs": -16.7,
+      "rng": 56,
+      "vsMean": 3.0
+    },
+    {
+      "tk": "DGX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 39.2,
+      "v200": 1.2,
+      "rs": -14.5,
+      "rng": 51,
+      "vsMean": 2.8
+    },
+    {
+      "tk": "O",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 35.8,
+      "v200": 3.8,
+      "rs": -14.0,
+      "rng": 62,
+      "vsMean": 5.6
+    },
+    {
+      "tk": "RSG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 64.3,
+      "v200": -3.5,
+      "rs": -11.8,
+      "rng": 22,
+      "vsMean": -5.9
+    },
+    {
+      "tk": "TDG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 39.0,
+      "v200": -10.0,
+      "rs": -21.0,
+      "rng": 8,
+      "vsMean": -11.5
+    },
+    {
+      "tk": "UHS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 45.8,
+      "v200": -15.5,
+      "rs": -34.3,
+      "rng": 17,
+      "vsMean": -13.5
+    },
+    {
+      "tk": "WEC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 38,
+      "action": "REDUCE",
+      "rsi": 32.4,
+      "v200": 0.6,
+      "rs": -10.6,
+      "rng": 59,
+      "vsMean": 2.0
+    },
+    {
+      "tk": "T",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 37,
+      "action": "REDUCE",
+      "rsi": 32.2,
+      "v200": -5.3,
+      "rs": -18.6,
+      "rng": 33,
+      "vsMean": -5.7
+    },
+    {
+      "tk": "AWK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 39.6,
+      "v200": -5.2,
+      "rs": -10.2,
+      "rng": 20,
+      "vsMean": -6.0
+    },
+    {
+      "tk": "DXCM",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 59.9,
+      "v200": -8.0,
+      "rs": -22.1,
+      "rng": 23,
+      "vsMean": -12.5
+    },
+    {
+      "tk": "GDDY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 51.0,
+      "v200": -24.7,
+      "rs": -12.1,
+      "rng": 7,
+      "vsMean": -32.1
+    },
+    {
+      "tk": "RL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 27.7,
+      "v200": -3.1,
+      "rs": -22.4,
+      "rng": 54,
+      "vsMean": 0.7
+    },
+    {
+      "tk": "RF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 29.6,
+      "v200": -0.6,
+      "rs": -19.6,
+      "rng": 58,
+      "vsMean": 2.5
+    },
+    {
+      "tk": "STE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 55.6,
+      "v200": -10.6,
+      "rs": -21.7,
+      "rng": 22,
+      "vsMean": -10.2
+    },
+    {
+      "tk": "SYY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 36,
+      "action": "REDUCE",
+      "rsi": 42.8,
+      "v200": -6.3,
+      "rs": -26.4,
+      "rng": 19,
+      "vsMean": -5.3
+    },
+    {
+      "tk": "CPT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 35,
+      "action": "REDUCE",
+      "rsi": 44.1,
+      "v200": -0.0,
+      "rs": -10.2,
+      "rng": 41,
+      "vsMean": -1.5
+    },
+    {
+      "tk": "EQT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 35,
+      "action": "REDUCE",
+      "rsi": 42.1,
+      "v200": 1.1,
+      "rs": -14.1,
+      "rng": 41,
+      "vsMean": 1.3
+    },
+    {
+      "tk": "FE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 35,
+      "action": "REDUCE",
+      "rsi": 26.3,
+      "v200": -2.9,
+      "rs": -18.6,
+      "rng": 47,
+      "vsMean": -0.0
+    },
+    {
+      "tk": "PPL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 35,
+      "action": "REDUCE",
+      "rsi": 23.3,
+      "v200": -1.9,
+      "rs": -12.1,
+      "rng": 41,
+      "vsMean": -0.5
+    },
+    {
+      "tk": "UPS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 35,
+      "action": "REDUCE",
+      "rsi": 39.8,
+      "v200": 3.1,
+      "rs": -23.2,
+      "rng": 49,
+      "vsMean": 3.4
+    },
+    {
+      "tk": "MMM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 34,
+      "action": "REDUCE",
+      "rsi": 54.6,
+      "v200": -6.8,
+      "rs": -20.4,
+      "rng": 17,
+      "vsMean": -5.7
+    },
+    {
+      "tk": "BDX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 34,
+      "action": "REDUCE",
+      "rsi": 39.6,
+      "v200": -6.3,
+      "rs": -30.0,
+      "rng": 25,
+      "vsMean": -4.0
+    },
+    {
+      "tk": "EXPE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 34,
+      "action": "REDUCE",
+      "rsi": 26.4,
+      "v200": -8.1,
+      "rs": -0.5,
+      "rng": 42,
+      "vsMean": -2.6
+    },
+    {
+      "tk": "JPM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 34,
+      "action": "REDUCE",
+      "rsi": 34.5,
+      "v200": -1.7,
+      "rs": -11.6,
+      "rng": 55,
+      "vsMean": 0.3
+    },
+    {
+      "tk": "AMP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 33,
+      "action": "REDUCE",
+      "rsi": 60.0,
+      "v200": -0.7,
+      "rs": -7.1,
+      "rng": 40,
+      "vsMean": -2.3
+    },
+    {
+      "tk": "EXC",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Utilities",
+      "score": 33,
+      "action": "REDUCE",
+      "rsi": 32.0,
+      "v200": -3.0,
+      "rs": -15.1,
+      "rng": 31,
+      "vsMean": -1.6
+    },
+    {
+      "tk": "KVUE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 33,
+      "action": "REDUCE",
+      "rsi": 45.8,
+      "v200": -0.8,
+      "rs": -15.3,
+      "rng": 37,
+      "vsMean": -5.2
+    },
+    {
+      "tk": "PPG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 33,
+      "action": "REDUCE",
+      "rsi": 35.8,
+      "v200": -2.6,
+      "rs": -25.7,
+      "rng": 28,
+      "vsMean": -3.4
+    },
+    {
+      "tk": "RJF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 33,
+      "action": "REDUCE",
+      "rsi": 50.6,
+      "v200": -3.1,
+      "rs": -9.8,
+      "rng": 42,
+      "vsMean": -2.1
+    },
+    {
+      "tk": "SYF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 33,
+      "action": "REDUCE",
+      "rsi": 36.4,
+      "v200": -4.1,
+      "rs": -11.3,
+      "rng": 46,
+      "vsMean": -1.3
+    },
+    {
+      "tk": "STZ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 32,
+      "action": "REDUCE",
+      "rsi": 26.0,
+      "v200": -4.1,
+      "rs": -17.4,
+      "rng": 23,
+      "vsMean": -6.9
+    },
+    {
+      "tk": "MSFT",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 32,
+      "action": "REDUCE",
+      "rsi": 61.6,
+      "v200": -8.6,
+      "rs": -1.7,
+      "rng": 36,
+      "vsMean": -9.4
+    },
+    {
+      "tk": "TSCO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 32,
+      "action": "REDUCE",
+      "rsi": 25.8,
+      "v200": -40.4,
+      "rs": -49.8,
+      "rng": 2,
+      "vsMean": -40.7
+    },
+    {
+      "tk": "AXP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 45.9,
+      "v200": -6.2,
+      "rs": -16.9,
+      "rng": 32,
+      "vsMean": -4.3
+    },
+    {
+      "tk": "CRL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 29.3,
+      "v200": -9.9,
+      "rs": -14.0,
+      "rng": 26,
+      "vsMean": -7.2
+    },
+    {
+      "tk": "CMS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 32.3,
+      "v200": -0.1,
+      "rs": -11.8,
+      "rng": 46,
+      "vsMean": 1.0
+    },
+    {
+      "tk": "CRH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 25.2,
+      "v200": -9.4,
+      "rs": -23.3,
+      "rng": 39,
+      "vsMean": -5.7
+    },
+    {
+      "tk": "DHI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 25.3,
+      "v200": -11.3,
+      "rs": -24.8,
+      "rng": 31,
+      "vsMean": -8.1
+    },
+    {
+      "tk": "META",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 44.3,
+      "v200": -8.7,
+      "rs": -14.2,
+      "rng": 34,
+      "vsMean": -9.2
+    },
+    {
+      "tk": "MSI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 29.8,
+      "v200": -7.8,
+      "rs": -22.5,
+      "rng": 26,
+      "vsMean": -7.2
+    },
+    {
+      "tk": "PHM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 27.9,
+      "v200": -11.5,
+      "rs": -28.7,
+      "rng": 31,
+      "vsMean": -8.5
+    },
+    {
+      "tk": "WY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 28.2,
+      "v200": -5.4,
+      "rs": -16.8,
+      "rng": 32,
+      "vsMean": -6.4
+    },
+    {
+      "tk": "INSM",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 31,
+      "action": "REDUCE",
+      "rsi": 34.5,
+      "v200": -28.9,
+      "rs": -40.6,
+      "rng": 31,
+      "vsMean": -22.2
+    },
+    {
+      "tk": "ABT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 36.2,
+      "v200": -27.6,
+      "rs": -31.7,
+      "rng": 5,
+      "vsMean": -29.1
+    },
+    {
+      "tk": "ADBE",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 48.6,
+      "v200": -20.8,
+      "rs": -13.5,
+      "rng": 10,
+      "vsMean": -24.9
+    },
+    {
+      "tk": "BAC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 27.2,
+      "v200": -2.9,
+      "rs": -13.6,
+      "rng": 51,
+      "vsMean": -0.4
+    },
+    {
+      "tk": "CPB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 28.1,
+      "v200": -26.3,
+      "rs": -32.3,
+      "rng": 0,
+      "vsMean": -28.4
+    },
+    {
+      "tk": "CLX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 45.7,
+      "v200": -16.3,
+      "rs": -33.3,
+      "rng": 11,
+      "vsMean": -18.3
+    },
+    {
+      "tk": "COO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 41.8,
+      "v200": -17.3,
+      "rs": -35.6,
+      "rng": 7,
+      "vsMean": -17.3
+    },
+    {
+      "tk": "ERIE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 41.3,
+      "v200": -24.5,
+      "rs": -28.4,
+      "rng": 3,
+      "vsMean": -27.7
+    },
+    {
+      "tk": "GPC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 16.9,
+      "v200": -23.7,
+      "rs": -27.0,
+      "rng": 0,
+      "vsMean": -23.5
+    },
+    {
+      "tk": "HD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 24.6,
+      "v200": -17.6,
+      "rs": -28.9,
+      "rng": 0,
+      "vsMean": -17.4
+    },
+    {
+      "tk": "HRL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 27.5,
+      "v200": -14.7,
+      "rs": -27.3,
+      "rng": 0,
+      "vsMean": -18.7
+    },
+    {
+      "tk": "ITW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 30.1,
+      "v200": -3.6,
+      "rs": -22.9,
+      "rng": 23,
+      "vsMean": -2.5
+    },
+    {
+      "tk": "IR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 24.1,
+      "v200": -14.0,
+      "rs": -34.0,
+      "rng": 0,
+      "vsMean": -14.4
+    },
+    {
+      "tk": "NFLX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 38.5,
+      "v200": -14.6,
+      "rs": 3.4,
+      "rng": 20,
+      "vsMean": -18.0
+    },
+    {
+      "tk": "NKE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 35.1,
+      "v200": -31.4,
+      "rs": -42.6,
+      "rng": 1,
+      "vsMean": -32.3
+    },
+    {
+      "tk": "NCLH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 25.0,
+      "v200": -27.9,
+      "rs": -43.4,
+      "rng": 0,
+      "vsMean": -26.9
+    },
+    {
+      "tk": "NVR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 17.7,
+      "v200": -24.3,
+      "rs": -34.2,
+      "rng": 0,
+      "vsMean": -24.3
+    },
+    {
+      "tk": "OTIS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 21.6,
+      "v200": -16.7,
+      "rs": -30.4,
+      "rng": 0,
+      "vsMean": -18.4
+    },
+    {
+      "tk": "PAYX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 49.9,
+      "v200": -16.3,
+      "rs": -6.9,
+      "rng": 10,
+      "vsMean": -21.6
+    },
+    {
+      "tk": "POOL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 18.2,
+      "v200": -31.1,
+      "rs": -28.3,
+      "rng": 0,
+      "vsMean": -33.5
+    },
+    {
+      "tk": "PG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 38.3,
+      "v200": -4.0,
+      "rs": -18.8,
+      "rng": 21,
+      "vsMean": -5.1
+    },
+    {
+      "tk": "PEG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 36.3,
+      "v200": -5.0,
+      "rs": -17.2,
+      "rng": 16,
+      "vsMean": -4.7
+    },
+    {
+      "tk": "HOOD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 47.0,
+      "v200": -26.5,
+      "rs": -6.3,
+      "rng": 18,
+      "vsMean": -23.3
+    },
+    {
+      "tk": "SHW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 29.7,
+      "v200": -10.7,
+      "rs": -23.6,
+      "rng": 0,
+      "vsMean": -11.0
+    },
+    {
+      "tk": "TMUS",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 38.9,
+      "v200": -11.4,
+      "rs": -19.9,
+      "rng": 8,
+      "vsMean": -13.0
+    },
+    {
+      "tk": "UBER",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 47.1,
+      "v200": -11.4,
+      "rs": -6.6,
+      "rng": 18,
+      "vsMean": -12.4
+    },
+    {
+      "tk": "WFC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 28.7,
+      "v200": -11.7,
+      "rs": -24.6,
+      "rng": 11,
+      "vsMean": -10.2
+    },
+    {
+      "tk": "ZBH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 30,
+      "action": "REDUCE",
+      "rsi": 49.8,
+      "v200": -10.5,
+      "rs": -22.6,
+      "rng": 16,
+      "vsMean": -10.3
+    },
+    {
+      "tk": "DECK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 29,
+      "action": "REDUCE",
+      "rsi": 31.8,
+      "v200": -8.0,
+      "rs": -28.0,
+      "rng": 31,
+      "vsMean": -8.8
+    },
+    {
+      "tk": "MCK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 29,
+      "action": "REDUCE",
+      "rsi": 43.9,
+      "v200": -6.4,
+      "rs": -27.5,
+      "rng": 31,
+      "vsMean": -4.0
+    },
+    {
+      "tk": "SW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 29,
+      "action": "REDUCE",
+      "rsi": 33.6,
+      "v200": -6.4,
+      "rs": -28.9,
+      "rng": 31,
+      "vsMean": -7.8
+    },
+    {
+      "tk": "WSM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 29,
+      "action": "REDUCE",
+      "rsi": 32.3,
+      "v200": -9.9,
+      "rs": -27.1,
+      "rng": 31,
+      "vsMean": -7.2
+    },
+    {
+      "tk": "A",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 40.5,
+      "v200": -13.0,
+      "rs": -16.4,
+      "rng": 9,
+      "vsMean": -11.1
+    },
+    {
+      "tk": "AMT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 28.0,
+      "v200": -6.7,
+      "rs": -16.4,
+      "rng": 7,
+      "vsMean": -9.8
+    },
+    {
+      "tk": "AJG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 41.0,
+      "v200": -21.1,
+      "rs": -15.8,
+      "rng": 4,
+      "vsMean": -25.2
+    },
+    {
+      "tk": "AVY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 29.7,
+      "v200": -8.8,
+      "rs": -27.4,
+      "rng": 5,
+      "vsMean": -9.1
+    },
+    {
+      "tk": "AXON",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 50.9,
+      "v200": -32.1,
+      "rs": -16.5,
+      "rng": 10,
+      "vsMean": -36.1
+    },
+    {
+      "tk": "BSX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 30.9,
+      "v200": -38.8,
+      "rs": -36.2,
+      "rng": 1,
+      "vsMean": -41.1
+    },
+    {
+      "tk": "CCL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 35.9,
+      "v200": -13.1,
+      "rs": -30.3,
+      "rng": 24,
+      "vsMean": -11.5
+    },
+    {
+      "tk": "CTAS",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 47.4,
+      "v200": -12.1,
+      "rs": -24.0,
+      "rng": 7,
+      "vsMean": -14.8
+    },
+    {
+      "tk": "DASH",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 39.8,
+      "v200": -26.5,
+      "rs": -19.1,
+      "rng": 7,
+      "vsMean": -27.5
+    },
+    {
+      "tk": "IT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 32.9,
+      "v200": -32.9,
+      "rs": -15.5,
+      "rng": 0,
+      "vsMean": -43.4
+    },
+    {
+      "tk": "GIS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 30.6,
+      "v200": -24.0,
+      "rs": -32.4,
+      "rng": 0,
+      "vsMean": -26.2
+    },
+    {
+      "tk": "GPN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 40.1,
+      "v200": -12.2,
+      "rs": -25.4,
+      "rng": 19,
+      "vsMean": -12.5
+    },
+    {
+      "tk": "HBAN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 27.3,
+      "v200": -7.6,
+      "rs": -22.3,
+      "rng": 12,
+      "vsMean": -6.9
+    },
+    {
+      "tk": "J",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 34.3,
+      "v200": -19.2,
+      "rs": -26.2,
+      "rng": 10,
+      "vsMean": -18.1
+    },
+    {
+      "tk": "KMB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 43.9,
+      "v200": -10.5,
+      "rs": -18.3,
+      "rng": 8,
+      "vsMean": -13.8
+    },
+    {
+      "tk": "LEN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 32.0,
+      "v200": -25.8,
+      "rs": -35.7,
+      "rng": 0,
+      "vsMean": -25.2
+    },
+    {
+      "tk": "MLM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 19.7,
+      "v200": -9.0,
+      "rs": -25.4,
+      "rng": 19,
+      "vsMean": -6.9
+    },
+    {
+      "tk": "MKC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 30.4,
+      "v200": -26.1,
+      "rs": -39.7,
+      "rng": 2,
+      "vsMean": -28.2
+    },
+    {
+      "tk": "MDT",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 38.3,
+      "v200": -17.0,
+      "rs": -28.1,
+      "rng": 7,
+      "vsMean": -15.6
+    },
+    {
+      "tk": "PYPL",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Financials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 27.7,
+      "v200": -21.7,
+      "rs": 0.7,
+      "rng": 16,
+      "vsMean": -25.8
+    },
+    {
+      "tk": "PTC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 50.5,
+      "v200": -19.3,
+      "rs": -16.9,
+      "rng": 9,
+      "vsMean": -19.7
+    },
+    {
+      "tk": "RCL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 43.3,
+      "v200": -11.2,
+      "rs": -24.7,
+      "rng": 21,
+      "vsMean": -11.1
+    },
+    {
+      "tk": "NOW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 58.7,
+      "v200": -34.8,
+      "rs": -17.4,
+      "rng": 9,
+      "vsMean": -39.6
+    },
+    {
+      "tk": "SYK",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 57.5,
+      "v200": -13.7,
+      "rs": -26.4,
+      "rng": 22,
+      "vsMean": -15.0
+    },
+    {
+      "tk": "VLTO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 42.2,
+      "v200": -12.3,
+      "rs": -15.2,
+      "rng": 5,
+      "vsMean": -12.7
+    },
+    {
+      "tk": "VRSK",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 36.2,
+      "v200": -25.4,
+      "rs": -18.7,
+      "rng": 3,
+      "vsMean": -31.1
+    },
+    {
+      "tk": "VMC",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 25.4,
+      "v200": -6.9,
+      "rs": -18.7,
+      "rng": 24,
+      "vsMean": -5.0
+    },
+    {
+      "tk": "ALNY",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 38.7,
+      "v200": -25.7,
+      "rs": -21.4,
+      "rng": 4,
+      "vsMean": -22.4
+    },
+    {
+      "tk": "PDD",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 28,
+      "action": "REDUCE",
+      "rsi": 39.1,
+      "v200": -16.6,
+      "rs": -17.2,
+      "rng": 0,
+      "vsMean": -15.5
+    },
+    {
+      "tk": "AZO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 26,
+      "action": "REDUCE",
+      "rsi": 32.1,
+      "v200": -10.0,
+      "rs": -17.8,
+      "rng": 12,
+      "vsMean": -9.9
+    },
+    {
+      "tk": "CMG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 26,
+      "action": "REDUCE",
+      "rsi": 52.1,
+      "v200": -11.2,
+      "rs": -20.1,
+      "rng": 11,
+      "vsMean": -18.0
+    },
+    {
+      "tk": "EXE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Energy",
+      "score": 26,
+      "action": "REDUCE",
+      "rsi": 50.0,
+      "v200": -6.4,
+      "rs": -17.1,
+      "rng": 18,
+      "vsMean": -7.3
+    },
+    {
+      "tk": "LOW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 26,
+      "action": "REDUCE",
+      "rsi": 32.6,
+      "v200": -10.8,
+      "rs": -28.9,
+      "rng": 17,
+      "vsMean": -8.7
+    },
+    {
+      "tk": "MA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 26,
+      "action": "REDUCE",
+      "rsi": 50.7,
+      "v200": -8.1,
+      "rs": -12.9,
+      "rng": 14,
+      "vsMean": -8.8
+    },
+    {
+      "tk": "ROL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 26,
+      "action": "REDUCE",
+      "rsi": 47.2,
+      "v200": -6.7,
+      "rs": -19.8,
+      "rng": 11,
+      "vsMean": -6.2
+    },
+    {
+      "tk": "BF-B",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 25,
+      "action": "REDUCE",
+      "rsi": 42.6,
+      "v200": -4.7,
+      "rs": -19.8,
+      "rng": 28,
+      "vsMean": -5.7
+    },
+    {
+      "tk": "WYNN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 25,
+      "action": "REDUCE",
+      "rsi": 24.5,
+      "v200": -16.6,
+      "rs": -24.4,
+      "rng": 26,
+      "vsMean": -13.8
+    },
+    {
+      "tk": "ADSK",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 23,
+      "action": "REDUCE",
+      "rsi": 45.3,
+      "v200": -15.0,
+      "rs": -4.0,
+      "rng": 16,
+      "vsMean": -16.3
+    },
+    {
+      "tk": "CVNA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 23,
+      "action": "REDUCE",
+      "rsi": 22.3,
+      "v200": -9.3,
+      "rs": -8.3,
+      "rng": 27,
+      "vsMean": -7.2
+    },
+    {
+      "tk": "FDS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 23,
+      "action": "REDUCE",
+      "rsi": 41.0,
+      "v200": -23.0,
+      "rs": -0.0,
+      "rng": 7,
+      "vsMean": -31.4
+    },
+    {
+      "tk": "ULTA",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 23,
+      "action": "REDUCE",
+      "rsi": 29.3,
+      "v200": -12.3,
+      "rs": -35.0,
+      "rng": 31,
+      "vsMean": -8.9
+    },
+    {
+      "tk": "AOS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 29.0,
+      "v200": -16.8,
+      "rs": -34.3,
+      "rng": 0,
+      "vsMean": -16.1
+    },
+    {
+      "tk": "ALLE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 24.8,
+      "v200": -20.2,
+      "rs": -28.6,
+      "rng": 0,
+      "vsMean": -18.6
+    },
+    {
+      "tk": "TECH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 29.0,
+      "v200": -22.4,
+      "rs": -30.1,
+      "rng": 0,
+      "vsMean": -20.5
+    },
+    {
+      "tk": "BKNG",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 27.6,
+      "v200": -21.2,
+      "rs": -12.8,
+      "rng": 0,
+      "vsMean": -23.2
+    },
+    {
+      "tk": "BLDR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 27.9,
+      "v200": -35.8,
+      "rs": -43.7,
+      "rng": 0,
+      "vsMean": -36.9
+    },
+    {
+      "tk": "CBRE",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 16.7,
+      "v200": -16.7,
+      "rs": -20.6,
+      "rng": 15,
+      "vsMean": -14.6
+    },
+    {
+      "tk": "CDW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 22.4,
+      "v200": -27.5,
+      "rs": -25.9,
+      "rng": 3,
+      "vsMean": -31.2
+    },
+    {
+      "tk": "CHTR",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 26.9,
+      "v200": -35.9,
+      "rs": -45.0,
+      "rng": 1,
+      "vsMean": -44.3
+    },
+    {
+      "tk": "CTSH",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 20.4,
+      "v200": -32.4,
+      "rs": -35.9,
+      "rng": 2,
+      "vsMean": -34.0
+    },
+    {
+      "tk": "CMCSA",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Communication Services",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 29.5,
+      "v200": -10.5,
+      "rs": -26.6,
+      "rng": 11,
+      "vsMean": -12.6
+    },
+    {
+      "tk": "CEG",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Utilities",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 24.4,
+      "v200": -17.3,
+      "rs": -16.5,
+      "rng": 14,
+      "vsMean": -16.4
+    },
+    {
+      "tk": "DHR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 13.4,
+      "v200": -21.0,
+      "rs": -29.8,
+      "rng": 0,
+      "vsMean": -20.1
+    },
+    {
+      "tk": "DPZ",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 23.2,
+      "v200": -24.2,
+      "rs": -28.1,
+      "rng": 1,
+      "vsMean": -26.4
+    },
+    {
+      "tk": "EPAM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 17.9,
+      "v200": -43.3,
+      "rs": -41.5,
+      "rng": 2,
+      "vsMean": -44.1
+    },
+    {
+      "tk": "EFX",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 24.5,
+      "v200": -25.0,
+      "rs": -27.2,
+      "rng": 1,
+      "vsMean": -28.3
+    },
+    {
+      "tk": "JKHY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 27.0,
+      "v200": -16.5,
+      "rs": -21.9,
+      "rng": 4,
+      "vsMean": -18.0
+    },
+    {
+      "tk": "LDOS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 20.3,
+      "v200": -28.9,
+      "rs": -35.2,
+      "rng": 2,
+      "vsMean": -26.9
+    },
+    {
+      "tk": "LULU",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 17.8,
+      "v200": -31.4,
+      "rs": -43.5,
+      "rng": 0,
+      "vsMean": -37.5
+    },
+    {
+      "tk": "MTD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 24.6,
+      "v200": -21.2,
+      "rs": -31.7,
+      "rng": 5,
+      "vsMean": -19.4
+    },
+    {
+      "tk": "NRG",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 26.3,
+      "v200": -17.6,
+      "rs": -34.9,
+      "rng": 0,
+      "vsMean": -17.0
+    },
+    {
+      "tk": "PSKY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 28.5,
+      "v200": -25.8,
+      "rs": -15.5,
+      "rng": 10,
+      "vsMean": -24.6
+    },
+    {
+      "tk": "PNR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 25.9,
+      "v200": -26.4,
+      "rs": -35.4,
+      "rng": 0,
+      "vsMean": -26.4
+    },
+    {
+      "tk": "ROP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 25.0,
+      "v200": -24.8,
+      "rs": -12.0,
+      "rng": 2,
+      "vsMean": -29.3
+    },
+    {
+      "tk": "TMO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 28.9,
+      "v200": -16.1,
+      "rs": -21.4,
+      "rng": 21,
+      "vsMean": -12.3
+    },
+    {
+      "tk": "TRMB",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 17.3,
+      "v200": -25.9,
+      "rs": -26.1,
+      "rng": 1,
+      "vsMean": -26.1
+    },
+    {
+      "tk": "VICI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Real Estate",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 35.7,
+      "v200": -4.2,
+      "rs": -13.6,
+      "rng": 23,
+      "vsMean": -5.3
+    },
+    {
+      "tk": "VST",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Utilities",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 25.8,
+      "v200": -20.9,
+      "rs": -26.9,
+      "rng": 0,
+      "vsMean": -21.2
+    },
+    {
+      "tk": "XYL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 29.9,
+      "v200": -18.7,
+      "rs": -22.2,
+      "rng": 2,
+      "vsMean": -17.7
+    },
+    {
+      "tk": "ZTS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 22,
+      "action": "REDUCE",
+      "rsi": 10.1,
+      "v200": -41.0,
+      "rs": -48.9,
+      "rng": 1,
+      "vsMean": -43.6
+    },
+    {
+      "tk": "INTU",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 21,
+      "action": "REDUCE",
+      "rsi": 50.2,
+      "v200": -31.1,
+      "rs": -4.9,
+      "rng": 9,
+      "vsMean": -35.4
+    },
+    {
+      "tk": "LH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 21,
+      "action": "REDUCE",
+      "rsi": 32.2,
+      "v200": -5.9,
+      "rs": -18.5,
+      "rng": 26,
+      "vsMean": -4.7
+    },
+    {
+      "tk": "LVS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 21,
+      "action": "REDUCE",
+      "rsi": 35.4,
+      "v200": -9.9,
+      "rs": -19.5,
+      "rng": 40,
+      "vsMean": -5.6
+    },
+    {
+      "tk": "TEL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 21,
+      "action": "REDUCE",
+      "rsi": 36.4,
+      "v200": -8.4,
+      "rs": -21.9,
+      "rng": 49,
+      "vsMean": -3.9
+    },
+    {
+      "tk": "ACN",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 35.4,
+      "v200": -28.8,
+      "rs": -30.1,
+      "rng": 4,
+      "vsMean": -32.6
+    },
+    {
+      "tk": "BBY",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 36.3,
+      "v200": -17.4,
+      "rs": -19.0,
+      "rng": 4,
+      "vsMean": -17.0
+    },
+    {
+      "tk": "BR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Industrials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 33.3,
+      "v200": -30.0,
+      "rs": -25.0,
+      "rng": 2,
+      "vsMean": -31.9
+    },
+    {
+      "tk": "BRO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 40.8,
+      "v200": -27.9,
+      "rs": -26.3,
+      "rng": 4,
+      "vsMean": -32.8
+    },
+    {
+      "tk": "COF",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 41.6,
+      "v200": -12.3,
+      "rs": -18.7,
+      "rng": 12,
+      "vsMean": -11.6
+    },
+    {
+      "tk": "COR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 31.0,
+      "v200": -19.7,
+      "rs": -35.4,
+      "rng": 8,
+      "vsMean": -17.9
+    },
+    {
+      "tk": "CPRT",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Industrials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 40.2,
+      "v200": -18.2,
+      "rs": -17.8,
+      "rng": 1,
+      "vsMean": -22.2
+    },
+    {
+      "tk": "CSGP",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Real Estate",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 33.8,
+      "v200": -48.9,
+      "rs": -42.8,
+      "rng": 1,
+      "vsMean": -51.7
+    },
+    {
+      "tk": "DLTR",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 36.1,
+      "v200": -18.4,
+      "rs": -41.1,
+      "rng": 9,
+      "vsMean": -16.8
+    },
+    {
+      "tk": "ECL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Materials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 26.7,
+      "v200": -8.7,
+      "rs": -26.3,
+      "rng": 0,
+      "vsMean": -8.2
+    },
+    {
+      "tk": "FIS",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 35.1,
+      "v200": -27.9,
+      "rs": -20.5,
+      "rng": 2,
+      "vsMean": -32.5
+    },
+    {
+      "tk": "FISV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 36.8,
+      "v200": -35.5,
+      "rs": -19.4,
+      "rng": 1,
+      "vsMean": -46.1
+    },
+    {
+      "tk": "IBM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 37.0,
+      "v200": -17.9,
+      "rs": -22.1,
+      "rng": 5,
+      "vsMean": -18.1
+    },
+    {
+      "tk": "IDXX",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 35.6,
+      "v200": -16.6,
+      "rs": -23.7,
+      "rng": 13,
+      "vsMean": -13.4
+    },
+    {
+      "tk": "PODD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 34.8,
+      "v200": -44.8,
+      "rs": -45.1,
+      "rng": 2,
+      "vsMean": -46.1
+    },
+    {
+      "tk": "ISRG",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Health Care",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 30.9,
+      "v200": -14.1,
+      "rs": -23.2,
+      "rng": 4,
+      "vsMean": -15.2
+    },
+    {
+      "tk": "MRSH",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 41.3,
+      "v200": -11.8,
+      "rs": -17.0,
+      "rng": 4,
+      "vsMean": -14.8
+    },
+    {
+      "tk": "TAP",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Staples",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 36.4,
+      "v200": -10.9,
+      "rs": -24.8,
+      "rng": 2,
+      "vsMean": -12.2
+    },
+    {
+      "tk": "PLTR",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 41.0,
+      "v200": -18.3,
+      "rs": -9.2,
+      "rng": 16,
+      "vsMean": -15.6
+    },
+    {
+      "tk": "RMD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 43.5,
+      "v200": -18.4,
+      "rs": -28.6,
+      "rng": 7,
+      "vsMean": -18.5
+    },
+    {
+      "tk": "SPGI",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 32.6,
+      "v200": -15.4,
+      "rs": -9.8,
+      "rng": 11,
+      "vsMean": -16.6
+    },
+    {
+      "tk": "CRM",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 44.6,
+      "v200": -22.4,
+      "rs": -14.0,
+      "rng": 7,
+      "vsMean": -25.4
+    },
+    {
+      "tk": "TTD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Communication Services",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 33.7,
+      "v200": -45.7,
+      "rs": -24.6,
+      "rng": 1,
+      "vsMean": -54.7
+    },
+    {
+      "tk": "TYL",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Information Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 36.4,
+      "v200": -30.1,
+      "rs": -11.2,
+      "rng": 6,
+      "vsMean": -34.3
+    },
+    {
+      "tk": "VEEV",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Health Care",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 45.9,
+      "v200": -30.7,
+      "rs": -19.0,
+      "rng": 6,
+      "vsMean": -33.3
+    },
+    {
+      "tk": "WTW",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 37.1,
+      "v200": -19.9,
+      "rs": -24.7,
+      "rng": 8,
+      "vsMean": -19.4
+    },
+    {
+      "tk": "MELI",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 31.5,
+      "v200": -23.5,
+      "rs": -29.0,
+      "rng": 2,
+      "vsMean": -26.5
+    },
+    {
+      "tk": "SHOP",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 33.1,
+      "v200": -29.4,
+      "rs": -29.1,
+      "rng": 5,
+      "vsMean": -26.4
+    },
+    {
+      "tk": "TRI",
+      "indices": [
+        "NDX100"
+      ],
+      "sector": "Technology",
+      "score": 20,
+      "action": "REDUCE",
+      "rsi": 31.0,
+      "v200": -35.4,
+      "rs": -8.5,
+      "rng": 2,
+      "vsMean": -41.8
+    },
+    {
+      "tk": "MCD",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 18,
+      "action": "REDUCE",
+      "rsi": 30.3,
+      "v200": -9.6,
+      "rs": -23.4,
+      "rng": 3,
+      "vsMean": -9.0
+    },
+    {
+      "tk": "MCO",
+      "indices": [
+        "SP500"
+      ],
+      "sector": "Financials",
+      "score": 18,
+      "action": "REDUCE",
+      "rsi": 32.3,
+      "v200": -9.5,
+      "rs": -10.8,
+      "rng": 18,
+      "vsMean": -9.8
+    },
+    {
+      "tk": "ORLY",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Consumer Discretionary",
+      "score": 18,
+      "action": "REDUCE",
+      "rsi": 33.7,
+      "v200": -7.4,
+      "rs": -11.8,
+      "rng": 12,
+      "vsMean": -6.4
+    },
+    {
+      "tk": "WDAY",
+      "indices": [
+        "SP500",
+        "NDX100"
+      ],
+      "sector": "Information Technology",
+      "score": 18,
+      "action": "REDUCE",
+      "rsi": 51.4,
+      "v200": -35.2,
+      "rs": -18.5,
+      "rng": 7,
+      "vsMean": -38.7
+    }
+  ]
+}

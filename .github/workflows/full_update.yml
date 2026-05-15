@@ -34,20 +34,24 @@ jobs:
         run: pip install yfinance pytz requests beautifulsoup4
 
       - name: Fetch live prices
-        run: python scripts/market_data.py || echo "WARNING: market_data.py failed — partial data may exist"
+        run: |
+          python scripts/market_data.py
+          if [ $? -ne 0 ]; then
+            echo "::error::market_data.py failed — prices not updated"
+            exit 1
+          fi
 
       - name: Compute signals
         run: python scripts/signals_update.py || echo "WARNING: signals_update.py failed — signals not updated"
 
       - name: Commit if changed
         run: |
-          if [[ -n "$(git status --porcelain data/processed)" ]]; then
+          # Stage data/processed AND holdings_cost.json (FX rate updated there)
+          git add data/processed data/holdings_cost.json
+          if [[ -n "$(git diff --cached --name-only)" ]]; then
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
-            git add data/processed
             git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            # Retry push up to 3 times — handles race where another commit
-            # lands between our fetch and push (common with 15-min schedule)
             for attempt in 1 2 3; do
               git pull --rebase origin main && git push && break
               echo "push attempt $attempt failed — retrying in 5s…"
@@ -59,4 +63,4 @@ jobs:
 
       - name: Report failure summary
         if: failure()
-        run: echo "WORKFLOW FAILURE at $(date -u +%Y-%m-%dT%H:%M:%SZ) — check logs above for root cause"
+        run: echo "::error::WORKFLOW FAILURE at $(date -u +%Y-%m-%dT%H:%M:%SZ)"

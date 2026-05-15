@@ -1007,7 +1007,7 @@ const DASH = (() => {
     // Guard: tk can be undefined/null if a row was malformed
     if (!holding.tk) return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false };
     const p = S.prices[holding.tk];
-    if (p && Number.isFinite(p.ltp)) return { ltp: p.ltp, pc: p.pc ?? p.ltp, live: true };
+    if (p && Number.isFinite(p.ltp)) return { ltp: p.ltp, pc: p.pc ?? null, live: true };
     return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false };
   }
   function enrich(holding) {
@@ -1017,8 +1017,8 @@ const DASH = (() => {
     const upl     = (ltp - holding.avg) * holding.qty;   // raw price gain
     const uplNet  = upl + fees;                           // net of buy fees already paid
     const exitFee = -5;                                   // cost to close in 1 trade
-    const dayPL   = (ltp - pc) * holding.qty;
-    const dayPct  = pc ? ((ltp - pc) / pc) * 100 : 0;
+    const dayPL   = pc !== null ? (ltp - pc) * holding.qty : null;  // null = prev-close unknown
+    const dayPct  = pc ? ((ltp - pc) / pc) * 100 : null;
     const cost    = (holding.avg || 0) * holding.qty;
     const ret     = cost ? (uplNet / cost) * 100 : 0;    // true net return %
     // houseMoney: avg===0 means purchase price unknown (e.g. NBCC pending) — treat as free shares
@@ -1044,7 +1044,7 @@ const DASH = (() => {
       etfsMV:       usOpen.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
       mv:           usMV,
       unrealPL:     usOpen.reduce((s,p)=>s+p.uplNet,0),  // net of buy fees
-      dayPL:        usOpen.reduce((s,p)=>s+p.dayPL,0),
+      dayPL:        usOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
       exitCost:     usOpen.length * -5,                   // -$5 per position to close
     };
     us.totalValue = us.mv + (us.cash||0);
@@ -1065,7 +1065,7 @@ const DASH = (() => {
       closed:       (S.cost.india && S.cost.india.closed) || [],
       mv:           inMV,
       unrealPL:     inOpen.reduce((s,p)=>s+p.uplNet,0),
-      dayPL:        inOpen.reduce((s,p)=>s+p.dayPL,0),
+      dayPL:        inOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
     };
     india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
     india.dayPct = india.mv ? (india.dayPL / (india.mv - india.dayPL)) * 100 : 0;
@@ -1076,7 +1076,10 @@ const DASH = (() => {
       totalUSD,
       unrealPL_USD: us.unrealPL + india.unrealPL / fx,  // both already net of fees
       dayPL_USD:    us.dayPL    + india.dayPL    / fx,
-      returnPct:    us.cashInfusion ? ((totalUSD - us.cashInfusion) / us.cashInfusion) * 100 : 0
+      returnPct: (()=>{
+        const totalInfused = (us.cashInfusion||0) + (india.cashInfusion||0) / fx;
+        return totalInfused ? ((totalUSD - totalInfused) / totalInfused) * 100 : 0;
+      })()
     };
 
     // Last update timestamp from prices
@@ -1100,7 +1103,20 @@ const DASH = (() => {
     if (!badge) return;
     const total      = positions.length;
     const staleCount = positions.filter(p => !p.live).length;
-    if (staleCount === 0) {
+
+    // Check if data is >15 min old during market hours
+    const asOf = S.view && S.view.asOf ? new Date(S.view.asOf) : null;
+    const ageMin = asOf ? (Date.now() - asOf.getTime()) / 60000 : 999;
+    const usStatus = S.indices?.usa_market?.status;
+    const inStatus = S.indices?.india_market?.status;
+    const marketOpen = usStatus === 'OPEN' || inStatus === 'OPEN';
+    const dataStale  = marketOpen && ageMin > 15;
+
+    if (dataStale) {
+      badge.textContent = `⚠ DATA ${Math.round(ageMin)}m OLD`;
+      badge.className   = 'live-badge stale';
+      badge.title       = `Last update: ${asOf ? asOf.toLocaleTimeString() : 'unknown'}. GitHub Actions may have failed.`;
+    } else if (staleCount === 0) {
       badge.textContent = '● LIVE';
       badge.className   = 'live-badge';
     } else if (staleCount === total) {
@@ -1338,7 +1354,7 @@ const DASH = (() => {
         income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised+p.income+p.costs, ret:p.ret_pct, ccy:'USD' }))
     ];
     const inRows = ind.closed.map(p => ({ mkt:'🇮🇳', cls:p.type||'Stock', tk:p.tk+' · '+(p.scrip||''), status:'CLOSED', market:'INDIA',
-      income: p.buy_amt||0, costs: p.sell_amt||0, realised: p.rpnl||0, unreal:0, total:p.rpnl||0, ret:0, ccy:'INR' }));
+      income: p.sell_amt||0, costs: -(p.buy_amt||0), realised: p.rpnl||0, unreal:0, total:p.rpnl||0, ret:0, ccy:'INR' }));
 
     S.txRows = [...usRows, ...inRows];
     repaintTransactions();

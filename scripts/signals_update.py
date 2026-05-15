@@ -49,6 +49,8 @@ def ewm(data: list[float], span: int) -> list[float]:
 
 
 def sma(arr: list[float], p: int) -> float:
+    # When len(arr) < p, slc is the full array — average over fewer periods.
+    # This is intentional: shorter history produces a valid (shorter) moving average.
     slc = arr[-p:]
     return sum(slc) / len(slc)
 
@@ -90,6 +92,9 @@ def fetch_history(yf_symbol: str) -> tuple[list[int], list[float], list[float]] 
     except Exception as exc:
         print(f"  WARN  {yf_symbol}: {exc}", file=sys.stderr)
         return None
+
+# Minimum bars needed for meaningful signal computation (RSI-14 + some trend context)
+MIN_BARS_FOR_SIGNALS = 60
 
 
 # ── SCORER ───────────────────────────────────────────────────────────────────
@@ -198,10 +203,10 @@ def main() -> int:
     # ── SPY benchmark ────────────────────────────────────────────────────────
     print("Fetching SPY benchmark…")
     spy_result = fetch_history("SPY")
-    spy_cl = spy_result[2] and spy_result[1] if spy_result else None  # closes only
-
-    # fix: just get closes cleanly
     spy_cl = spy_result[1] if spy_result else None
+
+    if spy_cl is None:
+        print("  WARN  SPY fetch failed — regime defaulting to BULL (signals may be optimistic)", file=sys.stderr)
 
     spy_summary: dict = {}
     regime = "BULL"
@@ -231,6 +236,14 @@ def main() -> int:
             continue
 
         ts, cl, vol = result
+        if len(cl) < MIN_BARS_FOR_SIGNALS:
+            print(
+                f"  WARN  {tk} ({yfs}): only {len(cl)} bars available "
+                f"(need ≥{MIN_BARS_FOR_SIGNALS}) — skipping signals",
+                file=sys.stderr,
+            )
+            continue
+
         try:
             res = score_ticker(ts, cl, vol, spy_cl)
             holdings_out[tk] = res

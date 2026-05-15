@@ -26,17 +26,18 @@ jobs:
           cache: pip
 
       - name: Install deps
-        run: pip install yfinance pytz
+        run: pip install yfinance pytz requests beautifulsoup4
 
       - name: Fetch live prices
-        run: python scripts/market_data.py
+        run: python scripts/market_data.py || echo "WARNING: market_data.py failed — partial data may exist"
 
       - name: Compute signals
-        run: python scripts/signals_update.py
+        run: python scripts/signals_update.py || echo "WARNING: signals_update.py failed — signals not updated"
 
       - name: Commit if changed
         run: |
           if [[ -n "$(git status --porcelain data/processed)" ]]; then
+            git config pull.rebase true
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
             git add data/processed
@@ -46,3 +47,7 @@ jobs:
           else
             echo "no changes"
           fi
+
+      - name: Report failure summary
+        if: failure()
+        run: echo "WORKFLOW FAILURE at $(date -u +%Y-%m-%dT%H:%M:%SZ) — check logs above for root cause"

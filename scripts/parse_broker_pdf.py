@@ -140,6 +140,13 @@ def parse_account_summary(pdf) -> dict:
         pl    = srtd[1]
         deposits = srtd[2]
         end   = srtd[3] if len(srtd) > 3 else (deposits + pl)
+        # Sanity check: end_value should be the largest of the four numbers
+        if end < deposits or end < abs(pl):
+            print(
+                f"  [WARN] parse_account_summary: end_value ({end}) may not be largest "
+                f"— nums_usd={nums_usd[:4]}. Sort-based extraction may be wrong.",
+                file=sys.stderr,
+            )
     return {
         "start_value":  start,
         "end_value":    end,
@@ -391,13 +398,17 @@ def parse_holdings(pdf) -> list[dict]:
             name_clean = clean_instrument_name(raw_name)
             ticker, yf, cls = lookup(name_clean)
             qty = float(m.group("qty").replace(",", ""))
+            avg = round(float(m.group("open").replace(",", "")), 4)
+            if qty <= 0 or avg <= 0:
+                print(f"  [WARN] skipping row with invalid qty={qty} avg={avg} for {name_clean!r}", file=sys.stderr)
+                continue
             out.append({
                 "tk":    ticker,
                 "yf":    yf,
                 "name":  name_clean,
                 "cls":   cls,
                 "qty":   int(qty) if qty.is_integer() else qty,
-                "avg":   round(float(m.group("open").replace(",", "")), 4),
+                "avg":   avg,
                 "_statement_ltp": round(float(m.group("cur").replace(",", "")), 4),
                 "_statement_upl": round(float(m.group("upl").replace(",", "")), 2),
             })
@@ -405,13 +416,14 @@ def parse_holdings(pdf) -> list[dict]:
 
 
 def parse_cash(pdf) -> float:
-    """Page 10 'Allaccounts USD <value> <%>'."""
-    rows = page_rows(pdf.pages[9])
-    for r in rows:
-        line = " ".join(r).replace(",", "")
-        m = re.search(r"Allaccounts\s+USD\s+(-?\d+\.\d+)", line)
-        if m:
-            return float(m.group(1))
+    """Search ALL pages for 'Allaccounts USD <value>' pattern (robust against page reordering)."""
+    for page in pdf.pages:
+        for r in page_rows(page):
+            line = " ".join(r).replace(",", "")
+            m = re.search(r"Allaccounts\s+USD\s+(-?\d+\.\d+)", line)
+            if m:
+                return float(m.group(1))
+    print("  [WARN] parse_cash: 'Allaccounts USD' pattern not found on any page", file=sys.stderr)
     return 0.0
 
 
@@ -478,6 +490,9 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
 
     open_full = []
     for h in holdings:
+        if h["tk"].startswith("UNKNOWN"):
+            print(f"  [WARN] skipping UNKNOWN ticker in open positions: {h['tk']!r} ({h['name']!r})", file=sys.stderr)
+            continue
         plr = pl_by_ticker.get(h["tk"], {})
         open_full.append({
             "tk":     h["tk"],
@@ -528,6 +543,12 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
             "realised": round(r["pl"], 2),
             "ret_pct":  round(r["ret_pct"], 2),
         })
+
+    if len(open_full) == 0:
+        raise ValueError(
+            "build_cost_json: no open positions extracted from PDF — "
+            "check page layout or TICKER_MAP coverage. Aborting to avoid data loss."
+        )
 
     out = prev or {}
     out["as_of"]      = summary.get("period_to") or out.get("as_of")

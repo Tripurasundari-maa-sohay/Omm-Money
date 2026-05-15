@@ -246,25 +246,32 @@ PL_ROW_RE = re.compile(
 
 
 def parse_pl_breakdown(pdf) -> list[dict]:
-    """Pages 5, 6, 7 — extract per-instrument rows from the right-hand data column.
-       We strip the explanatory left column by cropping to x >= 320pt (right two-thirds)."""
+    """Pages 5, 6, 7 — extract per-instrument P&L rows.
+
+    Previous approach cropped at x=300 which sliced off the FRONT of every
+    instrument name (leaving fragments like 'ClassC', 'nc.', '500GrowthETF').
+    The regex pattern is specific enough (ends with 4 numbers + %) that we
+    don't need the left crop — relying on pattern matching alone is safer.
+    """
     rows_out = []
-    for page_idx in (4, 5, 6):  # pages 5, 6, 7 → zero-indexed 4, 5, 6
+    for page_idx in (4, 5, 6):  # pages 5, 6, 7 → zero-indexed
         if page_idx >= len(pdf.pages):
             continue
         page = pdf.pages[page_idx]
-        # Crop to the right-hand columns where instrument names + numbers live
-        cropped = page.crop((300, 0, page.width, page.height))
+        # Crop at x=50 (not 300 which truncated names, not 0 which drops some rows).
+        cropped = page.crop((50, 0, page.width, page.height))
         for row in page_rows(cropped):
             line = " ".join(row)
-            # Skip header & footer noise
             if not line or "Page" in line or "DohaBank" in line:
                 continue
             m = PL_ROW_RE.match(line)
             if not m:
                 continue
             name = m.group("name").strip()
-            if name.lower().startswith(("total", "instrument", "p/l")):
+            # Skip aggregate/header rows but NOT instrument names that start with "Total"
+            # (e.g. "TotalEnergiesSE" is a valid instrument, "Total P/L" is not)
+            nl = name.lower()
+            if nl.startswith(("total ", "totalp", "totalc", "instrument", "p/l ")):
                 continue
             rows_out.append({
                 "name":    name,
@@ -370,14 +377,32 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
         cash     = parse_cash(pdf)
         charges  = parse_charges(pdf)
 
-    # Split P/L rows into open (present in holdings) vs closed (not).
-    held_norms = {norm(h["name"]).split("(")[0] for h in holdings}
-    pl_index = {norm(r["name"]).split("(")[0]: r for r in pl_rows}
+    # ── Match P&L rows to positions by TICKER (robust vs truncated names) ──
+    #
+    # The P&L breakdown (pages 5-7) is per-instrument for the whole period.
+    # Instruments that were closed AND reopened (e.g. VOOG, EWY) appear once
+    # in the statement with combined costs.  We handle this by:
+    #   • If ticker is currently OPEN  → costs go to open position
+    #   • If ticker is only CLOSED     → costs go to closed entry
+    # This avoids double-counting fees for re-opened positions.
+
+    open_tickers  = {h["tk"] for h in holdings}
+
+    # Build ticker → pl_row map. Sum costs if same ticker appears twice.
+    pl_by_ticker: dict[str, dict] = {}
+    for r in pl_rows:
+        tk, _, _ = lookup(r["name"])
+        if tk in pl_by_ticker:
+            # Same ticker found twice (e.g. split rows): merge costs
+            pl_by_ticker[tk]["costs"]   += r["costs"]
+            pl_by_ticker[tk]["income"]  += r["income"]
+            pl_by_ticker[tk]["pl"]      += r["pl"]
+        else:
+            pl_by_ticker[tk] = dict(r)
 
     open_full = []
     for h in holdings:
-        key = norm(h["name"]).split("(")[0]
-        plr = pl_index.get(key, {})
+        plr = pl_by_ticker.get(h["tk"], {})
         open_full.append({
             "tk":     h["tk"],
             "yf":     h["yf"],
@@ -390,12 +415,24 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
         })
 
     closed_full = []
-    for r in pl_rows:
-        k = norm(r["name"]).split("(")[0]
-        # Skip if exact match OR if this is a PDF fragment of a currently-held name
-        if k in held_norms or any(k in h for h in held_norms):
+    for tk, r in pl_by_ticker.items():
+        if tk in open_tickers:
+            # Fees for this ticker already captured in the open position.
+            # Still record the closed tranche's realised P&L (costs=0 to avoid double-count).
+            if r["pl"] != 0.0 and not tk.startswith("UNKNOWN"):
+                _, yf, cls = lookup(r["name"])
+                closed_full.append({
+                    "tk":       tk,
+                    "name":     r["name"],
+                    "cls":      cls,
+                    "income":   round(r["income"], 2),
+                    "costs":    0.0,   # costs already in open position; 0 here to avoid double-count
+                    "realised": round(r["pl"], 2),
+                    "ret_pct":  round(r["ret_pct"], 2),
+                    "_note":    "costs counted in open position (same ticker, re-opened)",
+                })
             continue
-        tk, yf, cls = lookup(r["name"])
+        _, yf, cls = lookup(r["name"])
         closed_full.append({
             "tk":       tk,
             "name":     r["name"],

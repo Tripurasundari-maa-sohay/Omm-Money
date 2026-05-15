@@ -157,13 +157,19 @@ def main(xlsx_path: str) -> int:
 
     changed_fees   = 0
     changed_income = 0
+    # Note: holdings with no transactions (e.g. transferred from another broker)
+    # will have new_fee=0 which is correct — fee_map only covers transactions in this file.
 
     for pos in open_pos:
         tk  = pos["tk"]
         sym = pos.get("yf", tk).split(".")[0]  # strip ".NS" etc.
 
-        new_fee, open_date = current_position_fees(trades_raw, fee_map, sym)
-        new_inc = current_position_income(bookings_raw, sym, open_date)
+        try:
+            new_fee, open_date = current_position_fees(trades_raw, fee_map, sym)
+            new_inc = current_position_income(bookings_raw, sym, open_date)
+        except Exception as exc:
+            print(f"  WARN  {tk} ({sym}): error computing fees/income — skipping: {exc}", file=sys.stderr)
+            continue
 
         old_fee = pos.get("fees", 0.0) or 0.0
         old_inc = pos.get("income", 0.0) or 0.0

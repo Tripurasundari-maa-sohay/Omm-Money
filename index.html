@@ -30,6 +30,12 @@
   #fetch-status.stale{color:#ffaa00}
   #fetch-status.error{color:#ff4444}
 
+  /* ── ERROR BANNER ── */
+  #error-banner{display:none;position:fixed;top:62px;left:0;right:0;z-index:999;
+    background:#3a0a0a;border-bottom:2px solid #ff4444;color:#ff8888;
+    font-size:12px;font-weight:700;padding:6px 20px;letter-spacing:.5px;text-align:center}
+  #error-banner.visible{display:block}
+
   /* ── LAYOUT ── */
   .dashboard-container{width:100%;min-height:100vh;padding-top:62px}
   .main-content{padding:20px;max-width:1600px;margin:0 auto}
@@ -249,6 +255,8 @@
       <div id="fetch-status">Loading…</div>
     </div>
   </div>
+
+  <div id="error-banner"></div>
 
   <div class="main-content">
 
@@ -787,6 +795,7 @@ const DASH = (() => {
     if (!S.cost) {
       status.textContent = 'No cost basis file (data/holdings_cost.json)';
       status.className = 'error';
+      showErrorBanner('Critical: holdings_cost.json failed to load — dashboard cannot display data');
     } else if (Object.keys(S.prices).length === 0) {
       status.textContent = 'Live prices unavailable — showing cost basis';
       status.className = 'stale';
@@ -796,11 +805,24 @@ const DASH = (() => {
     }
   }
 
+  function showErrorBanner(msg) {
+    const b = $('error-banner');
+    if (!b) return;
+    b.textContent = '⚠ ' + msg;
+    b.classList.add('visible');
+  }
+  function hideErrorBanner() {
+    const b = $('error-banner');
+    if (b) b.classList.remove('visible');
+  }
+
   /* ── 2. BUILD VIEW MODEL ──────────────────────────────────────── */
   function priceFor(holding) {
+    // Guard: tk can be undefined/null if a row was malformed
+    if (!holding.tk) return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false };
     const p = S.prices[holding.tk];
     if (p && Number.isFinite(p.ltp)) return { ltp: p.ltp, pc: p.pc ?? p.ltp, live: true };
-    return { ltp: holding.avg, pc: holding.avg, live: false };
+    return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false };
   }
   function enrich(holding) {
     const { ltp, pc, live } = priceFor(holding);
@@ -813,7 +835,8 @@ const DASH = (() => {
     const dayPct  = pc ? ((ltp - pc) / pc) * 100 : 0;
     const cost    = (holding.avg || 0) * holding.qty;
     const ret     = cost ? (uplNet / cost) * 100 : 0;    // true net return %
-    const houseMoney = !holding.avg;
+    // houseMoney: avg===0 means purchase price unknown (e.g. NBCC pending) — treat as free shares
+    const houseMoney = !holding.avg;  // catches both 0 and undefined/null
     return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, houseMoney };
   }
   function build() {
@@ -878,7 +901,13 @@ const DASH = (() => {
   }
 
   /* ── 3. RENDERERS ─────────────────────────────────────────────── */
-  function safe(fn, label){ try { fn(); } catch(e) { console.error(`[render:${label}]`, e); } }
+  function safe(fn, label){
+    try { fn(); }
+    catch(e) {
+      console.error(`[render:${label}]`, e);
+      showErrorBanner(`Render error in ${label}: ${e.message} — some data may not display correctly`);
+    }
+  }
 
   function setLiveBadge(elId, positions) {
     const badge = $(elId);

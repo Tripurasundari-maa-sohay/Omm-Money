@@ -80,8 +80,9 @@ def fetch_quote(yf_symbol: str) -> dict | None:
         fi = yf.Ticker(yf_symbol).fast_info
         ltp = fi.last_price
         pc  = fi.previous_close
-        if ltp:
-            return {"ltp": round(float(ltp), 4), "pc": round(float(pc) if pc else float(ltp), 4)}
+        # Explicit None check: fast_info can silently return None without raising
+        if ltp is not None and float(ltp) > 0:
+            return {"ltp": round(float(ltp), 4), "pc": round(float(pc) if pc is not None else float(ltp), 4)}
     except Exception as exc:
         print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
 
@@ -202,23 +203,39 @@ def build_holdings_json() -> dict:
 
     print(f"Fetching {len(tickers)} holding quotes…")
     prices: dict[str, dict] = {}
+    success_count = 0
     for tk, yf_sym in tickers:
-        q = fetch_quote(yf_sym)
-        if q is None and yf_sym.endswith(".NS"):
-            print(f"  INFO  {tk}: yfinance empty — trying SME fallback…", file=sys.stderr)
-            q = fetch_quote_india_sme(yf_sym)
-        if q is None:
-            continue
-        change     = q["ltp"] - q["pc"]
-        change_pct = (change / q["pc"]) * 100 if q["pc"] else 0.0
-        prices[tk] = {
-            "ltp":        q["ltp"],
-            "pc":         q["pc"],
-            "change":     round(change, 4),
-            "change_pct": round(change_pct, 2),
-            "as_of":      datetime.utcnow().isoformat() + "Z",
-        }
-        print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({change_pct:+.2f}%)")
+        try:
+            q = fetch_quote(yf_sym)
+            if q is None and yf_sym.endswith(".NS"):
+                print(f"  INFO  {tk}: yfinance empty — trying SME fallback…", file=sys.stderr)
+                q = fetch_quote_india_sme(yf_sym)
+            if q is None:
+                print(f"  FAIL  {tk} ({yf_sym}): no price obtained", file=sys.stderr)
+                continue
+            change     = q["ltp"] - q["pc"]
+            change_pct = (change / q["pc"]) * 100 if q["pc"] else 0.0
+            prices[tk] = {
+                "ltp":        q["ltp"],
+                "pc":         q["pc"],
+                "change":     round(change, 4),
+                "change_pct": round(change_pct, 2),
+                "as_of":      datetime.utcnow().isoformat() + "Z",
+            }
+            success_count += 1
+            print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({change_pct:+.2f}%)")
+        except Exception as exc:
+            print(f"  ERROR  {tk} ({yf_sym}): unexpected error: {exc}", file=sys.stderr)
+
+    # Guard: only write if at least 50% of tickers got prices
+    min_required = max(1, len(tickers) // 2)
+    if success_count < min_required:
+        print(
+            f"  WARN  only {success_count}/{len(tickers)} tickers resolved "
+            f"(need ≥{min_required}) — skipping holdings_prices.json write to avoid overwriting good data",
+            file=sys.stderr,
+        )
+        return {"generated": datetime.utcnow().isoformat() + "Z", "prices": {}, "_write_skipped": True}
 
     return {"generated": datetime.utcnow().isoformat() + "Z", "prices": prices}
 
@@ -232,8 +249,11 @@ def main() -> int:
     print(f"  wrote {OUT_INDICES.relative_to(ROOT)}")
 
     holdings = build_holdings_json()
-    OUT_HOLDINGS.write_text(json.dumps(holdings, indent=2))
-    print(f"  wrote {OUT_HOLDINGS.relative_to(ROOT)}")
+    if holdings.get("_write_skipped"):
+        print(f"  SKIP  {OUT_HOLDINGS.relative_to(ROOT)} (insufficient price data)")
+    else:
+        OUT_HOLDINGS.write_text(json.dumps(holdings, indent=2))
+        print(f"  wrote {OUT_HOLDINGS.relative_to(ROOT)}")
     return 0
 
 

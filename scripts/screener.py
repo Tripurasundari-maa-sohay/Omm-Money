@@ -16,6 +16,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import io
+import requests
 import pandas as pd
 
 # ── PATH SETUP ───────────────────────────────────────────────────────────────
@@ -27,13 +29,21 @@ from signals_update import fetch_history, score_ticker, MIN_BARS_FOR_SIGNALS, sm
 
 OUT_SCREENER = ROOT / "data" / "processed" / "screener.json"
 
+_HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
+
+def _wiki_tables(url: str) -> list:
+    """Fetch Wikipedia page with browser UA, parse all tables."""
+    resp = requests.get(url, headers=_HEADERS, timeout=20)
+    resp.raise_for_status()
+    return pd.read_html(io.StringIO(resp.text))
+
 
 # ── UNIVERSE FETCH ────────────────────────────────────────────────────────────
 
 def get_sp500_tickers() -> tuple[list[str], dict[str, str]]:
     """Returns (tickers, sector_map) from Wikipedia SP500 table."""
     try:
-        tables = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
+        tables = _wiki_tables("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
         df = tables[0]
         tickers = [t.replace(".", "-") for t in df["Symbol"].tolist()]
         sector_col = "GICS Sector" if "GICS Sector" in df.columns else df.columns[2]
@@ -50,7 +60,7 @@ def get_sp500_tickers() -> tuple[list[str], dict[str, str]]:
 def get_ndx100_tickers() -> tuple[list[str], dict[str, str]]:
     """Returns (tickers, sector_map) from Wikipedia NDX100 table."""
     try:
-        tables = pd.read_html("https://en.wikipedia.org/wiki/Nasdaq-100")
+        tables = _wiki_tables("https://en.wikipedia.org/wiki/Nasdaq-100")
         for t in tables:
             if "Ticker" in t.columns:
                 tickers = [

@@ -74,17 +74,27 @@ def market_status(market: str) -> str:
 
 def fetch_quote(yf_symbol: str) -> dict | None:
     """Return {'ltp': float, 'pc': float} or None on failure."""
+    # Attempt 1: fast_info — queries Yahoo's live quote endpoint,
+    # gives true intraday LTP + official previous close.
     try:
-        t = yf.Ticker(yf_symbol)
-        # 2d history gives us today's last price + previous close
-        hist = t.history(period="2d", interval="1d", auto_adjust=False)
+        fi = yf.Ticker(yf_symbol).fast_info
+        ltp = fi.last_price
+        pc  = fi.previous_close
+        if ltp:
+            return {"ltp": round(float(ltp), 4), "pc": round(float(pc) if pc else float(ltp), 4)}
+    except Exception as exc:
+        print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
+
+    # Attempt 2: daily history fallback (works when fast_info is unavailable)
+    try:
+        hist = yf.Ticker(yf_symbol).history(period="2d", interval="1d", auto_adjust=False)
         if hist.empty:
             return None
         ltp = float(hist["Close"].iloc[-1])
         pc  = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else ltp
         return {"ltp": round(ltp, 4), "pc": round(pc, 4)}
     except Exception as exc:
-        print(f"  WARN  {yf_symbol}: {exc}", file=sys.stderr)
+        print(f"  WARN  history {yf_symbol}: {exc}", file=sys.stderr)
         return None
 
 

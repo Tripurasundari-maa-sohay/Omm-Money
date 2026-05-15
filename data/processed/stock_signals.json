@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-15T09:29:18.165018Z",
+  "generated": "2026-05-15T10:30:58.525947Z",
   "regime": "BULL",
   "spy": {
     "px": 748.17,
@@ -7,6 +7,30 @@
     "pct_vs_200": 11.2
   },
   "holdings": {
+    "HUMN": {
+      "score": 63,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 66.5,
+      "v200": 25.0,
+      "rs": 4.0,
+      "hi52": 38.58,
+      "lo52": 23.94,
+      "rng": 93,
+      "vsMean": 27.2,
+      "px": 37.55,
+      "sc": {
+        "vs200": 12,
+        "cross": 8,
+        "wk": 10,
+        "rsi": 5,
+        "macd": 10,
+        "vol": 0,
+        "rs": 10,
+        "w52": 8,
+        "val": 0
+      }
+    },
     "GOOG": {
       "score": 76,
       "action": "BUY",

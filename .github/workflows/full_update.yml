@@ -41,13 +41,17 @@ jobs:
       - name: Commit if changed
         run: |
           if [[ -n "$(git status --porcelain data/processed)" ]]; then
-            git config pull.rebase true
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
             git add data/processed
             git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git pull --rebase origin main
-            git push
+            # Retry push up to 3 times — handles race where another commit
+            # lands between our fetch and push (common with 15-min schedule)
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "push attempt $attempt failed — retrying in 5s…"
+              sleep 5
+            done
           else
             echo "no changes"
           fi

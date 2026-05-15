@@ -20,3 +20,7 @@ Thumbs.db
 # ── Local-only output that shouldn't reach prod ───────────────
 *.log
 *.tmp
+
+# ── History CSVs — tracked in git but excluded from diff noise ──
+# To view history size: git ls-files data/history/ | wc -l
+# These ARE committed — just suppressed in default diff output

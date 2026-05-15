@@ -1,0 +1,69 @@
+name: EOD snapshot — US (NYSE + NASDAQ)
+
+on:
+  schedule:
+    - cron: "0 21 * * 1-5"   # 21:00 UTC Mon-Fri = 5:00 PM ET (1hr after US close)
+  workflow_dispatch:
+    inputs:
+      backfill_years:
+        description: "Years to backfill for new tickers"
+        default: "2"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: eod-us
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120   # ~10,000 tickers @ chunk=100 ≈ 100 batches ≈ 30-45 min
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install yfinance pandas requests
+
+      - name: Run US snapshot
+        run: |
+          python scripts/snapshot_eod.py \
+            --market us \
+            --chunk 100 \
+            --sleep 1.0 \
+            --backfill-years ${{ github.event.inputs.backfill_years || '2' }}
+
+      - name: Commit history
+        run: |
+          if [[ -n "$(git status --porcelain data/history/us data/history/_meta.json 2>/dev/null)" ]]; then
+            git config user.name  "github-actions"
+            git config user.email "github-actions@github.com"
+            git add data/history/us data/history/_meta.json
+            git commit -m "snapshot: US EOD $(date -u +%Y-%m-%d)"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "push attempt $attempt failed — retrying…"
+              sleep 10
+            done
+          else
+            echo "no changes"
+          fi
+
+      - name: Report stats
+        if: always()
+        run: |
+          if [ -f data/history/_meta.json ]; then
+            python3 -c "
+import json
+m = json.load(open('data/history/_meta.json'))
+us = m.get('us', {})
+print(f\"US: universe={us.get('universe',0)}  new={us.get('new_tickers',0)}  updated={us.get('updated',0)}  errors={us.get('errors',0)}\")
+"
+          fi

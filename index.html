@@ -492,7 +492,7 @@
         <div class="metric-card"><label>ETF VALUE</label><div class="mval loading pv" id="us-etf-value">…</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
         <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mdesc">From broker statement</div></div>
         <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
+        <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
         <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div></div>
       </div>
     </div>
@@ -1147,6 +1147,9 @@ const DASH = (() => {
     setText('us-cash-value',   usd(us.cash || 0));
     setText('us-unreal-pl',    sign(us.unrealPL) + usd(us.unrealPL));
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
+    const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
+    const lbl = $('us-day-pl-label');
+    if (lbl) lbl.textContent = usaStatus === 'OPEN' ? "TODAY'S P&L" : "PREV SESSION P&L";
     setText('us-day-pl',       sign(us.dayPL) + usd(us.dayPL));
     setClass('us-day-pl', 'mval pv ' + pn(us.dayPL));
     setText('us-day-pl-pct',   sign(us.dayPct) + pct(us.dayPct));

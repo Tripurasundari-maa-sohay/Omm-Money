@@ -310,12 +310,12 @@ def score_ticker_b(
 # ACCURACY
 # ─────────────────────────────────────────────────────────────────────────────
 
-def call_correct(action: str, fwd: float | None) -> bool | None:
+def call_correct(action: str, fwd: float | None) -> int | None:
     if fwd is None:
         return None
-    if action == "BUY":    return fwd > 2.0
-    if action == "REDUCE": return fwd < -2.0
-    return abs(fwd) <= 10.0   # HOLD
+    if action == "BUY":    return int(fwd > 2.0)
+    if action == "REDUCE": return int(fwd < -2.0)
+    return int(abs(fwd) <= 10.0)   # HOLD
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -392,6 +392,13 @@ def print_summary(results: list[dict], test_dates: list[date], forward_days: lis
     print(sep + "\n")
 
 
+class _BoolEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bool):
+            return 1 if obj else 0
+        return super().default(obj)
+
+
 def write_output(results: list[dict], test_dates: list[date], forward_days: list[int]) -> None:
     def _acc(model, d):
         vals = [r[f"correct_{model}_{d}"] for r in results if r[f"correct_{model}_{d}"] is not None]
@@ -411,7 +418,7 @@ def write_output(results: list[dict], test_dates: list[date], forward_days: list
         "calls": results,
     }
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OUT_FILE.write_text(json.dumps(out, indent=2))
+    OUT_FILE.write_text(json.dumps(out, indent=2, cls=_BoolEncoder))
     print(f"Wrote → {OUT_FILE}")
 
 

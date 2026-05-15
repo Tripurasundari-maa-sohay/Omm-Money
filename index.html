@@ -805,8 +805,9 @@
         <div class="sig-legend-row"><span>Valuation vs 1-year mean</span><strong style="color:#00ccff">10 pts</strong></div>
       </div>
       <div style="padding:10px 14px;background:#0d2b47;border-radius:4px;font-size:11px;display:flex;gap:20px;flex-wrap:wrap">
-        <span><strong style="color:#00ff88">BUY ≥ 65</strong></span>
-        <span><strong style="color:#ffaa00">HOLD 40–64</strong></span>
+        <span style="color:#aaa;font-size:10px;letter-spacing:.5px">MODEL C</span>
+        <span><strong style="color:#00ff88">BUY ≥ 68</strong></span>
+        <span><strong style="color:#ffaa00">HOLD 40–67</strong></span>
         <span><strong style="color:#ff4444">REDUCE &lt; 40</strong></span>
         <span style="color:#556">Bear regime (SPY &lt; 200MA) applies ×0.75 multiplier · 2-week stability filter before acting</span>
       </div>
@@ -1882,7 +1883,7 @@ const DASH = (() => {
     };
     const raw = Object.values(sc).reduce((s,v)=>s+v,0);
     const score = regime === 'BEAR' ? Math.round(raw * 0.75) : raw;
-    const action = score >= 65 ? 'BUY' : score >= 40 ? 'HOLD' : 'REDUCE';
+    const action = score >= 68 ? 'BUY' : score >= 40 ? 'HOLD' : 'REDUCE';  // Model C
     return { score, action, regime, rsi: +rsi.toFixed(1), v200: +v200.toFixed(1),
              rs: +rs.toFixed(1), hi52, lo52, rng: +rng.toFixed(0), vsMean: +vsMean.toFixed(1), px, sc };
   }
@@ -1961,7 +1962,7 @@ const DASH = (() => {
       return (va - vb) * SIG_SORT.dir;
     });
 
-    const scoreBarColor = s => s >= 65 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';
+    const scoreBarColor = s => s >= 68 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';  // Model C
 
     let html = rows.map(({ sym, name, res }) => {
       const rsiCol = (res.rsi < 30 || res.rsi > 73) ? 'color:#ff4444' : '';
@@ -2057,7 +2058,7 @@ const DASH = (() => {
 
   function sigWatchlistTableHtml(rows) {
     const prv = S.ui.privacy;
-    const scoreBarColor = s => s >= 65 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';
+    const scoreBarColor = s => s >= 68 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';  // Model C
     const rowHtml = rows.map(({ sym, name, res }) => {
       if (!res) return `<tr>
         <td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${sym}</span></td>
@@ -2230,7 +2231,7 @@ const DASH = (() => {
     let _sort = { col: 'score', dir: -1 };
 
     function scoreColor(s) {
-      return s >= 65 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';
+      return s >= 68 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';  // Model C
     }
     function actionBadge(a) {
       const c = a === 'BUY' ? '#00ff88' : a === 'HOLD' ? '#ffaa00' : '#ff4444';

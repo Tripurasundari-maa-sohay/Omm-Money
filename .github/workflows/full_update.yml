@@ -1,4 +1,4 @@
-name: Refresh market data (indices + holdings)
+name: Refresh market data (indices + holdings + signals)
 
 on:
   schedule:
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10              # increased: signals fetch 2y history for ~13 tickers
 
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +30,9 @@ jobs:
 
       - name: Fetch live prices
         run: python scripts/market_data.py
+
+      - name: Compute signals
+        run: python scripts/signals_update.py
 
       - name: Commit if changed
         run: |

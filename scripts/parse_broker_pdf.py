@@ -60,7 +60,7 @@ TICKER_MAP = {
     "direxiondailymubull2xetf":            ("MUU",   "MUU",   "ETF"),
     "globalxdaxgermanyetf":                ("DAX",   "DAX",   "ETF"),
     "keelinfrastructurecorp":              ("KEEL",  "KEEL",  "Stock"),
-    "roundhillhumanoidroboticsetf":        ("WHAI",  "WHAI",  "ETF"),
+    "roundhillhumanoidroboticsetf":        ("HUMN",  "HUMN",  "ETF"),
 }
 
 

@@ -64,6 +64,17 @@ TICKER_MAP = {
 }
 
 
+def clean_instrument_name(name: str) -> str:
+    """Strip PDF boilerplate that gets prepended (left column bleeds into right column).
+    All real instrument names start with uppercase or digit.
+    All boilerplate prefixes are lowercase-only runs."""
+    tokens = name.split()
+    for i, tok in enumerate(tokens):
+        if tok and (tok[0].isupper() or tok[0].isdigit()):
+            return " ".join(tokens[i:])
+    return name  # fallback: return as-is
+
+
 def norm(s: str) -> str:
     return re.sub(r"[\s,]+", "", s or "").lower()
 
@@ -267,7 +278,7 @@ def parse_pl_breakdown(pdf) -> list[dict]:
             m = PL_ROW_RE.match(line)
             if not m:
                 continue
-            name = m.group("name").strip()
+            name = clean_instrument_name(m.group("name").strip())
             # Skip aggregate/header rows but NOT instrument names that start with "Total"
             # (e.g. "TotalEnergiesSE" is a valid instrument, "Total P/L" is not)
             nl = name.lower()
@@ -304,15 +315,57 @@ def parse_holdings(pdf) -> list[dict]:
         rows = page_rows(pdf.pages[page_idx])
         for i, row in enumerate(rows):
             line = " ".join(row)
-            m = DATA_RE.match(line)
+            # Bug 1 fix: search for "USD " anywhere in the line, not just at start
+            usd_pos = line.find("USD ")
+            if usd_pos == -1:
+                continue
+            data_part = line[usd_pos:]
+            m = DATA_RE.match(data_part)
             if not m:
                 continue
-            # Name is on the row above (or two above for short names)
-            name_line = " ".join(rows[i - 1]) if i > 0 else ""
-            # Strip the trailing "(ISIN:" piece if it's at the end
-            name_clean = re.sub(r"\(ISIN:.*$", "", name_line).strip()
-            if not name_clean and i > 1:
-                name_clean = re.sub(r"\(ISIN:.*$", "", " ".join(rows[i - 2])).strip()
+            # Any text before "USD" on the same row is the tail of the instrument name
+            name_suffix = line[:usd_pos].strip()
+            # Strip ISIN patterns from name_suffix
+            name_suffix = re.sub(r"\(ISIN:.*$", "", name_suffix).strip()
+
+            # Tokens that identify a column-header row — never part of an instrument name
+            _HEADER_TOKENS = {
+                "Quantity", "ConversionRate", "Openprice", "Currentprice",
+                "UnrealizedP/L", "MarketValue", "MarketValue%",
+                "%Pricechange", "currency", "rating", "focus",
+            }
+
+            def _is_header_row(row_words: list[str]) -> bool:
+                return bool(set(row_words) & _HEADER_TOKENS)
+
+            # Collect name parts from rows above (up to 3), stopping at another data row
+            # or a column-header row
+            name_parts = []
+            for j in range(i - 1, max(i - 4, -1), -1):
+                prev_line = " ".join(rows[j])
+                # Stop if this row looks like another data row
+                if rows[j] and rows[j][0] == "USD":
+                    break
+                prev_usd_pos = prev_line.find("USD ")
+                if prev_usd_pos != -1:
+                    prev_data = prev_line[prev_usd_pos:]
+                    if DATA_RE.match(prev_data):
+                        break
+                # Stop if this is a column-header row
+                if _is_header_row(rows[j]):
+                    break
+                # Strip ISIN and collect
+                prev_clean = re.sub(r"\(ISIN:.*$", "", prev_line).strip()
+                # Strip leading ISIN token that sits alone (e.g. "US0231351067)")
+                prev_clean = re.sub(r"^[A-Z]{2}\w{10}\)\s*", "", prev_clean).strip()
+                if prev_clean:
+                    name_parts.insert(0, prev_clean)
+                else:
+                    break  # empty row — stop collecting
+
+            # Build final name: rows-above parts + same-row suffix
+            all_parts = name_parts + ([name_suffix] if name_suffix else [])
+            name_clean = clean_instrument_name(" ".join(all_parts).strip())
             ticker, yf, cls = lookup(name_clean)
             qty = float(m.group("qty").replace(",", ""))
             out.append({

@@ -335,11 +335,31 @@ def parse_holdings(pdf) -> list[dict]:
                 "%Pricechange", "currency", "rating", "focus",
             }
 
+            # Strings that identify a section-header row (case-insensitive substring match)
+            _SECTION_HEADER_SUBSTRINGS = (
+                "exchange", "traded products", "sustainability",
+                "asset class", "conversion rate", "quantity", "open price",
+            )
+
+            # Standalone abbreviation tokens that alone constitute a section header
+            _STANDALONE_ABBREV = {"ETF", "ETC", "ETN", "USD"}
+
             def _is_header_row(row_words: list[str]) -> bool:
                 return bool(set(row_words) & _HEADER_TOKENS)
 
+            def _is_section_header_row(row_words: list[str]) -> bool:
+                """Return True if this row is a section separator we should not harvest."""
+                joined_lower = " ".join(row_words).lower()
+                for substr in _SECTION_HEADER_SUBSTRINGS:
+                    if substr in joined_lower:
+                        return True
+                # A row that is ONLY standalone abbreviation tokens
+                if row_words and all(w in _STANDALONE_ABBREV for w in row_words):
+                    return True
+                return False
+
             # Collect name parts from rows above (up to 3), stopping at another data row
-            # or a column-header row
+            # or a column-header / section-header row
             name_parts = []
             for j in range(i - 1, max(i - 4, -1), -1):
                 prev_line = " ".join(rows[j])
@@ -351,8 +371,8 @@ def parse_holdings(pdf) -> list[dict]:
                     prev_data = prev_line[prev_usd_pos:]
                     if DATA_RE.match(prev_data):
                         break
-                # Stop if this is a column-header row
-                if _is_header_row(rows[j]):
+                # Stop if this is a column-header row or section-header row
+                if _is_header_row(rows[j]) or _is_section_header_row(rows[j]):
                     break
                 # Strip ISIN and collect
                 prev_clean = re.sub(r"\(ISIN:.*$", "", prev_line).strip()
@@ -365,7 +385,10 @@ def parse_holdings(pdf) -> list[dict]:
 
             # Build final name: rows-above parts + same-row suffix
             all_parts = name_parts + ([name_suffix] if name_suffix else [])
-            name_clean = clean_instrument_name(" ".join(all_parts).strip())
+            raw_name = " ".join(all_parts).strip()
+            # Strip any leading isolated ETF/ETC/ETN/USD tokens that leaked from section headers
+            raw_name = re.sub(r"^(?:ETF|ETC|ETN|USD)(?:\s+(?:ETF|ETC|ETN|USD))*\s+", "", raw_name)
+            name_clean = clean_instrument_name(raw_name)
             ticker, yf, cls = lookup(name_clean)
             qty = float(m.group("qty").replace(",", ""))
             out.append({
@@ -471,6 +494,16 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     for tk, r in pl_by_ticker.items():
         if tk in open_tickers:
             # Fees for this ticker already captured in the open position.
+            # Before recording a closed tranche, verify there was a real closed trade.
+            # If the period P&L is fully explained by unrealised mark-to-market + costs,
+            # the position was never closed — skip adding a phantom closed entry.
+            stmt_upl = next(
+                (h.get("_statement_upl", 0.0) for h in holdings if h["tk"] == tk), 0.0
+            )
+            realised_est = r["pl"] - stmt_upl - r["costs"]
+            if abs(realised_est) < 2.0:
+                # No real closed tranche — period P&L fully explained by mark-to-market + costs
+                continue
             # Still record the closed tranche's realised P&L (costs=0 to avoid double-count).
             if r["pl"] != 0.0 and not tk.startswith("UNKNOWN"):
                 _, yf, cls = lookup(r["name"])

@@ -192,6 +192,25 @@
   .ccy-btn:hover{background:rgba(0,204,255,.1);color:#00ccff}
   .ccy-btn.active{background:rgba(0,255,136,.15);color:#00ff88}
 
+  /* ── SCREENER TAB ── */
+  #scr-table { width:100%; border-collapse:collapse; font-size:12px; }
+  #scr-table thead th { background:#0d2b47; color:#00ccff; padding:8px 10px; text-align:left;
+    border-bottom:2px solid #1a4a6a; letter-spacing:.5px; font-size:11px; white-space:nowrap; }
+  #scr-table thead th.sortable { cursor:pointer; user-select:none; }
+  #scr-table thead th.sortable:hover { color:#00ff88; }
+  #scr-table tbody td { padding:6px 10px; border-bottom:1px solid #0d2b47; vertical-align:middle;
+    color:#b0c8e0; white-space:nowrap; }
+  #scr-table tbody tr:hover { background:#0d2b47; }
+  .scr-badge { display:inline-block; padding:1px 6px; border-radius:3px; font-size:10px;
+    font-weight:700; letter-spacing:.5px; margin-right:3px; }
+  .scr-sp { background:rgba(0,204,255,.15); color:#00ccff; }
+  .scr-ndx { background:rgba(0,255,136,.12); color:#00ff88; }
+  .scr-filter-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .scr-filter-bar select, .scr-filter-bar input[type=number] {
+    background:#0d2b47; color:#b0c8e0; border:1px solid #1a4a6a; border-radius:4px;
+    padding:5px 8px; font-size:12px; }
+  .scr-filter-bar label { font-size:12px; color:#778; }
+
   /* ── SIGNALS TAB ── */
   .sig-card{background:#0a1929;border:1px solid #1a3a5a;border-radius:8px;padding:16px;transition:border-color .2s}
   .sig-card:hover{border-color:#00ccff}
@@ -255,6 +274,7 @@
       <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
       <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
       <button class="tab-button" data-tab="signals">📡 SIGNALS</button>
+      <button class="tab-button" data-tab="screener">🔍 SCREENER</button>
     </div>
     <div class="banner-controls">
       <div class="ccy-group">
@@ -720,6 +740,64 @@
     </div>
 
   </div><!-- /signals-tab -->
+
+  <!-- ══════════ TAB 6 · SCREENER ══════════ -->
+  <div id="screener-tab" class="tab-content">
+
+    <!-- Filter bar -->
+    <div class="scr-filter-bar">
+      <label>Universe:
+        <select id="scr-universe" onchange="DASH_SCR.filter()">
+          <option value="all">All (SP500 + NDX100)</option>
+          <option value="SP500">S&amp;P 500 only</option>
+          <option value="NDX100">Nasdaq 100 only</option>
+        </select>
+      </label>
+      <label>Signal:
+        <select id="scr-action" onchange="DASH_SCR.filter()">
+          <option value="all">All Signals</option>
+          <option value="BUY">BUY only</option>
+          <option value="HOLD">HOLD only</option>
+          <option value="REDUCE">REDUCE only</option>
+        </select>
+      </label>
+      <label>Min Score:
+        <input type="number" id="scr-min-score" value="0" min="0" max="87" style="width:52px"
+          oninput="DASH_SCR.filter()">
+      </label>
+      <span id="scr-count" style="font-size:12px;color:#556;margin-left:auto"></span>
+    </div>
+
+    <!-- Status -->
+    <div id="scr-status" style="color:#778;font-size:13px;margin-bottom:10px"></div>
+
+    <!-- Table -->
+    <div class="tab-section" style="padding:0;overflow-x:auto">
+      <table id="scr-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-scrcol="tk">TICKER</th>
+            <th>INDEX</th>
+            <th class="sortable sort-desc" data-scrcol="score">SCORE ▾</th>
+            <th>ACTION</th>
+            <th class="sortable" data-scrcol="rsi">RSI</th>
+            <th class="sortable" data-scrcol="v200">vs 200MA</th>
+            <th class="sortable" data-scrcol="rs">RS/SPY</th>
+            <th class="sortable" data-scrcol="rng">52W%</th>
+            <th class="sortable" data-scrcol="vsMean">vsMEAN</th>
+          </tr>
+        </thead>
+        <tbody id="scr-tbody">
+          <tr><td colspan="9" style="text-align:center;color:#556;padding:30px">
+            Click <strong style="color:#00ff88">🔍 SCREENER</strong> to load — runs daily after US close
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="scr-updated" style="font-size:11px;color:#445;margin-top:10px;text-align:right"></div>
+
+  </div><!-- /screener-tab -->
 
   </div><!-- /main-content -->
 </div><!-- /dashboard-container -->
@@ -1470,6 +1548,7 @@ const DASH = (() => {
     const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
     if (name === 'signals') loadSignals();
+    if (name === 'screener') DASH_SCR.init();
   }
   /* ── Currency toggle ──────────────────────────────────────────── */
   function setCurrency(el) {
@@ -2036,6 +2115,110 @@ const DASH = (() => {
     </div>`;
   }
 
+  /* ── SCREENER ─────────────────────────────────────────────────────── */
+  const DASH_SCR = (() => {
+    let _data = null;
+    let _loaded = false;
+    let _sort = { col: 'score', dir: -1 };
+
+    function scoreColor(s) {
+      return s >= 65 ? '#00ff88' : s >= 40 ? '#ffaa00' : '#ff4444';
+    }
+    function actionBadge(a) {
+      const c = a === 'BUY' ? '#00ff88' : a === 'HOLD' ? '#ffaa00' : '#ff4444';
+      const bg = a === 'BUY' ? 'rgba(0,255,136,.15)' : a === 'HOLD' ? 'rgba(255,170,0,.15)' : 'rgba(255,68,68,.15)';
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;color:${c};background:${bg}">${a}</span>`;
+    }
+    function signed(v, dec=1) {
+      if (v == null) return '—';
+      const s = v.toFixed(dec);
+      return `<span style="color:${v >= 0 ? '#00ff88' : '#ff6b6b'}">${v > 0 ? '+' : ''}${s}%</span>`;
+    }
+    function indexBadges(indices) {
+      return (indices || []).map(ix =>
+        `<span class="scr-badge ${ix === 'SP500' ? 'scr-sp' : 'scr-ndx'}">${ix}</span>`
+      ).join('');
+    }
+
+    function render() {
+      if (!_data) return;
+      const universe = document.getElementById('scr-universe').value;
+      const action   = document.getElementById('scr-action').value;
+      const minScore = parseInt(document.getElementById('scr-min-score').value) || 0;
+
+      let rows = _data.tickers.filter(r => {
+        if (universe !== 'all' && !(r.indices || []).includes(universe)) return false;
+        if (action !== 'all' && r.action !== action) return false;
+        if (r.score < minScore) return false;
+        return true;
+      });
+
+      // Sort
+      rows.sort((a, b) => {
+        const va = _sort.col === 'tk' ? a.tk : (a[_sort.col] ?? -999);
+        const vb = _sort.col === 'tk' ? b.tk : (b[_sort.col] ?? -999);
+        if (typeof va === 'string') return _sort.dir * va.localeCompare(vb);
+        return _sort.dir * (va - vb);
+      });
+
+      document.getElementById('scr-count').textContent =
+        `Showing ${rows.length} of ${_data.tickers.length} tickers`;
+
+      const tbody = document.getElementById('scr-tbody');
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td><strong style="color:#e0f0ff;font-family:monospace">${r.tk}</strong></td>
+          <td>${indexBadges(r.indices)}</td>
+          <td><strong style="color:${scoreColor(r.score)}">${r.score}</strong></td>
+          <td>${actionBadge(r.action)}</td>
+          <td style="color:${r.rsi < 30 ? '#00ff88' : r.rsi > 70 ? '#ff6b6b' : '#b0c8e0'}">${r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
+          <td>${signed(r.v200)}</td>
+          <td>${signed(r.rs)}</td>
+          <td style="color:#b0c8e0">${r.rng != null ? r.rng + '%' : '—'}</td>
+          <td>${signed(r.vsMean)}</td>
+        </tr>`).join('');
+    }
+
+    async function init() {
+      if (_loaded) return;
+      _loaded = true;
+      document.getElementById('scr-status').textContent = '⟳ Loading screener data…';
+      try {
+        const res = await fetch(`data/processed/screener.json?_=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        _data = await res.json();
+        document.getElementById('scr-status').textContent = '';
+        document.getElementById('scr-updated').textContent =
+          `Last screened: ${_data.generated || 'unknown'}  ·  Regime: ${_data.regime || '—'}  ·  ${_data.count || 0} tickers scored`;
+        render();
+      } catch(e) {
+        _loaded = false; // allow retry on next tab click
+        document.getElementById('scr-status').textContent =
+          '⚠ Screener data not yet available — runs daily at 01:00 UTC after US close. ' +
+          'Trigger manually via GitHub Actions → screener workflow.';
+      }
+    }
+
+    // Sort on column header click
+    function initSort() {
+      document.querySelectorAll('#scr-table th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.scrcol;
+          if (_sort.col === col) _sort.dir *= -1;
+          else { _sort.col = col; _sort.dir = col === 'tk' ? 1 : -1; }
+          render();
+        });
+      });
+    }
+
+    return { init, filter: render, initSort };
+  })();
+
   /* ── INIT ── */
   function init() {
     document.querySelectorAll('.tab-button').forEach(btn => {
@@ -2053,6 +2236,7 @@ const DASH = (() => {
     // Signal holdings table sort + watchlist
     initSigTableSort();
     sigWatchlistInit();
+    DASH_SCR.initSort();
     tickCountdowns();
     setInterval(tickCountdowns, 1000);
     refresh();

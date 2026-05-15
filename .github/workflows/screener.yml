@@ -1,0 +1,50 @@
+name: Daily screener (S&P 500 + Nasdaq 100)
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 01:00 UTC daily — after US close, data stable
+  workflow_dispatch:        # manual trigger
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screener
+  cancel-in-progress: false   # long job, don't interrupt
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install yfinance pandas requests beautifulsoup4 lxml html5lib
+
+      - name: Run screener
+        run: python scripts/screener.py || echo "WARNING: screener.py failed"
+
+      - name: Commit if changed
+        run: |
+          if [[ -n "$(git status --porcelain data/processed/screener.json)" ]]; then
+            git config pull.rebase true
+            git config user.name  "github-actions"
+            git config user.email "github-actions@github.com"
+            git add data/processed/screener.json
+            git commit -m "screener: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git pull --rebase origin main
+            git push
+          else
+            echo "no changes"
+          fi
+
+      - name: Report failure
+        if: failure()
+        run: echo "SCREENER FAILURE at $(date -u +%Y-%m-%dT%H:%M:%SZ)"

@@ -82,7 +82,11 @@ def fetch_quote(yf_symbol: str) -> dict | None:
         pc  = fi.previous_close
         # Explicit None check: fast_info can silently return None without raising
         if ltp is not None and float(ltp) > 0:
-            return {"ltp": round(float(ltp), 4), "pc": round(float(pc) if pc is not None else float(ltp), 4)}
+            if pc is None:
+                # previous_close not yet published (e.g. market just opened) →
+                # fall through to history() which has yesterday's actual close
+                raise ValueError("previous_close is None — falling through to history fallback")
+            return {"ltp": round(float(ltp), 4), "pc": round(float(pc), 4)}
     except Exception as exc:
         print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
 
@@ -153,8 +157,22 @@ def fetch_quote_india_sme(yf_symbol: str) -> dict | None:
             if ltp:
                 ltp = round(float(ltp), 4)
                 print(f"  SME/Screener  {base} → {ltp:.2f}")
-                # Screener doesn't expose prev-close directly; use ltp as proxy
-                return {"ltp": ltp, "pc": ltp}
+                # Screener doesn't expose prev-close — try to get it from NSE API
+                pc = None
+                try:
+                    nse_r = requests.get(
+                        f"https://www.nseindia.com/api/quote-equity?symbol={base}",
+                        headers=_HEADERS, timeout=8,
+                    )
+                    if nse_r.status_code == 200:
+                        nse_d = nse_r.json()
+                        pc = float(nse_d.get("priceInfo", {}).get("previousClose", 0)) or None
+                except Exception:
+                    pass
+                # If still no prev-close, return None so caller shows unknown dayPL
+                if pc is None:
+                    return {"ltp": ltp, "pc": None}
+                return {"ltp": ltp, "pc": round(pc, 4)}
     except Exception as exc:
         print(f"  WARN  Screener {base}: {exc}", file=sys.stderr)
 
@@ -213,13 +231,14 @@ def build_holdings_json() -> dict:
             if q is None:
                 print(f"  FAIL  {tk} ({yf_sym}): no price obtained", file=sys.stderr)
                 continue
-            change     = q["ltp"] - q["pc"]
-            change_pct = (change / q["pc"]) * 100 if q["pc"] else 0.0
+            pc         = q["pc"]    # may be None for SME stocks with no prev-close
+            change     = round(q["ltp"] - pc, 4) if pc is not None else None
+            change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
             prices[tk] = {
                 "ltp":        q["ltp"],
-                "pc":         q["pc"],
-                "change":     round(change, 4),
-                "change_pct": round(change_pct, 2),
+                "pc":         pc,          # None means "unknown" — JS shows "–"
+                "change":     change,
+                "change_pct": change_pct,
                 "as_of":      datetime.utcnow().isoformat() + "Z",
             }
             success_count += 1
@@ -240,9 +259,50 @@ def build_holdings_json() -> dict:
     return {"generated": datetime.utcnow().isoformat() + "Z", "prices": prices}
 
 
+# ── FX RATE ──────────────────────────────────────────────────────────────
+def fetch_live_fx() -> float | None:
+    """Fetch live INR/USD rate from Yahoo Finance. Returns None on failure."""
+    try:
+        q = fetch_quote("INR=X")          # Yahoo symbol for USD/INR
+        if q and q["ltp"] and q["ltp"] > 0:
+            return round(q["ltp"], 4)
+    except Exception:
+        pass
+    try:
+        # Fallback: yfinance direct
+        fi = yf.Ticker("INR=X").fast_info
+        rate = fi.last_price
+        if rate and rate > 0:
+            return round(float(rate), 4)
+    except Exception:
+        pass
+    return None
+
+
+def update_fx_in_cost_basis(rate: float) -> None:
+    """Write live fx_inr_usd back to holdings_cost.json (only field updated)."""
+    if not COST_BASIS.exists():
+        return
+    try:
+        cost = json.loads(COST_BASIS.read_text())
+        cost["fx_inr_usd"] = rate
+        COST_BASIS.write_text(json.dumps(cost, indent=2))
+        print(f"  FX rate updated → ₹{rate}/USD")
+    except Exception as exc:
+        print(f"  WARN  FX update failed: {exc}", file=sys.stderr)
+
+
 # ── MAIN ─────────────────────────────────────────────────────────────────
 def main() -> int:
     OUT_INDICES.parent.mkdir(parents=True, exist_ok=True)
+
+    # Live FX rate — update holdings_cost.json so dashboard uses fresh rate
+    print("Fetching live INR/USD rate…")
+    fx = fetch_live_fx()
+    if fx:
+        update_fx_in_cost_basis(fx)
+    else:
+        print("  WARN  FX fetch failed — using stored rate", file=sys.stderr)
 
     indices = build_indices_json()
     OUT_INDICES.write_text(json.dumps(indices, indent=2))

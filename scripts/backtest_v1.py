@@ -247,7 +247,7 @@ def score_ticker_b(
 # ACCURACY HELPER
 # ─────────────────────────────────────────────────────────────────────────────
 
-def call_correct(action: str, fwd_return: float | None) -> bool | None:
+def call_correct(action: str, fwd_return: float | None) -> int | None:
     """
     Was the model's call directionally correct given the actual forward return?
 
@@ -258,11 +258,11 @@ def call_correct(action: str, fwd_return: float | None) -> bool | None:
     if fwd_return is None:
         return None
     if action == "BUY":
-        return fwd_return > 2.0
+        return int(fwd_return > 2.0)
     elif action == "REDUCE":
-        return fwd_return < -2.0
+        return int(fwd_return < -2.0)
     else:  # HOLD
-        return abs(fwd_return) <= 10.0
+        return int(abs(fwd_return) <= 10.0)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -380,6 +380,13 @@ def print_summary(
     print(sep + "\n")
 
 
+class _BoolEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, bool):
+            return 1 if obj else 0
+        return super().default(obj)
+
+
 def write_output(
     results: list[dict],
     test_dates: list[date],
@@ -407,7 +414,7 @@ def write_output(
         "calls":         results,
     }
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-    OUT_FILE.write_text(json.dumps(out, indent=2))
+    OUT_FILE.write_text(json.dumps(out, indent=2, cls=_BoolEncoder))
     print(f"Wrote results → {OUT_FILE}")
 
 

@@ -744,14 +744,15 @@ const DASH = (() => {
   function ccyLabel() { return S.ui.currency; }
 
   /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
+  const fetchJSON = async (path) => {
+    try {
+      const r = await fetch(path, { cache: 'no-store' });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch { return null; }
+  };
+
   async function load() {
-    const fetchJSON = async (path) => {
-      try {
-        const r = await fetch(path, { cache: 'no-store' });
-        if (!r.ok) return null;
-        return await r.json();
-      } catch { return null; }
-    };
     const [cost, prices, indices] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
@@ -1596,51 +1597,56 @@ const DASH = (() => {
     </div>`;
   }
 
-  function sigRenderRegime(spyData) {
-    if (!spyData) return;
-    const cl = spyData.map(d=>d.c);
-    const px = cl.at(-1), ma200 = sigMA(cl,200);
-    const isBull = px > ma200;
-    const pct = ((px-ma200)/ma200*100).toFixed(1);
+  function sigRenderRegimeBanner(regime, spy, generated) {
+    const isBull = regime === 'BULL';
     const banner = $('sig-regime-banner');
     if (banner) banner.style.borderColor = isBull ? '#00ff88' : '#ff4444';
     const rv = $('sig-regime-val');
     if (rv) { rv.textContent = isBull ? '🟢 BULL MARKET' : '🔴 BEAR MARKET'; rv.style.color = isBull ? '#00ff88' : '#ff4444'; }
     const rs = $('sig-regime-sub');
-    if (rs) rs.innerHTML = `SPY: ${S.ui.privacy ? '●●●' : '$'+px.toFixed(2)}<br>vs 200MA: <strong style="color:${isBull?'#00ff88':'#ff4444'}">${isBull?'+':''}${pct}%</strong>`;
+    if (rs && spy) {
+      const pct = spy.pct_vs_200 >= 0 ? '+'+spy.pct_vs_200 : spy.pct_vs_200;
+      const updStr = generated ? generated.slice(0,16).replace('T',' ') + ' UTC' : '';
+      rs.innerHTML = `SPY: ${S.ui.privacy ? '●●●' : '$'+spy.px.toFixed(2)}<br>vs 200MA: <strong style="color:${isBull?'#00ff88':'#ff4444'}">${pct}%</strong>`
+        + (updStr ? `<br><span style="font-size:9px;color:#445">Updated ${updStr}</span>` : '');
+    }
   }
 
   async function loadSignals() {
     if (SIG.loaded) return;
     SIG.loaded = true;
     const grid = $('sig-cards-grid');
-    if (grid) grid.innerHTML = '<div class="sig-loading">⟳ Fetching market data… (may take 20–30s)</div>';
+    if (grid) grid.innerHTML = '<div class="sig-loading">⟳ Loading signals…</div>';
 
-    SIG.spy = await sigFetch('SPY');
-    sigRenderRegime(SIG.spy);
-
-    const holdings = S.cost ? (S.cost.us.open || []) : [];
-    if (!holdings.length) {
-      if (grid) grid.innerHTML = '<div class="sig-loading">No US holdings found — ensure data/holdings_cost.json is loaded.</div>';
+    // Read pre-computed scores from GitHub Actions — no browser-side Yahoo Finance fetch
+    const data = await fetchJSON('data/processed/stock_signals.json');
+    if (!data || !data.holdings) {
+      if (grid) grid.innerHTML = '<div class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</div>';
       return;
     }
 
-    const cards = [];
-    for (const h of holdings) {
-      const data = await sigFetch(h.tk);
-      if (data) {
-        const res = sigScore(data, SIG.spy);
-        SIG.results[h.tk] = res;
-        cards.push(sigRenderCard(h.tk, h.name, res));
-      } else {
-        cards.push(`<div class="sig-card"><div class="sig-ticker">${h.tk}</div><div style="color:#556;font-size:11px;margin-top:8px">Data unavailable</div></div>`);
-      }
-    }
-    // Sort: REDUCE first, then HOLD, then BUY (descending score within each)
-    const order = {REDUCE:0,HOLD:1,BUY:2};
-    const sorted = holdings.map((h,i)=>({h,i,res:SIG.results[h.tk]}))
-      .sort((a,b)=> a.res && b.res ? (order[a.res.action]-order[b.res.action]) || (b.res.score-a.res.score) : 0);
-    if (grid) grid.innerHTML = sorted.map(({h,i}) => SIG.results[h.tk] ? sigRenderCard(h.tk, h.name, SIG.results[h.tk]) : cards[i]).join('');
+    sigRenderRegimeBanner(data.regime, data.spy, data.generated);
+
+    // Copy results into SIG.results so privacy toggle re-renders work
+    Object.assign(SIG.results, data.holdings);
+
+    const holdings = S.cost ? (S.cost.us.open || []) : [];
+    const order = { REDUCE: 0, HOLD: 1, BUY: 2 };
+    const sorted = holdings
+      .filter(h => data.holdings[h.tk])
+      .sort((a, b) => {
+        const ra = data.holdings[a.tk], rb = data.holdings[b.tk];
+        return (order[ra.action] - order[rb.action]) || (rb.score - ra.score);
+      });
+
+    const missing = holdings.filter(h => !data.holdings[h.tk]);
+    const missingHtml = missing.map(h =>
+      `<div class="sig-card"><div class="sig-ticker">${h.tk}</div><div style="color:#556;font-size:11px;margin-top:8px">Data unavailable</div></div>`
+    ).join('');
+
+    if (grid) grid.innerHTML =
+      sorted.map(h => sigRenderCard(h.tk, h.name, data.holdings[h.tk])).join('') + missingHtml
+      || '<div class="sig-loading">No signal data available.</div>';
   }
 
   async function sigRunScreener() {

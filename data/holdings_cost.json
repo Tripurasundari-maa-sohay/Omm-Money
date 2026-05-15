@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "12-May-2026",
+  "as_of": "14-May-2026",
   "fx_inr_usd": 83.5,
   "us": {
     "broker": "Doha Bank Global",
-    "cash": 3188.07,
+    "cash": 537.98,
     "cash_infusion_itd": 15875.07,
-    "account_value_statement": 18410.04,
-    "total_pl_statement": 2534.97,
+    "account_value_statement": 18808.77,
+    "total_pl_statement": 2933.7,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -25,7 +25,7 @@
         1568.12,
         2016.07,
         268.16,
-        3188.07
+        537.98
       ],
       "account_value": [
         0.0,
@@ -34,7 +34,7 @@
         14248.11,
         13692.49,
         16432.87,
-        18410.04
+        18808.77
       ],
       "monthly_pct_return": [
         0.0,
@@ -43,7 +43,7 @@
         -5.1,
         -6.8,
         20.0,
-        6.0
+        8.3
       ],
       "monthly_bench_return": [
         0.0,
@@ -52,7 +52,7 @@
         -1.0,
         -5.0,
         10.6,
-        2.5
+        3.9
       ],
       "monthly_pl": [
         0.0,
@@ -61,7 +61,7 @@
         -766.0,
         -966.58,
         2740.38,
-        977.17
+        1375.9
       ],
       "monthly_cost": [
         0.0,
@@ -70,7 +70,7 @@
         -51.7,
         -54.91,
         -72.54,
-        -39.22
+        -49.3
       ],
       "port_return_cum_pct": [
         0.0,
@@ -79,7 +79,7 @@
         -0.24,
         -7.02,
         11.57,
-        18.27
+        20.83
       ],
       "snp_return_cum_pct": [
         0.0,
@@ -88,7 +88,7 @@
         0.59,
         -4.44,
         5.69,
-        8.33
+        9.81
       ],
       "cash_deployed": [
         0.0,
@@ -212,6 +212,16 @@
         "income": 0.0
       },
       {
+        "tk": "EWY",
+        "yf": "EWY",
+        "name": "iSharesMSCISouthKorea",
+        "cls": "ETF",
+        "qty": 9,
+        "avg": 187.51,
+        "fees": 0.0,
+        "income": 0.0
+      },
+      {
         "tk": "VOOG",
         "yf": "VOOG",
         "name": "VanguardS&P500Growth",
@@ -282,9 +292,18 @@
         "name": "SouthKoreaETF",
         "cls": "ETF",
         "income": 0.0,
-        "costs": -16.89,
-        "realised": 429.33,
-        "ret_pct": 26.37
+        "costs": -21.97,
+        "realised": 451.42,
+        "ret_pct": 28.02
+      },
+      {
+        "tk": "WHAI",
+        "name": "anoidRoboticsETF",
+        "cls": "ETF",
+        "income": 0.0,
+        "costs": -5.0,
+        "realised": -18.75,
+        "ret_pct": -1.97
       },
       {
         "tk": "VOOG",
@@ -292,14 +311,14 @@
         "cls": "ETF",
         "income": 3.49,
         "costs": -5.0,
-        "realised": 142.23,
-        "ret_pct": 10.71
+        "realised": 175.89,
+        "ret_pct": 13.24
       }
     ],
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -1.84
+        "amt": -1.92
       },
       {
         "type": "Custody Fee (ongoing)",
@@ -311,7 +330,7 @@
       },
       {
         "type": "Commission",
-        "amt": -339.2
+        "amt": -349.2
       },
       {
         "type": "French FTT",

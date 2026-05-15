@@ -682,6 +682,7 @@
           <thead>
             <tr>
               <th class="sortable" data-col="ticker">TICKER</th>
+              <th>SECTOR</th>
               <th class="sortable sort-desc" data-col="score">SCORE</th>
               <th>ACTION</th>
               <th class="sortable" data-col="rsi">RSI</th>
@@ -695,7 +696,7 @@
             </tr>
           </thead>
           <tbody id="sig-holdings-tbody">
-            <tr><td colspan="11" class="sig-loading">Click <strong style="color:#00ff88">📡 SIGNALS</strong> to load…</td></tr>
+            <tr><td colspan="12" class="sig-loading">Click <strong style="color:#00ff88">📡 SIGNALS</strong> to load…</td></tr>
           </tbody>
         </table>
       </div>
@@ -777,6 +778,7 @@
         <thead>
           <tr>
             <th class="sortable" data-scrcol="tk">TICKER</th>
+            <th class="sortable" data-scrcol="sector">SECTOR</th>
             <th>INDEX</th>
             <th class="sortable sort-desc" data-scrcol="score">SCORE ▾</th>
             <th>ACTION</th>
@@ -789,7 +791,7 @@
         </thead>
         <tbody id="scr-tbody">
           <tr><td colspan="9" style="text-align:center;color:#556;padding:30px">
-            Click <strong style="color:#00ff88">🔍 SCREENER</strong> to load — runs daily after US close
+            Click <strong style="color:#00ff88">🔍 SCREENER</strong> to load — runs Tue &amp; Sat after US close
           </td></tr>
         </tbody>
       </table>
@@ -1868,6 +1870,7 @@ const DASH = (() => {
       const barW   = Math.min(100, res.score);
       return `<tr>
         <td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:#445;font-size:10px">${name}</span></td>
+        <td style="color:#778;font-size:11px">${res.sector || '—'}</td>
         <td>
           <span style="font-weight:700;font-family:Monaco,monospace;color:${barCol}">${prv ? '●●' : res.score}</span>
           <div class="sig-score-bar" style="width:${prv?0:barW}%;background:${barCol}"></div>
@@ -1886,10 +1889,10 @@ const DASH = (() => {
 
     html += missing.map(h =>
       `<tr><td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${h.tk}</span><br><span style="color:#445;font-size:10px">${h.name||''}</span></td>`
-      + `<td colspan="10" style="color:#556;font-size:11px">Data unavailable</td></tr>`
+      + `<td colspan="12" style="color:#556;font-size:11px">Data unavailable</td></tr>`
     ).join('');
 
-    tbody.innerHTML = html || '<tr><td colspan="11" class="sig-loading">No signal data available.</td></tr>';
+    tbody.innerHTML = html || '<tr><td colspan="12" class="sig-loading">No signal data available.</td></tr>';
   }
 
   // Wire up column-sort clicks on sig-holdings-table headers
@@ -1953,7 +1956,7 @@ const DASH = (() => {
     const rowHtml = rows.map(({ sym, name, res }) => {
       if (!res) return `<tr>
         <td><span style="color:#00ff88;font-weight:700;font-family:Monaco,monospace">${sym}</span></td>
-        <td colspan="10" style="color:#ff4444;font-size:11px">⚠ Fetch failed</td></tr>`;
+        <td colspan="11" style="color:#ff4444;font-size:11px">⚠ Fetch failed</td></tr>`;
       const rsiCol = (res.rsi < 30 || res.rsi > 73) ? 'color:#ff4444' : '';
       const v200sign = res.v200 >= 0 ? '+' : '';
       const rssign = res.rs >= 0 ? '+' : '';
@@ -2037,13 +2040,13 @@ const DASH = (() => {
     if (SIG.fetching) return;
     SIG.fetching = true;
     const tbody = $('sig-holdings-tbody');
-    if (!SIG.generatedAt && tbody) tbody.innerHTML = '<tr><td colspan="11" class="sig-loading">⟳ Loading signals…</td></tr>';
+    if (!SIG.generatedAt && tbody) tbody.innerHTML = '<tr><td colspan="12" class="sig-loading">⟳ Loading signals…</td></tr>';
 
     const data = await fetchJSON('data/processed/stock_signals.json');
     SIG.fetching = false;
     if (!data || !data.holdings) {
       if (!SIG.generatedAt && tbody)
-        tbody.innerHTML = '<tr><td colspan="11" class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</td></tr>';
       return;
     }
     if (data.generated === SIG.generatedAt) return;   // nothing changed
@@ -2166,13 +2169,14 @@ const DASH = (() => {
 
       const tbody = document.getElementById('scr-tbody');
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
         return;
       }
 
       tbody.innerHTML = rows.map(r => `
         <tr>
           <td><strong style="color:#e0f0ff;font-family:monospace">${r.tk}</strong></td>
+          <td style="color:#778;font-size:11px">${r.sector || '—'}</td>
           <td>${indexBadges(r.indices)}</td>
           <td><strong style="color:${scoreColor(r.score)}">${r.score}</strong></td>
           <td>${actionBadge(r.action)}</td>

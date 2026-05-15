@@ -1471,10 +1471,11 @@ const DASH = (() => {
   async function refresh() {
     await load();
     render();
+    refreshSignals();   // pick up new stock_signals.json if Actions pushed one
   }
 
   /* ══ SIGNALS ENGINE ═════════════════════════════════════════════ */
-  const SIG = { loaded: false, spy: null, results: {} };
+  const SIG = { generatedAt: null, fetching: false, spy: null, results: {} };
   const SIG_CORS = [
     s => `https://api.allorigins.win/raw?url=${encodeURIComponent(s)}`,
     s => `https://corsproxy.io/?${encodeURIComponent(s)}`
@@ -1612,24 +1613,14 @@ const DASH = (() => {
     }
   }
 
-  async function loadSignals() {
-    if (SIG.loaded) return;
-    SIG.loaded = true;
-    const grid = $('sig-cards-grid');
-    if (grid) grid.innerHTML = '<div class="sig-loading">⟳ Loading signals…</div>';
-
-    // Read pre-computed scores from GitHub Actions — no browser-side Yahoo Finance fetch
-    const data = await fetchJSON('data/processed/stock_signals.json');
-    if (!data || !data.holdings) {
-      if (grid) grid.innerHTML = '<div class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</div>';
-      return;
-    }
-
+  function sigApplyData(data) {
+    // Render regime banner + cards from a signals JSON object.
+    // Called on first load and whenever Actions pushes a new generated timestamp.
     sigRenderRegimeBanner(data.regime, data.spy, data.generated);
-
-    // Copy results into SIG.results so privacy toggle re-renders work
     Object.assign(SIG.results, data.holdings);
 
+    const grid = $('sig-cards-grid');
+    if (!grid) return;
     const holdings = S.cost ? (S.cost.us.open || []) : [];
     const order = { REDUCE: 0, HOLD: 1, BUY: 2 };
     const sorted = holdings
@@ -1638,15 +1629,44 @@ const DASH = (() => {
         const ra = data.holdings[a.tk], rb = data.holdings[b.tk];
         return (order[ra.action] - order[rb.action]) || (rb.score - ra.score);
       });
-
     const missing = holdings.filter(h => !data.holdings[h.tk]);
     const missingHtml = missing.map(h =>
       `<div class="sig-card"><div class="sig-ticker">${h.tk}</div><div style="color:#556;font-size:11px;margin-top:8px">Data unavailable</div></div>`
     ).join('');
-
-    if (grid) grid.innerHTML =
+    grid.innerHTML =
       sorted.map(h => sigRenderCard(h.tk, h.name, data.holdings[h.tk])).join('') + missingHtml
       || '<div class="sig-loading">No signal data available.</div>';
+  }
+
+  async function loadSignals() {
+    // Called on tab switch — shows spinner only on very first load.
+    if (SIG.fetching) return;
+    SIG.fetching = true;
+    const grid = $('sig-cards-grid');
+    if (!SIG.generatedAt && grid) grid.innerHTML = '<div class="sig-loading">⟳ Loading signals…</div>';
+
+    const data = await fetchJSON('data/processed/stock_signals.json');
+    SIG.fetching = false;
+    if (!data || !data.holdings) {
+      if (!SIG.generatedAt && grid)
+        grid.innerHTML = '<div class="sig-loading">⚠ Signals data not yet available — Actions runs every 15 min.</div>';
+      return;
+    }
+    if (data.generated === SIG.generatedAt) return;   // nothing changed
+    SIG.generatedAt = data.generated;
+    sigApplyData(data);
+  }
+
+  async function refreshSignals() {
+    // Called by refresh() every 5 min — silently checks for updated JSON.
+    // Only re-renders if Actions pushed a new generated timestamp.
+    if (SIG.fetching) return;
+    SIG.fetching = true;
+    const data = await fetchJSON('data/processed/stock_signals.json');
+    SIG.fetching = false;
+    if (!data || !data.holdings || data.generated === SIG.generatedAt) return;
+    SIG.generatedAt = data.generated;
+    sigApplyData(data);
   }
 
   async function sigRunScreener() {

@@ -39,6 +39,7 @@
   /* ── LAYOUT ── */
   .dashboard-container{width:100%;min-height:100vh;padding-top:62px}
   .main-content{padding:20px;max-width:1600px;margin:0 auto}
+  .r-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tab-content{display:none}
   .tab-content.active{display:block;animation:fadeIn .3s ease-in-out}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -254,10 +255,66 @@
     text-transform:uppercase; outline:none; }
   .wl-input:focus { border-color:#00ccff; }
 
+  /* ── RESPONSIVE: 900px (tablet) ── */
   @media (max-width:900px){
     .markets-status,.analytics-two-col,.charges-grid{grid-template-columns:1fr}
     .banner-tabs{gap:5px}
     .tab-button{padding:5px 10px;font-size:10px}
+    .main-content{padding:14px}
+    .index-value-large{font-size:22px}
+  }
+
+  /* ── RESPONSIVE: 640px (phone / small tablet) ── */
+  @media (max-width:640px){
+    .top-banner{height:auto;min-height:52px;padding:8px 12px;flex-wrap:wrap;gap:4px}
+    .logo{font-size:13px;letter-spacing:1px;order:1;flex-shrink:0}
+    .banner-right{order:2;font-size:10px;text-align:right}
+    .banner-tabs{order:3;width:100%;flex:unset;justify-content:flex-start;
+      overflow-x:auto;scrollbar-width:none;padding-bottom:2px;gap:4px}
+    .banner-tabs::-webkit-scrollbar{display:none}
+    .tab-button{padding:5px 8px;font-size:10px;white-space:nowrap;flex-shrink:0;border-width:1px}
+    .dashboard-container{padding-top:98px}
+    .main-content{padding:10px}
+    .portfolio-overview,.portfolio-metrics,.analytics-section,.holdings-section,
+    .holdings-preview,.tab-section{padding:12px;margin-bottom:14px;border-radius:6px}
+    .metrics-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+    .metric-card .mval{font-size:16px}
+    .index-value-large{font-size:20px}
+    .index-main{flex-wrap:wrap;gap:8px}
+    .chart-wide{height:200px}
+    .chart-square{height:180px}
+    h2{font-size:12px;margin-bottom:10px}
+    h3{font-size:11px}
+    .txn-search-wrap input{width:100%;max-width:none;box-sizing:border-box}
+    .txn-summary-strip{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))!important}
+    table{font-size:11px}
+    thead th,tbody td,tfoot td{padding:5px 7px}
+    .scr-filter-bar{gap:6px}
+    .sig-regime-banner{padding:10px 14px;flex-direction:column;align-items:flex-start;gap:6px}
+    .r-2col{grid-template-columns:1fr!important}
+    .wl-input{width:76px}
+    #sig-watchlist-run,#sig-watchlist-clear{padding:6px 12px;font-size:11px}
+  }
+
+  /* ── RESPONSIVE: 420px (small phone) ── */
+  @media (max-width:420px){
+    .logo{font-size:11px}
+    .banner-right{display:none}
+    .dashboard-container{padding-top:78px}
+    .main-content{padding:8px}
+    .metrics-grid{grid-template-columns:1fr 1fr;gap:6px}
+    .metric-card{padding:9px}
+    .metric-card .mval{font-size:14px}
+    .tab-button{padding:4px 6px;font-size:9px;letter-spacing:0}
+    .index-value-large{font-size:17px}
+    thead th,tbody td,tfoot td{padding:4px 5px;font-size:10px}
+    .chart-wide{height:170px}
+    .chart-square{height:160px}
+    .wl-input{width:64px}
+    .tab-section,.holdings-section,.analytics-section,.portfolio-overview,.portfolio-metrics{
+      padding:9px;margin-bottom:10px}
+    .scr-filter-bar label{font-size:11px}
+    #scr-min-score{width:42px}
   }
 </style>
 </head>
@@ -515,7 +572,7 @@
 
     <div class="analytics-section">
       <div class="analytics-header"><h2>🇮🇳 INDIA PORTFOLIO · ANALYTICS</h2></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="r-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
           <div style="height:260px;position:relative;"><canvas id="india-weight-chart"></canvas></div>
@@ -564,7 +621,7 @@
     <h2 style="margin-bottom:6px;">TRANSACTION HISTORY · 🌍 ALL PORTFOLIOS</h2>
     <div style="font-size:11px;color:#556;margin-bottom:16px;">🇺🇸 Doha Bank Global · 🇮🇳 Motilal Oswal, Upstox, Mirae Asset (FY24-26)</div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+    <div class="r-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
       <div style="background:#0a1929;border:1px solid #00ccff;border-radius:8px;padding:14px;">
         <div style="color:#00ccff;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">🇺🇸 US PORTFOLIO</div>
         <div class="txn-summary-strip" style="grid-template-columns:repeat(3,1fr);">

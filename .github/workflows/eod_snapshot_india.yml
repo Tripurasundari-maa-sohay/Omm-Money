@@ -1,0 +1,69 @@
+name: EOD snapshot — India (NSE)
+
+on:
+  schedule:
+    - cron: "30 11 * * 1-5"  # 11:30 UTC Mon-Fri = 5:00 PM IST (1.5hr after NSE close)
+  workflow_dispatch:
+    inputs:
+      backfill_years:
+        description: "Years to backfill for new tickers"
+        default: "2"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: eod-india
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60    # ~1,800 NSE tickers @ chunk=100 ≈ 18 batches ≈ 10-15 min
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install yfinance pandas requests
+
+      - name: Run India snapshot
+        run: |
+          python scripts/snapshot_eod.py \
+            --market india \
+            --chunk 100 \
+            --sleep 1.0 \
+            --backfill-years ${{ github.event.inputs.backfill_years || '2' }}
+
+      - name: Commit history
+        run: |
+          if [[ -n "$(git status --porcelain data/history/india data/history/_meta.json 2>/dev/null)" ]]; then
+            git config user.name  "github-actions"
+            git config user.email "github-actions@github.com"
+            git add data/history/india data/history/_meta.json
+            git commit -m "snapshot: India EOD $(date -u +%Y-%m-%d)"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "push attempt $attempt failed — retrying…"
+              sleep 10
+            done
+          else
+            echo "no changes"
+          fi
+
+      - name: Report stats
+        if: always()
+        run: |
+          if [ -f data/history/_meta.json ]; then
+            python3 -c "
+import json
+m = json.load(open('data/history/_meta.json'))
+ind = m.get('india', {})
+print(f\"India: universe={ind.get('universe',0)}  new={ind.get('new_tickers',0)}  updated={ind.get('updated',0)}  errors={ind.get('errors',0)}\")
+"
+          fi

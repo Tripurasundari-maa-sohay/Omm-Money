@@ -30,38 +30,59 @@ OUT_SCREENER = ROOT / "data" / "processed" / "screener.json"
 
 # ── UNIVERSE FETCH ────────────────────────────────────────────────────────────
 
-def get_sp500_tickers() -> list[str]:
+def get_sp500_tickers() -> tuple[list[str], dict[str, str]]:
+    """Returns (tickers, sector_map) from Wikipedia SP500 table."""
     try:
         tables = pd.read_html("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies")
-        tickers = tables[0]["Symbol"].tolist()
-        return [t.replace(".", "-") for t in tickers]
+        df = tables[0]
+        tickers = [t.replace(".", "-") for t in df["Symbol"].tolist()]
+        sector_col = "GICS Sector" if "GICS Sector" in df.columns else df.columns[2]
+        sectors = {
+            t.replace(".", "-"): str(s)
+            for t, s in zip(df["Symbol"], df[sector_col])
+        }
+        return tickers, sectors
     except Exception as e:
         print(f"WARN SP500 fetch failed: {e}", file=sys.stderr)
-        return []
+        return [], {}
 
 
-def get_ndx100_tickers() -> list[str]:
+def get_ndx100_tickers() -> tuple[list[str], dict[str, str]]:
+    """Returns (tickers, sector_map) from Wikipedia NDX100 table."""
     try:
         tables = pd.read_html("https://en.wikipedia.org/wiki/Nasdaq-100")
         for t in tables:
             if "Ticker" in t.columns:
-                return [
+                tickers = [
                     tk.replace(".", "-")
                     for tk in t["Ticker"].tolist()
-                    if isinstance(tk, str) and tk != "Ticker"
+                    if isinstance(tk, str) and tk not in ("Ticker", "nan")
                 ]
-        return []
+                sector_col = next(
+                    (c for c in t.columns if "sector" in c.lower() or "industry" in c.lower()),
+                    None,
+                )
+                sectors: dict[str, str] = {}
+                if sector_col:
+                    for tk, s in zip(t["Ticker"], t[sector_col]):
+                        if isinstance(tk, str) and tk not in ("Ticker", "nan"):
+                            sectors[tk.replace(".", "-")] = str(s)
+                return tickers, sectors
+        return [], {}
     except Exception as e:
         print(f"WARN NDX100 fetch failed: {e}", file=sys.stderr)
-        return []
+    return [], {}
 
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────
 
 def main() -> int:
     print("Fetching universe tickers…")
-    sp500  = get_sp500_tickers()
-    ndx100 = get_ndx100_tickers()
+    sp500, sp500_sectors   = get_sp500_tickers()
+    ndx100, ndx100_sectors = get_ndx100_tickers()
+
+    # Merged sector map — SP500 GICS data takes precedence
+    sector_map: dict[str, str] = {**ndx100_sectors, **sp500_sectors}
 
     sp500_set  = set(sp500)
     ndx100_set = set(ndx100)
@@ -128,6 +149,7 @@ def main() -> int:
             results.append({
                 "tk":      tk,
                 "indices": indices,
+                "sector":  sector_map.get(tk, "Unknown"),
                 "score":   score,
                 "action":  action,
                 "rsi":     res["rsi"],

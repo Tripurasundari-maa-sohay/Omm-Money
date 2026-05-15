@@ -79,6 +79,15 @@ def weekly_closes(ts: list[int], cl: list[float]) -> list[float]:
 
 # ── DATA FETCH ───────────────────────────────────────────────────────────────
 
+def fetch_sector(yf_symbol: str) -> str:
+    """Return GICS sector string for a ticker, or 'Unknown' on failure."""
+    try:
+        info = yf.Ticker(yf_symbol).info
+        return info.get("sector") or info.get("quoteType") or "Unknown"
+    except Exception:
+        return "Unknown"
+
+
 def fetch_history(yf_symbol: str) -> tuple[list[int], list[float], list[float]] | None:
     """Return (unix_timestamps, adj_closes, volumes) for 2 years of daily data."""
     try:
@@ -246,8 +255,9 @@ def main() -> int:
 
         try:
             res = score_ticker(ts, cl, vol, spy_cl)
+            res["sector"] = fetch_sector(yfs)
             holdings_out[tk] = res
-            print(f"score={res['score']} [{res['action']}]  RSI={res['rsi']}  vs200={res['v200']:+.1f}%")
+            print(f"score={res['score']} [{res['action']}]  RSI={res['rsi']}  vs200={res['v200']:+.1f}%  sector={res['sector']}")
         except Exception as exc:
             print(f"ERROR scoring: {exc}", file=sys.stderr)
 

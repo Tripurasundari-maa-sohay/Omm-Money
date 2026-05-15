@@ -2,7 +2,7 @@ name: Daily screener (S&P 500 + Nasdaq 100)
 
 on:
   schedule:
-    - cron: "0 1 * * *"   # 01:00 UTC daily — after US close, data stable
+    - cron: "0 1 * * 2,6"  # 01:00 UTC every Tuesday + Saturday — after US close
   workflow_dispatch:        # manual trigger
 
 permissions:

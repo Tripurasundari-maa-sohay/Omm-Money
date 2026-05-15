@@ -118,7 +118,7 @@
         "cls": "Stock",
         "qty": 10,
         "avg": 249.726,
-        "fees": -20.0,
+        "fees": -10.0,
         "income": 0.0
       },
       {
@@ -168,8 +168,8 @@
         "cls": "Stock",
         "qty": 1,
         "avg": 492.0,
-        "fees": -25.03,
-        "income": 0.3
+        "fees": -5.0,
+        "income": 0.0
       },
       {
         "tk": "MSFT",
@@ -198,7 +198,7 @@
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": -35.04,
+        "fees": -5.0,
         "income": 0.0
       },
       {
@@ -218,7 +218,7 @@
         "cls": "ETF",
         "qty": 9,
         "avg": 187.51,
-        "fees": -21.97,
+        "fees": -5.0,
         "income": 0.0
       },
       {
@@ -631,7 +631,7 @@
         "broker": "Motilal Oswal",
         "exch": "NSE",
         "fm": "BUY",
-        "_note": "purchase price pending — please update"
+        "_note": "purchase price pending \u2014 please update"
       },
       {
         "tk": "ASHALOG",

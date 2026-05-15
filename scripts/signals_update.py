@@ -20,7 +20,8 @@ Scoring model (max 87 pts raw):
   vs 1yr mean     10 / 8 / 6 / 3 / 0
 
   Bear regime (SPY < 200MA) → ×0.75 multiplier applied
-  BUY ≥ 65 / HOLD 40–64 / REDUCE < 40
+  Model C hybrid thresholds (B's BUY precision + A's HOLD/REDUCE range):
+  BUY ≥ 68 / HOLD 40–67 / REDUCE < 40
 """
 from __future__ import annotations
 
@@ -178,7 +179,7 @@ def score_ticker(
 
     raw   = sum(sc.values())
     score = round(raw * 0.75) if regime == "BEAR" else raw
-    action = "BUY" if score >= 65 else "HOLD" if score >= 40 else "REDUCE"
+    action = "BUY" if score >= 68 else "HOLD" if score >= 40 else "REDUCE"  # Model C: B's BUY bar + A's HOLD/REDUCE
 
     return {
         "score":   score,

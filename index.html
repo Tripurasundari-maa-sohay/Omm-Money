@@ -6,8 +6,9 @@
 <title>Portfolio Dashboard · SABARNA DBG</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+  :root{--fs-scale:1}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{background:#050d16;color:#c0d8f0;font-family:'Segoe UI',Arial,sans-serif;font-size:clamp(13px,1vw + 1px,20px)}
+  body{background:#050d16;color:#c0d8f0;font-family:'Segoe UI',Arial,sans-serif;font-size:calc(clamp(13px,1vw + 1px,20px) * var(--fs-scale))}
 
   /* ── BANNER ── */
   .top-banner{position:fixed;top:0;left:0;right:0;height:62px;
@@ -181,6 +182,13 @@
 
   /* ── BANNER CONTROLS (privacy + currency) ── */
   .banner-controls{display:flex;align-items:center;gap:10px}
+  /* ── FONT SIZE CONTROL ── */
+  .fs-group{display:flex;align-items:center;border:1px solid #1a4a6a;border-radius:4px;overflow:hidden}
+  .fs-btn{background:transparent;border:none;border-right:1px solid #1a4a6a;color:#556;
+    cursor:pointer;font-size:11px;font-weight:700;padding:4px 8px;transition:all .2s;line-height:1}
+  .fs-btn:last-child{border-right:none}
+  .fs-btn:hover{background:rgba(0,204,255,.1);color:#00ccff}
+  .fs-label{font-size:10px;color:#445;padding:0 6px;white-space:nowrap;user-select:none}
   .privacy-btn{background:transparent;border:1px solid #1a4a6a;border-radius:4px;
     color:#556;cursor:pointer;padding:5px 8px;font-size:16px;transition:all .2s;line-height:1}
   .privacy-btn:hover{border-color:#00ccff;color:#00ccff}
@@ -338,6 +346,11 @@
         <button class="ccy-btn active" data-ccy="USD" onclick="DASH.setCurrency(this)">$ USD</button>
         <button class="ccy-btn"        data-ccy="QAR" onclick="DASH.setCurrency(this)">﷼ QAR</button>
         <button class="ccy-btn"        data-ccy="INR" onclick="DASH.setCurrency(this)">₹ INR</button>
+      </div>
+      <div class="fs-group" title="Adjust font size">
+        <button class="fs-btn" onclick="DASH.fsAdjust(-1)">A−</button>
+        <span class="fs-label" id="fs-level">A</span>
+        <button class="fs-btn" onclick="DASH.fsAdjust(+1)">A+</button>
       </div>
       <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Hide portfolio values">👁</button>
     </div>
@@ -1609,6 +1622,20 @@ const DASH = (() => {
     if (name === 'signals') loadSignals();
     if (name === 'screener') DASH_SCR.init();
   }
+  /* ── Font size control ────────────────────────────────────────── */
+  const FS_STEPS = [0.75, 0.85, 1, 1.1, 1.2, 1.35, 1.5];
+  const FS_LABELS = ['XS','S','M','L','XL','2X','3X'];
+  let _fsIdx = parseInt(localStorage.getItem('fs_idx') ?? '2');
+
+  function fsApply() {
+    _fsIdx = Math.max(0, Math.min(FS_STEPS.length - 1, _fsIdx));
+    document.documentElement.style.setProperty('--fs-scale', FS_STEPS[_fsIdx]);
+    const lbl = document.getElementById('fs-level');
+    if (lbl) lbl.textContent = FS_LABELS[_fsIdx];
+    localStorage.setItem('fs_idx', _fsIdx);
+  }
+  function fsAdjust(dir) { _fsIdx += dir; fsApply(); }
+
   /* ── Currency toggle ──────────────────────────────────────────── */
   function setCurrency(el) {
     S.ui.currency = el.dataset.ccy;
@@ -2306,7 +2333,8 @@ const DASH = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   // public surface for inline handlers
-  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, sigRunScreener };
+  fsApply(); // restore saved font size on load
+  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, sigRunScreener, fsAdjust };
 })();
 </script>
 </body>

@@ -1,6 +1,6 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "14-May-2026",
+  "as_of": "15-May-2026",
   "fx_inr_usd": 83.5,
   "us": {
     "broker": "Doha Bank Global",
@@ -101,6 +101,16 @@
       ]
     },
     "open": [
+      {
+        "tk": "HUMN",
+        "yf": "HUMN",
+        "name": "Roundhill Humanoid Robotics ETF",
+        "cls": "ETF",
+        "qty": 25,
+        "avg": 38.10,
+        "fees": -5.0,
+        "income": 0.0
+      },
       {
         "tk": "GOOG",
         "yf": "GOOG",

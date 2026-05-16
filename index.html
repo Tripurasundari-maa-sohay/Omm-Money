@@ -1303,7 +1303,7 @@ const DASH = (() => {
     const ind = S.view.india;
     setText('in-equities-value', inr(ind.mv));
     setText('in-equities-count', ind.open.length + ' positions');
-    const inCostBasis = ind.open.reduce((s,p)=>s+(p.cost||0),0);
+    const inCostBasis = ind.open.reduce((s,p)=>s+(p.avg||0)*p.qty, 0);
     const inUnrealPct = inCostBasis ? (ind.unrealPL / inCostBasis) * 100 : 0;
     setText('in-unreal-pl',   sign(inUnrealPct) + pct(inUnrealPct));
     setClass('in-unreal-pl', 'mval pv ' + pn(ind.unrealPL));

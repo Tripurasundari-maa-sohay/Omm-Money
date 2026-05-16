@@ -42,7 +42,11 @@ jobs:
           fi
 
       - name: Compute signals
-        run: python scripts/signals_update.py || echo "WARNING: signals_update.py failed — signals not updated"
+        run: |
+          python scripts/signals_update.py
+          if [ $? -ne 0 ]; then
+            echo "::warning::signals_update.py failed — signals stale but prices still updated"
+          fi
 
       - name: Commit if changed
         run: |

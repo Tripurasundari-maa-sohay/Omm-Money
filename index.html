@@ -11,10 +11,10 @@
   body{background:#050d16;color:#c0d8f0;font-family:'Segoe UI',Arial,sans-serif;font-size:13px}
 
   /* ── BANNER ── */
-  .top-banner{position:fixed;top:0;left:0;right:0;height:62px;
+  .top-banner{position:fixed;top:0;left:0;right:0;
     background:linear-gradient(135deg,#0a1929 0%,#0d2b47 100%);
-    border-bottom:2px solid #00ff88;display:flex;align-items:center;
-    justify-content:space-between;padding:0 20px;z-index:1000;
+    border-bottom:2px solid #00ff88;display:flex;flex-direction:column;
+    align-items:stretch;padding:6px 20px 4px;z-index:1000;
     box-shadow:0 4px 16px rgba(0,0,0,0.6)}
   .logo{font-size:17px;color:#00ff88;font-weight:700;letter-spacing:2px}
   .banner-tabs{display:flex;gap:10px;align-items:center;flex:1;justify-content:center}
@@ -25,6 +25,11 @@
   .tab-button.active{background:#00ff88;color:#0a1929;border-color:#00ff88;
     box-shadow:0 0 12px rgba(0,255,136,.4)}
   .banner-right{font-size:11px;color:#00ccff;text-align:right}
+  .banner-row1{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
+  .banner-metrics{display:flex;align-items:center;gap:6px;padding:3px 0;border-top:1px solid #0d3a5a;flex-wrap:wrap}
+  .bm-item{display:flex;flex-direction:column;align-items:center;background:#081420;border:1px solid #0d3a5a;border-radius:4px;padding:2px 10px;min-width:80px}
+  .bm-label{font-size:9px;color:#556677;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .bm-val{font-size:12px;font-weight:700;font-family:Monaco,monospace;color:#00ff88}
   #update-time{color:#00ff88;font-weight:700;font-family:Monaco,monospace}
   #fetch-status{font-size:10px;color:#556;margin-top:2px}
   #fetch-status.live{color:#00ff88}
@@ -32,13 +37,13 @@
   #fetch-status.error{color:#ff4444}
 
   /* ── ERROR BANNER ── */
-  #error-banner{display:none;position:fixed;top:62px;left:0;right:0;z-index:999;
+  #error-banner{display:none;position:fixed;top:98px;left:0;right:0;z-index:999;
     background:#3a0a0a;border-bottom:2px solid #ff4444;color:#ff8888;
     font-size:12px;font-weight:700;padding:6px 20px;letter-spacing:.5px;text-align:center}
   #error-banner.visible{display:block}
 
   /* ── LAYOUT ── */
-  .dashboard-container{width:100%;min-height:100vh;padding-top:62px}
+  .dashboard-container{width:100%;min-height:100vh;padding-top:98px}
   .main-content{padding:20px 28px;zoom:var(--fs-scale)}
   .r-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tab-content{display:none}
@@ -272,6 +277,7 @@
     .tab-button{padding:5px 10px;font-size:10px}
     .main-content{padding:14px}
     .index-value-large{font-size:22px}
+    .dashboard-container{padding-top:140px}
   }
 
   /* ── RESPONSIVE: 640px (phone / small tablet) ── */
@@ -334,31 +340,40 @@
 
   <!-- ══════════ BANNER ══════════ -->
   <div class="top-banner">
-    <div><h1 class="logo">🌍 Multi Country Portfolio Tracker</h1></div>
-    <div class="banner-tabs">
-      <button class="tab-button active" data-tab="portfolio">PORTFOLIO</button>
-      <button class="tab-button" data-tab="us">US PORTFOLIO</button>
-      <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
-      <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
-      <button class="tab-button" data-tab="signals">📡 SIGNALS</button>
-      <button class="tab-button" data-tab="screener">🔍 SCREENER</button>
-    </div>
-    <div class="banner-controls">
-      <div class="ccy-group">
-        <button class="ccy-btn active" data-ccy="USD" onclick="DASH.setCurrency(this)">$ USD</button>
-        <button class="ccy-btn"        data-ccy="QAR" onclick="DASH.setCurrency(this)">﷼ QAR</button>
-        <button class="ccy-btn"        data-ccy="INR" onclick="DASH.setCurrency(this)">₹ INR</button>
+    <div class="banner-row1">
+      <div><h1 class="logo">🌍 Multi Country Portfolio Tracker</h1></div>
+      <div class="banner-tabs">
+        <button class="tab-button active" data-tab="portfolio">PORTFOLIO</button>
+        <button class="tab-button" data-tab="us">US PORTFOLIO</button>
+        <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
+        <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
+        <button class="tab-button" data-tab="signals">📡 SIGNALS</button>
+        <button class="tab-button" data-tab="screener">🔍 SCREENER</button>
       </div>
-      <div class="fs-group" title="Adjust font size">
-        <button class="fs-btn" onclick="DASH.fsAdjust(-1)">A−</button>
-        <span class="fs-label" id="fs-level">A</span>
-        <button class="fs-btn" onclick="DASH.fsAdjust(+1)">A+</button>
+      <div class="banner-controls">
+        <div class="ccy-group">
+          <button class="ccy-btn active" data-ccy="USD" onclick="DASH.setCurrency(this)">$ USD</button>
+          <button class="ccy-btn"        data-ccy="QAR" onclick="DASH.setCurrency(this)">﷼ QAR</button>
+          <button class="ccy-btn"        data-ccy="INR" onclick="DASH.setCurrency(this)">₹ INR</button>
+        </div>
+        <div class="fs-group" title="Adjust font size">
+          <button class="fs-btn" onclick="DASH.fsAdjust(-1)">A−</button>
+          <span class="fs-label" id="fs-level">A</span>
+          <button class="fs-btn" onclick="DASH.fsAdjust(+1)">A+</button>
+        </div>
+        <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Hide portfolio values">👁</button>
       </div>
-      <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Hide portfolio values">👁</button>
+      <div class="banner-right">
+        <div>Clock: <span id="update-time">--:--:--</span></div>
+        <div id="fetch-status">Loading…</div>
+      </div>
     </div>
-    <div class="banner-right">
-      <div>Clock: <span id="update-time">--:--:--</span></div>
-      <div id="fetch-status">Loading…</div>
+    <div class="banner-metrics">
+      <div class="bm-item"><span class="bm-label">TOTAL (USD)</span><span class="bm-val pv" id="bm-total">--</span></div>
+      <div class="bm-item"><span class="bm-label">US VALUE</span><span class="bm-val pv" id="bm-us">--</span></div>
+      <div class="bm-item"><span class="bm-label">INDIA VALUE</span><span class="bm-val pv" id="bm-india">--</span></div>
+      <div class="bm-item"><span class="bm-label">UNREAL %</span><span class="bm-val pv" id="bm-unreal">--</span></div>
+      <div class="bm-item"><span class="bm-label">TODAY'S P&L</span><span class="bm-val pv" id="bm-today">--</span></div>
     </div>
   </div>
 
@@ -491,7 +506,7 @@
         <div class="metric-card"><label>STOCKS VALUE</label><div class="mval loading pv" id="us-stocks-value">…</div><div class="mdesc" id="us-stocks-count">-- positions</div></div>
         <div class="metric-card"><label>ETF VALUE</label><div class="mval loading pv" id="us-etf-value">…</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
         <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mdesc">From broker statement</div></div>
-        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
         <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div></div>
       </div>
@@ -543,6 +558,20 @@
     </div>
 
     <div class="analytics-section">
+      <div class="analytics-header"><h2>🇺🇸 US PORTFOLIO · ANALYTICS</h2></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
+          <div style="height:280px;position:relative;"><canvas id="us-weight-chart"></canvas></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px;">Return % by Position</h3>
+          <div style="height:280px;position:relative;"><canvas id="us-upl-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-section">
       <h2>US PORTFOLIO vs S&amp;P 500 · CUMULATIVE</h2>
       <div class="chart-container chart-wide"><canvas id="us-perf-chart"></canvas></div>
     </div>
@@ -580,21 +609,25 @@
       <h2>India Portfolio Metrics · Live</h2>
       <div class="metrics-grid">
         <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading pv" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
-        <div class="metric-card"><label>UNREALISED P&amp;L</label><div class="mval loading pv" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading pv" id="in-day-pl">…</div><div class="mchg pv" id="in-day-pl-pct">--</div></div>
       </div>
     </div>
 
     <div class="analytics-section">
       <div class="analytics-header"><h2>🇮🇳 INDIA PORTFOLIO · ANALYTICS</h2></div>
-      <div class="r-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
           <div style="height:260px;position:relative;"><canvas id="india-weight-chart"></canvas></div>
         </div>
         <div>
-          <h3 style="margin-bottom:8px;">Unrealised P&amp;L by Position (₹)</h3>
+          <h3 style="margin-bottom:8px;">Return % by Position</h3>
           <div style="height:260px;position:relative;"><canvas id="india-upl-chart"></canvas></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px;">By Brokerage (Invested ₹)</h3>
+          <div style="height:260px;position:relative;"><canvas id="india-broker-chart"></canvas></div>
         </div>
       </div>
     </div>
@@ -1154,6 +1187,15 @@ const DASH = (() => {
     setText('hero-day-pl-pct', sign(dayPct) + pct(dayPct));
     setClass('hero-day-pl-pct', 'mchg pv ' + pn(dayPct));
     setText('hero-cash-infused', hero(us.cashInfusion || 0));
+
+    // Banner mini-metrics strip
+    setText('bm-total',  hero(combined.totalUSD));
+    setText('bm-us',     hero(us.totalValue));
+    setText('bm-india',  hero(india.mv / (S.view.fx || FX_DEFAULT)));
+    setText('bm-unreal', sign(combined.returnPct) + pct(combined.returnPct));
+    setClass('bm-unreal', 'bm-val pv ' + pn(combined.returnPct));
+    setText('bm-today',  sign(combined.dayPL_USD) + hero(Math.abs(combined.dayPL_USD)));
+    setClass('bm-today', 'bm-val pv ' + pn(combined.dayPL_USD));
   }
 
   function renderUSMetrics() {
@@ -1162,7 +1204,7 @@ const DASH = (() => {
     setText('us-stocks-value', usd(us.stocksMV));
     setText('us-etf-value',    usd(us.etfsMV));
     setText('us-cash-value',   usd(us.cash || 0));
-    setText('us-unreal-pl',    sign(us.unrealPL) + usd(us.unrealPL));
+    setText('us-unreal-pl',    sign(us.returnPct) + pct(us.returnPct));
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
     const lbl = $('us-day-pl-label');
@@ -1181,7 +1223,9 @@ const DASH = (() => {
     const ind = S.view.india;
     setText('in-equities-value', inr(ind.mv));
     setText('in-equities-count', ind.open.length + ' positions');
-    setText('in-unreal-pl',   sign(ind.unrealPL) + inr(ind.unrealPL));
+    const inCostBasis = ind.open.reduce((s,p)=>s+(p.cost||0),0);
+    const inUnrealPct = inCostBasis ? (ind.unrealPL / inCostBasis) * 100 : 0;
+    setText('in-unreal-pl',   sign(inUnrealPct) + pct(inUnrealPct));
     setClass('in-unreal-pl', 'mval pv ' + pn(ind.unrealPL));
     setText('in-day-pl',      sign(ind.dayPL) + inr(ind.dayPL));
     setClass('in-day-pl', 'mval pv ' + pn(ind.dayPL));
@@ -1456,6 +1500,7 @@ const DASH = (() => {
   function renderCharts() {
     if (!S.view) return;
     const { us, india } = S.view;
+    const COLORS = ['#00ff88','#00ccff','#ffaa00','#ff6644','#aa88ff','#44ddaa','#ffcc44','#ff4488','#88ccff','#ccff88','#ff8844','#4488ff','#88ff44','#cc44ff'];
     const m = us.monthly;
     const cashBase = us.cashInfusion || 0;
     const dualLabel = ctx => {
@@ -1537,6 +1582,39 @@ const DASH = (() => {
       options: { responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'right', labels:{ color:'#889aaa', boxWidth:12 } },
                   tooltip:{ callbacks:{ label: ctx => `${ctx.label}: $${ctx.parsed.toLocaleString('en-US')} (${pct(ctx.parsed/data.reduce((s,v)=>s+v,0)*100)})` } } } }
+    });
+
+    // US open positions pie
+    const usOpen = us.open.filter(p=>p.mv>0);
+    const usSorted = [...usOpen].sort((a,b)=>b.mv-a.mv);
+    mkChart('us-weight-chart', { type:'doughnut',
+      data: {
+        labels: usSorted.map(p=>p.tk),
+        datasets: [{ data: usSorted.map(p=>Math.round(p.mv)),
+          backgroundColor: COLORS.slice(0, usSorted.length),
+          borderColor: '#0a1929', borderWidth: 2 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'right', labels:{ color:'#c0d8f0', boxWidth:12, font:{size:10} } },
+          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${usd(ctx.parsed)} (${pct(ctx.parsed/us.mv*100)})` } } } }
+    });
+
+    // US return % horizontal bar
+    const usRetSorted = [...usOpen].sort((a,b)=>b.ret-a.ret);
+    mkChart('us-upl-chart', { type:'bar',
+      data: {
+        labels: usRetSorted.map(p=>p.tk),
+        datasets: [{ label:'Return %',
+          data: usRetSorted.map(p=>+p.ret.toFixed(2)),
+          backgroundColor: usRetSorted.map(p=>p.ret>=0?'rgba(0,255,136,.7)':'rgba(255,68,68,.7)'),
+          borderColor:     usRetSorted.map(p=>p.ret>=0?'#00ff88':'#ff4444'),
+          borderWidth:1 }]
+      },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${ctx.parsed.x.toFixed(2)}%` } } },
+        scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>`${v}%`} },
+                 y:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} } } }
     });
   }
   function lineOpts(extraTooltip={}){
@@ -1749,22 +1827,42 @@ const DASH = (() => {
           tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/ind.mv*100)})` } } } }
     });
 
-    // 2. Unrealised P&L bar (all positions, sorted by upl)
-    const uplSorted = [...ind.open].sort((a,b)=>b.upl-a.upl);
+    // 2. Return % bar (all positions, sorted by ret)
+    const uplSorted = [...ind.open].sort((a,b)=>b.ret-a.ret);
     mkChart('india-upl-chart', { type:'bar',
       data: {
         labels: uplSorted.map(p=>p.tk),
-        datasets: [{ label:'Unrealised P&L (₹)',
-          data: uplSorted.map(p=>+p.upl.toFixed(0)),
-          backgroundColor: uplSorted.map(p=>p.upl>=0?'rgba(0,255,136,.7)':'rgba(255,68,68,.7)'),
-          borderColor:     uplSorted.map(p=>p.upl>=0?'#00ff88':'#ff4444'),
+        datasets: [{ label:'Return %',
+          data: uplSorted.map(p=>+p.ret.toFixed(2)),
+          backgroundColor: uplSorted.map(p=>p.ret>=0?'rgba(0,255,136,.7)':'rgba(255,68,68,.7)'),
+          borderColor:     uplSorted.map(p=>p.ret>=0?'#00ff88':'#ff4444'),
           borderWidth:1 }]
       },
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false},
-          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${inr(ctx.parsed.x)}` } } },
-        scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>S.ui.privacy?'***':inr(v)} },
+          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${ctx.parsed.x.toFixed(2)}%` } } },
+        scales:{ x:{ grid:{color:'#1a2a3a'}, ticks:{color:'#556', callback:v=>`${v}%`} },
                  y:{ grid:{display:false}, ticks:{color:'#c0d8f0',font:{size:10}} } } }
+    });
+
+    // 3. Brokerage pie
+    const brokerMap = {};
+    ind.open.forEach(p => {
+      const b = p.broker || 'Unknown';
+      brokerMap[b] = (brokerMap[b] || 0) + (p.cost || 0);
+    });
+    const brokers = Object.keys(brokerMap);
+    const brokerColors = ['#00ff88','#00ccff','#ffaa00','#ff6644','#aa88ff'];
+    mkChart('india-broker-chart', { type:'doughnut',
+      data: {
+        labels: brokers,
+        datasets: [{ data: brokers.map(b=>Math.round(brokerMap[b])),
+          backgroundColor: brokerColors.slice(0, brokers.length),
+          borderColor: '#0a1929', borderWidth: 2 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{ position:'bottom', labels:{ color:'#c0d8f0', boxWidth:12, font:{size:10} } },
+          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/Object.values(brokerMap).reduce((s,v)=>s+v,0)*100)})` } } } }
     });
 
   }

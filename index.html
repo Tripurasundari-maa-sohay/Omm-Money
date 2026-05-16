@@ -2115,7 +2115,7 @@ const DASH = (() => {
     if (S.ui.demo) {
       // Snapshot real state
       S._realView = S.view;
-      S._realSIG  = { results: { ...SIG.results }, generatedAt: SIG.generatedAt, spy: SIG.spy };
+      S._realSIG  = { results: JSON.parse(JSON.stringify(SIG.results)), generatedAt: SIG.generatedAt, spy: SIG.spy ? { ...SIG.spy } : null };
       // Inject demo data
       S.view = buildDemoView();
       const demoSig = buildDemoSIG();

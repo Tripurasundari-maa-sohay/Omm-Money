@@ -1773,7 +1773,8 @@ const DASH = (() => {
       },
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12 } },
-          tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.parsed} holdings` } } } }
+          tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.dataset.data[ctx.dataIndex]} holdings` } },
+          datalabels:{ display:false } } }
     });
 
     // Closed positions waterfall
@@ -1807,7 +1808,8 @@ const DASH = (() => {
       data: { labels, datasets:[{ data:data.map(v=>Math.round(v)), backgroundColor:colors, borderColor:'#0f0f1a', borderWidth:2 }] },
       options: { responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{ position:'right', labels:{ color:'#8892aa', boxWidth:12 } },
-                  tooltip:{ callbacks:{ label: ctx => `${ctx.label}: $${ctx.parsed.toLocaleString('en-US')} (${pct(ctx.parsed/data.reduce((s,v)=>s+v,0)*100)})` } } } }
+                  tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; const tot=data.reduce((s,x)=>s+x,0); return `${ctx.label}: $${v.toLocaleString('en-US')} (${pct(v/tot*100)})`; } } },
+                  datalabels:{ display:false } } }
     });
 
     // US open positions pie
@@ -1822,7 +1824,8 @@ const DASH = (() => {
       },
       options: { responsive:true, maintainAspectRatio:false,
         plugins: { legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
-          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${usd(ctx.parsed)} (${pct(ctx.parsed/us.mv*100)})` } } } }
+          tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/us.mv*100)})`; } } },
+          datalabels:{ display:false } } }
     });
 
     // US return % horizontal bar
@@ -2048,10 +2051,8 @@ const DASH = (() => {
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
         plugins: { legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
-          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/ind.mv*100)})` } },
-          datalabels:{ display: ctx => ctx.parsed > ind.mv * 0.04,  // only label slices >4%
-            formatter: (v, ctx) => pct(v/ind.mv*100),
-            color:'#fff', font:{ size:10, weight:'700' }, anchor:'center', align:'center' } } }
+          tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${inr(v)} (${pct(v/ind.mv*100)})`; } } },
+          datalabels:{ display:false } } }
     });
 
     // 2. Return % bar (all positions, sorted by ret)
@@ -2094,11 +2095,8 @@ const DASH = (() => {
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
         plugins: { legend:{ position:'bottom', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
-          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/brokerTotal*100)})` } },
-          datalabels:{ display: ctx => ctx.parsed > brokerTotal * 0.05,
-            formatter: (v, ctx) => `${ctx.chart.data.labels[ctx.dataIndex]}\n${pct(v/brokerTotal*100)}`,
-            color:'#fff', font:{ size:10, weight:'700' }, anchor:'center', align:'center',
-            textAlign:'center' } } }
+          tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${inr(v)} (${pct(v/brokerTotal*100)})`; } } },
+          datalabels:{ display:false } } }
     });
 
     // 4. India monthly heatmap placeholder

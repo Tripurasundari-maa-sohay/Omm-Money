@@ -2070,7 +2070,7 @@ const DASH = (() => {
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
         plugins:{ legend:{display:false},
           tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${ctx.parsed.x.toFixed(2)}%` } },
-          datalabels:{ display:true, anchor:'end', align: ctx => ctx.parsed.x >= 0 ? 'right' : 'left',
+          datalabels:{ display:true, anchor:'end', align: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? 'right' : 'left',
             formatter: v => `${sign(v)}${Math.abs(v).toFixed(1)}%`,
             color: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? '#00d4aa' : '#ff5c5c',
             font:{ size:10, weight:'700' } } },

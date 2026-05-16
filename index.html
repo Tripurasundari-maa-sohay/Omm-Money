@@ -1001,7 +1001,7 @@ const DASH = (() => {
   'use strict';
 
   /* ══ CONFIG ══════════════════════════════════════════════════════ */
-  const REFRESH_MS  = 5 * 60 * 1000;
+  const REFRESH_MS  = (15 * 60 + 10) * 1000;  // 15m10s — Actions cron */15, fetch ~64s, +10s buffer
   const FX_DEFAULT  = 95.0;    // INR per USD (fallback — live rate fetched by market_data.py)
   const QAR_PER_USD = 3.6413;  // fixed peg — update if needed
 

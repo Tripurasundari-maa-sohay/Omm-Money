@@ -999,7 +999,7 @@ const DASH = (() => {
 
   /* ══ CONFIG ══════════════════════════════════════════════════════ */
   const REFRESH_MS  = 5 * 60 * 1000;
-  const FX_DEFAULT  = 83.5;    // INR per USD (fallback)
+  const FX_DEFAULT  = 95.0;    // INR per USD (fallback — live rate fetched by market_data.py)
   const QAR_PER_USD = 3.6413;  // fixed peg — update if needed
 
   /* ══ STATE ═══════════════════════════════════════════════════════
@@ -1131,8 +1131,9 @@ const DASH = (() => {
     const cost    = (holding.avg || 0) * holding.qty;
     const ret     = cost ? (uplNet / cost) * 100 : 0;    // true net return %
     // houseMoney: avg===0 means purchase price unknown (e.g. NBCC pending) — treat as free shares
+    // NOTE: cost IS returned here so callers can use p.cost directly
     const houseMoney = !holding.avg;  // catches both 0 and undefined/null
-    return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, houseMoney };
+    return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney };
   }
   function build() {
     if (!S.cost) { S.view = null; return; }
@@ -1219,7 +1220,7 @@ const DASH = (() => {
     const usStatus = S.indices?.usa_market?.status;
     const inStatus = S.indices?.india_market?.status;
     const marketOpen = usStatus === 'OPEN' || inStatus === 'OPEN';
-    const dataStale  = marketOpen && ageMin > 15;
+    const dataStale  = marketOpen && ageMin > 5; // watchdog heals at >3min, warn at >5min
 
     if (dataStale) {
       badge.textContent = `⚠ DATA ${Math.round(ageMin)}m OLD`;
@@ -1268,8 +1269,8 @@ const DASH = (() => {
     setText('bm-us',     hero(us.totalValue));
     setText('bm-india',  hero(india.mv / (S.view.fx || FX_DEFAULT)));
     // Unrealised % vs open position cost basis (avg*qty) — not vs gross buys ITD
-    const usCost  = us.open.reduce((s,p)=>s+(p.avg||0)*p.qty, 0);
-    const inCost  = india.open.reduce((s,p)=>s+(p.avg||0)*p.qty, 0) / (S.view.fx || FX_DEFAULT);
+    const usCost  = us.open.reduce((s,p)=>s+(p.cost||0), 0);
+    const inCost  = india.open.reduce((s,p)=>s+(p.cost||0), 0) / (S.view.fx || FX_DEFAULT);
     const totCost = usCost + inCost;
     const unrPct  = totCost ? (combined.unrealPL_USD / totCost) * 100 : 0;
     setText('bm-unreal', sign(unrPct) + pct(unrPct));
@@ -1303,7 +1304,7 @@ const DASH = (() => {
     const ind = S.view.india;
     setText('in-equities-value', inr(ind.mv));
     setText('in-equities-count', ind.open.length + ' positions');
-    const inCostBasis = ind.open.reduce((s,p)=>s+(p.avg||0)*p.qty, 0);
+    const inCostBasis = ind.open.reduce((s,p)=>s+(p.cost||0), 0);
     const inUnrealPct = inCostBasis ? (ind.unrealPL / inCostBasis) * 100 : 0;
     setText('in-unreal-pl',   sign(inUnrealPct) + pct(inUnrealPct));
     setClass('in-unreal-pl', 'mval pv ' + pn(ind.unrealPL));
@@ -1606,7 +1607,7 @@ const DASH = (() => {
   function renderCharts() {
     if (!S.view) return;
     const { us, india } = S.view;
-    const COLORS = CHART_COLORS;
+    const COLORS = CHART_COLORS; // alias — use CHART_COLORS directly in new code
     const m = us.monthly;
     const cashBase = us.cashInfusion || 0;
     const dualLabel = ctx => {
@@ -2038,7 +2039,7 @@ const DASH = (() => {
   function renderIndiaCharts() {
     if (!S.view) return;
     const ind = S.view.india;
-    const COLORS = CHART_COLORS;
+    const COLORS = CHART_COLORS; // alias — use CHART_COLORS directly in new code
 
     // 1. Holdings weight donut
     const sorted = [...ind.open].sort((a,b)=>b.mv-a.mv);
@@ -2081,7 +2082,7 @@ const DASH = (() => {
     const brokerMap = {};
     ind.open.forEach(p => {
       const b = p.broker || 'Unknown';
-      brokerMap[b] = (brokerMap[b] || 0) + ((p.avg || 0) * p.qty);
+      brokerMap[b] = (brokerMap[b] || 0) + (p.cost || 0);
     });
     const brokerTotal = Object.values(brokerMap).reduce((s,v)=>s+v,0);
     const brokers = Object.keys(brokerMap);
@@ -2608,58 +2609,6 @@ const DASH = (() => {
     sigApplyData(data);
   }
 
-  async function sigRunScreener() {
-    const sym = ($('sig-input')?.value || '').trim().toUpperCase();
-    const out = $('sig-screener-out');
-    if (!sym || !out) return;
-    out.innerHTML = `<div style="color:var(--text-dim);font-size:12px">⟳ Fetching data for <strong style="color:var(--accent-b)">${sym}</strong>…</div>`;
-    if (!SIG.spy) SIG.spy = await sigFetch('SPY');
-    const data = await sigFetch(sym);
-    if (!data) { out.innerHTML = `<div style="background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.3);border-radius:6px;padding:14px;color:#ff5c5c;font-size:12px">⚠ No data for <strong>${sym}</strong>. Check the ticker is valid on US markets.</div>`; return; }
-    const res = sigScore(data, SIG.spy);
-    const prv = S.ui.privacy;
-    const col = res.action==='BUY'?'#00d4aa':res.action==='HOLD'?'#ffaa00':'#ff5c5c';
-    // Position sizing
-    const acctVal = S.view ? S.view.us.totalValue : 15000;
-    const stop = +(res.px * 0.93).toFixed(2);
-    const risk = acctVal * 0.01;
-    const rawShares = Math.floor(risk / (res.px - stop));
-    const maxPos = acctVal * 0.12;
-    const shares = Math.min(rawShares, Math.floor(maxPos / res.px));
-    const posSz = prv ? '●●●' : `${shares} shares (~$${Math.round(shares*res.px).toLocaleString('en-US')})`;
-    const verdict = res.action==='BUY' && res.rsi<73 && res.v200<30 ? 'GO' : res.action==='REDUCE' ? 'NO-GO' : 'WAIT';
-    const vCol = verdict==='GO'?'#00d4aa':verdict==='NO-GO'?'#ff5c5c':'#ffaa00';
-
-    out.innerHTML = `<div style="background:var(--bg-card);border:2px solid ${col};border-radius:8px;padding:18px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
-        <div><span style="font-size:22px;font-weight:700;color:#00d4aa;font-family:Monaco,monospace">${sym}</span>
-          <span style="margin-left:12px;font-size:13px;color:#556">@ ${prv?'●●●':'$'+res.px.toFixed(2)}</span></div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <span class="sig-badge ${res.action}">${res.action}</span>
-          <span style="padding:4px 14px;border-radius:4px;font-weight:700;font-size:14px;background:rgba(0,0,0,.3);border:2px solid ${vCol};color:${vCol}">${verdict}</span>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">
-        <div style="background:var(--bg-card2);border-radius:4px;padding:10px"><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">SCORE</div><div style="font-size:20px;font-weight:700;color:${col};font-family:Monaco,monospace">${prv?'●●':res.score}<span style="font-size:11px;color:var(--text-dim)">/100</span></div></div>
-        <div style="background:var(--bg-card2);border-radius:4px;padding:10px"><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">POSITION SIZE</div><div style="font-size:13px;font-weight:700;color:#00d4aa">${posSz}</div></div>
-        <div style="background:var(--bg-card2);border-radius:4px;padding:10px"><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">STOP LOSS</div><div style="font-size:13px;font-weight:700;color:#ff5c5c">${prv?'●●●':'$'+stop}</div></div>
-        <div style="background:var(--bg-card2);border-radius:4px;padding:10px"><div style="color:var(--text-dim);font-size:9px;letter-spacing:1px;margin-bottom:4px">52W HIGH (TRIM)</div><div style="font-size:13px;font-weight:700;color:#4f8ef7">${prv?'●●●':'$'+res.hi52.toFixed(2)}</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px;font-family:Monaco,monospace">
-        ${[['vs 200MA', (res.v200>=0?'+':'')+res.v200+'%', res.v200>=0],
-           ['50/200 Cross', res.sc.cross?'Golden✓':'Death✗', !!res.sc.cross],
-           ['RSI-14', res.rsi, res.rsi<73&&res.rsi>30],
-           ['MACD', res.sc.macd?'Bull✓':'Bear✗', !!res.sc.macd],
-           ['RS vs SPY', (res.rs>=0?'+':'')+res.rs+'%', res.rs>=0],
-           ['Regime', res.regime, res.regime==='BULL']]
-          .map(([l,v,ok])=>`<div style="background:var(--bg-card2);border-radius:3px;padding:6px 8px;display:flex;gap:6px;align-items:center">
-            <div style="width:6px;height:6px;border-radius:50%;background:${ok?'#00d4aa':'#ff5c5c'};flex-shrink:0"></div>
-            <div><div style="font-size:9px;color:var(--text-dim)">${l}</div><div style="color:var(--text-pri)">${prv&&l!=='50/200 Cross'&&l!=='MACD'&&l!=='Regime'?'●●':v}</div></div>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  }
-
   /* ── SCREENER ─────────────────────────────────────────────────────── */
   const DASH_SCR = (() => {
     let _data = null;
@@ -2804,7 +2753,7 @@ const DASH = (() => {
 
   // public surface for inline handlers
   fsApply(); // restore saved font size on load
-  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, sigRunScreener, fsAdjust };
+  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, fsAdjust };
 })();
 </script>
 </body>

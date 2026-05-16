@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi Country Portfolio Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -598,24 +599,24 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:280px;position:relative;"><canvas id="us-weight-chart"></canvas></div>
+          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
-          <div style="height:280px;position:relative;"><canvas id="us-upl-chart"></canvas></div>
+          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
         </div>
       </div>
       <div style="margin-top:16px;">
         <h3 style="margin-bottom:8px;">Sector Exposure (Market Value)</h3>
-        <div style="height:220px;position:relative;"><canvas id="us-sector-chart"></canvas></div>
+        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
       </div>
       <div style="margin-top:16px;">
         <h3 style="margin-bottom:8px;">Signal Score Distribution (Holdings)</h3>
-        <div style="height:180px;position:relative;"><canvas id="us-signal-dist-chart"></canvas></div>
+        <div style="height:180px;position:relative;overflow:visible;"><canvas id="us-signal-dist-chart"></canvas></div>
       </div>
       <div style="margin-top:16px;">
         <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
-        <div style="height:220px;position:relative;"><canvas id="us-waterfall-chart"></canvas></div>
+        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
       </div>
     </div>
 
@@ -673,15 +674,15 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
-          <div style="height:260px;position:relative;"><canvas id="india-weight-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:visible;"><canvas id="india-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
-          <div style="height:260px;position:relative;"><canvas id="india-upl-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:visible;"><canvas id="india-upl-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">By Brokerage (Invested ₹)</h3>
-          <div style="height:260px;position:relative;"><canvas id="india-broker-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:visible;"><canvas id="india-broker-chart"></canvas></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
@@ -691,7 +692,7 @@
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Broker P&L Comparison (Unrealised)</h3>
-          <div style="height:160px;position:relative;"><canvas id="india-broker-pl-chart"></canvas></div>
+          <div style="height:160px;position:relative;overflow:visible;"><canvas id="india-broker-pl-chart"></canvas></div>
         </div>
       </div>
     </div>
@@ -1585,10 +1586,13 @@ const DASH = (() => {
   const CHART_COLORS = ['#00d4aa','#4f8ef7','#f0b429','#ff5c5c','#aa88ff',
                         '#44ddaa','#ffcc44','#ff4488','#88ccff','#ccff88',
                         '#ff8844','#4488ff','#88ff44','#cc44ff'];
+  Chart.register(ChartDataLabels);
   Chart.defaults.color = '#8892aa';
   Chart.defaults.borderColor = '#2a2a4a';
   Chart.defaults.font.family = "'Inter', system-ui, Arial, sans-serif";
   Chart.defaults.font.size = 11;
+  // Disable datalabels globally — opt in per chart
+  Chart.defaults.plugins.datalabels = { display: false };
   const darkLine = { borderWidth:2, tension:0.3, pointRadius:2, fill:false };
 
   function destroyChart(id){ if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } }
@@ -2042,9 +2046,12 @@ const DASH = (() => {
           backgroundColor: COLORS.slice(0, sorted.length),
           borderColor: '#0f0f1a', borderWidth: 2 }]
       },
-      options: { responsive:true, maintainAspectRatio:false,
+      options: { responsive:true, maintainAspectRatio:false, clip:false,
         plugins: { legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
-          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/ind.mv*100)})` } } } }
+          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/ind.mv*100)})` } },
+          datalabels:{ display: ctx => ctx.parsed > ind.mv * 0.04,  // only label slices >4%
+            formatter: (v, ctx) => pct(v/ind.mv*100),
+            color:'#fff', font:{ size:10, weight:'700' }, anchor:'center', align:'center' } } }
     });
 
     // 2. Return % bar (all positions, sorted by ret)
@@ -2058,9 +2065,13 @@ const DASH = (() => {
           borderColor:     uplSorted.map(p=>p.ret>=0?'#00d4aa':'#ff5c5c'),
           borderWidth:1 }]
       },
-      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
         plugins:{ legend:{display:false},
-          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${ctx.parsed.x.toFixed(2)}%` } } },
+          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${ctx.parsed.x.toFixed(2)}%` } },
+          datalabels:{ display:true, anchor:'end', align: ctx => ctx.parsed.x >= 0 ? 'right' : 'left',
+            formatter: v => `${sign(v)}${Math.abs(v).toFixed(1)}%`,
+            color: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? '#00d4aa' : '#ff5c5c',
+            font:{ size:10, weight:'700' } } },
         scales:{ x:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>`${v}%`} },
                  y:{ grid:{display:false}, ticks:{color:'#e8eaf0',font:{size:10}} } } }
     });
@@ -2071,6 +2082,7 @@ const DASH = (() => {
       const b = p.broker || 'Unknown';
       brokerMap[b] = (brokerMap[b] || 0) + ((p.avg || 0) * p.qty);
     });
+    const brokerTotal = Object.values(brokerMap).reduce((s,v)=>s+v,0);
     const brokers = Object.keys(brokerMap);
     const brokerColors = CHART_COLORS.slice(0,5);
     mkChart('india-broker-chart', { type:'doughnut',
@@ -2080,9 +2092,13 @@ const DASH = (() => {
           backgroundColor: brokerColors.slice(0, brokers.length),
           borderColor: '#0f0f1a', borderWidth: 2 }]
       },
-      options: { responsive:true, maintainAspectRatio:false,
+      options: { responsive:true, maintainAspectRatio:false, clip:false,
         plugins: { legend:{ position:'bottom', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
-          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/Object.values(brokerMap).reduce((s,v)=>s+v,0)*100)})` } } } }
+          tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/brokerTotal*100)})` } },
+          datalabels:{ display: ctx => ctx.parsed > brokerTotal * 0.05,
+            formatter: (v, ctx) => `${ctx.chart.data.labels[ctx.dataIndex]}\n${pct(v/brokerTotal*100)}`,
+            color:'#fff', font:{ size:10, weight:'700' }, anchor:'center', align:'center',
+            textAlign:'center' } } }
     });
 
     // 4. India monthly heatmap placeholder
@@ -2109,8 +2125,13 @@ const DASH = (() => {
             borderColor:     bpLabels.map(b=>brokerPL[b].upl>=0?'#00d4aa':'#ff5c5c'),
             borderWidth:1 }]
         },
-        options:{ responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${sign(ctx.parsed.y)}${inr(Math.abs(ctx.parsed.y))}` } } },
+        options:{ responsive:true, maintainAspectRatio:false, clip:false,
+          plugins:{ legend:{display:false},
+            tooltip:{ callbacks:{ label: ctx=>`${sign(ctx.parsed.y)}${inr(Math.abs(ctx.parsed.y))}` } },
+            datalabels:{ display:true, anchor:'end', align:'top',
+              formatter: v => S.ui.privacy ? '●●' : `${sign(v)}${inr(Math.abs(v))}`,
+              color: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? '#00d4aa' : '#ff5c5c',
+              font:{ size:10, weight:'700' } } },
           scales:{ x:{ grid:{display:false}, ticks:{color:'#e8eaf0'} },
                    y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>S.ui.privacy?'***':inr(v)} } } }
       });

@@ -390,7 +390,7 @@
       <div class="bm-item"><span class="bm-label">TOTAL (USD)</span><span class="bm-val pv" id="bm-total">--</span></div>
       <div class="bm-item"><span class="bm-label">US VALUE</span><span class="bm-val pv" id="bm-us">--</span></div>
       <div class="bm-item"><span class="bm-label">INDIA VALUE</span><span class="bm-val pv" id="bm-india">--</span></div>
-      <div class="bm-item"><span class="bm-label">UNREAL %</span><span class="bm-val pv" id="bm-unreal">--</span></div>
+      <div class="bm-item"><span class="bm-label">UNREAL % (OPEN)</span><span class="bm-val pv" id="bm-unreal">--</span></div>
       <div class="bm-item"><span class="bm-label">TODAY'S P&L</span><span class="bm-val pv" id="bm-today">--</span></div>
     </div>
   </div>
@@ -1266,8 +1266,13 @@ const DASH = (() => {
     setText('bm-total',  hero(combined.totalUSD));
     setText('bm-us',     hero(us.totalValue));
     setText('bm-india',  hero(india.mv / (S.view.fx || FX_DEFAULT)));
-    setText('bm-unreal', sign(combined.returnPct) + pct(combined.returnPct));
-    setClass('bm-unreal', 'bm-val pv ' + pn(combined.returnPct));
+    // Unrealised % vs open position cost basis (avg*qty) — not vs gross buys ITD
+    const usCost  = us.open.reduce((s,p)=>s+(p.avg||0)*p.qty, 0);
+    const inCost  = india.open.reduce((s,p)=>s+(p.avg||0)*p.qty, 0) / (S.view.fx || FX_DEFAULT);
+    const totCost = usCost + inCost;
+    const unrPct  = totCost ? (combined.unrealPL_USD / totCost) * 100 : 0;
+    setText('bm-unreal', sign(unrPct) + pct(unrPct));
+    setClass('bm-unreal', 'bm-val pv ' + pn(unrPct));
     setText('bm-today',  sign(combined.dayPL_USD) + hero(Math.abs(combined.dayPL_USD)));
     setClass('bm-today', 'bm-val pv ' + pn(combined.dayPL_USD));
   }
@@ -2080,6 +2085,37 @@ const DASH = (() => {
           tooltip:{ callbacks:{ label: ctx => `${ctx.label}: ${inr(ctx.parsed)} (${pct(ctx.parsed/Object.values(brokerMap).reduce((s,v)=>s+v,0)*100)})` } } } }
     });
 
+    // 4. India monthly heatmap placeholder
+    const inHmap = $('india-monthly-heatmap');
+    if (inHmap) {
+      inHmap.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:20px 0;">Monthly breakdown coming soon — requires EOD snapshot data</div>';
+    }
+
+    // 5. Broker unrealised P&L bar
+    const brokerPL = {};
+    ind.open.forEach(p => {
+      const b = p.broker || 'Unknown';
+      if (!brokerPL[b]) brokerPL[b] = { upl: 0, mv: 0 };
+      brokerPL[b].upl += p.uplNet || 0;
+      brokerPL[b].mv  += p.mv || 0;
+    });
+    const bpLabels = Object.keys(brokerPL);
+    if (bpLabels.length) {
+      mkChart('india-broker-pl-chart', { type:'bar',
+        data: { labels: bpLabels,
+          datasets:[{ label:'Unrealised P&L (₹)',
+            data: bpLabels.map(b=>Math.round(brokerPL[b].upl)),
+            backgroundColor: bpLabels.map(b=>brokerPL[b].upl>=0?'rgba(0,212,170,.7)':'rgba(255,92,92,.7)'),
+            borderColor:     bpLabels.map(b=>brokerPL[b].upl>=0?'#00d4aa':'#ff5c5c'),
+            borderWidth:1 }]
+        },
+        options:{ responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${sign(ctx.parsed.y)}${inr(Math.abs(ctx.parsed.y))}` } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:'#e8eaf0'} },
+                   y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>S.ui.privacy?'***':inr(v)} } } }
+      });
+    }
+
   }
 
   /* ── 6b. US INSIGHTS TILE ─────────────────────────────────────── */
@@ -2147,34 +2183,6 @@ const DASH = (() => {
       tile('🎯','WIN RATE (CLOSED)',  winRate==='--'?'--':winRate+'%', `${wins} of ${closed.length} trades`),
     ].join('');
 
-    // India monthly heatmap placeholder
-    const inHmap = $('india-monthly-heatmap');
-    if (inHmap) {
-      inHmap.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:20px 0;">Monthly breakdown coming soon — requires EOD snapshot data</div>';
-    }
-
-    // Broker P&L comparison (unrealised)
-    const brokerPL = {};
-    ind.open.forEach(p => {
-      const b = p.broker || 'Unknown';
-      if (!brokerPL[b]) brokerPL[b] = { upl: 0, mv: 0 };
-      brokerPL[b].upl += p.uplNet || 0;
-      brokerPL[b].mv  += p.mv || 0;
-    });
-    const bpLabels = Object.keys(brokerPL);
-    mkChart('india-broker-pl-chart', { type:'bar',
-      data: { labels: bpLabels,
-        datasets:[{ label:'Unrealised P&L (₹)',
-          data: bpLabels.map(b=>Math.round(brokerPL[b].upl)),
-          backgroundColor: bpLabels.map(b=>brokerPL[b].upl>=0?'rgba(0,212,170,.7)':'rgba(255,92,92,.7)'),
-          borderColor:     bpLabels.map(b=>brokerPL[b].upl>=0?'#00d4aa':'#ff5c5c'),
-          borderWidth:1 }]
-      },
-      options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${sign(ctx.parsed.y)}${inr(Math.abs(ctx.parsed.y))}` } } },
-        scales:{ x:{ grid:{display:false}, ticks:{color:'#e8eaf0'} },
-                 y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>S.ui.privacy?'***':inr(v)} } } }
-    });
   }
 
   /* ── 7. RENDER PIPELINE ────────────────────────────────────────── */

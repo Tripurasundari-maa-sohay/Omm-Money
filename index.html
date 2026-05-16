@@ -610,13 +610,16 @@
         <h3 style="margin-bottom:8px;">Sector Exposure (Market Value)</h3>
         <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
       </div>
-      <div style="margin-top:16px;">
-        <h3 style="margin-bottom:8px;">Signal Score Distribution (Holdings)</h3>
-        <div style="height:180px;position:relative;overflow:visible;"><canvas id="us-signal-dist-chart"></canvas></div>
-      </div>
-      <div style="margin-top:16px;">
-        <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
-        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
+      <!-- Signal dist + Waterfall side by side -->
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;">
+        <div>
+          <h3 style="margin-bottom:8px;">Signal Score Distribution</h3>
+          <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-signal-dist-chart"></canvas></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
+          <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
+        </div>
       </div>
     </div>
 

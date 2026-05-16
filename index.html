@@ -380,7 +380,7 @@
           <span class="fs-label" id="fs-level">A</span>
           <button class="fs-btn" onclick="DASH.fsAdjust(+1)">A+</button>
         </div>
-        <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Hide portfolio values">👁</button>
+        <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Show demo data">👁</button>
       </div>
       <div class="banner-right">
         <div>Clock: <span id="update-time">--:--:--</span></div>
@@ -1013,7 +1013,8 @@ const DASH = (() => {
   ══════════════════════════════════════════════════════════════════ */
   const S = {
     cost: null, prices: {}, indices: null, view: null, charts: {},
-    ui: { currency: 'USD', privacy: false, status: 'ALL', market: 'ALL', search: '' }
+    ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '' },
+    _realView: null
   };
 
   /* ══ DOM HELPERS ═════════════════════════════════════════════════ */
@@ -1978,31 +1979,128 @@ const DASH = (() => {
   }
 
   /* ── Privacy toggle ───────────────────────────────────────────── */
+  /* ── DEMO VIEW BUILDER ───────────────────────────────────────────── */
+  function buildDemoView() {
+    const fx = 95.0;
+    function uPos(tk, name, cls, qty, avg, ltp) {
+      const mv=qty*ltp, cost=qty*avg, upl=(ltp-avg)*qty, uplNet=upl;
+      const pc=+(ltp*0.997).toFixed(2), dayPL=(ltp-pc)*qty;
+      const ret=cost?(uplNet/cost)*100:0, dayPct=(ltp-pc)/pc*100;
+      return {tk,name,cls,qty,avg,ltp,pc,live:true,mv,upl,uplNet,exitFee:-5,dayPL,dayPct,ret,cost,houseMoney:false,wt:0};
+    }
+    function iPos(tk, name, qty, avg, ltp, broker) {
+      const mv=qty*ltp, cost=qty*avg, upl=(ltp-avg)*qty, uplNet=upl;
+      const pc=+(ltp*0.997).toFixed(2), dayPL=(ltp-pc)*qty;
+      const ret=cost?(uplNet/cost)*100:0, dayPct=(ltp-pc)/pc*100;
+      return {tk,name,cls:'Stock',qty,avg,ltp,pc,live:true,mv,upl,uplNet,exitFee:0,dayPL,dayPct,ret,cost,houseMoney:false,broker,exch:'NSE',yf:tk+'.NS',wt:0};
+    }
+
+    const usOpenRaw = [
+      uPos('AAPL','Apple Inc.','Stock',8,172,211),
+      uPos('MSFT','Microsoft Corp.','Stock',5,385,441),
+      uPos('NVDA','NVIDIA Corp.','Stock',3,620,875),
+      uPos('AMZN','Amazon.com Inc.','Stock',10,178,196),
+      uPos('META','Meta Platforms','Stock',4,490,578),
+      uPos('GOOG','Alphabet Inc. C','Stock',12,168,172),
+      uPos('JPM','JPMorgan Chase','Stock',9,188,204),
+      uPos('COST','Costco Wholesale','Stock',2,820,888),
+      uPos('EWY','iShares MSCI S.Korea ETF','ETF',35,62,59),
+    ];
+    const usMV = usOpenRaw.reduce((s,p)=>s+p.mv,0);
+    usOpenRaw.forEach(p=>p.wt=usMV?(p.mv/usMV)*100:0);
+
+    const usClosed = [
+      {tk:'TSLA',name:'Tesla Inc.',cls:'Stock',income:0,costs:-12,realised:340,ret_pct:18.2},
+      {tk:'NFLX',name:'Netflix Inc.',cls:'Stock',income:0,costs:-8,realised:215,ret_pct:11.4},
+      {tk:'AMD',name:'Advanced Micro Devices',cls:'Stock',income:0,costs:-10,realised:180,ret_pct:9.8},
+      {tk:'DIS',name:'Walt Disney Co.',cls:'Stock',income:0,costs:-7,realised:-95,ret_pct:-5.2},
+      {tk:'BABA',name:'Alibaba Group',cls:'Stock',income:0,costs:-9,realised:-210,ret_pct:-14.1},
+      {tk:'F',name:'Ford Motor Co.',cls:'Stock',income:12,costs:-5,realised:45,ret_pct:3.2},
+      {tk:'SBUX',name:'Starbucks Corp.',cls:'Stock',income:8,costs:-6,realised:88,ret_pct:6.1},
+      {tk:'BA',name:'Boeing Co.',cls:'Stock',income:0,costs:-8,realised:120,ret_pct:8.4},
+      {tk:'GE',name:'GE Aerospace',cls:'Stock',income:0,costs:-6,realised:67,ret_pct:4.8},
+      {tk:'T',name:'AT&T Inc.',cls:'Stock',income:22,costs:-4,realised:-32,ret_pct:-2.1},
+    ];
+
+    const us = {
+      cash:1240.50, cashInfusion:15875,
+      open:usOpenRaw, closed:usClosed,
+      monthly:{
+        labels:['Nov-25','Dec','Jan','Feb','Mar','Apr','May-26'],
+        port_return_cum_pct:[0,-1.2,-3.4,-5.1,-8.2,-3.1,4.8],
+        snp_return_cum_pct: [0,-0.8,-2.1,-4.3,-7.5,-1.8,2.1],
+        cash_deployed:[10000,12000,14000,16000,16000,16000,16000],
+        monthly_pl:[0,-145,-264,-221,-391,612,742],
+      },
+      charges:[], charges_total:0,
+      stocksMV:usOpenRaw.filter(p=>p.cls==='Stock').reduce((s,p)=>s+p.mv,0),
+      etfsMV:  usOpenRaw.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
+      mv:usMV,
+      unrealPL:usOpenRaw.reduce((s,p)=>s+p.uplNet,0),
+      dayPL:   usOpenRaw.reduce((s,p)=>s+p.dayPL,0),
+      exitCost:usOpenRaw.length*-5,
+    };
+    us.totalValue=us.mv+us.cash;
+    us.dayPct=us.totalValue?(us.dayPL/(us.totalValue-us.dayPL))*100:0;
+    us.returnPct=us.cashInfusion?((us.totalValue-us.cashInfusion)/us.cashInfusion)*100:0;
+    us.realisedPL=usClosed.reduce((s,p)=>s+p.realised,0);
+    us.dividends=42;
+
+    const inOpenRaw = [
+      iPos('RELIANCE','Reliance Industries',15,2850,3120,'Zerodha'),
+      iPos('TCS','Tata Consultancy Svcs',8,3580,3740,'Zerodha'),
+      iPos('HDFCBANK','HDFC Bank Ltd.',20,1640,1710,'Motilal Oswal'),
+      iPos('INFY','Infosys Ltd.',25,1520,1580,'Motilal Oswal'),
+      iPos('ICICIBANK','ICICI Bank Ltd.',30,1080,1145,'Motilal Oswal'),
+      iPos('BAJFINANCE','Bajaj Finance Ltd.',5,7200,7850,'Zerodha'),
+      iPos('WIPRO','Wipro Ltd.',50,460,445,'Groww'),
+      iPos('ADANIPORTS','Adani Ports & SEZ',18,1280,1350,'Groww'),
+    ];
+    const inMV=inOpenRaw.reduce((s,p)=>s+p.mv,0);
+    inOpenRaw.forEach(p=>p.wt=inMV?(p.mv/inMV)*100:0);
+
+    const india = {
+      cash:8500, cashInfusion:280000,
+      open:inOpenRaw, closed:[],
+      mv:inMV,
+      unrealPL:inOpenRaw.reduce((s,p)=>s+p.uplNet,0),
+      dayPL:   inOpenRaw.reduce((s,p)=>s+p.dayPL,0),
+      realisedPL:0,
+    };
+    india.dayPct=india.mv?(india.dayPL/(india.mv-india.dayPL))*100:0;
+
+    const totalUSD=us.totalValue+india.mv/fx;
+    const combined={
+      totalUSD,
+      unrealPL_USD: us.unrealPL+india.unrealPL/fx,
+      dayPL_USD:    us.dayPL+india.dayPL/fx,
+      returnPct: ((totalUSD-(us.cashInfusion+india.cashInfusion/fx))/(us.cashInfusion+india.cashInfusion/fx))*100,
+    };
+
+    return { fx, us, india, combined, asOf:new Date().toISOString(), anyLive:true };
+  }
+
   function togglePrivacy() {
-    S.ui.privacy = !S.ui.privacy;
+    S.ui.demo = !S.ui.demo;
+    S.ui.privacy = false;               // never blur in demo mode — view has fake data
+    document.body.classList.remove('privacy');
 
-    // 1. Mask / restore all .pv metric-card values (set via setText)
-    document.querySelectorAll('.pv').forEach(el => {
-      if (S.ui.privacy) {
-        if (!el.dataset.real) el.dataset.real = el.textContent;
-        el.textContent = MASK;
-      } else {
-        if (el.dataset.real !== undefined) el.textContent = el.dataset.real;
-      }
-    });
+    if (S.ui.demo) {
+      S._realView = S.view;
+      S.view = buildDemoView();
+    } else {
+      if (S._realView) S.view = S._realView;
+      S._realView = null;
+    }
 
-    // 2. Table rows — CSS blur via body class (mixed HTML, can't text-replace)
-    document.body.classList.toggle('privacy', S.ui.privacy);
+    // Full re-render — all renderers read S.view so they get fake/real data automatically
+    render();
 
-    // 3. Charts — tick callbacks close over S.ui.privacy, just force redraw
-    Object.values(S.charts).forEach(c => { try { c.update('none'); } catch(_){} });
-
-    // 4. Button state
     const btn = $('privacy-btn');
     if (btn) {
-      btn.textContent = S.ui.privacy ? '🙈' : '👁';
-      btn.classList.toggle('active', S.ui.privacy);
-      btn.title = S.ui.privacy ? 'Show portfolio values' : 'Hide portfolio values';
+      btn.textContent = S.ui.demo ? '🎭' : '👁';
+      btn.classList.toggle('active', S.ui.demo);
+      btn.title = S.ui.demo ? 'Demo mode — sample data shown' : 'Show demo data';
     }
   }
 

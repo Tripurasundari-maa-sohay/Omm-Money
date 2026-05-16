@@ -483,10 +483,16 @@
       <div id="monthly-heatmap" style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;"></div>
     </div>
 
-    <!-- Rolling 3-month Alpha -->
-    <div class="tab-section" style="margin-top:16px;">
-      <h3>ROLLING 3-MONTH ALPHA vs S&amp;P 500</h3>
-      <div class="chart-container chart-wide"><canvas id="rolling-alpha-chart"></canvas></div>
+    <!-- Rolling Alpha + Drawdown side by side -->
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="tab-section">
+        <h3>ROLLING 3-MONTH ALPHA vs S&amp;P 500</h3>
+        <div class="chart-container chart-wide"><canvas id="rolling-alpha-chart"></canvas></div>
+      </div>
+      <div class="tab-section">
+        <h3>PORTFOLIO DRAWDOWN FROM PEAK</h3>
+        <div class="chart-container chart-wide"><canvas id="drawdown-chart"></canvas></div>
+      </div>
     </div>
 
     <!-- Allocation + Cash vs Value -->
@@ -608,16 +614,9 @@
         <h3 style="margin-bottom:8px;">Signal Score Distribution (Holdings)</h3>
         <div style="height:180px;position:relative;overflow:visible;"><canvas id="us-signal-dist-chart"></canvas></div>
       </div>
-      <!-- Waterfall + Drawdown side by side -->
-      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div>
-          <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
-          <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
-        </div>
-        <div>
-          <h3 style="margin-bottom:8px;">Portfolio Drawdown from Peak</h3>
-          <div style="height:220px;position:relative;overflow:visible;"><canvas id="drawdown-chart"></canvas></div>
-        </div>
+      <div style="margin-top:16px;">
+        <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
+        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
       </div>
     </div>
 

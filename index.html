@@ -1140,6 +1140,7 @@ const DASH = (() => {
     return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney };
   }
   function build() {
+    if (S.ui.demo) return;              // demo view already set — don't overwrite with real data
     if (!S.cost) { S.view = null; return; }
     const fx = S.cost.fx_inr_usd || FX_DEFAULT;
 

@@ -15,7 +15,7 @@ concurrency:
 jobs:
   screen:
     runs-on: ubuntu-latest
-    timeout-minutes: 120   # US 516 + India 500 + macro 8 tickers @ ~0.25s each ≈ 60-90 min
+    timeout-minutes: 150   # US 516 + India ~2000 + macro 8 tickers @ ~0.25s each ≈ 90-130 min
 
     steps:
       - uses: actions/checkout@v4

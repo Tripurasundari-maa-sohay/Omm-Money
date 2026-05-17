@@ -187,14 +187,60 @@ def main() -> int:
     # Sort by score descending
     results.sort(key=lambda r: r["score"], reverse=True)
 
+    # ── Global commodities & macro signals ────────────────────────────────────
+    # Gold (GLD), Silver (SLV), Oil (USO), Bonds (TLT), Bitcoin (BTC-USD)
+    COMMODITIES = [
+        ("GLD",     "Gold (SPDR ETF)",       "Precious Metals"),
+        ("GC=F",    "Gold Futures (COMEX)",  "Precious Metals"),
+        ("XAUUSD=X","Gold Spot (USD/oz)",    "Precious Metals"),
+        ("SLV",     "Silver (iShares ETF)",  "Precious Metals"),
+        ("USO",     "Crude Oil (ETF)",       "Energy"),
+        ("TLT",     "US 20yr Treasury ETF",  "Bonds"),
+        ("BTC-USD", "Bitcoin",               "Crypto"),
+        ("GOLDBEES.NS", "Gold BeES (NSE)",   "Precious Metals"),
+    ]
+    commodities_out: list[dict] = []
+    print("\nScoring commodities & macro…")
+    for sym, label, cat in COMMODITIES:
+        try:
+            data = fetch_history(sym)
+            if not data:
+                print(f"  {sym:14s} → no data")
+                continue
+            ts, cl, vol = data
+            if len(cl) < MIN_BARS_FOR_SIGNALS:
+                print(f"  {sym:14s} → only {len(cl)} bars — skip")
+                continue
+            res = score_ticker(ts, cl, vol, spy_cl)
+            px  = cl[-1]
+            print(f"  {sym:14s} → score={res['score']} [{res['action']}]  RSI={res['rsi']}  vs200={res['v200']:+.1f}%  px={px:.2f}")
+            commodities_out.append({
+                "tk":      sym,
+                "label":   label,
+                "category": cat,
+                "px":      round(px, 4),
+                "score":   res["score"],
+                "action":  res["action"],
+                "rsi":     res["rsi"],
+                "v200":    res["v200"],
+                "rs":      res["rs"],
+                "rng":     res["rng"],
+                "vsMean":  res["vsMean"],
+                "regime":  res["regime"],
+            })
+        except Exception as exc:
+            print(f"  {sym:14s} → ERROR: {exc}", file=sys.stderr)
+        time.sleep(0.3)
+
     # ── Write output ──────────────────────────────────────────────────────────
     OUT_SCREENER.parent.mkdir(parents=True, exist_ok=True)
     out = {
-        "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "regime":    regime,
-        "spy":       spy_summary,
-        "count":     succeeded,
-        "tickers":   results,
+        "generated":   datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "regime":      regime,
+        "spy":         spy_summary,
+        "count":       succeeded,
+        "tickers":     results,
+        "commodities": commodities_out,
     }
     OUT_SCREENER.write_text(json.dumps(out, indent=2))
     print(

@@ -1,19 +1,15 @@
 // Service Worker — Portfolio Dashboard PWA
-// Caches app shell for offline; always fetches data files fresh from network.
+// Uses relative paths — works on GitHub Pages subpath (/portfolio-dashboard/)
 
-const CACHE = 'portfolio-v1';
+const CACHE = 'portfolio-v2';
+const BASE = self.location.pathname.replace(/\/sw\.js$/, '');
+
 const SHELL = [
-  '/',
-  '/index.html',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png',
-];
-
-// Data files — always network-first (never serve stale prices/signals)
-const DATA_PATHS = [
-  '/data/processed/',
-  '/data/history/',
+  BASE + '/',
+  BASE + '/index.html',
+  BASE + '/icons/icon-192.png',
+  BASE + '/icons/icon-512.png',
+  BASE + '/icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', e => {
@@ -32,14 +28,15 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+  const path = url.pathname;
 
-  // Always network for data files
-  if (DATA_PATHS.some(p => url.pathname.startsWith(p))) {
+  // Always network-first for data files (never serve stale prices)
+  if (path.includes('/data/processed/') || path.includes('/data/history/')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }
 
-  // Cache-first for shell
+  // Cache-first for shell assets
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );

@@ -309,14 +309,22 @@
 
   /* ── RESPONSIVE: 640px (phone / small tablet) ── */
   @media (max-width:640px){
-    .top-banner{height:auto;min-height:52px;padding:8px 12px;flex-wrap:wrap;gap:4px}
-    .logo{font-size:13px;letter-spacing:1px;order:1;flex-shrink:0}
-    .banner-right{order:2;font-size:10px;text-align:right}
+    .top-banner{height:auto;min-height:52px;padding:6px 10px;flex-wrap:wrap;gap:3px}
+    /* Row 1: logo (left) + controls (right) */
+    .banner-row1{flex-wrap:wrap;gap:4px}
+    .logo{font-size:12px;letter-spacing:0.5px;order:1;flex:1;min-width:0}
+    .banner-right{order:2;font-size:9px;text-align:right;white-space:nowrap}
+    .banner-controls{order:2;gap:5px;margin-left:auto}
+    .ccy-btn{padding:3px 5px;font-size:9px}
+    .fs-btn{padding:3px 5px;font-size:9px}
+    .fs-label{padding:0 3px;font-size:9px}
+    .privacy-btn{padding:3px 7px;font-size:11px}
+    /* Row 2: tabs full width scrollable */
     .banner-tabs{order:3;width:100%;flex:unset;justify-content:flex-start;
-      overflow-x:auto;scrollbar-width:none;padding-bottom:2px;gap:4px}
+      overflow-x:auto;scrollbar-width:none;padding-bottom:2px;gap:4px;margin-top:2px}
     .banner-tabs::-webkit-scrollbar{display:none}
     .tab-button{padding:5px 8px;font-size:10px;white-space:nowrap;flex-shrink:0;border-width:1px}
-    .dashboard-container{padding-top:98px}
+    .dashboard-container{padding-top:108px}
     .main-content{padding:10px}
     .portfolio-overview,.portfolio-metrics,.analytics-section,.holdings-section,
     .holdings-preview,.tab-section{padding:12px;margin-bottom:14px;border-radius:6px}
@@ -341,9 +349,9 @@
 
   /* ── RESPONSIVE: 420px (small phone) ── */
   @media (max-width:420px){
-    .logo{font-size:11px}
+    .logo{font-size:10px}
     .banner-right{display:none}
-    .dashboard-container{padding-top:78px}
+    .dashboard-container{padding-top:100px}
     .main-content{padding:8px}
     .metrics-grid{grid-template-columns:1fr 1fr;gap:6px}
     .metric-card{padding:9px}

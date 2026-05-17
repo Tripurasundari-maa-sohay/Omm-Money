@@ -61,9 +61,9 @@ jobs:
         run: |
           if [ -f data/history/_meta.json ]; then
             python3 -c "
-import json
-m = json.load(open('data/history/_meta.json'))
-us = m.get('us', {})
-print(f\"US: universe={us.get('universe',0)}  new={us.get('new_tickers',0)}  updated={us.get('updated',0)}  errors={us.get('errors',0)}\")
-"
+          import json
+          m = json.load(open('data/history/_meta.json'))
+          us = m.get('us', {})
+          print('US: universe='+str(us.get('universe',0))+' new='+str(us.get('new_tickers',0))+' updated='+str(us.get('updated',0))+' errors='+str(us.get('errors',0)))
+          "
           fi

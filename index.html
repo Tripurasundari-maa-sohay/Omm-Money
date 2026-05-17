@@ -3107,6 +3107,29 @@ const DASH = (() => {
   }
   document.addEventListener('DOMContentLoaded', init);
 
+  // ── Swipe to change tabs (mobile) ────────────────────────────────────────
+  (function() {
+    const TABS = ['portfolio','us','india','transactions','signals','screener'];
+    let _tx = 0, _ty = 0;
+    const mc = document.querySelector('.main-content') || document.body;
+    mc.addEventListener('touchstart', e => {
+      _tx = e.touches[0].clientX;
+      _ty = e.touches[0].clientY;
+    }, { passive: true });
+    mc.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - _tx;
+      const dy = e.changedTouches[0].clientY - _ty;
+      // Only horizontal swipes > 60px, not mostly vertical
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      const active = document.querySelector('.tab-button.active');
+      if (!active) return;
+      const cur = TABS.indexOf(active.dataset.tab);
+      if (cur === -1) return;
+      const next = dx < 0 ? Math.min(cur + 1, TABS.length - 1) : Math.max(cur - 1, 0);
+      if (next !== cur) switchTab(TABS[next]);
+    }, { passive: true });
+  })();
+
   // public surface for inline handlers
   fsApply(); // restore saved font size on load
   return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, fsAdjust };

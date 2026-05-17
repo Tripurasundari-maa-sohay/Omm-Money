@@ -929,8 +929,20 @@
   <!-- ══════════ TAB 6 · SCREENER ══════════ -->
   <div id="screener-tab" class="tab-content">
 
-    <!-- Filter bar -->
-    <div class="scr-filter-bar">
+    <!-- Market selector -->
+    <div class="scr-filter-bar" style="margin-bottom:6px">
+      <label>Market:
+        <select id="scr-market" onchange="DASH_SCR.switchMarket()">
+          <option value="us">🇺🇸 US (SP500 + NDX100)</option>
+          <option value="india">🇮🇳 India (NSE full universe)</option>
+          <option value="macro">🌐 Macro / Commodities</option>
+        </select>
+      </label>
+      <span id="scr-regime-badge" style="font-size:11px;padding:2px 8px;border-radius:3px;margin-left:8px"></span>
+    </div>
+
+    <!-- Filter bar (US + India) -->
+    <div class="scr-filter-bar" id="scr-filter-us">
       <label>Universe:
         <select id="scr-universe" onchange="DASH_SCR.filter()">
           <option value="all">All (SP500 + NDX100)</option>
@@ -953,11 +965,33 @@
       <span id="scr-count" style="font-size:12px;color:var(--text-dim);margin-left:auto"></span>
     </div>
 
+    <!-- India filter bar -->
+    <div class="scr-filter-bar" id="scr-filter-india" style="display:none">
+      <label>Signal:
+        <select id="scr-india-action" onchange="DASH_SCR.filter()">
+          <option value="all">All Signals</option>
+          <option value="BUY">BUY only</option>
+          <option value="HOLD">HOLD only</option>
+          <option value="REDUCE">REDUCE only</option>
+        </select>
+      </label>
+      <label>Sector:
+        <select id="scr-india-sector" onchange="DASH_SCR.filter()">
+          <option value="all">All Sectors</option>
+        </select>
+      </label>
+      <label>Min Score:
+        <input type="number" id="scr-india-min-score" value="0" min="0" max="87" style="width:52px"
+          oninput="DASH_SCR.filter()">
+      </label>
+      <span id="scr-india-count" style="font-size:12px;color:var(--text-dim);margin-left:auto"></span>
+    </div>
+
     <!-- Status -->
     <div id="scr-status" style="color:#778;font-size:13px;margin-bottom:10px"></div>
 
-    <!-- Table -->
-    <div class="tab-section" style="padding:0;overflow-x:auto">
+    <!-- US Table -->
+    <div id="scr-panel-us" class="tab-section" style="padding:0;overflow-x:auto">
       <table id="scr-table">
         <thead>
           <tr>
@@ -974,9 +1008,55 @@
           </tr>
         </thead>
         <tbody id="scr-tbody">
-          <tr><td colspan="9" style="text-align:center;color:var(--text-dim);padding:30px">
+          <tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:30px">
             Click <strong style="color:#00d4aa">🔍 SCREENER</strong> to load — runs Tue &amp; Sat after US close
           </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- India Table -->
+    <div id="scr-panel-india" style="display:none;overflow-x:auto">
+      <table id="scr-india-table" style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr>
+            <th class="sortable" data-inscrcol="tk" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">TICKER</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">PRICE ₹</th>
+            <th class="sortable" data-inscrcol="sector" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">SECTOR</th>
+            <th class="sortable sort-desc" data-inscrcol="score" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">SCORE ▾</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">ACTION</th>
+            <th class="sortable" data-inscrcol="rsi" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">RSI</th>
+            <th class="sortable" data-inscrcol="v200" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">vs 200MA</th>
+            <th class="sortable" data-inscrcol="rs" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">RS/NSEI</th>
+            <th class="sortable" data-inscrcol="rng" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">52W%</th>
+            <th class="sortable" data-inscrcol="vsMean" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">vsMEAN</th>
+          </tr>
+        </thead>
+        <tbody id="scr-india-tbody">
+          <tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:30px">Loading India universe…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Macro / Commodities Panel -->
+    <div id="scr-panel-macro" style="display:none">
+      <table id="scr-macro-table" style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">ASSET</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">CATEGORY</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">PRICE</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">SCORE</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">ACTION</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">RSI</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">vs 200MA</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">RS/SPY</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">52W%</th>
+            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">vsMEAN</th>
+          </tr>
+        </thead>
+        <tbody id="scr-macro-tbody">
+          <tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:30px">Loading macro data…</td></tr>
         </tbody>
       </table>
     </div>
@@ -2763,13 +2843,15 @@ const DASH = (() => {
   const DASH_SCR = (() => {
     let _data = null;
     let _loaded = false;
-    let _sort = { col: 'score', dir: -1 };
+    let _sort      = { col: 'score', dir: -1 };
+    let _sortIndia = { col: 'score', dir: -1 };
+    let _market = 'us';
 
     function scoreColor(s) {
-      return s >= 68 ? '#00d4aa' : s >= 40 ? '#ffaa00' : '#ff5c5c';  // Model C
+      return s >= 68 ? '#00d4aa' : s >= 40 ? '#ffaa00' : '#ff5c5c';
     }
     function actionBadge(a) {
-      const c = a === 'BUY' ? '#00d4aa' : a === 'HOLD' ? '#ffaa00' : '#ff5c5c';
+      const c  = a === 'BUY' ? '#00d4aa' : a === 'HOLD' ? '#ffaa00' : '#ff5c5c';
       const bg = a === 'BUY' ? 'rgba(0,212,170,.15)' : a === 'HOLD' ? 'rgba(255,170,0,.15)' : 'rgba(255,92,92,.15)';
       return `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;color:${c};background:${bg}">${a}</span>`;
     }
@@ -2783,37 +2865,60 @@ const DASH = (() => {
         `<span class="scr-badge ${ix === 'SP500' ? 'scr-sp' : 'scr-ndx'}">${ix}</span>`
       ).join('');
     }
+    function regimeBadge(regime, label) {
+      const c  = regime === 'BULL' ? '#00d4aa' : '#ff5c5c';
+      const bg = regime === 'BULL' ? 'rgba(0,212,170,.15)' : 'rgba(255,92,92,.15)';
+      return `<span style="padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;color:${c};background:${bg}">${label}: ${regime}</span>`;
+    }
 
-    function render() {
+    function switchMarket() {
+      _market = document.getElementById('scr-market').value;
+      document.getElementById('scr-panel-us').style.display    = _market === 'us'    ? '' : 'none';
+      document.getElementById('scr-panel-india').style.display = _market === 'india' ? '' : 'none';
+      document.getElementById('scr-panel-macro').style.display = _market === 'macro' ? '' : 'none';
+      document.getElementById('scr-filter-us').style.display   = _market === 'us'    ? '' : 'none';
+      document.getElementById('scr-filter-india').style.display= _market === 'india' ? '' : 'none';
+      // Update regime badge
+      const badge = document.getElementById('scr-regime-badge');
+      if (_data) {
+        if (_market === 'us')    badge.innerHTML = regimeBadge(_data.regime || '?', 'US');
+        else if (_market === 'india') badge.innerHTML = regimeBadge(_data.india_regime || '?', 'India');
+        else badge.innerHTML = '';
+      }
+      filter();
+    }
+
+    function filter() {
       if (!_data) return;
+      if (_market === 'us')    renderUS();
+      else if (_market === 'india') renderIndia();
+      else renderMacro();
+    }
+
+    function renderUS() {
       const universe = document.getElementById('scr-universe').value;
       const action   = document.getElementById('scr-action').value;
       const minScore = parseInt(document.getElementById('scr-min-score').value) || 0;
 
-      let rows = _data.tickers.filter(r => {
+      let rows = (_data.tickers || []).filter(r => {
         if (universe !== 'all' && !(r.indices || []).includes(universe)) return false;
         if (action !== 'all' && r.action !== action) return false;
         if (r.score < minScore) return false;
         return true;
       });
-
-      // Sort
       rows.sort((a, b) => {
         const va = _sort.col === 'tk' ? a.tk : (a[_sort.col] ?? -999);
         const vb = _sort.col === 'tk' ? b.tk : (b[_sort.col] ?? -999);
         if (typeof va === 'string') return _sort.dir * va.localeCompare(vb);
         return _sort.dir * (va - vb);
       });
-
       document.getElementById('scr-count').textContent =
-        `Showing ${rows.length} of ${_data.tickers.length} tickers`;
-
+        `Showing ${rows.length} of ${(_data.tickers || []).length} tickers`;
       const tbody = document.getElementById('scr-tbody');
       if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
         return;
       }
-
       tbody.innerHTML = rows.map(r => `
         <tr>
           <td><strong style="color:#e0f0ff;font-family:monospace">${r.tk}</strong></td>
@@ -2829,6 +2934,77 @@ const DASH = (() => {
         </tr>`).join('');
     }
 
+    function renderIndia() {
+      const action   = document.getElementById('scr-india-action').value;
+      const sector   = document.getElementById('scr-india-sector').value;
+      const minScore = parseInt(document.getElementById('scr-india-min-score').value) || 0;
+
+      let rows = (_data.india_tickers || []).filter(r => {
+        if (action !== 'all' && r.action !== action) return false;
+        if (sector !== 'all' && (r.sector || 'Unknown') !== sector) return false;
+        if (r.score < minScore) return false;
+        return true;
+      });
+      rows.sort((a, b) => {
+        const va = _sortIndia.col === 'tk' ? a.tk : (a[_sortIndia.col] ?? -999);
+        const vb = _sortIndia.col === 'tk' ? b.tk : (b[_sortIndia.col] ?? -999);
+        if (typeof va === 'string') return _sortIndia.dir * va.localeCompare(vb);
+        return _sortIndia.dir * (va - vb);
+      });
+      document.getElementById('scr-india-count').textContent =
+        `Showing ${rows.length} of ${(_data.india_tickers || []).length} stocks`;
+      const tbody = document.getElementById('scr-india-tbody');
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 10px"><strong style="color:#e0f0ff;font-family:monospace">${r.tk}</strong></td>
+          <td style="padding:6px 10px;color:#aaa;font-size:11px">${r.px != null ? '₹' + r.px.toLocaleString('en-IN', {maximumFractionDigits:2}) : '—'}</td>
+          <td style="padding:6px 10px;color:#778;font-size:11px">${r.sector || '—'}</td>
+          <td style="padding:6px 10px"><strong style="color:${scoreColor(r.score)}">${r.score}</strong></td>
+          <td style="padding:6px 10px">${actionBadge(r.action)}</td>
+          <td style="padding:6px 10px;color:${r.rsi < 30 ? '#00d4aa' : r.rsi > 70 ? '#ff5c5c' : '#e8eaf0'}">${r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
+          <td style="padding:6px 10px">${signed(r.v200)}</td>
+          <td style="padding:6px 10px">${signed(r.rs)}</td>
+          <td style="padding:6px 10px;color:#b0c8e0">${r.rng != null ? r.rng + '%' : '—'}</td>
+          <td style="padding:6px 10px">${signed(r.vsMean)}</td>
+        </tr>`).join('');
+    }
+
+    function renderMacro() {
+      const rows = _data.commodities || [];
+      const tbody = document.getElementById('scr-macro-tbody');
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No macro data available</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px 10px">
+            <strong style="color:#e0f0ff">${r.label || r.tk}</strong>
+            <div style="font-size:10px;color:#556;font-family:monospace">${r.tk}</div>
+          </td>
+          <td style="padding:8px 10px;color:#778;font-size:11px">${r.category || '—'}</td>
+          <td style="padding:8px 10px;color:#e8eaf0">${r.px != null ? r.px.toLocaleString(undefined,{maximumFractionDigits:2}) : '—'}</td>
+          <td style="padding:8px 10px"><strong style="color:${scoreColor(r.score)}">${r.score}</strong></td>
+          <td style="padding:8px 10px">${actionBadge(r.action)}</td>
+          <td style="padding:8px 10px;color:${r.rsi < 30 ? '#00d4aa' : r.rsi > 70 ? '#ff5c5c' : '#e8eaf0'}">${r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
+          <td style="padding:8px 10px">${signed(r.v200)}</td>
+          <td style="padding:8px 10px">${signed(r.rs)}</td>
+          <td style="padding:8px 10px;color:#b0c8e0">${r.rng != null ? r.rng + '%' : '—'}</td>
+          <td style="padding:8px 10px">${signed(r.vsMean)}</td>
+        </tr>`).join('');
+    }
+
+    function populateIndiaSectors() {
+      const sectors = [...new Set((_data.india_tickers || []).map(r => r.sector || 'Unknown').filter(Boolean))].sort();
+      const sel = document.getElementById('scr-india-sector');
+      sel.innerHTML = '<option value="all">All Sectors</option>' +
+        sectors.map(s => `<option value="${s}">${s}</option>`).join('');
+    }
+
     async function init() {
       if (_loaded) return;
       _loaded = true;
@@ -2838,30 +3014,43 @@ const DASH = (() => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         _data = await res.json();
         document.getElementById('scr-status').textContent = '';
+        const us_count     = _data.count || 0;
+        const india_count  = _data.india_count || (_data.india_tickers || []).length;
+        const macro_count  = (_data.commodities || []).length;
         document.getElementById('scr-updated').textContent =
-          `Last screened: ${_data.generated || 'unknown'}  ·  Regime: ${_data.regime || '—'}  ·  ${_data.count || 0} tickers scored`;
-        render();
+          `Last screened: ${_data.generated || 'unknown'}  ·  US: ${us_count} tickers  ·  India: ${india_count} stocks  ·  Macro: ${macro_count} assets`;
+        populateIndiaSectors();
+        switchMarket(); // paint regime badge + render active panel
       } catch(e) {
-        _loaded = false; // allow retry on next tab click
+        _loaded = false;
         document.getElementById('scr-status').textContent =
-          '⚠ Screener data not yet available — runs daily at 01:00 UTC after US close. ' +
+          '⚠ Screener data not yet available — runs Tue & Sat at 01:00 UTC after US close. ' +
           'Trigger manually via GitHub Actions → screener workflow.';
       }
     }
 
-    // Sort on column header click
     function initSort() {
+      // US table sort
       document.querySelectorAll('#scr-table th.sortable').forEach(th => {
         th.addEventListener('click', () => {
           const col = th.dataset.scrcol;
           if (_sort.col === col) _sort.dir *= -1;
           else { _sort.col = col; _sort.dir = col === 'tk' ? 1 : -1; }
-          render();
+          renderUS();
+        });
+      });
+      // India table sort
+      document.querySelectorAll('[data-inscrcol]').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.inscrcol;
+          if (_sortIndia.col === col) _sortIndia.dir *= -1;
+          else { _sortIndia.col = col; _sortIndia.dir = col === 'tk' ? 1 : -1; }
+          renderIndia();
         });
       });
     }
 
-    return { init, filter: render, initSort };
+    return { init, filter, switchMarket, initSort };
   })();
 
   /* ── INIT ── */

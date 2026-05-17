@@ -29,6 +29,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 # Import scoring functions from signals_update.py
 from signals_update import fetch_history, score_ticker, MIN_BARS_FOR_SIGNALS, sma
+# Import India universe fetch from snapshot_eod.py (full NSE EQ series)
+from snapshot_eod import get_india_tickers as _get_nse_tickers
 
 OUT_SCREENER = ROOT / "data" / "processed" / "screener.json"
 
@@ -87,51 +89,14 @@ def get_ndx100_tickers() -> tuple[list[str], dict[str, str]]:
     return [], {}
 
 
-def get_nifty500_tickers() -> tuple[list[str], dict[str, str]]:
+def get_india_universe() -> tuple[list[str], dict[str, str]]:
     """
-    Returns (yf_symbols, sector_map) for Nifty 500 from NSE public CSV.
-    yf symbols are in the form SYMBOL.NS (e.g. RELIANCE.NS).
-    Falls back to Nifty 50 Wikipedia table if NSE CSV is unavailable.
+    Full NSE EQ-series universe (~2,000 stocks) via snapshot_eod.get_india_tickers().
+    Returns (yf_symbols, sector_map). Sector map is empty — yfinance fetch_sector()
+    is called per-ticker during scoring to populate it.
     """
-    # Primary: NSE official Nifty 500 index constituent CSV
-    NSE_URLS = [
-        "https://archives.nseindia.com/content/indices/ind_nifty500list.csv",
-        "https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv",
-    ]
-    for url in NSE_URLS:
-        try:
-            resp = requests.get(url, headers=_HEADERS, timeout=30)
-            resp.raise_for_status()
-            df = pd.read_csv(io.StringIO(resp.text))
-            # NSE CSV columns: Company Name, Industry, Symbol, Series, ISIN Code
-            sym_col = next((c for c in df.columns if "symbol" in c.lower()), None)
-            ind_col = next((c for c in df.columns if "industry" in c.lower()), None)
-            if sym_col is None:
-                continue
-            symbols = [str(s).strip() for s in df[sym_col] if str(s).strip() and str(s).strip() != "nan"]
-            sectors = {}
-            if ind_col:
-                for s, ind in zip(df[sym_col], df[ind_col]):
-                    sectors[str(s).strip() + ".NS"] = str(ind).strip()
-            yf_syms = [s + ".NS" for s in symbols]
-            print(f"  Nifty 500: {len(yf_syms)} tickers from {url.split('//')[-1].split('/')[0]}")
-            return yf_syms, sectors
-        except Exception as e:
-            print(f"  WARN Nifty500 fetch from {url}: {e}", file=sys.stderr)
-
-    # Fallback: Nifty 50 from Wikipedia
-    try:
-        tables = _wiki_tables("https://en.wikipedia.org/wiki/NIFTY_50")
-        for t in tables:
-            sym_col = next((c for c in t.columns if "symbol" in c.lower() or "ticker" in c.lower()), None)
-            if sym_col:
-                syms = [str(s).strip() for s in t[sym_col] if isinstance(s, str) and s.strip()]
-                print(f"  WARN using Nifty 50 fallback ({len(syms)} tickers)", file=sys.stderr)
-                return [s + ".NS" for s in syms], {}
-    except Exception as e:
-        print(f"  WARN Nifty50 Wikipedia fallback failed: {e}", file=sys.stderr)
-
-    return [], {}
+    tickers = _get_nse_tickers()   # returns ['RELIANCE.NS', 'TCS.NS', ...]
+    return tickers, {}
 
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────
@@ -282,9 +247,9 @@ def main() -> int:
             print(f"  {sym:14s} → ERROR: {exc}", file=sys.stderr)
         time.sleep(0.3)
 
-    # ── Nifty 500 — India universe ────────────────────────────────────────────
-    print("\nFetching Nifty 500 universe…")
-    nifty500, nifty_sectors = get_nifty500_tickers()
+    # ── India full NSE EQ universe (~2,000 stocks) ────────────────────────────
+    print("\nFetching India NSE full universe…")
+    nifty500, nifty_sectors = get_india_universe()
 
     # India benchmark: Nifty 50 index
     print("Fetching Nifty 50 benchmark (^NSEI)…")

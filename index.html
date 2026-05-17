@@ -3104,31 +3104,30 @@ const DASH = (() => {
     setInterval(tickCountdowns, 1000);
     refresh();
     setInterval(refresh, REFRESH_MS);
-  }
-  document.addEventListener('DOMContentLoaded', init);
 
-  // ── Swipe to change tabs (mobile) ────────────────────────────────────────
-  (function() {
-    const TABS = ['portfolio','us','india','transactions','signals','screener'];
-    let _tx = 0, _ty = 0;
-    const mc = document.querySelector('.main-content') || document.body;
-    mc.addEventListener('touchstart', e => {
-      _tx = e.touches[0].clientX;
-      _ty = e.touches[0].clientY;
+    // ── Swipe tabs (mobile) ──────────────────────────────────────────────
+    const TAB_ORDER = ['portfolio','us','india','transactions','signals','screener'];
+    let _swipeX = 0, _swipeY = 0;
+    document.addEventListener('touchstart', e => {
+      _swipeX = e.touches[0].clientX;
+      _swipeY = e.touches[0].clientY;
     }, { passive: true });
-    mc.addEventListener('touchend', e => {
-      const dx = e.changedTouches[0].clientX - _tx;
-      const dy = e.changedTouches[0].clientY - _ty;
-      // Only horizontal swipes > 60px, not mostly vertical
-      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - _swipeX;
+      const dy = e.changedTouches[0].clientY - _swipeY;
+      if (Math.abs(dx) < 50) return;                  // too short
+      if (Math.abs(dy) > Math.abs(dx) * 0.8) return;  // mostly vertical
       const active = document.querySelector('.tab-button.active');
       if (!active) return;
-      const cur = TABS.indexOf(active.dataset.tab);
+      const cur = TAB_ORDER.indexOf(active.dataset.tab);
       if (cur === -1) return;
-      const next = dx < 0 ? Math.min(cur + 1, TABS.length - 1) : Math.max(cur - 1, 0);
-      if (next !== cur) switchTab(TABS[next]);
+      const next = dx < 0
+        ? Math.min(cur + 1, TAB_ORDER.length - 1)
+        : Math.max(cur - 1, 0);
+      if (next !== cur) switchTab(TAB_ORDER[next]);
     }, { passive: true });
-  })();
+  }
+  document.addEventListener('DOMContentLoaded', init);
 
   // public surface for inline handlers
   fsApply(); // restore saved font size on load

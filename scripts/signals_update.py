@@ -262,16 +262,50 @@ def main() -> int:
         except Exception as exc:
             print(f"ERROR scoring: {exc}", file=sys.stderr)
 
+    # ── Score India holdings ──────────────────────────────────────────────────
+    india_open = cost.get("india", {}).get("open", [])
+    india_out: dict[str, dict] = {}
+    seen_in_yf: dict[str, tuple] = {}
+
+    if india_open:
+        print(f"Scoring {len(india_open)} India holdings…")
+        for pos in india_open:
+            tk  = pos["tk"]
+            yfs = pos.get("yf", tk + ".NS")
+            print(f"  {tk:16s} ({yfs})…", end=" ")
+
+            if yfs not in seen_in_yf:
+                seen_in_yf[yfs] = fetch_history(yfs) or ()
+
+            result = seen_in_yf[yfs]
+            if not result:
+                print("no data")
+                continue
+
+            ts, cl, vol = result
+            if len(cl) < MIN_BARS_FOR_SIGNALS:
+                print(f"only {len(cl)} bars — skip", file=sys.stderr)
+                continue
+
+            try:
+                res = score_ticker(ts, cl, vol, spy_cl)
+                res["sector"] = fetch_sector(yfs)
+                india_out[tk] = res
+                print(f"score={res['score']} [{res['action']}]  RSI={res['rsi']}  vs200={res['v200']:+.1f}%")
+            except Exception as exc:
+                print(f"ERROR: {exc}", file=sys.stderr)
+
     # ── Write output ──────────────────────────────────────────────────────────
     OUT_SIGNALS.parent.mkdir(parents=True, exist_ok=True)
     out = {
-        "generated": datetime.utcnow().isoformat() + "Z",
-        "regime":    regime,
-        "spy":       spy_summary,
-        "holdings":  holdings_out,
+        "generated":      datetime.utcnow().isoformat() + "Z",
+        "regime":         regime,
+        "spy":            spy_summary,
+        "holdings":       holdings_out,
+        "india_holdings": india_out,
     }
     OUT_SIGNALS.write_text(json.dumps(out, indent=2))
-    print(f"  wrote {OUT_SIGNALS.relative_to(ROOT)}  ({len(holdings_out)} holdings scored)")
+    print(f"  wrote {OUT_SIGNALS.relative_to(ROOT)}  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
     return 0
 
 

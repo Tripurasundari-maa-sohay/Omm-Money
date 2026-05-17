@@ -1,12 +1,15 @@
 """
 screener.py — full-universe signal screener for the portfolio dashboard.
 
-Scans the S&P 500 + Nasdaq 100 using the same scoring model as signals_update.py.
+Scans:
+  US:     S&P 500 + Nasdaq 100   (benchmark: SPY)
+  India:  Nifty 500              (benchmark: ^NSEI)
+  Macro:  Gold, Silver, Oil, Bonds, BTC
+
 Writes: data/processed/screener.json
 
-Runs daily via GitHub Actions (.github/workflows/screener.yml).
-The dashboard Screener tab reads this JSON — zero browser-side computation,
-zero Yahoo Finance fetches from the user's device.
+Runs via GitHub Actions (.github/workflows/screener.yml).
+The dashboard Screener tab reads this JSON — zero browser-side computation.
 """
 from __future__ import annotations
 
@@ -81,6 +84,53 @@ def get_ndx100_tickers() -> tuple[list[str], dict[str, str]]:
         return [], {}
     except Exception as e:
         print(f"WARN NDX100 fetch failed: {e}", file=sys.stderr)
+    return [], {}
+
+
+def get_nifty500_tickers() -> tuple[list[str], dict[str, str]]:
+    """
+    Returns (yf_symbols, sector_map) for Nifty 500 from NSE public CSV.
+    yf symbols are in the form SYMBOL.NS (e.g. RELIANCE.NS).
+    Falls back to Nifty 50 Wikipedia table if NSE CSV is unavailable.
+    """
+    # Primary: NSE official Nifty 500 index constituent CSV
+    NSE_URLS = [
+        "https://archives.nseindia.com/content/indices/ind_nifty500list.csv",
+        "https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv",
+    ]
+    for url in NSE_URLS:
+        try:
+            resp = requests.get(url, headers=_HEADERS, timeout=30)
+            resp.raise_for_status()
+            df = pd.read_csv(io.StringIO(resp.text))
+            # NSE CSV columns: Company Name, Industry, Symbol, Series, ISIN Code
+            sym_col = next((c for c in df.columns if "symbol" in c.lower()), None)
+            ind_col = next((c for c in df.columns if "industry" in c.lower()), None)
+            if sym_col is None:
+                continue
+            symbols = [str(s).strip() for s in df[sym_col] if str(s).strip() and str(s).strip() != "nan"]
+            sectors = {}
+            if ind_col:
+                for s, ind in zip(df[sym_col], df[ind_col]):
+                    sectors[str(s).strip() + ".NS"] = str(ind).strip()
+            yf_syms = [s + ".NS" for s in symbols]
+            print(f"  Nifty 500: {len(yf_syms)} tickers from {url.split('//')[-1].split('/')[0]}")
+            return yf_syms, sectors
+        except Exception as e:
+            print(f"  WARN Nifty500 fetch from {url}: {e}", file=sys.stderr)
+
+    # Fallback: Nifty 50 from Wikipedia
+    try:
+        tables = _wiki_tables("https://en.wikipedia.org/wiki/NIFTY_50")
+        for t in tables:
+            sym_col = next((c for c in t.columns if "symbol" in c.lower() or "ticker" in c.lower()), None)
+            if sym_col:
+                syms = [str(s).strip() for s in t[sym_col] if isinstance(s, str) and s.strip()]
+                print(f"  WARN using Nifty 50 fallback ({len(syms)} tickers)", file=sys.stderr)
+                return [s + ".NS" for s in syms], {}
+    except Exception as e:
+        print(f"  WARN Nifty50 Wikipedia fallback failed: {e}", file=sys.stderr)
+
     return [], {}
 
 
@@ -232,19 +282,98 @@ def main() -> int:
             print(f"  {sym:14s} → ERROR: {exc}", file=sys.stderr)
         time.sleep(0.3)
 
+    # ── Nifty 500 — India universe ────────────────────────────────────────────
+    print("\nFetching Nifty 500 universe…")
+    nifty500, nifty_sectors = get_nifty500_tickers()
+
+    # India benchmark: Nifty 50 index
+    print("Fetching Nifty 50 benchmark (^NSEI)…")
+    nsei_result = fetch_history("^NSEI")
+    nsei_cl = nsei_result[1] if nsei_result else None
+    nsei_summary: dict = {}
+    india_regime = "BULL"
+    if nsei_cl:
+        nsei_px    = nsei_cl[-1]
+        nsei_ma200 = sma(nsei_cl, 200)
+        nsei_pct   = round((nsei_px - nsei_ma200) / nsei_ma200 * 100, 1)
+        india_regime = "BULL" if nsei_px > nsei_ma200 else "BEAR"
+        nsei_summary = {"px": round(nsei_px, 2), "ma200": round(nsei_ma200, 2), "pct_vs_200": nsei_pct}
+        print(f"  ^NSEI → ₹{nsei_px:,.2f}  vs 200MA {nsei_pct:+.1f}%  [{india_regime}]")
+    else:
+        print("  WARN  ^NSEI fetch failed — India regime defaulting to BULL", file=sys.stderr)
+
+    india_results: list[dict] = []
+    india_errors = 0
+    india_total  = len(nifty500)
+
+    for i, yf_sym in enumerate(nifty500):
+        tk = yf_sym.replace(".NS", "")
+        try:
+            data = fetch_history(yf_sym)
+            if data is None:
+                india_errors += 1
+                time.sleep(0.2)
+                continue
+
+            ts, cl, vol = data
+            if len(cl) < MIN_BARS_FOR_SIGNALS:
+                india_errors += 1
+                time.sleep(0.2)
+                continue
+
+            res = score_ticker(ts, cl, vol, nsei_cl)   # RS vs Nifty, not SPY
+            # Override regime with India regime
+            res["regime"] = india_regime
+            if india_regime == "BEAR":
+                res["score"] = round(res["score"] * 0.75)
+                res["action"] = "BUY" if res["score"] >= 68 else "HOLD" if res["score"] >= 40 else "REDUCE"
+
+            print(f"[{i+1}/{india_total}] {tk:16s} → score={res['score']} [{res['action']}]  RSI={res['rsi']}")
+            india_results.append({
+                "tk":      tk,
+                "yf":      yf_sym,
+                "sector":  nifty_sectors.get(yf_sym, "Unknown"),
+                "score":   res["score"],
+                "action":  res["action"],
+                "rsi":     res["rsi"],
+                "v200":    res["v200"],
+                "rs":      res["rs"],
+                "rng":     res["rng"],
+                "vsMean":  res["vsMean"],
+                "regime":  res["regime"],
+                "px":      round(cl[-1], 2),
+            })
+        except Exception as exc:
+            print(f"[{i+1}/{india_total}] {tk} → ERROR: {exc}", file=sys.stderr)
+            india_errors += 1
+        time.sleep(0.25)
+
+    india_results.sort(key=lambda r: r["score"], reverse=True)
+    print(f"\nIndia done — {len(india_results)}/{india_total} scored  ({india_errors} skipped)")
+
     # ── Write output ──────────────────────────────────────────────────────────
     OUT_SCREENER.parent.mkdir(parents=True, exist_ok=True)
     out = {
-        "generated":   datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "regime":      regime,
-        "spy":         spy_summary,
-        "count":       succeeded,
-        "tickers":     results,
-        "commodities": commodities_out,
+        "generated":      datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        # US
+        "regime":         regime,
+        "spy":            spy_summary,
+        "count":          succeeded,
+        "tickers":        results,
+        # India
+        "india_regime":   india_regime,
+        "nsei":           nsei_summary,
+        "india_count":    len(india_results),
+        "india_tickers":  india_results,
+        # Macro
+        "commodities":    commodities_out,
     }
     OUT_SCREENER.write_text(json.dumps(out, indent=2))
     print(
-        f"\nDone — {succeeded}/{total} scored  ({errors} skipped/errored)\n"
+        f"\nDone.\n"
+        f"  US:     {succeeded}/{total} scored  ({errors} skipped)\n"
+        f"  India:  {len(india_results)}/{india_total} scored  ({india_errors} skipped)\n"
+        f"  Macro:  {len(commodities_out)} commodities\n"
         f"Wrote {OUT_SCREENER.relative_to(ROOT)}"
     )
     return 0

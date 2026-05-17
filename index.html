@@ -3052,6 +3052,7 @@ const DASH = (() => {
 
     return { init, filter, switchMarket, initSort };
   })();
+  window.DASH_SCR = DASH_SCR;  // expose to global scope for inline onchange handlers
 
   /* ── INIT ── */
   function init() {

@@ -384,7 +384,7 @@
   .sig-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;transition:border-color .2s}
   .sig-card:hover{border-color:var(--accent-b)}
   .sig-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
-  .sig-ticker{color:var(--accent-g);font-weight:700;font-size:14px;font-family:Monaco,monospace}
+  .sig-ticker{color:var(--accent-b);font-weight:700;font-size:14px;font-family:Monaco,monospace}
   .sig-name{color:var(--text-dim);font-size:10px;margin-top:2px}
   .sig-badge{padding:3px 10px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.5px}
   .sig-badge.BUY{background:rgba(0,212,170,.15);color:var(--accent-g);border:1px solid var(--accent-g)}
@@ -2949,7 +2949,7 @@ const DASH = (() => {
       const barCol = scoreBarColor(res.score);
       const barW   = Math.min(100, res.score);
       return `<tr>
-        <td><span style="color:#00d4aa;font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:#4a5068;font-size:10px">${name}</span></td>
+        <td><span style="color:var(--accent-b);font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:var(--text-dim);font-size:10px">${name}</span></td>
         <td style="color:#8892aa;font-size:11px">${res.sector || '—'}</td>
         <td>
           <span style="font-weight:700;font-family:Monaco,monospace;color:${barCol}">${prv ? '●●' : res.score}</span>
@@ -2968,8 +2968,8 @@ const DASH = (() => {
     }).join('');
 
     html += missing.map(h =>
-      `<tr><td><span style="color:#00d4aa;font-weight:700;font-family:Monaco,monospace">${h.tk}</span><br><span style="color:#4a5068;font-size:10px">${h.name||''}</span></td>`
-      + `<td colspan="12" style="color:#4a5068;font-size:11px">Data unavailable</td></tr>`
+      `<tr><td><span style="color:var(--accent-b);font-weight:700;font-family:Monaco,monospace">${h.tk}</span><br><span style="color:var(--text-dim);font-size:10px">${h.name||''}</span></td>`
+      + `<td colspan="12" style="color:var(--text-dim);font-size:11px">Data unavailable</td></tr>`
     ).join('');
 
     tbody.innerHTML = html || '<tr><td colspan="12" class="sig-loading">No signal data available.</td></tr>';
@@ -3035,7 +3035,7 @@ const DASH = (() => {
     const scoreBarColor = s => s >= 68 ? '#00d4aa' : s >= 40 ? '#ffaa00' : '#ff5c5c';  // Model C
     const rowHtml = rows.map(({ sym, name, res }) => {
       if (!res) return `<tr>
-        <td><span style="color:#00d4aa;font-weight:700;font-family:Monaco,monospace">${sym}</span></td>
+        <td><span style="color:var(--accent-b);font-weight:700;font-family:Monaco,monospace">${sym}</span></td>
         <td colspan="11" style="color:#ff5c5c;font-size:11px">⚠ Fetch failed</td></tr>`;
       const rsiCol = (res.rsi < 30 || res.rsi > 73) ? 'color:#ff5c5c' : '';
       const v200sign = res.v200 >= 0 ? '+' : '';
@@ -3044,7 +3044,7 @@ const DASH = (() => {
       const macdOk = res.sc.macd > 0, volOk = res.sc.vol > 0, isBull = res.regime === 'BULL';
       const barCol = scoreBarColor(res.score), barW = Math.min(100, res.score);
       return `<tr>
-        <td><span style="color:#00d4aa;font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:#4a5068;font-size:10px">${name}</span></td>
+        <td><span style="color:var(--accent-b);font-weight:700;font-family:Monaco,monospace">${sym}</span><br><span style="color:var(--text-dim);font-size:10px">${name}</span></td>
         <td><span style="font-weight:700;font-family:Monaco,monospace;color:${barCol}">${prv?'●●':res.score}</span>
             <div class="sig-score-bar" style="width:${prv?0:barW}%;background:${barCol}"></div></td>
         <td><span class="sig-badge ${res.action}">${res.action}</span></td>
@@ -3226,12 +3226,12 @@ const DASH = (() => {
         `Showing ${rows.length} of ${(_data.tickers || []).length} tickers`;
       const tbody = document.getElementById('scr-tbody');
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:20px">No results match filters</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(r => `
         <tr>
-          <td><strong style="color:#e0f0ff;font-family:monospace">${r.tk}</strong></td>
+          <td><strong style="color:var(--accent-b);font-family:monospace">${r.tk}</strong></td>
           <td style="color:#778;font-size:11px">${r.sector || '—'}</td>
           <td>${indexBadges(r.indices)}</td>
           <td><strong style="color:${scoreColor(r.score)}">${r.score}</strong></td>
@@ -3265,12 +3265,12 @@ const DASH = (() => {
         `Showing ${rows.length} of ${(_data.india_tickers || []).length} stocks`;
       const tbody = document.getElementById('scr-india-tbody');
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No results match filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:20px">No results match filters</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(r => `
         <tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:6px 10px"><strong style="color:#e0f0ff;font-family:monospace">${r.tk}</strong></td>
+          <td style="padding:6px 10px"><strong style="color:var(--accent-b);font-family:monospace">${r.tk}</strong></td>
           <td style="padding:6px 10px;color:#aaa;font-size:11px">${r.px != null ? '₹' + r.px.toLocaleString('en-IN', {maximumFractionDigits:2}) : '—'}</td>
           <td style="padding:6px 10px;color:#778;font-size:11px">${r.sector || '—'}</td>
           <td style="padding:6px 10px"><strong style="color:${scoreColor(r.score)}">${r.score}</strong></td>
@@ -3287,14 +3287,14 @@ const DASH = (() => {
       const rows = _data.commodities || [];
       const tbody = document.getElementById('scr-macro-tbody');
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#556;padding:20px">No macro data available</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:20px">No macro data available</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(r => `
         <tr style="border-bottom:1px solid var(--border)">
           <td style="padding:8px 10px">
-            <strong style="color:#e0f0ff">${r.label || r.tk}</strong>
-            <div style="font-size:10px;color:#556;font-family:monospace">${r.tk}</div>
+            <strong style="color:var(--accent-b)">${r.label || r.tk}</strong>
+            <div style="font-size:10px;color:var(--text-dim);font-family:monospace">${r.tk}</div>
           </td>
           <td style="padding:8px 10px;color:#778;font-size:11px">${r.category || '—'}</td>
           <td style="padding:8px 10px;color:#e8eaf0">${r.px != null ? r.px.toLocaleString(undefined,{maximumFractionDigits:2}) : '—'}</td>

@@ -687,14 +687,14 @@
       <div class="metrics-grid">
         <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading pv" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card" style="display:flex;align-items:stretch;gap:0">
-          <div style="flex:1;min-width:0">
+        <div class="metric-card" style="flex-direction:row;align-items:stretch;gap:0">
+          <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:0">
             <label>TODAY'S P&amp;L</label>
             <div class="mval loading pv" id="in-day-pl">…</div>
             <div class="mchg pv" id="in-day-pl-pct">--</div>
           </div>
-          <div style="width:1px;background:var(--border);margin:6px 10px"></div>
-          <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;flex-shrink:0"></div>
+          <div style="width:1px;background:var(--border);margin:4px 10px;flex-shrink:0"></div>
+          <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:5px;flex-shrink:0"></div>
         </div>
       </div>
     </div>

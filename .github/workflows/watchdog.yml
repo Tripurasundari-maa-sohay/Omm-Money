@@ -44,7 +44,7 @@ jobs:
               ts  = datetime.fromisoformat(generated.replace("Z", "+00:00"))
               age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
               print(f"Data age: {age:.1f} min  (generated: {generated})")
-              stale = age > 3
+              stale = age > 12  # 12 min threshold — avoids overlap with 15-min schedule
           except Exception as e:
               print(f"Could not read prices file: {e} — treating as stale")
               stale = True
@@ -80,7 +80,7 @@ jobs:
           if [[ -n "$(git diff --cached --name-only)" ]]; then
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
-            git commit -m "data: watchdog heal $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "data: watchdog heal $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
             for attempt in 1 2 3; do
               git pull --rebase origin main && git push && break
               echo "push attempt $attempt failed — retrying…"

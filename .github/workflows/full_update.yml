@@ -5,22 +5,21 @@ on:
     - cron: "*/15 4-10 * * 1-5"    # India market hours  04:00–10:59 UTC (9:30–4:30 IST)
     - cron: "*/15 13-20 * * 1-5"   # US market hours     13:00–20:59 UTC (9:00–4:59 ET)
   workflow_dispatch:                  # manual trigger (works any time)
-  push:
-    branches: [main]
-    paths:
-      - "data/holdings_cost.json"    # new position added → fetch prices immediately
+  # NOTE: push trigger REMOVED — it caused a cascade loop:
+  #   workflow commits holdings_cost.json → triggers itself → push conflict → failure.
+  #   Schedule + watchdog provide sufficient freshness without the loop.
 
 permissions:
-  contents: write                     # needed to commit the updated JSON back
+  contents: write
 
 concurrency:
   group: market-data
-  cancel-in-progress: true
+  cancel-in-progress: false   # don't cancel in-progress runs — let them finish
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 10              # increased: signals fetch 2y history for ~13 tickers
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -43,19 +42,15 @@ jobs:
 
       - name: Compute signals
         run: |
-          python scripts/signals_update.py
-          if [ $? -ne 0 ]; then
-            echo "::warning::signals_update.py failed — signals stale but prices still updated"
-          fi
+          python scripts/signals_update.py || echo "::warning::signals_update.py failed — signals stale but prices still updated"
 
       - name: Commit if changed
         run: |
-          # Stage data/processed AND holdings_cost.json (FX rate updated there)
           git add data/processed data/holdings_cost.json
           if [[ -n "$(git diff --cached --name-only)" ]]; then
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
-            git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
             for attempt in 1 2 3; do
               git pull --rebase origin main && git push && break
               echo "push attempt $attempt failed — retrying in 5s…"

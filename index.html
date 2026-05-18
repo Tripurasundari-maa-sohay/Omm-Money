@@ -1989,7 +1989,7 @@ const DASH = (() => {
         setIndexChange('nasdaq-change', nq.change, nq.change_pct);
       }
       setText('usa-time', 'Updated: ' + new Date(usa.timestamp).toLocaleTimeString());
-      setText('snp-time', 'Market: ' + usa.status);
+      setText('snp-time', 'Market: ' + liveMarketStatus('America/New_York', 9, 30, 16, 0));
     }
     if (ind) {
       applyMarketStatus('india-status', ind.status);
@@ -2006,7 +2006,7 @@ const DASH = (() => {
         setIndexChange('sensex-change', sx.change, sx.change_pct);
       }
       setText('india-time', 'Updated: ' + new Date(ind.timestamp).toLocaleTimeString());
-      setText('nifty-time', 'Market: ' + ind.status);
+      setText('nifty-time', 'Market: ' + liveMarketStatus('Asia/Kolkata', 9, 15, 15, 30));
     }
   }
   function fmtHMS(ms){ if (ms<0) ms=0; const s=Math.floor(ms/1000), h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
@@ -2038,10 +2038,21 @@ const DASH = (() => {
       lblEl.textContent = 'OPENS IN'; valEl.textContent = fmtHMS(t-now); valEl.classList.add('warn');
     }
   }
+  function liveMarketStatus(tz, openH, openM, closeH, closeM) {
+    const now = tzNow(tz);
+    const wd = now.getDay();
+    if (wd === 0 || wd === 6) return 'CLOSED';
+    const mins = now.getHours()*60 + now.getMinutes();
+    if (mins >= openH*60+openM && mins < closeH*60+closeM) return 'OPEN';
+    return 'CLOSED';
+  }
   function tickCountdowns(){
     setText('update-time', new Date().toLocaleTimeString());
     updateCountdown('usa',   'America/New_York', 9, 30, 16, 0);
     updateCountdown('india', 'Asia/Kolkata',     9, 15, 15, 30);
+    // Override badge with client-side calc (more reliable than stale JSON)
+    applyMarketStatus('usa-status',   liveMarketStatus('America/New_York', 9, 30, 16, 0));
+    applyMarketStatus('india-status', liveMarketStatus('Asia/Kolkata',     9, 15, 15, 30));
   }
 
   /* ── 6. TAB SWITCHING + UI HANDLERS ─────────────────────────── */

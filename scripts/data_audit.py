@@ -8,6 +8,8 @@ and writes data/processed/audit.json.
 Exits with code 0 always (informational — does not break CI pipeline).
 """
 
+from __future__ import annotations
+
 import sys
 import json
 import time

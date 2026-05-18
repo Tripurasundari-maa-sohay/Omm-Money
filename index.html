@@ -1419,7 +1419,7 @@ const DASH = (() => {
       const regions = [['🇺🇸 US', usDayUSD], ['🇮🇳 India', indDayUSD]];
       brkEl.innerHTML = regions.map(([label, pl]) => `
         <div style="white-space:nowrap">
-          <div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${label}</div>
+          <div style="font-size:9px;color:var(--text-pri);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${label}</div>
           <div style="font-size:11px;font-weight:700;font-family:Monaco,monospace;${pl>=0?'color:var(--gain)':'color:var(--loss)'}">${sign(pl)}${usd(Math.abs(pl))}</div>
         </div>`).join('');
     }
@@ -1471,7 +1471,7 @@ const DASH = (() => {
         .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]))
         .map(([broker, pl]) => `
           <div style="white-space:nowrap">
-            <div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${broker}</div>
+            <div style="font-size:9px;color:var(--text-pri);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${broker}</div>
             <div style="font-size:11px;font-weight:700;font-family:Monaco,monospace;${pl>=0?'color:var(--gain)':'color:var(--loss)'}">${sign(pl)}${inr(pl)}</div>
           </div>`).join('');
     }

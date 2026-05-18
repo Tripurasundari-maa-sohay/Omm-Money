@@ -3,7 +3,7 @@ name: Refresh market data (indices + holdings + signals)
 on:
   schedule:
     - cron: "*/15 4-10 * * 1-5"    # India market hours  04:00–10:59 UTC (9:30–4:30 IST)
-    - cron: "*/15 13-20 * * 1-5"   # US market hours     13:00–20:59 UTC (9:00–4:59 ET)
+    - cron: "*/15 13-21 * * 1-5"   # US market hours     13:00–21:59 UTC (9:00–5:59 ET, covers EST winter)
   workflow_dispatch:                  # manual trigger (works any time)
   # NOTE: push trigger REMOVED — it caused a cascade loop:
   #   workflow commits holdings_cost.json → triggers itself → push conflict → failure.
@@ -43,6 +43,9 @@ jobs:
       - name: Compute signals
         run: |
           python scripts/signals_update.py || echo "::warning::signals_update.py failed — signals stale but prices still updated"
+
+      - name: Audit + self-heal data
+        run: python scripts/data_audit.py || echo "audit script error — skipping"
 
       - name: Commit if changed
         run: |

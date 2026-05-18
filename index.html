@@ -399,7 +399,10 @@
         <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Show demo data">👁</button>
       </div>
       <div class="banner-right">
-        <div>Clock: <span id="update-time">--:--:--</span></div>
+        <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+          <span id="audit-badge" style="display:none;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;color:#ff5c5c;background:rgba(255,92,92,.15);border:1px solid #ff5c5c;cursor:help" title="">&#9888; DATA</span>
+          <span>Clock: <span id="update-time">--:--:--</span></span>
+        </div>
         <div id="fetch-status">Loading…</div>
       </div>
     </div>
@@ -1176,14 +1179,16 @@ const DASH = (() => {
   };
 
   async function load() {
-    const [cost, prices, indices] = await Promise.all([
+    const [cost, prices, indices, audit] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
-      fetchJSON('data/processed/market_indices.json')
+      fetchJSON('data/processed/market_indices.json'),
+      fetchJSON('data/processed/audit.json')
     ]);
     if (cost)    S.cost = cost;
     if (prices)  S.prices = prices.prices || {};
     if (indices) S.indices = indices;
+    if (audit)   S.audit = audit;
 
     // freshness banner
     const status = $('fetch-status');
@@ -1197,6 +1202,18 @@ const DASH = (() => {
     } else {
       status.textContent = '● Live · last update ' + new Date().toLocaleTimeString();
       status.className = 'live';
+    }
+
+    // audit badge — only shown when human action is needed
+    if (audit && audit.status === 'alert' && audit.alerts && audit.alerts.length) {
+      const badge = document.getElementById('audit-badge');
+      if (badge) {
+        badge.style.display = '';
+        badge.title = audit.alerts.map(a => a.message).join('\n');
+      }
+    } else {
+      const badge = document.getElementById('audit-badge');
+      if (badge) badge.style.display = 'none';
     }
   }
 

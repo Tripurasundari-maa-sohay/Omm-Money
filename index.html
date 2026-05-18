@@ -1122,7 +1122,7 @@ const DASH = (() => {
      ui.market   : tx filter (ALL/US/INDIA)
   ══════════════════════════════════════════════════════════════════ */
   const S = {
-    cost: null, prices: {}, indices: null, view: null, charts: {},
+    cost: null, prices: {}, demoPrices: {}, indices: null, view: null, charts: {},
     ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '' },
     _realView: null
   };
@@ -1197,7 +1197,7 @@ const DASH = (() => {
       fetchJSON('data/processed/audit.json'),
     ]);
     if (cost)    S.cost = cost;
-    if (prices)  S.prices = prices.prices || {};
+    if (prices)  { S.prices = prices.prices || {}; S.demoPrices = prices.demo_prices || {}; }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;
 
@@ -2134,45 +2134,67 @@ const DASH = (() => {
   /* ── Privacy toggle ───────────────────────────────────────────── */
   /* ── DEMO VIEW BUILDER ───────────────────────────────────────────── */
   function buildDemoView() {
-    const fx = 95.0;
-    function uPos(tk, name, cls, qty, avg, ltp) {
-      const mv=qty*ltp, cost=qty*avg, upl=(ltp-avg)*qty, uplNet=upl;
-      const pc=+(ltp*0.997).toFixed(2), dayPL=(ltp-pc)*qty;
-      const ret=cost?(uplNet/cost)*100:0, dayPct=(ltp-pc)/pc*100;
-      return {tk,name,cls,qty,avg,ltp,pc,live:true,mv,upl,uplNet,exitFee:-5,dayPL,dayPct,ret,cost,houseMoney:false,wt:0};
+    const fx  = (S.indices && S.indices.fx_rate) || 95.0;
+    const dp  = S.demoPrices || {};   // real LTPs fetched by market_data.py
+
+    // Real LTP if available, else hardcoded fallback (used before first demo fetch)
+    function lp(tk, fb) { return (dp[tk] && dp[tk].ltp) ? dp[tk].ltp : fb; }
+    // Real prev_close if available, else estimate from LTP
+    function pc(tk, ltp) { return (dp[tk] && dp[tk].pc) ? dp[tk].pc : +(ltp * 0.9985).toFixed(4); }
+
+    // factor < 1 → entry below LTP → unrealised profit
+    // factor > 1 → entry above LTP → unrealised loss
+    function uPos(tk, name, cls, qty, factor, fb_ltp) {
+      const ltp = lp(tk, fb_ltp);
+      const avg = +(ltp * factor).toFixed(2);
+      const prc = pc(tk, ltp);
+      const mv = qty*ltp, cost = qty*avg;
+      const upl = (ltp-avg)*qty, uplNet = upl - 5;
+      const dayPL = (ltp-prc)*qty;
+      const dayPct = prc ? (ltp-prc)/prc*100 : 0;
+      const ret = cost ? (uplNet/cost)*100 : 0;
+      return {tk,name,cls,qty,avg,ltp,pc:prc,live:!!dp[tk],mv,upl,uplNet,exitFee:-5,dayPL,dayPct,ret,cost,houseMoney:false,wt:0};
     }
-    function iPos(tk, name, qty, avg, ltp, broker) {
-      const mv=qty*ltp, cost=qty*avg, upl=(ltp-avg)*qty, uplNet=upl;
-      const pc=+(ltp*0.997).toFixed(2), dayPL=(ltp-pc)*qty;
-      const ret=cost?(uplNet/cost)*100:0, dayPct=(ltp-pc)/pc*100;
-      return {tk,name,cls:'Stock',qty,avg,ltp,pc,live:true,mv,upl,uplNet,exitFee:0,dayPL,dayPct,ret,cost,houseMoney:false,broker,exch:'NSE',yf:tk+'.NS',wt:0};
+    function iPos(tk, name, qty, factor, fb_ltp, broker) {
+      const ltp = lp(tk, fb_ltp);
+      const avg = +(ltp * factor).toFixed(2);
+      const prc = pc(tk, ltp);
+      const mv = qty*ltp, cost = qty*avg;
+      const upl = (ltp-avg)*qty, uplNet = upl;
+      const dayPL = (ltp-prc)*qty;
+      const dayPct = prc ? (ltp-prc)/prc*100 : 0;
+      const ret = cost ? (uplNet/cost)*100 : 0;
+      return {tk,name,cls:'Stock',qty,avg,ltp,pc:prc,live:!!dp[tk],mv,upl,uplNet,exitFee:0,dayPL,dayPct,ret,cost,houseMoney:false,broker,exch:'NSE',yf:tk+'.NS',wt:0};
     }
 
+    // ── US portfolio: 12 positions (8 profit, 4 loss) ──
+    // factor × LTP = entry price — recalculates automatically with real LTPs
     const usOpenRaw = [
-      uPos('AAPL','Apple Inc.','Stock',8,172,211),
-      uPos('MSFT','Microsoft Corp.','Stock',5,385,441),
-      uPos('NVDA','NVIDIA Corp.','Stock',3,620,875),
-      uPos('AMZN','Amazon.com Inc.','Stock',10,178,196),
-      uPos('META','Meta Platforms','Stock',4,490,578),
-      uPos('GOOG','Alphabet Inc. C','Stock',12,168,172),
-      uPos('JPM','JPMorgan Chase','Stock',9,188,204),
-      uPos('COST','Costco Wholesale','Stock',2,820,888),
-      uPos('EWY','iShares MSCI S.Korea ETF','ETF',35,62,59),
+      uPos('AAPL', 'Apple Inc.',            'Stock',  8, 0.78, 215),  // +28%
+      uPos('MSFT', 'Microsoft Corp.',        'Stock',  5, 0.82, 450),  // +22%
+      uPos('NVDA', 'NVIDIA Corp.',           'Stock',  3, 0.55, 900),  // +82%
+      uPos('AMZN', 'Amazon.com Inc.',        'Stock', 10, 0.84, 200),  // +19%
+      uPos('META', 'Meta Platforms',         'Stock',  4, 0.86, 590),  // +16%
+      uPos('GOOGL','Alphabet Inc.',          'Stock', 12, 0.92, 172),  // +9%
+      uPos('JPM',  'JPMorgan Chase',         'Stock',  9, 0.88, 250),  // +14%
+      uPos('VTI',  'Vanguard Total Market', 'ETF',   20, 0.91, 270),  // +10%
+      uPos('QQQ',  'Invesco Nasdaq-100',    'ETF',   10, 0.89, 470),  // +12%
+      uPos('EWY',  'iShares MSCI S.Korea',  'ETF',   35, 1.05,  55),  // -5%
+      uPos('T',    'AT&T Inc.',             'Stock', 80, 1.12,  18),  // -11%
+      uPos('BA',   'Boeing Co.',            'Stock',  6, 1.18, 165),  // -15%
     ];
     const usMV = usOpenRaw.reduce((s,p)=>s+p.mv,0);
     usOpenRaw.forEach(p=>p.wt=usMV?(p.mv/usMV)*100:0);
 
     const usClosed = [
-      {tk:'TSLA',name:'Tesla Inc.',cls:'Stock',income:0,costs:-12,realised:340,ret_pct:18.2},
-      {tk:'NFLX',name:'Netflix Inc.',cls:'Stock',income:0,costs:-8,realised:215,ret_pct:11.4},
-      {tk:'AMD',name:'Advanced Micro Devices',cls:'Stock',income:0,costs:-10,realised:180,ret_pct:9.8},
-      {tk:'DIS',name:'Walt Disney Co.',cls:'Stock',income:0,costs:-7,realised:-95,ret_pct:-5.2},
-      {tk:'BABA',name:'Alibaba Group',cls:'Stock',income:0,costs:-9,realised:-210,ret_pct:-14.1},
-      {tk:'F',name:'Ford Motor Co.',cls:'Stock',income:12,costs:-5,realised:45,ret_pct:3.2},
-      {tk:'SBUX',name:'Starbucks Corp.',cls:'Stock',income:8,costs:-6,realised:88,ret_pct:6.1},
-      {tk:'BA',name:'Boeing Co.',cls:'Stock',income:0,costs:-8,realised:120,ret_pct:8.4},
-      {tk:'GE',name:'GE Aerospace',cls:'Stock',income:0,costs:-6,realised:67,ret_pct:4.8},
-      {tk:'T',name:'AT&T Inc.',cls:'Stock',income:22,costs:-4,realised:-32,ret_pct:-2.1},
+      {tk:'TSLA',name:'Tesla Inc.',        cls:'Stock',income:0, costs:-12,realised: 340,ret_pct: 18.2},
+      {tk:'NFLX',name:'Netflix Inc.',      cls:'Stock',income:0, costs: -8,realised: 215,ret_pct: 11.4},
+      {tk:'AMD', name:'AMD Inc.',          cls:'Stock',income:0, costs:-10,realised: 180,ret_pct:  9.8},
+      {tk:'DIS', name:'Walt Disney Co.',   cls:'Stock',income:0, costs: -7,realised: -95,ret_pct: -5.2},
+      {tk:'BABA',name:'Alibaba Group',     cls:'Stock',income:0, costs: -9,realised:-210,ret_pct:-14.1},
+      {tk:'SBUX',name:'Starbucks Corp.',   cls:'Stock',income:8, costs: -6,realised:  88,ret_pct:  6.1},
+      {tk:'GE',  name:'GE Aerospace',      cls:'Stock',income:0, costs: -6,realised:  67,ret_pct:  4.8},
+      {tk:'F',   name:'Ford Motor Co.',    cls:'Stock',income:12,costs: -5,realised:  45,ret_pct:  3.2},
     ];
 
     const us = {
@@ -2199,15 +2221,20 @@ const DASH = (() => {
     us.realisedPL=usClosed.reduce((s,p)=>s+p.realised,0);
     us.dividends=42;
 
+    // ── India portfolio: 12 positions (8 profit, 4 loss) ──
     const inOpenRaw = [
-      iPos('RELIANCE','Reliance Industries',15,2850,3120,'Zerodha'),
-      iPos('TCS','Tata Consultancy Svcs',8,3580,3740,'Zerodha'),
-      iPos('HDFCBANK','HDFC Bank Ltd.',20,1640,1710,'Motilal Oswal'),
-      iPos('INFY','Infosys Ltd.',25,1520,1580,'Motilal Oswal'),
-      iPos('ICICIBANK','ICICI Bank Ltd.',30,1080,1145,'Motilal Oswal'),
-      iPos('BAJFINANCE','Bajaj Finance Ltd.',5,7200,7850,'Zerodha'),
-      iPos('WIPRO','Wipro Ltd.',50,460,445,'Groww'),
-      iPos('ADANIPORTS','Adani Ports & SEZ',18,1280,1350,'Groww'),
+      iPos('RELIANCE',  'Reliance Industries',   15, 0.87, 2800, 'Zerodha'),         // +15%
+      iPos('TCS',       'Tata Consultancy Svcs',  8, 0.91, 3600, 'Zerodha'),         // +10%
+      iPos('HDFCBANK',  'HDFC Bank Ltd.',         20, 0.88, 1700, 'Motilal Oswal'),  // +14%
+      iPos('ICICIBANK', 'ICICI Bank Ltd.',         30, 0.82, 1300, 'Motilal Oswal'), // +22%
+      iPos('BAJFINANCE','Bajaj Finance Ltd.',       5, 0.78, 8000, 'Motilal Oswal'), // +28%
+      iPos('NIFTYBEES', 'Nifty BeES ETF',         100, 0.89,  280, 'Zerodha'),       // +12% ETF
+      iPos('GOLDBEES',  'Gold BeES ETF',           80, 0.94,  130, 'Zerodha'),       // +6%  ETF
+      iPos('ADANIPORTS','Adani Ports & SEZ',       18, 0.86, 1400, 'Groww'),         // +16%
+      iPos('INFY',      'Infosys Ltd.',            25, 1.08, 1550, 'Groww'),          // -7%
+      iPos('WIPRO',     'Wipro Ltd.',              50, 1.12,  450, 'Groww'),          // -11%
+      iPos('TITAN',     'Titan Company Ltd.',      10, 1.06, 3400, 'Groww'),          // -6%
+      iPos('MARUTI',    'Maruti Suzuki India',      3, 1.09,12500, 'Groww'),          // -8%
     ];
     const inMV=inOpenRaw.reduce((s,p)=>s+p.mv,0);
     inOpenRaw.forEach(p=>p.wt=inMV?(p.mv/inMV)*100:0);
@@ -2234,29 +2261,30 @@ const DASH = (() => {
   }
 
   function buildDemoSIG() {
-    // Fake but plausible signal results for demo US tickers
     function sig(score, rsi, v200, rs, rng, vsMean, sector) {
       const action = score>=68?'BUY':score>=40?'HOLD':'REDUCE';
-      const sc = { vs200: v200>5?12:v200>0?8:v200>-5?4:0,
-                   cross: score>=60?8:0, wk: score>=55?10:0,
-                   rsi: rsi<30?12:rsi<50?10:rsi<65?8:rsi<73?5:0,
-                   macd: score>=58?10:0, vol: score>=52?8:0,
-                   rs: rs>10?15:rs>3?10:rs>0?6:rs>-5?3:0,
-                   w52: rng>75?8:rng>50?6:rng>25?3:0,
-                   val: vsMean<-10?10:vsMean<0?8:vsMean<10?6:vsMean<20?3:0 };
-      return { score, action, regime:'BULL', rsi, v200, rs, rng, vsMean,
-               px:0, hi52:0, lo52:0, sc, sector };
+      const sc = { vs200:v200>5?12:v200>0?8:v200>-5?4:0,
+                   cross:score>=60?8:0, wk:score>=55?10:0,
+                   rsi:rsi<30?12:rsi<50?10:rsi<65?8:rsi<73?5:0,
+                   macd:score>=58?10:0, vol:score>=52?8:0,
+                   rs:rs>10?15:rs>3?10:rs>0?6:rs>-5?3:0,
+                   w52:rng>75?8:rng>50?6:rng>25?3:0,
+                   val:vsMean<-10?10:vsMean<0?8:vsMean<10?6:vsMean<20?3:0 };
+      return {score,action,regime:'BULL',rsi,v200,rs,rng,vsMean,px:0,hi52:0,lo52:0,sc,sector};
     }
     return {
-      AAPL: sig(74, 48.2,  12.3,  5.8, 68,  -3.1, 'Technology'),
-      MSFT: sig(71, 52.1,   8.7,  4.2, 72,  -1.8, 'Technology'),
-      NVDA: sig(82, 61.4,  41.1, 18.7, 85,   8.4, 'Technology'),
-      AMZN: sig(68, 49.8,  10.1,  3.1, 61,  -1.2, 'Consumer Cyclical'),
-      META: sig(76, 55.3,  17.9,  9.4, 74,   4.2, 'Communication Services'),
-      GOOG: sig(58, 50.2,   2.4,  0.8, 48,  -6.1, 'Communication Services'),
-      JPM:  sig(63, 47.1,   8.5,  2.1, 55,  -4.3, 'Financial Services'),
-      COST: sig(65, 53.8,   8.3,  1.9, 62,  -2.8, 'Consumer Defensive'),
-      EWY:  sig(35, 41.2,  -4.8, -6.3, 32,  -8.2, 'ETF'),
+      AAPL:  sig(74, 48.2,  12.3,  5.8, 68,  -3.1, 'Technology'),
+      MSFT:  sig(71, 52.1,   8.7,  4.2, 72,  -1.8, 'Technology'),
+      NVDA:  sig(82, 61.4,  41.1, 18.7, 85,   8.4, 'Technology'),
+      AMZN:  sig(68, 49.8,  10.1,  3.1, 61,  -1.2, 'Consumer Cyclical'),
+      META:  sig(76, 55.3,  17.9,  9.4, 74,   4.2, 'Communication Services'),
+      GOOGL: sig(58, 50.2,   2.4,  0.8, 48,  -6.1, 'Communication Services'),
+      JPM:   sig(63, 47.1,   8.5,  2.1, 55,  -4.3, 'Financial Services'),
+      VTI:   sig(66, 49.5,   9.1,  2.8, 63,  -2.4, 'ETF'),
+      QQQ:   sig(69, 51.8,  11.2,  4.1, 67,  -1.9, 'ETF'),
+      EWY:   sig(35, 41.2,  -4.8, -6.3, 32,  -8.2, 'ETF'),
+      T:     sig(42, 44.8,   1.2, -3.1, 38,  -5.8, 'Communication Services'),
+      BA:    sig(31, 38.4,  -8.1, -9.2, 22, -12.4, 'Industrials'),
     };
   }
 

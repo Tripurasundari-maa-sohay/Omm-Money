@@ -1895,8 +1895,12 @@ const DASH = (() => {
                         '#44ddaa','#ffcc44','#ff4488','#88ccff','#ccff88',
                         '#ff8844','#4488ff','#88ff44','#cc44ff'];
   Chart.register(ChartDataLabels);
-  Chart.defaults.color = '#8892aa';
-  Chart.defaults.borderColor = '#2a2a4a';
+  function applyChartDefaults() {
+    const _d = getComputedStyle(document.documentElement);
+    Chart.defaults.color       = _d.getPropertyValue('--text-sec').trim() || '#8892aa';
+    Chart.defaults.borderColor = _d.getPropertyValue('--border').trim()   || '#2a2a4a';
+  }
+  applyChartDefaults();
   Chart.defaults.font.family = "'Inter', system-ui, Arial, sans-serif";
   Chart.defaults.font.size = 11;
   // Disable datalabels globally — opt in per chart
@@ -1915,6 +1919,12 @@ const DASH = (() => {
     if (!S.view) return;
     const { us, india } = S.view;
     const COLORS = CHART_COLORS; // alias — use CHART_COLORS directly in new code
+    const _thc = getComputedStyle(document.documentElement);
+    const _gainC  = _thc.getPropertyValue('--gain').trim()  || '#00d4aa';
+    const _lossC  = _thc.getPropertyValue('--loss').trim()  || '#ff5c5c';
+    const _gridC  = _thc.getPropertyValue('--border').trim()|| '#2a2a4a';
+    const _secC   = _thc.getPropertyValue('--text-sec').trim()||'#8892aa';
+    const _priC   = _thc.getPropertyValue('--text-pri').trim()||'#e8eaf0';
     const m = us.monthly;
     const cashBase = us.cashInfusion || 0;
     const dualLabel = ctx => {
@@ -2011,14 +2021,14 @@ const DASH = (() => {
       mkChart('rolling-alpha-chart', { type:'bar',
         data: { labels: m.labels,
           datasets: [{ label:'3m Rolling Alpha (%)', data: alphaData,
-            backgroundColor: alphaData.map(v=>v===null?'transparent':v>=0?'rgba(0,212,170,.6)':'rgba(255,92,92,.6)'),
-            borderColor:     alphaData.map(v=>v===null?'transparent':v>=0?'#00d4aa':'#ff5c5c'),
+            backgroundColor: alphaData.map(v=>v===null?'transparent':v>=0?_gainC+'99':_lossC+'99'),
+            borderColor:     alphaData.map(v=>v===null?'transparent':v>=0?_gainC:_lossC),
             borderWidth:1 }]
         },
         options: { responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>ctx.parsed.y===null?'':sign(ctx.parsed.y)+ctx.parsed.y.toFixed(2)+'%' } } },
-          scales:{ x:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa'} },
-                   y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>sign(v)+v+'%'} } } }
+          scales:{ x:{ grid:{color:_gridC}, ticks:{color:_secC} },
+                   y:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>sign(v)+v+'%'} } } }
       });
     }
 
@@ -2032,13 +2042,13 @@ const DASH = (() => {
       mkChart('drawdown-chart', { type:'line',
         data: { labels: m.labels,
           datasets: [{ label:'Drawdown %', data: dd,
-            borderColor:'#ff5c5c', backgroundColor:'rgba(255,92,92,.15)',
+            borderColor:_lossC, backgroundColor:_lossC+'26',
             fill:true, tension:0.3, pointRadius:0 }]
         },
         options: { responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false} },
-          scales:{ x:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa'} },
-                   y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>v.toFixed(1)+'%'} } } }
+          scales:{ x:{ grid:{color:_gridC}, ticks:{color:_secC} },
+                   y:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>v.toFixed(1)+'%'} } } }
       });
     }
 
@@ -2060,8 +2070,8 @@ const DASH = (() => {
         },
         options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${usd(ctx.parsed.x)} (${pct(ctx.parsed.x/us.mv*100)})` } } },
-          scales:{ x:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>usd(v)} },
-                   y:{ grid:{display:false}, ticks:{color:'#e8eaf0',font:{size:10}} } } }
+          scales:{ x:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>usd(v)} },
+                   y:{ grid:{display:false}, ticks:{color:_priC,font:{size:10}} } } }
       });
     }
 
@@ -2092,14 +2102,14 @@ const DASH = (() => {
         data: { labels: wf.map(p=>p.tk||'?'),
           datasets:[{ label:'Realised P&L ($)',
             data: wf.map(p=>+(p.realised||0).toFixed(2)),
-            backgroundColor: wf.map(p=>(p.realised||0)>=0?'rgba(0,212,170,.7)':'rgba(255,92,92,.7)'),
-            borderColor:     wf.map(p=>(p.realised||0)>=0?'#00d4aa':'#ff5c5c'),
+            backgroundColor: wf.map(p=>(p.realised||0)>=0?_gainC+'bb':_lossC+'bb'),
+            borderColor:     wf.map(p=>(p.realised||0)>=0?_gainC:_lossC),
             borderWidth:1 }]
         },
         options:{ responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>sign(ctx.parsed.y)+usd(Math.abs(ctx.parsed.y)) } } },
-          scales:{ x:{ grid:{display:false}, ticks:{color:'#e8eaf0',font:{size:10}} },
-                   y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>sign(v)+usd(Math.abs(v))} } } }
+          scales:{ x:{ grid:{display:false}, ticks:{color:_priC,font:{size:10}} },
+                   y:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>sign(v)+usd(Math.abs(v))} } } }
       });
     }
 
@@ -2131,7 +2141,7 @@ const DASH = (() => {
         labels: usSorted.map(p=>p.tk),
         datasets: [{ data: usSorted.map(p=>Math.round(p.mv)),
           backgroundColor: COLORS.slice(0, usSorted.length),
-          borderColor: '#0f0f1a', borderWidth: 2 }]
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false,
         plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
@@ -2141,12 +2151,6 @@ const DASH = (() => {
 
     // US return % horizontal bar
     const usRetSorted = [...usOpen].sort((a,b)=>b.ret-a.ret);
-    const _cs = getComputedStyle(document.documentElement);
-    const _gainC  = _cs.getPropertyValue('--gain').trim()  || '#00d4aa';
-    const _lossC  = _cs.getPropertyValue('--loss').trim()  || '#ff5c5c';
-    const _gridC  = _cs.getPropertyValue('--border').trim()|| '#2a2a4a';
-    const _secC   = _cs.getPropertyValue('--text-sec').trim()||'#8892aa';
-    const _priC   = _cs.getPropertyValue('--text-pri').trim()||'#e8eaf0';
     // dynamic height: at least 32px per bar, min 300
     const _uplH = Math.max(300, usRetSorted.length * 32);
     const _uplWrap = document.getElementById('us-upl-wrap');
@@ -2329,6 +2333,7 @@ const DASH = (() => {
     themeApply();
     // Re-render all charts so getComputedStyle picks up new theme CSS vars
     requestAnimationFrame(() => {
+      applyChartDefaults();
       safe(renderCharts,      'charts-theme');
       safe(renderIndiaCharts, 'india-charts-theme');
     });
@@ -2607,7 +2612,7 @@ const DASH = (() => {
         labels:   sorted.map(p=>p.tk),
         datasets: [{ data: sorted.map(p=>+p.mv.toFixed(0)),
           backgroundColor: COLORS.slice(0, sorted.length),
-          borderColor: '#0f0f1a', borderWidth: 2 }]
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
         plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
@@ -2662,7 +2667,7 @@ const DASH = (() => {
         labels: brokers,
         datasets: [{ data: brokers.map(b=>Math.round(brokerMap[b])),
           backgroundColor: brokerColors.slice(0, brokers.length),
-          borderColor: '#0f0f1a', borderWidth: 2 }]
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
         plugins: { legend:{ position:'bottom', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
@@ -2686,12 +2691,18 @@ const DASH = (() => {
     });
     const bpLabels = Object.keys(brokerPL);
     if (bpLabels.length) {
+      const _bThc  = getComputedStyle(document.documentElement);
+      const _bGainC = _bThc.getPropertyValue('--gain').trim()  || '#00d4aa';
+      const _bLossC = _bThc.getPropertyValue('--loss').trim()  || '#ff5c5c';
+      const _bGridC = _bThc.getPropertyValue('--border').trim()|| '#2a2a4a';
+      const _bSecC  = _bThc.getPropertyValue('--text-sec').trim()||'#8892aa';
+      const _bPriC  = _bThc.getPropertyValue('--text-pri').trim()||'#e8eaf0';
       mkChart('india-broker-pl-chart', { type:'bar',
         data: { labels: bpLabels,
           datasets:[{ label:'Unrealised P&L (₹)',
             data: bpLabels.map(b=>Math.round(brokerPL[b].upl)),
-            backgroundColor: bpLabels.map(b=>brokerPL[b].upl>=0?'rgba(0,212,170,.7)':'rgba(255,92,92,.7)'),
-            borderColor:     bpLabels.map(b=>brokerPL[b].upl>=0?'#00d4aa':'#ff5c5c'),
+            backgroundColor: bpLabels.map(b=>brokerPL[b].upl>=0?_bGainC+'bb':_bLossC+'bb'),
+            borderColor:     bpLabels.map(b=>brokerPL[b].upl>=0?_bGainC:_bLossC),
             borderWidth:1 }]
         },
         options:{ responsive:true, maintainAspectRatio:false, clip:false,
@@ -2699,10 +2710,10 @@ const DASH = (() => {
             tooltip:{ callbacks:{ label: ctx=>`${sign(ctx.parsed.y)}${inr(Math.abs(ctx.parsed.y))}` } },
             datalabels:{ display:true, anchor:'end', align:'top',
               formatter: v => S.ui.privacy ? '●●' : `${sign(v)}${inr(Math.abs(v))}`,
-              color: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? '#00d4aa' : '#ff5c5c',
+              color: ctx => ctx.dataset.data[ctx.dataIndex] >= 0 ? _bGainC : _bLossC,
               font:{ size:10, weight:'700' } } },
-          scales:{ x:{ grid:{display:false}, ticks:{color:'#e8eaf0'} },
-                   y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>S.ui.privacy?'***':inr(v)} } } }
+          scales:{ x:{ grid:{display:false}, ticks:{color:_bPriC} },
+                   y:{ grid:{color:_bGridC}, ticks:{color:_bSecC, callback:v=>S.ui.privacy?'***':inr(v)} } } }
       });
     }
 

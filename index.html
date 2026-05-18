@@ -2724,7 +2724,7 @@ const DASH = (() => {
     const tbody = $('sig-holdings-tbody');
     if (!tbody) return;
     const prv = S.ui.privacy;
-    const holdings = S.cost ? (S.cost.us.open || []) : [];
+    const holdings = S.view ? (S.view.us.open || []) : [];  // use S.view — correct in both real and demo mode
 
     // Build rows: holdings that have signal data
     const rows = [];
@@ -2932,6 +2932,7 @@ const DASH = (() => {
 
   async function loadSignals() {
     // Called on tab switch — shows spinner only on very first load.
+    if (S.ui.demo) return;   // demo mode: keep demo SIG data, don't overwrite
     if (SIG.fetching) return;
     SIG.fetching = true;
     const tbody = $('sig-holdings-tbody');
@@ -2952,6 +2953,7 @@ const DASH = (() => {
   async function refreshSignals() {
     // Called by refresh() every 5 min — silently checks for updated JSON.
     // Only re-renders if Actions pushed a new generated timestamp.
+    if (S.ui.demo) return;   // demo mode: keep demo SIG data, don't overwrite
     if (SIG.fetching) return;
     SIG.fetching = true;
     const data = await fetchJSON('data/processed/stock_signals.json');

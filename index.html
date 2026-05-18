@@ -2319,6 +2319,11 @@ const DASH = (() => {
   function toggleTheme() {
     _theme = THEMES[(THEMES.indexOf(_theme) + 1) % THEMES.length];
     themeApply();
+    // Re-render all charts so getComputedStyle picks up new theme CSS vars
+    requestAnimationFrame(() => {
+      safe(renderCharts,      'charts-theme');
+      safe(renderIndiaCharts, 'india-charts-theme');
+    });
   }
 
   /* ── Currency toggle ──────────────────────────────────────────── */

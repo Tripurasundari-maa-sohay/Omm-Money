@@ -1476,13 +1476,22 @@ const DASH = (() => {
     const total      = positions.length;
     const staleCount = positions.filter(p => !p.live).length;
 
-    // Check if data is >15 min old during market hours
+    // Check if data is >5 min old during market hours
     const asOf = S.view && S.view.asOf ? new Date(S.view.asOf) : null;
     const ageMin = asOf ? (Date.now() - asOf.getTime()) / 60000 : 999;
     const usStatus = S.indices?.usa_market?.status;
     const inStatus = S.indices?.india_market?.status;
-    const marketOpen = usStatus === 'OPEN' || inStatus === 'OPEN';
-    const dataStale  = marketOpen && ageMin > 5; // watchdog heals at >3min, warn at >5min
+    // Client-side wall-clock fallback — don't trust server status if data is stale
+    const _now = new Date();
+    const _et  = new Date(_now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const _ist = new Date(_now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const _etMins  = _et.getHours() * 60 + _et.getMinutes();
+    const _istMins = _ist.getHours() * 60 + _ist.getMinutes();
+    const _etWd  = _et.getDay(), _istWd = _ist.getDay();
+    const usMarketOpenNow  = _etWd >= 1 && _etWd <= 5 && _etMins >= 570 && _etMins < 960;   // 9:30–4:00 ET
+    const indMarketOpenNow = _istWd >= 1 && _istWd <= 5 && _istMins >= 555 && _istMins < 930; // 9:15–3:30 IST
+    const marketOpen = usStatus === 'OPEN' || inStatus === 'OPEN' || usMarketOpenNow || indMarketOpenNow;
+    const dataStale  = marketOpen && ageMin > 5;
 
     if (dataStale) {
       badge.textContent = `⚠ DATA ${Math.round(ageMin)}m OLD`;

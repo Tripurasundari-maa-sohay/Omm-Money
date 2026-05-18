@@ -687,7 +687,15 @@
       <div class="metrics-grid">
         <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading pv" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label>TODAY'S P&amp;L</label><div class="mval loading pv" id="in-day-pl">…</div><div class="mchg pv" id="in-day-pl-pct">--</div></div>
+        <div class="metric-card" style="display:flex;align-items:stretch;gap:0">
+          <div style="flex:1;min-width:0">
+            <label>TODAY'S P&amp;L</label>
+            <div class="mval loading pv" id="in-day-pl">…</div>
+            <div class="mchg pv" id="in-day-pl-pct">--</div>
+          </div>
+          <div style="width:1px;background:var(--border);margin:6px 10px"></div>
+          <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;flex-shrink:0"></div>
+        </div>
       </div>
     </div>
 
@@ -1430,6 +1438,23 @@ const DASH = (() => {
     setClass('in-day-pl', 'mval pv ' + pn(ind.dayPL));
     setText('in-day-pl-pct', sign(ind.dayPct) + pct(ind.dayPct));
     setClass('in-day-pl-pct', 'mchg pv ' + pn(ind.dayPct));
+
+    // Broker-wise daily P&L breakdown
+    const brkMap = {};
+    ind.open.forEach(p => {
+      const b = p.broker || 'Other';
+      brkMap[b] = (brkMap[b] || 0) + (p.dayPL || 0);
+    });
+    const el = $('in-day-broker-breakdown');
+    if (el && Object.keys(brkMap).length) {
+      el.innerHTML = Object.entries(brkMap)
+        .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]))
+        .map(([broker, pl]) => `
+          <div style="white-space:nowrap">
+            <div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${broker}</div>
+            <div style="font-size:11px;font-weight:700;font-family:Monaco,monospace;${pl>=0?'color:var(--gain)':'color:var(--loss)'}">${sign(pl)}${inr(pl)}</div>
+          </div>`).join('');
+    }
   }
 
   const US_SORT = { col: null, dir: 1 };

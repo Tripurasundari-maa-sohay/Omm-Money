@@ -1322,7 +1322,7 @@ const DASH = (() => {
     };
 
     // Last update timestamp from prices
-    const ts = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().pop();
+    const ts = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().shift(); // min = stalest price
     const anyLive = Object.keys(S.prices).length > 0;
 
     S.view = { fx, us, india, combined, asOf: ts || S.cost.as_of, anyLive };

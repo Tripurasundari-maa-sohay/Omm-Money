@@ -1,0 +1,63 @@
+{
+  "_note": "Demo portfolio — same schema as holdings_cost.json. Edit this file to change demo positions.",
+  "fx_inr_usd": 95.0,
+  "as_of": "2024-11-01",
+
+  "us": {
+    "cash": 1240.50,
+    "cash_infusion_itd": 15875,
+    "charges_breakdown": [],
+    "open": [
+      {"tk":"AAPL",  "yf":"AAPL",  "name":"Apple Inc.",          "cls":"Stock","qty": 8, "avg":168.50,"fm":"2024-03-15"},
+      {"tk":"MSFT",  "yf":"MSFT",  "name":"Microsoft Corp.",      "cls":"Stock","qty": 5, "avg":370.00,"fm":"2024-01-12"},
+      {"tk":"NVDA",  "yf":"NVDA",  "name":"NVIDIA Corp.",         "cls":"Stock","qty": 3, "avg":495.00,"fm":"2023-11-08"},
+      {"tk":"AMZN",  "yf":"AMZN",  "name":"Amazon.com Inc.",      "cls":"Stock","qty":10, "avg":168.00,"fm":"2024-02-20"},
+      {"tk":"META",  "yf":"META",  "name":"Meta Platforms Inc.",  "cls":"Stock","qty": 4, "avg":505.00,"fm":"2024-04-10"},
+      {"tk":"GOOGL", "yf":"GOOGL", "name":"Alphabet Inc.",        "cls":"Stock","qty":12, "avg":158.00,"fm":"2024-03-08"},
+      {"tk":"JPM",   "yf":"JPM",   "name":"JPMorgan Chase & Co.", "cls":"Stock","qty": 9, "avg":196.00,"fm":"2024-02-14"},
+      {"tk":"VTI",   "yf":"VTI",   "name":"Vanguard Total Market","cls":"ETF",  "qty":20, "avg":238.00,"fm":"2024-01-05"},
+      {"tk":"QQQ",   "yf":"QQQ",   "name":"Invesco Nasdaq-100",   "cls":"ETF",  "qty":10, "avg":418.00,"fm":"2024-01-05"},
+      {"tk":"EWY",   "yf":"EWY",   "name":"iShares MSCI S.Korea", "cls":"ETF",  "qty":35, "avg": 58.00,"fm":"2024-08-20"},
+      {"tk":"T",     "yf":"T",     "name":"AT&T Inc.",             "cls":"Stock","qty":80, "avg": 20.50,"fm":"2024-05-10"},
+      {"tk":"BA",    "yf":"BA",    "name":"Boeing Co.",            "cls":"Stock","qty": 6, "avg":205.00,"fm":"2024-01-18"}
+    ],
+    "closed": [
+      {"tk":"TSLA","name":"Tesla Inc.",              "cls":"Stock","income":0, "costs":-12,"realised": 340,"ret_pct": 18.2},
+      {"tk":"NFLX","name":"Netflix Inc.",            "cls":"Stock","income":0, "costs": -8,"realised": 215,"ret_pct": 11.4},
+      {"tk":"AMD", "name":"Advanced Micro Devices",  "cls":"Stock","income":0, "costs":-10,"realised": 180,"ret_pct":  9.8},
+      {"tk":"DIS", "name":"Walt Disney Co.",          "cls":"Stock","income":0, "costs": -7,"realised": -95,"ret_pct": -5.2},
+      {"tk":"BABA","name":"Alibaba Group Hldg.",     "cls":"Stock","income":0, "costs": -9,"realised":-210,"ret_pct":-14.1},
+      {"tk":"SBUX","name":"Starbucks Corp.",          "cls":"Stock","income":8, "costs": -6,"realised":  88,"ret_pct":  6.1},
+      {"tk":"GE",  "name":"GE Aerospace",             "cls":"Stock","income":0, "costs": -6,"realised":  67,"ret_pct":  4.8},
+      {"tk":"F",   "name":"Ford Motor Co.",           "cls":"Stock","income":12,"costs": -5,"realised":  45,"ret_pct":  3.2}
+    ],
+    "monthly": {
+      "labels":              ["Nov-25","Dec","Jan","Feb","Mar","Apr","May-26"],
+      "port_return_cum_pct": [0, -1.2, -3.4, -5.1, -8.2, -3.1,  4.8],
+      "snp_return_cum_pct":  [0, -0.8, -2.1, -4.3, -7.5, -1.8,  2.1],
+      "cash_deployed":       [10000, 12000, 14000, 16000, 16000, 16000, 16000],
+      "monthly_pl":          [0, -145, -264, -221, -391, 612, 742],
+      "monthly_cost":        [10000, 12000, 14000, 16000, 16000, 16000, 16000]
+    }
+  },
+
+  "india": {
+    "cash": 8500,
+    "cash_infusion_itd": 280000,
+    "open": [
+      {"tk":"RELIANCE",  "yf":"RELIANCE.NS",  "name":"Reliance Industries",  "cls":"Stock","qty":15,"avg":2435.00,"broker":"Zerodha",        "exch":"NSE","fm":"2024-02-10"},
+      {"tk":"TCS",       "yf":"TCS.NS",       "name":"Tata Consultancy Svcs","cls":"Stock","qty": 8,"avg":3640.00,"broker":"Zerodha",        "exch":"NSE","fm":"2024-01-15"},
+      {"tk":"HDFCBANK",  "yf":"HDFCBANK.NS",  "name":"HDFC Bank Ltd.",       "cls":"Stock","qty":20,"avg":1495.00,"broker":"Motilal Oswal",  "exch":"NSE","fm":"2024-03-05"},
+      {"tk":"ICICIBANK", "yf":"ICICIBANK.NS", "name":"ICICI Bank Ltd.",      "cls":"Stock","qty":30,"avg":1065.00,"broker":"Motilal Oswal",  "exch":"NSE","fm":"2024-01-20"},
+      {"tk":"BAJFINANCE","yf":"BAJFINANCE.NS","name":"Bajaj Finance Ltd.",    "cls":"Stock","qty": 5,"avg":6240.00,"broker":"Motilal Oswal",  "exch":"NSE","fm":"2023-12-12"},
+      {"tk":"NIFTYBEES", "yf":"NIFTYBEES.NS", "name":"Nifty BeES ETF",       "cls":"ETF",  "qty":100,"avg":238.00,"broker":"Zerodha",        "exch":"NSE","fm":"2024-01-08"},
+      {"tk":"GOLDBEES",  "yf":"GOLDBEES.NS",  "name":"Gold BeES ETF",        "cls":"ETF",  "qty": 80,"avg":122.00,"broker":"Zerodha",        "exch":"NSE","fm":"2024-02-18"},
+      {"tk":"ADANIPORTS","yf":"ADANIPORTS.NS","name":"Adani Ports & SEZ",    "cls":"Stock","qty":18,"avg":1285.00,"broker":"Groww",          "exch":"NSE","fm":"2024-03-22"},
+      {"tk":"INFY",      "yf":"INFY.NS",      "name":"Infosys Ltd.",          "cls":"Stock","qty":25,"avg":1685.00,"broker":"Groww",          "exch":"NSE","fm":"2024-05-14"},
+      {"tk":"WIPRO",     "yf":"WIPRO.NS",     "name":"Wipro Ltd.",            "cls":"Stock","qty":50,"avg": 504.00,"broker":"Groww",          "exch":"NSE","fm":"2024-06-10"},
+      {"tk":"TITAN",     "yf":"TITAN.NS",     "name":"Titan Company Ltd.",    "cls":"Stock","qty":10,"avg":3605.00,"broker":"Groww",          "exch":"NSE","fm":"2024-07-08"},
+      {"tk":"MARUTI",    "yf":"MARUTI.NS",    "name":"Maruti Suzuki India",   "cls":"Stock","qty": 3,"avg":12850.00,"broker":"Groww",         "exch":"NSE","fm":"2024-08-05"}
+    ],
+    "closed": []
+  }
+}

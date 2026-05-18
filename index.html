@@ -1122,7 +1122,8 @@ const DASH = (() => {
      ui.market   : tx filter (ALL/US/INDIA)
   ══════════════════════════════════════════════════════════════════ */
   const S = {
-    cost: null, prices: {}, demoPrices: {}, indices: null, view: null, charts: {},
+    cost: null, prices: {}, demoPrices: {}, demoCost: null,
+    indices: null, view: null, charts: {},
     ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '' },
     _realView: null
   };
@@ -1200,6 +1201,8 @@ const DASH = (() => {
     if (prices)  { S.prices = prices.prices || {}; S.demoPrices = prices.demo_prices || {}; }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;
+    // Load demo portfolio (data/demo_portfolio.json) for demo mode
+    fetchJSON('data/demo_portfolio.json').then(d => { if (d) S.demoCost = d; });
 
     // freshness banner
     const status = $('fetch-status');
@@ -2133,6 +2136,25 @@ const DASH = (() => {
 
   /* ── Privacy toggle ───────────────────────────────────────────── */
   /* ── DEMO VIEW BUILDER ───────────────────────────────────────────── */
+  // buildFromDemo: temporarily swaps S.cost + S.prices with demo equivalents,
+  // runs the real build() pipeline, captures S.view, then restores.
+  // Result: demo view is computed by the SAME enrichment/calculation logic as live data.
+  function buildFromDemo() {
+    if (!S.demoCost) return null;
+    const _demo = S.ui.demo, _cost = S.cost, _prices = S.prices;
+    S.ui.demo = false;       // allow build() to run (it skips when demo=true)
+    S.cost    = S.demoCost;
+    S.prices  = S.demoPrices;
+    build();
+    const demoView = S.view;
+    // Restore real state
+    S.ui.demo = _demo;
+    S.cost    = _cost;
+    S.prices  = _prices;
+    return demoView;
+  }
+
+  // Legacy inline builder — kept as fallback if demo_portfolio.json not yet loaded
   function buildDemoView() {
     const fx  = (S.indices && S.indices.fx_rate) || 95.0;
     const dp  = S.demoPrices || {};   // real LTPs fetched by market_data.py
@@ -2297,8 +2319,8 @@ const DASH = (() => {
       // Snapshot real state
       S._realView = S.view;
       S._realSIG  = { results: JSON.parse(JSON.stringify(SIG.results)), generatedAt: SIG.generatedAt, spy: SIG.spy ? { ...SIG.spy } : null };
-      // Inject demo data
-      S.view = buildDemoView();
+      // Build demo view — prefer file-driven pipeline, fallback to inline builder
+      S.view = buildFromDemo() || buildDemoView();
       const demoSig = buildDemoSIG();
       Object.keys(SIG.results).forEach(k => delete SIG.results[k]);
       Object.assign(SIG.results, demoSig);

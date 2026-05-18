@@ -7,6 +7,7 @@ name: Watchdog — auto-heal stale market data
 on:
   schedule:
     - cron: "*/5 4-10 * * 1-5"    # India hours  04:00–10:59 UTC
+    - cron: "*/5 11-12 * * 1-5"   # Bridge gap   11:00–12:59 UTC (7:00–8:59 ET pre-market)
     - cron: "*/5 13-21 * * 1-5"   # US hours     13:00–21:59 UTC (covers EST winter close 21:00 UTC)
   workflow_dispatch:                 # manual trigger for testing
 

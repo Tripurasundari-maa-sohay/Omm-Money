@@ -292,6 +292,44 @@ def update_fx_in_cost_basis(rate: float) -> None:
         print(f"  WARN  FX update failed: {exc}", file=sys.stderr)
 
 
+# ── DEMO TICKER PRICES ───────────────────────────────────────────────────
+# Fetched alongside real holdings so demo mode shows live LTPs.
+# Stored under "demo_prices" key — never mixed with real holdings prices.
+DEMO_US_TICKERS = [
+    ("AAPL","AAPL"), ("MSFT","MSFT"), ("NVDA","NVDA"), ("AMZN","AMZN"),
+    ("META","META"), ("GOOGL","GOOGL"), ("JPM","JPM"), ("VTI","VTI"),
+    ("QQQ","QQQ"), ("EWY","EWY"), ("T","T"), ("BA","BA"),
+]
+DEMO_IN_TICKERS = [
+    ("RELIANCE","RELIANCE.NS"), ("TCS","TCS.NS"), ("HDFCBANK","HDFCBANK.NS"),
+    ("INFY","INFY.NS"), ("ICICIBANK","ICICIBANK.NS"), ("BAJFINANCE","BAJFINANCE.NS"),
+    ("WIPRO","WIPRO.NS"), ("ADANIPORTS","ADANIPORTS.NS"),
+    ("NIFTYBEES","NIFTYBEES.NS"), ("GOLDBEES","GOLDBEES.NS"),
+    ("TITAN","TITAN.NS"), ("MARUTI","MARUTI.NS"),
+]
+
+def build_demo_prices() -> dict:
+    """Fetch live LTP + prev_close for demo portfolio tickers."""
+    demo: dict[str, dict] = {}
+    all_demo = DEMO_US_TICKERS + DEMO_IN_TICKERS
+    print(f"Fetching {len(all_demo)} demo ticker prices…")
+    for tk, yf_sym in all_demo:
+        try:
+            q = fetch_quote(yf_sym)
+            if q:
+                demo[tk] = {
+                    "ltp":   q["ltp"],
+                    "pc":    q["pc"],
+                    "as_of": datetime.utcnow().isoformat() + "Z",
+                }
+                print(f"  demo {tk:12s} → {q['ltp']:>12,.2f}")
+            else:
+                print(f"  demo {tk}: no price", file=sys.stderr)
+        except Exception as exc:
+            print(f"  demo {tk}: error {exc}", file=sys.stderr)
+    return demo
+
+
 # ── MAIN ─────────────────────────────────────────────────────────────────
 def main() -> int:
     OUT_INDICES.parent.mkdir(parents=True, exist_ok=True)
@@ -312,6 +350,7 @@ def main() -> int:
     if holdings.get("_write_skipped"):
         print(f"  SKIP  {OUT_HOLDINGS.relative_to(ROOT)} (insufficient price data)")
     else:
+        holdings["demo_prices"] = build_demo_prices()
         OUT_HOLDINGS.write_text(json.dumps(holdings, indent=2))
         print(f"  wrote {OUT_HOLDINGS.relative_to(ROOT)}")
     return 0

@@ -2080,7 +2080,7 @@ const DASH = (() => {
           borderColor:['#00d4aa','#f0b429','#ff5c5c','#445566'], borderWidth:2 }]
       },
       options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12 } },
+        plugins:{ legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
           tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.dataset.data[ctx.dataIndex]} holdings` } },
           datalabels:{ display:false } } }
     });
@@ -2134,7 +2134,7 @@ const DASH = (() => {
           borderColor: '#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false,
-        plugins: { legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
+        plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
           tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/us.mv*100)})`; } } },
           datalabels:{ display:false } } }
     });
@@ -2177,10 +2177,18 @@ const DASH = (() => {
   function lineOpts(extraTooltip={}){
     return {
       responsive:true, maintainAspectRatio:false, animation:{duration:400},
-      plugins:{ legend:{ position:'top', labels:{ color:'#8892aa', boxWidth:12 } },
-        tooltip:{ mode:'index', intersect:false, backgroundColor:'#16213e', borderColor:'#4f8ef7', borderWidth:1, ...extraTooltip } },
-      scales:{ x:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa'} },
-               y:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa',
+      plugins:{ legend:{ position:'top', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:6 } },
+        tooltip:{ mode:'index', intersect:false,
+          backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-card2').trim()||'#16213e',
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent-b').trim()||'#4f8ef7',
+          titleColor: getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0',
+          bodyColor:  getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim()||'#8892aa',
+          borderWidth:1, ...extraTooltip } },
+      scales:{
+        x:{ grid:{color:getComputedStyle(document.documentElement).getPropertyValue('--border').trim()||'#2a2a4a'},
+            ticks:{color:getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim()||'#8892aa'} },
+        y:{ grid:{color:getComputedStyle(document.documentElement).getPropertyValue('--border').trim()||'#2a2a4a'},
+            ticks:{color:getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim()||'#8892aa',
                    callback: v => S.ui.privacy ? '***' : v } } }
     };
   }
@@ -2602,7 +2610,7 @@ const DASH = (() => {
           borderColor: '#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
-        plugins: { legend:{ position:'right', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
+        plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
           tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${inr(v)} (${pct(v/ind.mv*100)})`; } } },
           datalabels:{ display:false } } }
     });
@@ -2657,7 +2665,7 @@ const DASH = (() => {
           borderColor: '#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
-        plugins: { legend:{ position:'bottom', labels:{ color:'#e8eaf0', boxWidth:12, font:{size:10} } },
+        plugins: { legend:{ position:'bottom', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
           tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${inr(v)} (${pct(v/brokerTotal*100)})`; } } },
           datalabels:{ display:false } } }
     });

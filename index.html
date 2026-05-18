@@ -751,7 +751,7 @@
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
-          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
+          <div id="us-upl-wrap" style="height:280px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
         </div>
       </div>
       <div style="margin-top:16px;">
@@ -2108,10 +2108,13 @@ const DASH = (() => {
       data.push(india.mv / S.view.fx);
       colors.push('rgba(255,68,170,.6)');
     }
+    const _aCs = getComputedStyle(document.documentElement);
+    const _aPri = _aCs.getPropertyValue('--text-pri').trim()||'#e8eaf0';
+    const _aBg  = _aCs.getPropertyValue('--bg-base').trim()||'#0f0f1a';
     mkChart('alloc-chart', { type:'doughnut',
-      data: { labels, datasets:[{ data:data.map(v=>Math.round(v)), backgroundColor:colors, borderColor:'#0f0f1a', borderWidth:2 }] },
+      data: { labels, datasets:[{ data:data.map(v=>Math.round(v)), backgroundColor:colors, borderColor:_aBg, borderWidth:2 }] },
       options: { responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'right', labels:{ color:'#8892aa', boxWidth:12 } },
+        plugins:{ legend:{ position:'right', labels:{ color:_aPri, boxWidth:14, font:{size:12}, padding:8 } },
                   tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; const tot=data.reduce((s,x)=>s+x,0); return `${ctx.label}: $${v.toLocaleString('en-US')} (${pct(v/tot*100)})`; } } },
                   datalabels:{ display:false } } }
     });
@@ -2134,20 +2137,32 @@ const DASH = (() => {
 
     // US return % horizontal bar
     const usRetSorted = [...usOpen].sort((a,b)=>b.ret-a.ret);
+    const _cs = getComputedStyle(document.documentElement);
+    const _gainC  = _cs.getPropertyValue('--gain').trim()  || '#00d4aa';
+    const _lossC  = _cs.getPropertyValue('--loss').trim()  || '#ff5c5c';
+    const _gridC  = _cs.getPropertyValue('--border').trim()|| '#2a2a4a';
+    const _secC   = _cs.getPropertyValue('--text-sec').trim()||'#8892aa';
+    const _priC   = _cs.getPropertyValue('--text-pri').trim()||'#e8eaf0';
+    // dynamic height: at least 30px per bar, min 300
+    const _uplH = Math.max(300, usRetSorted.length * 30);
+    const _uplWrap = document.getElementById('us-upl-wrap');
+    if (_uplWrap) _uplWrap.style.height = _uplH + 'px';
     mkChart('us-upl-chart', { type:'bar',
       data: {
         labels: usRetSorted.map(p=>p.tk),
         datasets: [{ label:'Return %',
           data: usRetSorted.map(p=>+p.ret.toFixed(2)),
-          backgroundColor: usRetSorted.map(p=>p.ret>=0?'rgba(0,212,170,.7)':'rgba(255,92,92,.7)'),
-          borderColor:     usRetSorted.map(p=>p.ret>=0?'#00d4aa':'#ff5c5c'),
+          backgroundColor: usRetSorted.map(p=>p.ret>=0?_gainC.replace(')',', .7)').replace('rgb','rgba'):'#ff5c5c99'),
+          borderColor:     usRetSorted.map(p=>p.ret>=0?_gainC:_lossC),
+          borderRadius: 3,
           borderWidth:1 }]
       },
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false},
           tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${ctx.parsed.x.toFixed(2)}%` } } },
-        scales:{ x:{ grid:{color:'#2a2a4a'}, ticks:{color:'#8892aa', callback:v=>`${v}%`} },
-                 y:{ grid:{display:false}, ticks:{color:'#e8eaf0',font:{size:10}} } } }
+        scales:{
+          x:{ grid:{color:_gridC}, ticks:{color:_secC, font:{size:11}, callback:v=>`${v}%`} },
+          y:{ grid:{display:false}, ticks:{color:_priC, font:{size:12}, crossAlign:'far'} } } }
     });
   }
   function lineOpts(extraTooltip={}){

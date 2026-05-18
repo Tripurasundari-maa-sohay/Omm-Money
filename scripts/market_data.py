@@ -44,7 +44,11 @@ INDICES = {
 
 # ── HELPERS ──────────────────────────────────────────────────────────────
 def market_status(market: str) -> str:
-    """OPEN / CLOSED / PREOPEN based on local-market clock."""
+    """OPEN / CLOSED / PREMARKET / POSTMARKET / RESET based on local-market clock.
+    RESET = 2-hour window before open (7:30–9:30 AM ET) — dashboard blanks daily P&L.
+    PREMARKET = early pre-market (4:00–7:30 AM ET).
+    POSTMARKET = extended after-hours (4:00–8:00 PM ET).
+    """
     if market == "usa":
         tz   = pytz.timezone("America/New_York")
         now  = datetime.now(tz)
@@ -54,8 +58,12 @@ def market_status(market: str) -> str:
             return "CLOSED"
         if 9 * 60 + 30 <= mins < 16 * 60:
             return "OPEN"
-        if 4 * 60 <= mins < 9 * 60 + 30:
-            return "PREOPEN"
+        if 16 * 60 <= mins < 20 * 60:
+            return "POSTMARKET"          # 4:00 PM – 8:00 PM ET
+        if 7 * 60 + 30 <= mins < 9 * 60 + 30:
+            return "RESET"               # 7:30 AM – 9:30 AM ET — daily P&L blanked
+        if 4 * 60 <= mins < 7 * 60 + 30:
+            return "PREMARKET"           # 4:00 AM – 7:30 AM ET
         return "CLOSED"
     if market == "india":
         tz   = pytz.timezone("Asia/Kolkata")

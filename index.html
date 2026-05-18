@@ -1414,13 +1414,14 @@ const DASH = (() => {
     const brkEl = $('hero-day-region-breakdown');
     if (brkEl) {
       const fx = S.view.fx || FX_DEFAULT;
-      const usDayUSD  = us.dayPL || 0;
+      const usReset   = (S.indices?.usa_market?.status || 'CLOSED') === 'RESET';
+      const usDayUSD  = usReset ? null : (us.dayPL || 0);
       const indDayUSD = (india.dayPL || 0) / fx;
       const regions = [['🇺🇸 US', usDayUSD], ['🇮🇳 India', indDayUSD]];
       brkEl.innerHTML = regions.map(([label, pl]) => `
         <div style="white-space:nowrap">
           <div style="font-size:9px;color:var(--text-pri);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${label}</div>
-          <div style="font-size:11px;font-weight:700;font-family:Monaco,monospace;${pl>=0?'color:var(--gain)':'color:var(--loss)'}">${sign(pl)}${usd(Math.abs(pl))}</div>
+          <div style="font-size:11px;font-weight:700;font-family:Monaco,monospace;${pl===null?'color:var(--text-sec)':pl>=0?'color:var(--gain)':'color:var(--loss)'}">${pl===null?'--':sign(pl)+usd(Math.abs(pl))}</div>
         </div>`).join('');
     }
   }
@@ -1435,11 +1436,24 @@ const DASH = (() => {
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
     const lbl = $('us-day-pl-label');
-    if (lbl) lbl.textContent = usaStatus === 'OPEN' ? "TODAY'S P&L" : "PREV SESSION P&L";
-    setText('us-day-pl',       sign(us.dayPL) + usd(us.dayPL));
-    setClass('us-day-pl', 'mval pv ' + pn(us.dayPL));
-    setText('us-day-pl-pct',   sign(us.dayPct) + pct(us.dayPct));
-    setClass('us-day-pl-pct', 'mchg pv ' + pn(us.dayPct));
+    if (lbl) {
+      if      (usaStatus === 'OPEN')        lbl.textContent = "TODAY'S P&L";
+      else if (usaStatus === 'POSTMARKET')  lbl.textContent = "TODAY'S P&L (POST-MARKET)";
+      else if (usaStatus === 'PREMARKET')   lbl.textContent = "PREV SESSION P&L (PRE-MARKET)";
+      else if (usaStatus === 'RESET')       lbl.textContent = "TODAY'S P&L";
+      else                                  lbl.textContent = "PREV SESSION P&L";
+    }
+    if (usaStatus === 'RESET') {
+      setText('us-day-pl', '--');
+      setClass('us-day-pl', 'mval pv');
+      setText('us-day-pl-pct', '--');
+      setClass('us-day-pl-pct', 'mchg pv');
+    } else {
+      setText('us-day-pl',     sign(us.dayPL) + usd(us.dayPL));
+      setClass('us-day-pl', 'mval pv ' + pn(us.dayPL));
+      setText('us-day-pl-pct', sign(us.dayPct) + pct(us.dayPct));
+      setClass('us-day-pl-pct', 'mchg pv ' + pn(us.dayPct));
+    }
     setText('us-account-value',usd(us.totalValue));
     setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');
     setText('us-etf-count',    us.open.filter(p=>p.cls==='ETF').length + ' positions');

@@ -33,64 +33,131 @@
     --gain:       #00d4aa;
     --loss:       #ff5c5c;
   }
-  [data-theme="light"] {
-    --bg-base:    #e8ecf5;
-    --bg-card:    #ffffff;
-    --bg-card2:   #f0f3fb;
-    --border:     #c4cce0;
+  /* ── THEME 2 · DEEP VIOLET ────────────────────────────────── */
+  [data-theme="violet"] {
+    --bg-base:    #12101f;
+    --bg-card:    #1d1a30;
+    --bg-card2:   #181528;
+    --border:     #302c50;
+    --border-act: #a78bfa;
+    --text-pri:   #edeaff;
+    --text-sec:   #9490b8;
+    --text-dim:   #5a5478;
+    --accent-g:   #34d399;
+    --accent-y:   #a78bfa;
+    --accent-b:   #a78bfa;
+    --gain:       #34d399;
+    --loss:       #f87171;
+  }
+  [data-theme="violet"] .top-banner {
+    background: linear-gradient(135deg,#12101f 0%,#1d1a30 100%);
+    box-shadow: 0 4px 20px rgba(167,139,250,0.15);
+    border-bottom-color: #a78bfa;
+  }
+  [data-theme="violet"] .tab-button.active {
+    background: linear-gradient(135deg,#6d28d9,#7c3aed);
+    color:#fff; border-color:#7c3aed;
+    box-shadow: 0 2px 10px rgba(124,58,237,0.4);
+  }
+  [data-theme="violet"] .market-panel {
+    box-shadow: 0 0 14px rgba(167,139,250,0.12);
+  }
+
+  /* ── THEME 4 · WARM IVORY ──────────────────────────────────── */
+  [data-theme="ivory"] {
+    --bg-base:    #f5f0e8;
+    --bg-card:    #fffdf7;
+    --bg-card2:   #f7f3ea;
+    --border:     #ddd5c0;
     --border-act: #b87a00;
-    --text-pri:   #0d1020;
-    --text-sec:   #3d4670;
-    --text-dim:   #7a84a8;
-    --accent-g:   #006b52;
+    --text-pri:   #1a1208;
+    --text-sec:   #5c4a2a;
+    --text-dim:   #9c8a68;
+    --accent-g:   #1a6b3c;
     --accent-y:   #b87a00;
-    --accent-b:   #1e4ec8;
-    --gain:       #006b52;
-    --loss:       #b81c1c;
+    --accent-b:   #7a5a00;
+    --gain:       #1a6b3c;
+    --loss:       #b83222;
   }
-  /* Light theme depth & polish */
-  [data-theme="light"] .top-banner {
-    background: linear-gradient(135deg, #1e2a5e 0%, #2d3f8a 60%, #1a3070 100%);
-    box-shadow: 0 4px 20px rgba(30,42,94,0.25);
+  [data-theme="ivory"] .top-banner {
+    background: linear-gradient(135deg,#2a1e0a 0%,#3d2e14 60%,#2a1e0a 100%);
+    box-shadow: 0 4px 20px rgba(42,30,10,0.3);
+    border-bottom-color: #b87a00;
   }
-  [data-theme="light"] .metric-card {
-    background: #ffffff;
-    border: 1px solid #d0d8ee;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(30,42,94,0.08), 0 1px 2px rgba(30,42,94,0.06);
+  [data-theme="ivory"] .tab-button { background:#f7f3ea; border-color:#ddd5c0; color:#5c4a2a; }
+  [data-theme="ivory"] .tab-button.active {
+    background: linear-gradient(135deg,#b87a00,#d4960a);
+    color:#fff; border-color:#b87a00;
+    box-shadow: 0 2px 10px rgba(184,122,0,0.35);
   }
-  [data-theme="light"] .metric-card label { color: #5560880; }
-  [data-theme="light"] .analytics-section {
-    background: #ffffff;
-    border: 1px solid #d0d8ee;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px rgba(30,42,94,0.08);
+  [data-theme="ivory"] .metric-card {
+    background:#fffdf7; border-color:#ddd5c0;
+    box-shadow: 0 2px 8px rgba(42,30,10,0.08);
   }
-  [data-theme="light"] .market-panel {
-    background: linear-gradient(135deg,#f5f8ff 0%,#eef2fc 100%);
-    border: 1px solid #c4cce0;
-    box-shadow: 0 2px 10px rgba(30,42,94,0.08);
+  [data-theme="ivory"] .analytics-section {
+    background:#fffdf7; border-color:#ddd5c0;
+    box-shadow: 0 2px 12px rgba(42,30,10,0.07);
   }
-  [data-theme="light"] .tab-button {
-    background: #f0f3fb;
-    border-color: #c4cce0;
-    color: #3d4670;
+  [data-theme="ivory"] .market-panel {
+    background: linear-gradient(135deg,#fffdf7,#f7f3ea);
+    border-color:#ddd5c0; box-shadow: 0 2px 10px rgba(42,30,10,0.08);
   }
-  [data-theme="light"] .tab-button.active {
-    background: linear-gradient(135deg,#1e4ec8,#2d6ee0);
-    color: #fff;
-    border-color: #1e4ec8;
-    box-shadow: 0 2px 8px rgba(30,78,200,0.3);
+  [data-theme="ivory"] .holdings-table tr:nth-child(even) td { background:#f7f3ea; }
+  [data-theme="ivory"] .holdings-table tr:hover td { background:#ede8dc; }
+  [data-theme="ivory"] .holdings-table th {
+    background: linear-gradient(180deg,#3d2e14,#2a1e0a); color:#f5f0e8;
   }
-  [data-theme="light"] .holdings-table tr:nth-child(even) td { background: #f5f7fd; }
-  [data-theme="light"] .holdings-table tr:hover td { background: #e8eefb; }
-  [data-theme="light"] .holdings-table th {
-    background: linear-gradient(180deg,#2d3f8a,#1e2a5e);
-    color: #e8eaf0;
+  [data-theme="ivory"] .mchg.positive,[data-theme="ivory"] .mval.positive { color:#1a6b3c; }
+  [data-theme="ivory"] .mchg.negative,[data-theme="ivory"] .mval.negative { color:#b83222; }
+  [data-theme="ivory"] h2 { color:#2a1e0a; }
+
+  /* ── THEME 5 · ARCTIC CLEAN ────────────────────────────────── */
+  [data-theme="arctic"] {
+    --bg-base:    #f0f4fa;
+    --bg-card:    #ffffff;
+    --bg-card2:   #e8f0fb;
+    --border:     #b8c8e8;
+    --border-act: #0ea5e9;
+    --text-pri:   #0a1628;
+    --text-sec:   #2c4a7a;
+    --text-dim:   #6888aa;
+    --accent-g:   #0a7a50;
+    --accent-y:   #0369a1;
+    --accent-b:   #0ea5e9;
+    --gain:       #0a7a50;
+    --loss:       #c02020;
   }
-  [data-theme="light"] .section-header, [data-theme="light"] h2 { color: #1e2a5e; }
-  [data-theme="light"] .mchg.positive, [data-theme="light"] .mval.positive { color: #006b52; }
-  [data-theme="light"] .mchg.negative, [data-theme="light"] .mval.negative { color: #b81c1c; }
+  [data-theme="arctic"] .top-banner {
+    background: linear-gradient(135deg,#0a1e3e 0%,#0f2d5c 60%,#0a1e3e 100%);
+    box-shadow: 0 4px 20px rgba(10,22,62,0.25);
+    border-bottom-color: #0ea5e9;
+  }
+  [data-theme="arctic"] .tab-button { background:#e8f0fb; border-color:#b8c8e8; color:#2c4a7a; }
+  [data-theme="arctic"] .tab-button.active {
+    background: linear-gradient(135deg,#0284c7,#0ea5e9);
+    color:#fff; border-color:#0284c7;
+    box-shadow: 0 2px 10px rgba(2,132,199,0.35);
+  }
+  [data-theme="arctic"] .metric-card {
+    background:#ffffff; border-color:#b8c8e8;
+    box-shadow: 0 2px 8px rgba(10,22,62,0.08);
+  }
+  [data-theme="arctic"] .analytics-section {
+    background:#ffffff; border-color:#b8c8e8;
+    box-shadow: 0 2px 12px rgba(10,22,62,0.07);
+  }
+  [data-theme="arctic"] .market-panel {
+    background: linear-gradient(135deg,#f5f9ff,#eaf2fb);
+    border-color:#b8c8e8; box-shadow: 0 2px 10px rgba(10,22,62,0.08);
+  }
+  [data-theme="arctic"] .holdings-table tr:nth-child(even) td { background:#eaf2fb; }
+  [data-theme="arctic"] .holdings-table tr:hover td { background:#d8eaf8; }
+  [data-theme="arctic"] .holdings-table th {
+    background: linear-gradient(180deg,#0f2d5c,#0a1e3e); color:#e8f0ff;
+  }
+  [data-theme="arctic"] .mchg.positive,[data-theme="arctic"] .mval.positive { color:#0a7a50; }
+  [data-theme="arctic"] .mchg.negative,[data-theme="arctic"] .mval.negative { color:#c02020; }
+  [data-theme="arctic"] h2 { color:#0a1e3e; }
   :root{--fs-scale:1}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg-base);color:var(--text-pri);font-family:'Inter',system-ui,Arial,sans-serif;font-size:13px}
@@ -2213,15 +2280,22 @@ const DASH = (() => {
   }
   function fsAdjust(dir) { _fsIdx += dir; fsApply(); }
 
-  /* ── Theme toggle ─────────────────────────────────────────────── */
+  /* ── Theme cycle: dark → violet → ivory → arctic → dark ───────── */
+  const THEMES      = ['dark','violet','ivory','arctic'];
+  const THEME_ICONS = { dark:'🌑', violet:'💜', ivory:'🌤️', arctic:'❄️' };
+  const THEME_TIPS  = { dark:'Dark Ocean', violet:'Deep Violet', ivory:'Warm Ivory', arctic:'Arctic Clean' };
   let _theme = localStorage.getItem('theme') || 'dark';
+  if (!THEMES.includes(_theme)) _theme = 'dark';
   function themeApply() {
-    document.documentElement.setAttribute('data-theme', _theme === 'light' ? 'light' : '');
+    document.documentElement.setAttribute('data-theme', _theme === 'dark' ? '' : _theme);
     const btn = document.getElementById('theme-btn');
-    if (btn) btn.textContent = _theme === 'light' ? '☀️' : '🌙';
+    if (btn) { btn.textContent = THEME_ICONS[_theme]; btn.title = THEME_TIPS[_theme]; }
     localStorage.setItem('theme', _theme);
   }
-  function toggleTheme() { _theme = _theme === 'light' ? 'dark' : 'light'; themeApply(); }
+  function toggleTheme() {
+    _theme = THEMES[(THEMES.indexOf(_theme) + 1) % THEMES.length];
+    themeApply();
+  }
 
   /* ── Currency toggle ──────────────────────────────────────────── */
   function setCurrency(el) {

@@ -1183,7 +1183,7 @@ const DASH = (() => {
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
       fetchJSON('data/processed/market_indices.json'),
-      fetchJSON('data/processed/audit.json')
+      fetchJSON('data/processed/audit.json'),
     ]);
     if (cost)    S.cost = cost;
     if (prices)  S.prices = prices.prices || {};

@@ -24,6 +24,8 @@ PRICES_FILE  = ROOT / "data" / "processed" / "holdings_prices.json"
 INDICES_FILE = ROOT / "data" / "processed" / "market_indices.json"
 SIGNALS_FILE = ROOT / "data" / "processed" / "stock_signals.json"
 AUDIT_FILE   = ROOT / "data" / "processed" / "audit.json"
+HISTORY_FILE = ROOT / "data" / "processed" / "audit_history.json"
+HISTORY_MAX_DAYS = 90
 
 FX_SOURCES = [
     "https://open.er-api.com/v6/latest/USD",
@@ -302,6 +304,41 @@ def main() -> None:
         "data_age_min": round(data_age_min, 2),
     }
     save_json(AUDIT_FILE, audit)
+
+    # 9. Append to rolling 90-day history (one entry per calendar day, worst status wins)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    hist_data = load_json(HISTORY_FILE) or {"history": []}
+    history = hist_data.get("history", [])
+
+    # Find today's existing entry (if any) and merge — worst status wins
+    existing_idx = next((i for i, d in enumerate(history) if d.get("date") == today), None)
+    def status_rank(s): return {"ok": 0, "healed": 1, "alert": 2}.get(s, 0)
+
+    new_entry = {
+        "date": today,
+        "status": "healed" if (not alerts and healed) else ("alert" if alerts else "ok"),
+        "alerts": alerts,
+        "healed": healed,
+        "runs": 1,
+        "tickers_ok": final_ok,
+        "tickers_expected": total_expected,
+        "data_age_min": round(data_age_min, 1),
+    }
+    if existing_idx is not None:
+        prev = history[existing_idx]
+        # Keep worst status of day
+        if status_rank(new_entry["status"]) >= status_rank(prev.get("status", "ok")):
+            new_entry["runs"] = prev.get("runs", 0) + 1
+            history[existing_idx] = new_entry
+        else:
+            history[existing_idx]["runs"] = prev.get("runs", 0) + 1
+    else:
+        history.append(new_entry)
+
+    # Keep only last HISTORY_MAX_DAYS days, sorted descending
+    history.sort(key=lambda d: d["date"], reverse=True)
+    history = history[:HISTORY_MAX_DAYS]
+    save_json(HISTORY_FILE, {"history": history})
 
     print(
         f"[audit] Done — status={audit['status']}, "

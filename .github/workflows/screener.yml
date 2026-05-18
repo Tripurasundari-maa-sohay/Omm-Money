@@ -38,9 +38,12 @@ jobs:
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
             git add data/processed/screener.json
-            git commit -m "screener: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git pull --rebase origin main
-            git push
+            git commit -m "screener: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "push attempt $attempt failed — retrying in 5s…"
+              sleep 5
+            done
           else
             echo "no changes"
           fi

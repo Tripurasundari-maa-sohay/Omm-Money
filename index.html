@@ -48,6 +48,7 @@
   .tab-button{padding:7px 18px;background:transparent;color:var(--text-sec);
     border:2px solid var(--border);border-radius:4px;cursor:pointer;
     font-size:12px;font-weight:700;letter-spacing:1px;transition:all .25s}
+  .tab-button .ts{display:none}
   .tab-button:hover{background:rgba(0,212,170,.1);border-color:var(--accent-g);color:var(--accent-g)}
   .tab-button.active{background:var(--accent-y);color:#0f0f1a;border-color:var(--accent-y);
     box-shadow:0 0 12px rgba(240,180,41,.35)}
@@ -324,6 +325,8 @@
       overflow-x:auto;scrollbar-width:none;padding-bottom:2px;gap:4px;margin-top:2px}
     .banner-tabs::-webkit-scrollbar{display:none}
     .tab-button{padding:5px 8px;font-size:10px;white-space:nowrap;flex-shrink:0;border-width:1px}
+    .tab-button .tl{display:none}
+    .tab-button .ts{display:inline}
     .dashboard-container{padding-top:108px}
     .main-content{padding:10px}
     .portfolio-overview,.portfolio-metrics,.analytics-section,.holdings-section,
@@ -378,12 +381,12 @@
     <div class="banner-row1">
       <div><h1 class="logo">🌍 Multi Country Portfolio Tracker</h1></div>
       <div class="banner-tabs">
-        <button class="tab-button active" data-tab="portfolio">PORTFOLIO</button>
-        <button class="tab-button" data-tab="us">US PORTFOLIO</button>
-        <button class="tab-button" data-tab="india">INDIA PORTFOLIO</button>
-        <button class="tab-button" data-tab="transactions">TRANSACTIONS</button>
-        <button class="tab-button" data-tab="signals">📡 SIGNALS</button>
-        <button class="tab-button" data-tab="screener">🔍 SCREENER</button>
+        <button class="tab-button active" data-tab="portfolio"><span class="tl">PORTFOLIO</span><span class="ts">HOME</span></button>
+        <button class="tab-button" data-tab="us"><span class="tl">US PORTFOLIO</span><span class="ts">US</span></button>
+        <button class="tab-button" data-tab="india"><span class="tl">INDIA PORTFOLIO</span><span class="ts">INDIA</span></button>
+        <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
+        <button class="tab-button" data-tab="signals"><span class="tl">📡 SIGNALS</span><span class="ts">SIGNALS</span></button>
+        <button class="tab-button" data-tab="screener"><span class="tl">🔍 SCREENER</span><span class="ts">SCREEN</span></button>
       </div>
       <div class="banner-controls">
         <div class="ccy-group">

@@ -174,7 +174,7 @@
     border:2px solid var(--border);border-radius:4px;cursor:pointer;
     font-size:12px;font-weight:700;letter-spacing:1px;transition:all .25s}
   .tab-button .ts{display:none}
-  .tab-button:hover{background:rgba(0,212,170,.1);border-color:var(--accent-g);color:var(--accent-g)}
+  .tab-button:hover{background:rgba(79,142,247,.1);border-color:var(--accent-b);color:var(--accent-b)}
   .tab-button.active{background:var(--accent-y);color:#0f0f1a;border-color:var(--accent-y);
     box-shadow:0 0 12px rgba(240,180,41,.35)}
   .banner-right{font-size:11px;color:var(--text-sec);text-align:right}
@@ -187,7 +187,7 @@
   #fetch-status{font-size:10px;color:var(--text-dim);margin-top:2px}
   #fetch-status.live{color:var(--accent-g)}
   #fetch-status.stale{color:#ffaa00}
-  #fetch-status.error{color:#ff5c5c}
+  #fetch-status.error{color:var(--loss)}
 
   /* ── ERROR BANNER ── */
   #error-banner{display:none;position:fixed;top:98px;left:0;right:0;z-index:999;
@@ -214,8 +214,8 @@
     margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
   .market-name{color:var(--accent-g);font-weight:700;font-size:14px}
   .market-status{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700}
-  .market-status.OPEN{background:rgba(0,212,170,.15);color:#00d4aa;border:1px solid #00d4aa}
-  .market-status.CLOSED{background:rgba(255,92,92,.15);color:#ff5c5c;border:1px solid #ff5c5c}
+  .market-status.OPEN{background:rgba(0,212,170,.15);color:var(--gain);border:1px solid var(--gain)}
+  .market-status.CLOSED{background:rgba(255,92,92,.15);color:var(--loss);border:1px solid var(--loss)}
   .market-status.PREOPEN{background:rgba(255,170,0,.15);color:#ffaa00;border:1px solid #ffaa00}
   .market-details{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
   .index-item{display:flex;justify-content:space-between;align-items:center;
@@ -223,8 +223,8 @@
   .index-name{color:var(--accent-b);font-weight:600}
   .index-value{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace;font-size:13px}
   .index-change{font-size:12px;font-weight:700;margin-left:8px}
-  .index-change.positive{color:#00d4aa}
-  .index-change.negative{color:#ff5c5c}
+  .index-change.positive{color:var(--gain)}
+  .index-change.negative{color:var(--loss)}
   .market-time{font-size:10px;color:var(--text-dim);font-style:italic}
   .market-countdown{display:flex;justify-content:space-between;align-items:center;
     margin-top:8px;padding:8px 10px;background:var(--bg-card2);
@@ -232,7 +232,7 @@
   .countdown-label{color:var(--accent-b);font-weight:700;letter-spacing:.5px}
   .countdown-value{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace;font-size:13px}
   .countdown-value.warn{color:#ffaa00}
-  .countdown-value.alert{color:#ff5c5c}
+  .countdown-value.alert{color:var(--loss)}
 
   /* ── METRIC CARDS ── */
   .portfolio-overview,.portfolio-metrics{background:var(--bg-card);border:1px solid var(--accent-y);
@@ -243,13 +243,13 @@
     padding:12px;display:flex;flex-direction:column;gap:5px}
   .metric-card label{color:var(--text-sec);font-size:10px;font-weight:700;
     text-transform:uppercase;letter-spacing:1px}
-  .metric-card .mval{color:var(--accent-g);font-size:18px;font-weight:700;font-family:Monaco,monospace}
+  .metric-card .mval{color:var(--text-pri);font-size:18px;font-weight:700;font-family:Monaco,monospace}
   .metric-card .mchg{font-size:11px}
-  .metric-card .mchg.positive{color:#00d4aa}
-  .metric-card .mchg.negative{color:#ff5c5c}
+  .metric-card .mchg.positive{color:var(--gain)}
+  .metric-card .mchg.negative{color:var(--loss)}
   .metric-card .mdesc{font-size:10px;color:var(--text-dim)}
-  .metric-card .mval.positive{color:#00d4aa}
-  .metric-card .mval.negative{color:#ff5c5c}
+  .metric-card .mval.positive{color:var(--gain)}
+  .metric-card .mval.negative{color:var(--loss)}
   .metric-card .mval.loading{color:var(--text-dim);font-size:14px}
 
   /* ── CHARTS ── */
@@ -263,7 +263,7 @@
   .chart-square{height:260px}
   .chart-stat-bar{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;
     padding:8px 12px;background:var(--bg-card2);border-radius:4px;font-size:11px}
-  .chart-stat-bar strong{color:var(--accent-g)}
+  .chart-stat-bar strong{color:var(--accent-b)}
   .analytics-two-col{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start}
 
   /* ── TABLES ── */
@@ -277,10 +277,10 @@
   tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
   tbody tr:hover{background:var(--bg-card2)}
   tbody td{padding:7px 10px;color:var(--text-pri);white-space:nowrap}
-  tfoot td{padding:8px 10px;font-weight:700;color:var(--accent-g);background:var(--bg-card2);
+  tfoot td{padding:8px 10px;font-weight:700;color:var(--text-pri);background:var(--bg-card2);
     border-top:1px solid var(--border)}
-  .positive{color:#00d4aa!important}
-  .negative{color:#ff5c5c!important}
+  .positive{color:var(--gain)!important}
+  .negative{color:var(--loss)!important}
   .table-meta{margin-bottom:10px}
   .live-badge{color:var(--accent-g);font-size:11px;font-weight:700;margin-right:10px}
   .live-badge.stale{color:#ffaa00}

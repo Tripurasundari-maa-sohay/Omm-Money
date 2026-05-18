@@ -33,6 +33,21 @@
     --gain:       #00d4aa;
     --loss:       #ff5c5c;
   }
+  [data-theme="light"] {
+    --bg-base:    #eef0f7;
+    --bg-card:    #ffffff;
+    --bg-card2:   #f4f6fc;
+    --border:     #cdd3e8;
+    --border-act: #c98a00;
+    --text-pri:   #0f1124;
+    --text-sec:   #4a5278;
+    --text-dim:   #8892aa;
+    --accent-g:   #007a60;
+    --accent-y:   #c98a00;
+    --accent-b:   #2558d4;
+    --gain:       #007a60;
+    --loss:       #cc2222;
+  }
   :root{--fs-scale:1}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg-base);color:var(--text-pri);font-family:'Inter',system-ui,Arial,sans-serif;font-size:13px}
@@ -399,6 +414,7 @@
           <span class="fs-label" id="fs-level">A</span>
           <button class="fs-btn" onclick="DASH.fsAdjust(+1)">A+</button>
         </div>
+        <button class="privacy-btn" id="theme-btn" onclick="DASH.toggleTheme()" title="Toggle light/dark theme">🌙</button>
         <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Show demo data">👁</button>
       </div>
       <div class="banner-right">
@@ -2154,6 +2170,16 @@ const DASH = (() => {
   }
   function fsAdjust(dir) { _fsIdx += dir; fsApply(); }
 
+  /* ── Theme toggle ─────────────────────────────────────────────── */
+  let _theme = localStorage.getItem('theme') || 'dark';
+  function themeApply() {
+    document.documentElement.setAttribute('data-theme', _theme === 'light' ? 'light' : '');
+    const btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = _theme === 'light' ? '☀️' : '🌙';
+    localStorage.setItem('theme', _theme);
+  }
+  function toggleTheme() { _theme = _theme === 'light' ? 'dark' : 'light'; themeApply(); }
+
   /* ── Currency toggle ──────────────────────────────────────────── */
   function setCurrency(el) {
     S.ui.currency = el.dataset.ccy;
@@ -3266,7 +3292,8 @@ const DASH = (() => {
   document.addEventListener('DOMContentLoaded', init);
 
   // public surface for inline handlers
-  fsApply(); // restore saved font size on load
+  fsApply();     // restore saved font size on load
+  themeApply();  // restore saved theme on load
   return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, fsAdjust };
 })();
 

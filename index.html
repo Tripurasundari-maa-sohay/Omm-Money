@@ -483,7 +483,7 @@
         <div class="metric-card"><label>INDIA PORTFOLIO VALUE</label><div class="mval loading pv" id="hero-india-value">…</div><div class="mdesc">Equities</div></div>
         <div class="metric-card"><label id="hero-total-label">TOTAL VALUE (USD)</label><div class="mval loading pv" id="hero-total-value">…</div><div class="mchg pv" id="hero-total-return">--</div></div>
         <div class="metric-card"><label id="hero-pl-label">UNREALISED P&amp;L (USD)</label><div class="mval loading pv" id="hero-total-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label id="hero-day-label">TODAY'S GAIN (USD)</label><div class="mval loading pv" id="hero-day-pl">…</div><div class="mchg pv" id="hero-day-pl-pct">--</div></div>
+        <div class="metric-card" style="flex-direction:row;align-items:stretch;gap:0"><div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:0"><label id="hero-day-label">TODAY'S GAIN (USD)</label><div class="mval loading pv" id="hero-day-pl">…</div><div class="mchg pv" id="hero-day-pl-pct">--</div></div><div style="width:1px;background:var(--border);margin:4px 10px;flex-shrink:0"></div><div id="hero-day-region-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:5px;flex-shrink:0"></div></div>
         <div class="metric-card"><label>CASH INFUSED (US)</label><div class="mval loading pv" id="hero-cash-infused">…</div><div class="mdesc">Net deposits ITD</div></div>
       </div>
     </div>
@@ -1409,6 +1409,20 @@ const DASH = (() => {
     setClass('bm-unreal', 'bm-val pv ' + pn(unrPct));
     setText('bm-today',  sign(combined.dayPL_USD) + hero(Math.abs(combined.dayPL_USD)));
     setClass('bm-today', 'bm-val pv ' + pn(combined.dayPL_USD));
+
+    // Region breakdown on TODAY'S GAIN tile
+    const brkEl = $('hero-day-region-breakdown');
+    if (brkEl) {
+      const fx = S.view.fx || FX_DEFAULT;
+      const usDayUSD  = us.dayPL || 0;
+      const indDayUSD = (india.dayPL || 0) / fx;
+      const regions = [['🇺🇸 US', usDayUSD], ['🇮🇳 India', indDayUSD]];
+      brkEl.innerHTML = regions.map(([label, pl]) => `
+        <div style="white-space:nowrap">
+          <div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:.4px;text-transform:uppercase;line-height:1.2">${label}</div>
+          <div style="font-size:11px;font-weight:700;font-family:Monaco,monospace;${pl>=0?'color:var(--gain)':'color:var(--loss)'}">${sign(pl)}${usd(Math.abs(pl))}</div>
+        </div>`).join('');
+    }
   }
 
   function renderUSMetrics() {

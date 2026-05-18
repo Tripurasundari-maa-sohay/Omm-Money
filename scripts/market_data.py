@@ -293,27 +293,29 @@ def update_fx_in_cost_basis(rate: float) -> None:
 
 
 # ── DEMO TICKER PRICES ───────────────────────────────────────────────────
-# Fetched alongside real holdings so demo mode shows live LTPs.
-# Stored under "demo_prices" key — never mixed with real holdings prices.
-DEMO_US_TICKERS = [
-    ("AAPL","AAPL"), ("MSFT","MSFT"), ("NVDA","NVDA"), ("AMZN","AMZN"),
-    ("META","META"), ("GOOGL","GOOGL"), ("JPM","JPM"), ("VTI","VTI"),
-    ("QQQ","QQQ"), ("EWY","EWY"), ("T","T"), ("BA","BA"),
-]
-DEMO_IN_TICKERS = [
-    ("RELIANCE","RELIANCE.NS"), ("TCS","TCS.NS"), ("HDFCBANK","HDFCBANK.NS"),
-    ("INFY","INFY.NS"), ("ICICIBANK","ICICIBANK.NS"), ("BAJFINANCE","BAJFINANCE.NS"),
-    ("WIPRO","WIPRO.NS"), ("ADANIPORTS","ADANIPORTS.NS"),
-    ("NIFTYBEES","NIFTYBEES.NS"), ("GOLDBEES","GOLDBEES.NS"),
-    ("TITAN","TITAN.NS"), ("MARUTI","MARUTI.NS"),
-]
+DEMO_PORTFOLIO_FILE = ROOT / "data" / "demo_portfolio.json"
 
 def build_demo_prices() -> dict:
-    """Fetch live LTP + prev_close for demo portfolio tickers."""
+    """Read data/demo_portfolio.json, fetch live LTP+PC for every open position.
+    Stored under 'demo_prices' key — never mixed with real holdings prices."""
     demo: dict[str, dict] = {}
-    all_demo = DEMO_US_TICKERS + DEMO_IN_TICKERS
-    print(f"Fetching {len(all_demo)} demo ticker prices…")
-    for tk, yf_sym in all_demo:
+    if not DEMO_PORTFOLIO_FILE.exists():
+        print("  WARN  demo_portfolio.json not found — skipping demo prices", file=sys.stderr)
+        return demo
+
+    try:
+        dp = json.loads(DEMO_PORTFOLIO_FILE.read_text())
+    except Exception as exc:
+        print(f"  WARN  demo_portfolio.json parse error: {exc}", file=sys.stderr)
+        return demo
+
+    tickers: list[tuple[str, str]] = []
+    for region in ("us", "india"):
+        for p in dp.get(region, {}).get("open", []):
+            tickers.append((p["tk"], p.get("yf", p["tk"])))
+
+    print(f"Fetching {len(tickers)} demo ticker prices…")
+    for tk, yf_sym in tickers:
         try:
             q = fetch_quote(yf_sym)
             if q:
@@ -322,7 +324,7 @@ def build_demo_prices() -> dict:
                     "pc":    q["pc"],
                     "as_of": datetime.utcnow().isoformat() + "Z",
                 }
-                print(f"  demo {tk:12s} → {q['ltp']:>12,.2f}")
+                print(f"  demo {tk:12s} ({yf_sym:16s}) → {q['ltp']:>12,.2f}")
             else:
                 print(f"  demo {tk}: no price", file=sys.stderr)
         except Exception as exc:

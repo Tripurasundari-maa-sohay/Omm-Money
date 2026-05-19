@@ -535,45 +535,47 @@ def fetch_fx_on_date(date_str: str) -> float | None:
         return None
 
 
-def update_fx_buy_rates() -> None:
-    """For every US open position that has buy_date but no fx_buy,
-    fetch historical INR/USD and write it back to holdings_cost.json.
-    Skips positions that already have fx_buy set (avoids re-fetching)."""
+def build_fx_buy_prices(existing_prices: dict[str, dict]) -> dict[str, float]:
+    """
+    Fetch historical INR/USD buy rates for all US open positions with buy_date.
+    Returns dict {tk: fx_buy_rate}.
+
+    Architecture: fx_buy lives in holdings_prices.json (network-first, always
+    fresh) NOT holdings_cost.json (cache-first, stale in browser cache).
+    Carries forward previously-fetched rates — idempotent, no re-fetch.
+    """
     if not COST_BASIS.exists():
-        return
+        return {}
     try:
         cost = json.loads(COST_BASIS.read_text())
     except Exception:
-        return
+        return {}
 
-    positions = cost.get("us", {}).get("open", [])
-    updated = 0
-    for pos in positions:
+    fx_buys: dict[str, float] = {}
+    for tk, p in existing_prices.items():
+        if p.get("fx_buy"):
+            fx_buys[tk] = p["fx_buy"]
+
+    for pos in cost.get("us", {}).get("open", []):
+        tk       = pos.get("tk")
         buy_date = pos.get("buy_date")
-        if not buy_date:
+        if not tk or not buy_date:
             continue
-        if pos.get("fx_buy"):          # already fetched — skip
+        if tk in fx_buys:
             continue
         fx = fetch_fx_on_date(buy_date)
         if fx:
-            pos["fx_buy"] = fx
-            updated += 1
-            print(f"  fx_buy  {pos['tk']:8s}  {buy_date}  → ₹{fx}/USD")
+            fx_buys[tk] = fx
+            print(f"  fx_buy  {tk:8s}  {buy_date}  → ₹{fx}/USD")
         else:
-            print(f"  WARN  fx_buy not found for {pos['tk']} on {buy_date}", file=sys.stderr)
+            print(f"  WARN  fx_buy not found for {tk} on {buy_date}", file=sys.stderr)
 
-    if updated:
-        COST_BASIS.write_text(json.dumps(cost, indent=2))
-        print(f"  fx_buy: updated {updated} position(s) in holdings_cost.json")
+    return fx_buys
 
 
 # ── MAIN ─────────────────────────────────────────────────────────────────
 def main() -> int:
     OUT_INDICES.parent.mkdir(parents=True, exist_ok=True)
-
-    # Backfill historical fx_buy for any positions missing it
-    print("Checking fx_buy rates for US positions…")
-    update_fx_buy_rates()
 
     # Live FX rate — update holdings_cost.json so dashboard uses fresh rate
     print("Fetching live INR/USD rate…")
@@ -592,6 +594,12 @@ def main() -> int:
         print(f"  SKIP  {OUT_HOLDINGS.relative_to(ROOT)} (insufficient price data)")
     else:
         holdings["demo_prices"] = build_demo_prices()
+        # fx_buy per ticker — stored here (network-first) not in holdings_cost.json (cache-first)
+        print("Fetching fx_buy rates for open positions…")
+        fx_buys = build_fx_buy_prices(holdings.get("prices", {}))
+        for tk, rate in fx_buys.items():
+            if tk in holdings["prices"]:
+                holdings["prices"][tk]["fx_buy"] = rate
         # Real S&P 500 cumulative returns — replaces broker's benchmark in the chart
         try:
             cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}

@@ -625,7 +625,7 @@
       <div class="chart-stat-bar">
         <span>Portfolio ITD: <strong id="cum-port">--</strong></span>
         <span>S&amp;P 500 ITD: <strong id="cum-snp">--</strong></span>
-        <span>Alpha vs S&amp;P: <strong id="cum-alpha">--</strong></span>
+        <span>Alpha vs S&amp;P: <strong id="cum-alpha" style="font-size:13px">--</strong></span>
       </div>
     </div>
 
@@ -1970,18 +1970,35 @@ const DASH = (() => {
 
     // Cumulative chart (portfolio)
     if (m && m.labels) {
+      const _cumCs   = getComputedStyle(document.documentElement);
+      const _cumGain = _cumCs.getPropertyValue('--gain').trim() || '#00d4aa';
+      const _cumWarn = _cumCs.getPropertyValue('--warn').trim() || '#f0b429';
+      const alphaData = m.port_return_cum_pct.map((v, i) =>
+        +((v - (m.snp_return_cum_pct[i] || 0)).toFixed(2)));
+      const alphaColor = (alphaData.at(-1) || 0) >= 0 ? _cumGain : '#ff5c5c';
       mkChart('cumulative-chart', { type:'line',
         data: { labels: m.labels, datasets: [
-          { label:'Portfolio', data:m.port_return_cum_pct, borderColor:'#00d4aa', ...darkLine },
-          { label:'S&P 500',   data:m.snp_return_cum_pct,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine }
+          { label:'Portfolio', data:m.port_return_cum_pct, borderColor:_cumGain, ...darkLine },
+          { label:'S&P 500',   data:m.snp_return_cum_pct,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
+          { label:'Alpha vs S&P', data:alphaData,
+            borderColor: _cumWarn, borderWidth:1.5, borderDash:[3,3],
+            tension:0.3, pointRadius:0, fill:false,
+            backgroundColor:'transparent' }
         ]},
-        options: lineOpts({ callbacks: { label: dualLabel } })
+        options: lineOpts({ callbacks: { label: ctx => {
+          const v = ctx.parsed.y, s = v>=0?'+':'';
+          if (ctx.dataset.label === 'Alpha vs S&P')
+            return `Alpha: ${s}${v.toFixed(2)}%`;
+          const usdDelta = cashBase * (v/100);
+          return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
+        }}})
       });
       const portPct = m.port_return_cum_pct.at(-1) || 0;
       const snpPct  = m.snp_return_cum_pct.at(-1)  || 0;
       setText('cum-port',  sign(portPct) + pct(portPct));
       setText('cum-snp',   sign(snpPct)  + pct(snpPct));
       setText('cum-alpha', sign(portPct-snpPct) + pct(portPct - snpPct));
+      setClass('cum-alpha', pn(portPct - snpPct));
 
       // US-tab dedicated chart (same data)
       mkChart('us-perf-chart', { type:'line',

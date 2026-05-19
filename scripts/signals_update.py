@@ -53,7 +53,7 @@ def sma(arr: list[float], p: int) -> float:
     # When len(arr) < p, slc is the full array — average over fewer periods.
     # This is intentional: shorter history produces a valid (shorter) moving average.
     slc = arr[-p:]
-    return sum(slc) / len(slc)
+    return sum(slc) / len(slc) if slc else 0.0  # guard: empty array → 0
 
 
 def calc_rsi(cl: list[float], n: int = 14) -> float:
@@ -120,7 +120,7 @@ def score_ticker(
 
     ma200 = sma(cl, 200)
     ma50  = sma(cl, 50)
-    v200  = (px - ma200) / ma200 * 100
+    v200  = (px - ma200) / ma200 * 100 if ma200 else 0.0
 
     rsi_val = calc_rsi(cl)
 
@@ -142,10 +142,13 @@ def score_ticker(
     rs = 0.0
     if spy_cl:
         p60 = min(60, len(spy_cl), n)
-        rs = (
-            (px - cl[-p60]) / cl[-p60]
-            - (spy_cl[-1] - spy_cl[-p60]) / spy_cl[-p60]
-        ) * 100
+        base_stk = cl[-p60]
+        base_spy = spy_cl[-p60]
+        if base_stk and base_spy:   # guard: both denominators non-zero
+            rs = (
+                (px - base_stk) / base_stk
+                - (spy_cl[-1] - base_spy) / base_spy
+            ) * 100
 
     # 52-week range position
     cl252 = cl[-252:]
@@ -154,7 +157,7 @@ def score_ticker(
 
     # Valuation vs 1-year mean
     mean1   = sma(cl, 252)
-    vs_mean = (px - mean1) / mean1 * 100
+    vs_mean = (px - mean1) / mean1 * 100 if mean1 else 0.0
 
     # Weekly trend vs 10-week MA
     wk = weekly_closes(ts, cl)

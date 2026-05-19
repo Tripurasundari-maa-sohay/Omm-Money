@@ -525,12 +525,29 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
     labels, dates, port_rets, snp_rets, inr_rets, fx_alphas = [], [], [], [], [], []
     seen_months: set[str] = set()
 
+    # Build a map of month-end date → broker TWR % (verified, deposit-neutral)
+    # Used to anchor weekly returns — avoids step-changes from cash infusions
+    twr_map: dict[str, float] = {}
+    label_dates_all = cost.get("us", {}).get("monthly", {}).get("label_dates", [])
+    twr_series      = cost.get("us", {}).get("monthly", {}).get("port_return_cum_pct", [])
+    for ld, tv in zip(label_dates_all, twr_series):
+        if ld and tv is not None:
+            twr_map[ld] = tv
+
+    # Portfolio value at account inception (Nov-25 statement start)
+    # Used to compute TWR for weeks within statement period
+    acct_inception = cost.get("us", {}).get("monthly", {}).get("account_value", [None])[0]
+    if not acct_inception:
+        # Fallback: derive from cash_infusion and first TWR point
+        acct_inception = cash_infusion
+
     for fri in fridays:
         snp_px = nearest_val(snp, fri)
         inr_px = nearest_val(inrx, fri)
         if snp_px is None or inr_px is None:
             continue
 
+        # Compute current portfolio value from holdings
         port_val = cash
         for pos in positions:
             tk = pos["yf"]
@@ -541,7 +558,53 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
             if px:
                 port_val += pos["qty"] * px
 
-        port_ret = (port_val - cash_infusion) / cash_infusion * 100
+        # TWR-anchored return: find nearest broker month-end anchor on or before this Friday
+        # then extend using price change from that anchor date
+        anchor_date = None
+        anchor_twr  = None
+        anchor_val  = None
+        for ld in sorted(twr_map.keys(), reverse=True):
+            if ld <= fri.isoformat():
+                anchor_date = ld
+                anchor_twr  = twr_map[ld]
+                break
+
+        # Only use TWR-anchoring for anchors AFTER the first real month-end
+        # (skip the inception Nov-30 anchor which has no actual positions yet)
+        valid_anchors = {k: v for k, v in twr_map.items()
+                         if k > (label_dates_all[0] if label_dates_all else "")}
+
+        anchor_date_v = None
+        anchor_twr_v  = None
+        for ld in sorted(valid_anchors.keys(), reverse=True):
+            if ld <= fri.isoformat():
+                anchor_date_v = ld
+                anchor_twr_v  = valid_anchors[ld]
+                break
+
+        if anchor_date_v and anchor_twr_v is not None:
+            # Compute portfolio value at anchor date
+            anchor_port_val = cash
+            for pos in positions:
+                tk = pos["yf"]
+                col = tk if tk in hist.columns else None
+                if col is None:
+                    continue
+                anchor_dt = _date.fromisoformat(anchor_date_v)
+                px = nearest_val(hist[col], anchor_dt)
+                if px:
+                    anchor_port_val += pos["qty"] * px
+            # Extend TWR using price change only — no cash flow distortion
+            if anchor_port_val > 0:
+                price_change = (port_val - anchor_port_val) / anchor_port_val
+                port_ret = ((1 + anchor_twr_v / 100) * (1 + price_change) - 1) * 100
+            else:
+                port_ret = anchor_twr_v
+        else:
+            # Before first real broker anchor (Dec weeks) — use simple money-weighted
+            # Less accurate but only affects ~4 data points at start
+            port_ret = (port_val - cash_infusion) / cash_infusion * 100
+
         snp_ret  = (snp_px / snp_inception - 1) * 100
         inr_ret  = ((1 + port_ret / 100) * (inr_px / inr_inception) - 1) * 100
         fx_alpha = inr_ret - port_ret

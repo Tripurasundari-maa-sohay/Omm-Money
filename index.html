@@ -2018,17 +2018,10 @@ const DASH = (() => {
 
       // INR return — position-level: cost-weighted avg fx_buy as anchor
       // Each position bought at different INR rate → weighted avg is correct base
-      // fx_buy lives in S.prices (network-first) — always fresh regardless of holdings_cost cache
-      const _openPos    = (S.view && S.view.us) ? S.view.us.open.filter(p => p.cost > 0) : [];
-      const _totalCost  = _openPos.reduce((s,p) => s + p.cost, 0);
-      const _wtdFxBuy   = _totalCost > 0
-        ? _openPos.reduce((s,p) => {
-            const fxb = (S.prices[p.tk] && S.prices[p.tk].fx_buy) || 0;
-            return fxb ? s + fxb * (p.cost/_totalCost) : s;
-          }, 0) || null
-        : null;
-      // Fallback to inr_fx_monthly[0] if prices not loaded yet
-      const _fxBase = _wtdFxBuy || (S.inrFxMon && S.inrFxMon[0]) || null;
+      // For the chart: anchor to inr_fx_monthly[0] (portfolio inception FX rate)
+      // This ensures all 3 lines start at 0% on the same date — apples-to-apples comparison
+      // (weighted fx_buy is only used for per-position tile/table, not the time-series chart)
+      const _fxBase = (S.inrFxMon && S.inrFxMon[0]) || null;
       const inrLine = (S.inrFxMon && S.inrFxMon.length === m.labels.length && _fxBase)
         ? m.port_return_cum_pct.map((v, i) =>
             +((((1 + v/100) * (S.inrFxMon[i] / _fxBase)) - 1) * 100).toFixed(2))

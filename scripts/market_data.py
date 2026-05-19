@@ -632,6 +632,116 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
     }
 
 
+def build_daily_chart_data(cost: dict) -> dict | None:
+    """Daily close version of build_weekly_chart_data — all trading days."""
+    from datetime import date as _date, timedelta as _td
+    import pandas as _pd
+
+    positions     = cost.get("us", {}).get("open", [])
+    cash          = cost.get("us", {}).get("cash", 0)
+    cash_infusion = cost.get("us", {}).get("cash_infusion_itd", 1)
+    if not positions or not cash_infusion:
+        return None
+
+    tickers = [p["yf"] for p in positions]
+    label_dates_all = cost.get("us", {}).get("monthly", {}).get("label_dates", [])
+    twr_series      = cost.get("us", {}).get("monthly", {}).get("port_return_cum_pct", [])
+    twr_map = {ld: tv for ld, tv in zip(label_dates_all, twr_series) if ld and tv is not None}
+    valid_anchors = {k: v for k, v in twr_map.items()
+                     if k > (label_dates_all[0] if label_dates_all else "")}
+
+    inception = _date.fromisoformat(label_dates_all[0]) if label_dates_all and label_dates_all[0] else _date(2025, 11, 28)
+    today = datetime.utcnow().date()
+    start_str = inception.isoformat()
+    end_str   = (today + _td(days=1)).isoformat()
+
+    try:
+        import yfinance as _yf
+        hist = _yf.download(tickers, start=start_str, end=end_str,
+                            interval="1d", auto_adjust=True, progress=False)
+        if hasattr(hist.columns, "levels"):
+            hist = hist["Close"]
+        snp  = _yf.download("^GSPC", start=start_str, end=end_str,
+                             interval="1d", auto_adjust=True, progress=False)["Close"].squeeze()
+        inrx = _yf.download("INR=X", start=start_str, end=end_str,
+                             interval="1d", auto_adjust=True, progress=False)["Close"].squeeze()
+    except Exception as exc:
+        print(f"  WARN  build_daily_chart_data fetch failed: {exc}", file=sys.stderr)
+        return None
+
+    def nearest_val(series, target):
+        import pandas as _pd2
+        s = series.loc[series.index.normalize() <= _pd2.Timestamp(target)]
+        return float(s.iloc[-1]) if not s.empty else None
+
+    # Get inception price from first trading day ON or AFTER inception
+    # (inception may be a weekend/holiday with no trading data)
+    import pandas as _pd3
+    snp_after  = snp.loc[snp.index.normalize()  >= _pd3.Timestamp(inception)]
+    inrx_after = inrx.loc[inrx.index.normalize() >= _pd3.Timestamp(inception)]
+    snp_inception  = float(snp_after.iloc[0])  if not snp_after.empty  else None
+    inr_inception  = float(inrx_after.iloc[0]) if not inrx_after.empty else None
+    if not snp_inception or not inr_inception:
+        return None
+
+    # All trading days (weekdays with data)
+    trading_days = sorted(set(snp.index.date))
+    trading_days = [d for d in trading_days if d >= inception and d <= today]
+
+    labels, dates, port_rets, snp_rets, inr_rets, fx_alphas = [], [], [], [], [], []
+    seen_months: set[str] = set()
+
+    for day in trading_days:
+        snp_px = nearest_val(snp, day)
+        inr_px = nearest_val(inrx, day)
+        if not snp_px or not inr_px:
+            continue
+
+        port_val = cash
+        for pos in positions:
+            tk = pos["yf"]
+            col = tk if tk in hist.columns else None
+            if col:
+                px = nearest_val(hist[col], day)
+                if px:
+                    port_val += pos["qty"] * px
+
+        # TWR anchor
+        anchor_date_v = anchor_twr_v = None
+        for ld in sorted(valid_anchors.keys(), reverse=True):
+            if ld <= day.isoformat():
+                anchor_date_v = ld; anchor_twr_v = valid_anchors[ld]; break
+
+        if anchor_date_v and anchor_twr_v is not None:
+            anchor_val = cash
+            for pos in positions:
+                tk = pos["yf"]
+                col = tk if tk in hist.columns else None
+                if col:
+                    px = nearest_val(hist[col], _date.fromisoformat(anchor_date_v))
+                    if px: anchor_val += pos["qty"] * px
+            price_change = (port_val - anchor_val) / anchor_val if anchor_val > 0 else 0
+            port_ret = ((1 + anchor_twr_v / 100) * (1 + price_change) - 1) * 100
+        else:
+            port_ret = (port_val - cash_infusion) / cash_infusion * 100
+
+        snp_ret  = (snp_px / snp_inception - 1) * 100
+        inr_ret  = ((1 + port_ret / 100) * (inr_px / inr_inception) - 1) * 100
+        fx_alpha = inr_ret - port_ret
+
+        mo_key = day.strftime("%b-%Y")
+        lbl = day.strftime("%b-%y") if mo_key not in seen_months else ""
+        seen_months.add(mo_key)
+
+        labels.append(lbl); dates.append(day.isoformat())
+        port_rets.append(round(port_ret, 2)); snp_rets.append(round(snp_ret, 2))
+        inr_rets.append(round(inr_ret, 2));   fx_alphas.append(round(fx_alpha, 2))
+
+    print(f"  daily chart: {len(dates)} days from {dates[0]} to {dates[-1]}")
+    return {"labels":labels,"dates":dates,"port_ret":port_rets,
+            "snp_ret":snp_rets,"inr_ret":inr_rets,"fx_alpha":fx_alphas}
+
+
 def build_snp_actual(label_dates: list[str | None]) -> list[float] | None:
     """
     Given ISO date strings matching portfolio monthly labels,
@@ -772,6 +882,16 @@ def main() -> int:
         print(f"  SKIP  {OUT_HOLDINGS.relative_to(ROOT)} (insufficient price data)")
     else:
         holdings["demo_prices"] = build_demo_prices()
+        # Daily chart data
+        try:
+            cost_now2 = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}
+            print("Building daily chart data…")
+            daily = build_daily_chart_data(cost_now2)
+            if daily:
+                holdings["daily_chart"] = daily
+        except Exception as exc:
+            print(f"  WARN  daily_chart build failed: {exc}", file=sys.stderr)
+
         # Weekly Friday chart data (replaces monthly in chart)
         try:
             cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}

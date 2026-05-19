@@ -620,7 +620,14 @@
 
     <!-- Cumulative return chart -->
     <div class="analytics-section">
-      <h2>CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <h2 style="margin-bottom:0">CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
+        <div style="display:flex;gap:4px">
+          <button id="cum-view-daily"   onclick="DASH.setCumView('daily')"   style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Daily</button>
+          <button id="cum-view-weekly"  onclick="DASH.setCumView('weekly')"  style="padding:3px 10px;border:1px solid var(--accent-b);border-radius:4px;background:var(--accent-b);color:#fff;cursor:pointer;font-size:11px;font-weight:700">Weekly</button>
+          <button id="cum-view-monthly" onclick="DASH.setCumView('monthly')" style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Monthly</button>
+        </div>
+      </div>
       <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
       <div class="chart-stat-bar">
         <span>Portfolio (USD): <strong id="cum-port">--</strong></span>
@@ -1351,7 +1358,8 @@ const DASH = (() => {
       S.demoPrices = prices.demo_prices || {};
       S.snpActual  = prices.snp_actual_cum_pct || null;
       S.inrFxMon   = prices.inr_fx_monthly    || null;
-      S.weeklyChart = prices.weekly_chart     || null;  // Friday-close weekly chart data
+      S.weeklyChart = prices.weekly_chart || null;
+      S.dailyChart  = prices.daily_chart  || null;
     }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;
@@ -2013,14 +2021,27 @@ const DASH = (() => {
       const _cumCs   = getComputedStyle(document.documentElement);
       const _cumGain = _cumCs.getPropertyValue('--gain').trim() || '#00d4aa';
       const _cumWarn = _cumCs.getPropertyValue('--warn').trim() || '#f0b429';
-      const wc = S.weeklyChart;  // weekly_chart from holdings_prices.json
+      // Select dataset based on toggle (daily/weekly/monthly)
+      const _cumView = localStorage.getItem('cum_view') || 'weekly';
+      const wc = _cumView === 'daily'   ? S.dailyChart  :
+                 _cumView === 'weekly'  ? S.weeklyChart :
+                 null;  // monthly = null → use broker data below
 
-      // Use weekly Friday data when available, else fall back to monthly broker data
+      // Highlight active toggle button
+      ['daily','weekly','monthly'].forEach(v => {
+        const btn = document.getElementById(`cum-view-${v}`);
+        if (!btn) return;
+        const active = v === _cumView;
+        btn.style.background    = active ? 'var(--accent-b)' : 'var(--bg-card2)';
+        btn.style.color         = active ? '#fff' : 'var(--text-sec)';
+        btn.style.borderColor   = active ? 'var(--accent-b)' : 'var(--border)';
+      });
+
       const _labels   = wc ? wc.labels   : m.labels;
       const _portData = wc ? wc.port_ret : m.port_return_cum_pct;
       const _snpData  = wc ? wc.snp_ret  : (S.snpActual || m.snp_return_cum_pct);
       const _inrData  = wc ? wc.inr_ret  : null;
-      const _dates    = wc ? wc.dates    : null;  // for tooltip date display
+      const _dates    = wc ? wc.dates    : null;
       const snpLabel  = 'S&P 500 (^GSPC)';
 
       // Monthly fallback: compute INR line from inr_fx_monthly
@@ -3588,7 +3609,12 @@ const DASH = (() => {
   // public surface for inline handlers
   fsApply();     // restore saved font size on load
   themeApply();  // restore saved theme on load
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme };
+  function setCumView(view) {
+    localStorage.setItem('cum_view', view);
+    safe(renderCharts, 'charts-cumview');
+  }
+
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView };
 })();
 
 // Register service worker for PWA installability

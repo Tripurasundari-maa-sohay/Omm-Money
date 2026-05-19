@@ -499,6 +499,70 @@
     .scr-filter-bar label{font-size:11px}
     #scr-min-score{width:42px}
   }
+
+  /* ── MOBILE: Fix overlapping layouts ──────────────────────── */
+  @media (max-width:640px){
+
+    /* Today's P&L tile with broker breakdown — stack vertically on mobile */
+    .metric-card[style*="flex-direction:row"] {
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+    .metric-card[style*="flex-direction:row"] > div[style*="width:1px"] {
+      width: 100% !important;
+      height: 1px !important;
+      margin: 0 !important;
+    }
+    #in-day-broker-breakdown,
+    #hero-day-region-breakdown {
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+      justify-content: flex-start !important;
+    }
+
+    /* Analytics 3-col grid → single column on mobile */
+    .analytics-section > div[style*="grid-template-columns:1fr 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+    .analytics-section > div[style*="grid-template-columns:1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* Bar charts — hide datalabels on mobile (too cramped) */
+    /* Handled via JS chartOptions — see renderIndiaCharts mobile check */
+
+    /* Donut chart containers — taller on mobile to fit legends */
+    .analytics-section canvas { max-width: 100%; }
+    #india-upl-wrap { height: 320px !important; }
+
+    /* Prevent bar label overflow */
+    .holdings-section { overflow-x: auto; }
+
+    /* India metrics tile — full width on mobile */
+    #in-day-broker-breakdown {
+      margin-top: 4px;
+    }
+
+    /* Chart stat bar — wrap on mobile */
+    .chart-stat-bar { flex-direction: column; gap: 4px; }
+    .chart-stat-bar span { font-size: 11px; }
+
+    /* Monthly heatmap — smaller tiles on mobile */
+    #india-monthly-heatmap > div,
+    #us-monthly-heatmap > div { min-width: 60px !important; padding: 5px 6px !important; }
+
+    /* Signals table — hide less important columns */
+    .sig-table-wrap { overflow-x: auto; }
+  }
+
+  @media (max-width:420px){
+    /* Metrics grid — full width single column for Today's P&L tile */
+    .metric-card[style*="flex-direction"] { width: 100%; grid-column: 1 / -1; }
+
+    /* Bar chart datalabels font size */
+    #india-upl-wrap { height: 380px !important; }
+  }
 </style>
 </head>
 
@@ -2763,7 +2827,8 @@ const DASH = (() => {
     const _igridC = _ics.getPropertyValue('--border').trim() || '#2a2a4a';
     const _isecC  = _ics.getPropertyValue('--text-sec').trim()||'#8892aa';
     const _ipriC  = _ics.getPropertyValue('--text-pri').trim()||'#e8eaf0';
-    const _inH = Math.max(300, uplSorted.length * 32);
+    const _rowH = window.innerWidth < 480 ? 28 : 32;
+    const _inH  = Math.max(300, uplSorted.length * _rowH);
     const _inWrap = document.getElementById('india-upl-wrap');
     if (_inWrap) _inWrap.style.height = _inH + 'px';
     mkChart('india-upl-chart', { type:'bar',
@@ -2783,9 +2848,10 @@ const DASH = (() => {
             align: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
             formatter: v => `${sign(v)}${Math.abs(v).toFixed(1)}%`,
             color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _igainC : _ilossC,
-            font:{ size:11, weight:'700' } } },
+            font:{ size: window.innerWidth < 480 ? 9 : 11, weight:'700' },
+            clamp: true } },
         scales:{ x:{ grid:{color:_igridC}, ticks:{color:_isecC, font:{size:11}, callback:v=>`${v}%`} },
-                 y:{ grid:{display:false}, ticks:{color:_ipriC, font:{size:12}, crossAlign:'far'} } } }
+                 y:{ grid:{display:false}, ticks:{color:_ipriC, font:{size: window.innerWidth < 480 ? 10 : 12}, crossAlign:'far'} } } }
     });
 
     // 3. Brokerage pie

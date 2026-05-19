@@ -455,6 +455,120 @@ def build_inr_monthly(label_dates: list[str | None]) -> list[float] | None:
         return None
 
 
+def build_weekly_chart_data(cost: dict) -> dict | None:
+    """
+    Fetch Friday-close history for all US open positions from account inception
+    to today. Returns a dict ready to store in holdings_prices.json:
+      weekly_chart.labels      — month name at first Friday of month, else ""
+      weekly_chart.dates       — ISO date strings (for tooltip)
+      weekly_chart.port_ret    — cumulative portfolio return % from inception
+      weekly_chart.snp_ret     — cumulative ^GSPC return % from inception
+      weekly_chart.inr_ret     — cumulative INR return % from inception
+      weekly_chart.fx_alpha    — inr_ret - port_ret (pure FX contribution)
+    """
+    from datetime import date as _date, timedelta as _td
+    import pandas as _pd
+
+    positions     = cost.get("us", {}).get("open", [])
+    cash          = cost.get("us", {}).get("cash", 0)
+    cash_infusion = cost.get("us", {}).get("cash_infusion_itd", 1)
+    if not positions or not cash_infusion:
+        return None
+
+    tickers = [p["yf"] for p in positions]
+
+    # Find inception date from label_dates (first Friday on/after Nov 28)
+    label_dates = cost.get("us", {}).get("monthly", {}).get("label_dates", [])
+    if label_dates and label_dates[0]:
+        inception = datetime.strptime(label_dates[0], "%Y-%m-%d").date()
+    else:
+        inception = _date(2025, 11, 28)
+
+    # All Fridays from inception to today
+    today = datetime.utcnow().date()
+    d = inception
+    while d.weekday() != 4: d += _td(days=1)
+    fridays = []
+    while d <= today:
+        fridays.append(d)
+        d += _td(days=7)
+    if not fridays:
+        return None
+
+    start_str = fridays[0].isoformat()
+    end_str   = (today + _td(days=1)).isoformat()
+
+    try:
+        import yfinance as _yf
+        hist = _yf.download(tickers, start=start_str, end=end_str,
+                            interval="1d", auto_adjust=True, progress=False)
+        if hasattr(hist.columns, "levels"):
+            hist = hist["Close"]
+
+        snp  = _yf.download("^GSPC", start=start_str, end=end_str,
+                             interval="1d", auto_adjust=True, progress=False)["Close"]
+        inrx = _yf.download("INR=X", start=start_str, end=end_str,
+                             interval="1d", auto_adjust=True, progress=False)["Close"]
+    except Exception as exc:
+        print(f"  WARN  build_weekly_chart_data fetch failed: {exc}", file=sys.stderr)
+        return None
+
+    def nearest_val(series, target):
+        s = series.loc[series.index.normalize() <= _pd.Timestamp(target)]
+        return float(s.iloc[-1]) if not s.empty else None
+
+    snp_inception = nearest_val(snp, fridays[0])
+    inr_inception = nearest_val(inrx, fridays[0])
+    if not snp_inception or not inr_inception:
+        return None
+
+    labels, dates, port_rets, snp_rets, inr_rets, fx_alphas = [], [], [], [], [], []
+    seen_months: set[str] = set()
+
+    for fri in fridays:
+        snp_px = nearest_val(snp, fri)
+        inr_px = nearest_val(inrx, fri)
+        if snp_px is None or inr_px is None:
+            continue
+
+        port_val = cash
+        for pos in positions:
+            tk = pos["yf"]
+            col = tk if tk in hist.columns else None
+            if col is None:
+                continue
+            px = nearest_val(hist[col], fri)
+            if px:
+                port_val += pos["qty"] * px
+
+        port_ret = (port_val - cash_infusion) / cash_infusion * 100
+        snp_ret  = (snp_px / snp_inception - 1) * 100
+        inr_ret  = ((1 + port_ret / 100) * (inr_px / inr_inception) - 1) * 100
+        fx_alpha = inr_ret - port_ret
+
+        # X-axis label: month abbreviation at first Friday of each month
+        mo_key = fri.strftime("%b-%Y")
+        lbl = fri.strftime("%b-%y") if mo_key not in seen_months else ""
+        seen_months.add(mo_key)
+
+        labels.append(lbl)
+        dates.append(fri.isoformat())
+        port_rets.append(round(port_ret, 2))
+        snp_rets.append(round(snp_ret, 2))
+        inr_rets.append(round(inr_ret, 2))
+        fx_alphas.append(round(fx_alpha, 2))
+
+    print(f"  weekly chart: {len(dates)} Fridays from {dates[0]} to {dates[-1]}")
+    return {
+        "labels":   labels,
+        "dates":    dates,
+        "port_ret": port_rets,
+        "snp_ret":  snp_rets,
+        "inr_ret":  inr_rets,
+        "fx_alpha": fx_alphas,
+    }
+
+
 def build_snp_actual(label_dates: list[str | None]) -> list[float] | None:
     """
     Given ISO date strings matching portfolio monthly labels,
@@ -595,6 +709,16 @@ def main() -> int:
         print(f"  SKIP  {OUT_HOLDINGS.relative_to(ROOT)} (insufficient price data)")
     else:
         holdings["demo_prices"] = build_demo_prices()
+        # Weekly Friday chart data (replaces monthly in chart)
+        try:
+            cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}
+            print("Building weekly Friday chart data…")
+            weekly = build_weekly_chart_data(cost_now)
+            if weekly:
+                holdings["weekly_chart"] = weekly
+        except Exception as exc:
+            print(f"  WARN  weekly_chart build failed: {exc}", file=sys.stderr)
+
         # fx_buy per ticker — stored here (network-first) not in holdings_cost.json (cache-first)
         print("Fetching fx_buy rates for open positions…")
         fx_buys = build_fx_buy_prices(holdings.get("prices", {}))

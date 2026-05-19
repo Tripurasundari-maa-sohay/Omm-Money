@@ -1,5 +1,5 @@
 // Service Worker — Portfolio Dashboard PWA
-const CACHE = 'portfolio-v43';
+const CACHE = 'portfolio-v44';
 const BASE = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/'));
 
 const SHELL = [

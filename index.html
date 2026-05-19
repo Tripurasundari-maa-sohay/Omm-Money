@@ -3587,7 +3587,9 @@ const DASH = (() => {
 
 // Register service worker for PWA installability
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    .then(reg => reg.update())   // force check for new SW on every page load
+    .catch(() => {});
 }
 </script>
 </body>

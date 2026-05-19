@@ -2008,53 +2008,57 @@ const DASH = (() => {
       const _cumCs   = getComputedStyle(document.documentElement);
       const _cumGain = _cumCs.getPropertyValue('--gain').trim() || '#00d4aa';
       const _cumWarn = _cumCs.getPropertyValue('--warn').trim() || '#f0b429';
-      // Use real ^GSPC data if available, fall back to broker benchmark
+
+      // S&P series — real ^GSPC preferred
       const snpSeries = (S.snpActual && S.snpActual.length === m.labels.length)
         ? S.snpActual : m.snp_return_cum_pct;
       const snpLabel  = (S.snpActual && S.snpActual.length === m.labels.length)
-        ? 'S&P 500 (actual ^GSPC)' : 'S&P 500 (broker benchmark)';
-      const alphaData = m.port_return_cum_pct.map((v, i) =>
-        +((v - (snpSeries[i] || 0)).toFixed(2)));
-      mkChart('cumulative-chart', { type:'line',
-        data: { labels: m.labels, datasets: [
-          { label:'Portfolio', data:m.port_return_cum_pct, borderColor:_cumGain, ...darkLine },
-          { label:snpLabel,    data:snpSeries, borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
-          { label:'Alpha vs S&P', data:alphaData,
-            borderColor: _cumWarn, borderWidth:1.5, borderDash:[3,3],
-            tension:0.3, pointRadius:0, fill:false,
-            backgroundColor:'transparent' }
-        ]},
-        options: lineOpts({ callbacks: { label: ctx => {
-          const v = ctx.parsed.y, s = v>=0?'+':'';
-          if (ctx.dataset.label === 'Alpha vs S&P')
-            return `Alpha: ${s}${v.toFixed(2)}%`;
-          const usdDelta = cashBase * (v/100);
-          return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
-        }}})
+        ? 'S&P 500 (^GSPC)' : 'S&P 500 (broker)';
+
+      // INR return — position-level: cost-weighted avg fx_buy as anchor
+      // Each position bought at different INR rate → weighted avg is correct base
+      const _openWithFx = (S.view && S.view.us) ? S.view.us.open.filter(p => p.fx_buy && p.cost > 0) : [];
+      const _totalCost  = _openWithFx.reduce((s,p) => s + p.cost, 0);
+      const _wtdFxBuy   = _totalCost > 0
+        ? _openWithFx.reduce((s,p) => s + p.fx_buy * (p.cost/_totalCost), 0)
+        : null;
+      // Monthly INR return: uses per-position weighted fx_buy as base, monthly fx for current value
+      const inrLine = (S.inrFxMon && S.inrFxMon.length === m.labels.length && _wtdFxBuy)
+        ? m.port_return_cum_pct.map((v, i) =>
+            +((((1 + v/100) * (S.inrFxMon[i] / _wtdFxBuy)) - 1) * 100).toFixed(2))
+        : null;
+
+      const _chartCallback = ctx => {
+        const v = ctx.parsed.y, s = v>=0?'+':'';
+        const usdDelta = cashBase * (v/100);
+        return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
+      };
+
+      const _datasets = [
+        { label:'Portfolio (USD)', data:m.port_return_cum_pct, borderColor:_cumGain, ...darkLine },
+        { label:snpLabel,          data:snpSeries, borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
+        ...(inrLine ? [{ label:'Portfolio (INR ₹→$→₹)',
+          data:inrLine, borderColor:_cumWarn, borderWidth:2.5,
+          tension:0.3, pointRadius:2, fill:false, backgroundColor:'transparent' }] : []),
+      ];
+
+      mkChart('cumulative-chart', {
+        type:'line', data:{ labels:m.labels, datasets:_datasets },
+        options: lineOpts({ callbacks:{ label:_chartCallback } })
       });
+      mkChart('us-perf-chart', {
+        type:'line', data:{ labels:m.labels, datasets:_datasets },
+        options: lineOpts({ callbacks:{ label:_chartCallback } })
+      });
+
       const portPct = m.port_return_cum_pct.at(-1) || 0;
       const snpPct  = snpSeries.at(-1) || 0;
+      const inrPct  = inrLine ? (inrLine.at(-1) || 0) : null;
       setText('cum-port',  sign(portPct) + pct(portPct));
       setText('cum-snp',   sign(snpPct)  + pct(snpPct));
       setText('cum-alpha', sign(portPct-snpPct) + pct(portPct - snpPct));
       setClass('cum-alpha', pn(portPct - snpPct));
-
-      // US-tab dedicated chart (same data)
-      mkChart('us-perf-chart', { type:'line',
-        data: { labels: m.labels, datasets: [
-          { label:'US Portfolio',   data:m.port_return_cum_pct, borderColor:_cumGain,  ...darkLine },
-          { label:snpLabel,         data:snpSeries,             borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
-          { label:'Alpha vs S&P',   data:alphaData,
-            borderColor:_cumWarn, borderWidth:1.5, borderDash:[3,3],
-            tension:0.3, pointRadius:0, fill:false, backgroundColor:'transparent' }
-        ]},
-        options: lineOpts({ callbacks: { label: ctx => {
-          const v = ctx.parsed.y, s = v>=0?'+':'';
-          if (ctx.dataset.label === 'Alpha vs S&P') return `Alpha: ${s}${v.toFixed(2)}%`;
-          const usdDelta = cashBase * (v/100);
-          return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
-        }}})
-      });
+      if (inrPct !== null) { setText('cum-inr', sign(inrPct)+pct(inrPct)); setClass('cum-inr', pn(inrPct)); }
 
       // Cash vs Account value
       mkChart('cash-value-chart', { type:'line',

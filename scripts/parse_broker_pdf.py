@@ -535,10 +535,11 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
                     "name":     r["name"],
                     "cls":      cls,
                     "income":   round(r["income"], 2),
-                    "costs":    0.0,   # costs already in open position; 0 here to avoid double-count
+                    "costs":    0.0,                       # realised is ALREADY net of costs (PDF P&L = gross - costs)
+                    "_costs_paid": round(r["costs"], 2),   # informational only — do NOT use in total calculation
                     "realised": round(r["pl"], 2),
                     "ret_pct":  round(r["ret_pct"], 2),
-                    "_note":    "costs counted in open position (same ticker, re-opened)",
+                    "_note":    "realised is net of all period costs; costs=0 avoids double-deduction in total",
                 })
             continue
         _, yf, cls = lookup(r["name"])

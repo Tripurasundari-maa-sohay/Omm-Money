@@ -421,9 +421,67 @@ def build_demo_prices() -> dict:
     return demo
 
 
+# ── FX BUY RATE ──────────────────────────────────────────────────────────
+def fetch_fx_on_date(date_str: str) -> float | None:
+    """Return INR/USD closing rate on a specific date (YYYY-MM-DD).
+    Uses yfinance history for INR=X. Returns None on failure."""
+    try:
+        from datetime import timedelta
+        dt  = datetime.strptime(date_str, "%Y-%m-%d")
+        end = dt + timedelta(days=4)          # +4 days buffer for weekends/holidays
+        hist = yf.Ticker("INR=X").history(
+            start=dt.strftime("%Y-%m-%d"),
+            end=end.strftime("%Y-%m-%d"),
+            interval="1d",
+            auto_adjust=False,
+        )
+        if hist.empty:
+            return None
+        return round(float(hist["Close"].iloc[0]), 4)
+    except Exception as exc:
+        print(f"  WARN  fx_on_date {date_str}: {exc}", file=sys.stderr)
+        return None
+
+
+def update_fx_buy_rates() -> None:
+    """For every US open position that has buy_date but no fx_buy,
+    fetch historical INR/USD and write it back to holdings_cost.json.
+    Skips positions that already have fx_buy set (avoids re-fetching)."""
+    if not COST_BASIS.exists():
+        return
+    try:
+        cost = json.loads(COST_BASIS.read_text())
+    except Exception:
+        return
+
+    positions = cost.get("us", {}).get("open", [])
+    updated = 0
+    for pos in positions:
+        buy_date = pos.get("buy_date")
+        if not buy_date:
+            continue
+        if pos.get("fx_buy"):          # already fetched — skip
+            continue
+        fx = fetch_fx_on_date(buy_date)
+        if fx:
+            pos["fx_buy"] = fx
+            updated += 1
+            print(f"  fx_buy  {pos['tk']:8s}  {buy_date}  → ₹{fx}/USD")
+        else:
+            print(f"  WARN  fx_buy not found for {pos['tk']} on {buy_date}", file=sys.stderr)
+
+    if updated:
+        COST_BASIS.write_text(json.dumps(cost, indent=2))
+        print(f"  fx_buy: updated {updated} position(s) in holdings_cost.json")
+
+
 # ── MAIN ─────────────────────────────────────────────────────────────────
 def main() -> int:
     OUT_INDICES.parent.mkdir(parents=True, exist_ok=True)
+
+    # Backfill historical fx_buy for any positions missing it
+    print("Checking fx_buy rates for US positions…")
+    update_fx_buy_rates()
 
     # Live FX rate — update holdings_cost.json so dashboard uses fresh rate
     print("Fetching live INR/USD rate…")

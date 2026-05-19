@@ -719,6 +719,7 @@
             <th class="sortable" data-sc="fees">FEES</th>
             <th class="sortable" data-sc="upl">UNREAL P&amp;L</th>
             <th class="sortable" data-sc="ret">RETURN %</th>
+            <th class="sortable" data-sc="inrRet" title="Return in INR terms — includes currency movement">INR RETURN %</th>
             <th class="sortable" data-sc="signal">SIGNAL</th>
           </tr>
         </thead>
@@ -1397,10 +1398,18 @@ const DASH = (() => {
     const dayPct  = pc ? ((ltp - pc) / pc) * 100 : null;
     const cost    = (holding.avg || 0) * holding.qty;
     const ret     = cost ? (uplNet / cost) * 100 : 0;    // true net return %
+    // INR-adjusted return: accounts for USD/INR movement since buy date
+    // inrCost = avg_USD × fx_buy;  inrValue = ltp_USD × fx_today
+    const fx_today = (S.cost && S.cost.fx_inr_usd) || FX_DEFAULT;
+    const fx_buy   = holding.fx_buy || null;   // null if buy_date not yet fetched
+    const inrRet   = (fx_buy && holding.avg)
+      ? (((ltp * fx_today) - (holding.avg * fx_buy)) / (holding.avg * fx_buy)) * 100
+      : null;   // null = no historical fx rate yet
+    const fxAlpha  = (inrRet !== null) ? inrRet - ret : null;  // pure currency contribution
     // houseMoney: avg===0 means purchase price unknown (e.g. NBCC pending) — treat as free shares
     // NOTE: cost IS returned here so callers can use p.cost directly
     const houseMoney = !holding.avg;  // catches both 0 and undefined/null
-    return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney };
+    return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney, inrRet, fxAlpha };
   }
   function build() {
     if (S.ui.demo) return;              // demo view already set — don't overwrite with real data
@@ -1651,6 +1660,7 @@ const DASH = (() => {
     tk: p => p.tk, qty: p => p.qty, avg: p => p.avg, ltp: p => p.ltp,
     dayPL: p => p.dayPL, mv: p => p.mv, fees: p => p.fees,
     upl: p => p.uplNet, ret: p => p.ret,
+    inrRet: p => p.inrRet ?? -Infinity,
     signal: p => SIG.results[p.tk]?.score ?? -1,
   };
 
@@ -1693,6 +1703,12 @@ const DASH = (() => {
         <td>${usd2(p.fees)}</td>
         <td class="${pn(p.uplNet)}">${sign(p.uplNet)}${usd2(p.uplNet)}</td>
         <td class="${pn(p.ret)}">${p.houseMoney ? FREE_TAG : sign(p.ret)+pct(p.ret)}</td>
+        <td class="${p.inrRet!==null?pn(p.inrRet):''}" title="${p.fxAlpha!==null?'FX alpha: '+sign(p.fxAlpha)+pct(p.fxAlpha):'Awaiting buy_date from parser'}">
+          ${p.inrRet!==null
+            ? `${sign(p.inrRet)}${pct(p.inrRet)}<br><span style="font-size:10px;color:var(--text-dim)">(FX: ${sign(p.fxAlpha)}${pct(p.fxAlpha)})</span>`
+            : '<span style="color:var(--text-dim);font-size:11px">run parser</span>'
+          }
+        </td>
         <td>${sigHtml}</td>
       </tr>`;
     }).join('');

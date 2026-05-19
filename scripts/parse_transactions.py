@@ -194,6 +194,11 @@ def main(xlsx_path: str) -> int:
             pos["income"] = new_inc
             changed_income += 1
 
+        # Always write buy_date — needed for INR return % calculation (FX alpha)
+        new_buy_date = str(open_date) if open_date else None
+        if new_buy_date and pos.get("buy_date") != new_buy_date:
+            pos["buy_date"] = new_buy_date
+
     print("-" * 80)
     print(f"\nFee fixes:    {changed_fees}")
     print(f"Income fixes: {changed_income}")

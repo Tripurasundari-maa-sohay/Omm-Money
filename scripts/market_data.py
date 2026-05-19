@@ -217,6 +217,7 @@ def fetch_quote_india_sme(yf_symbol: str) -> dict | None:
                 # Screener doesn't expose prev-close — try to get it from NSE API
                 pc = None
                 try:
+                    time.sleep(1)  # rate-limit: NSE needs gap between requests
                     nse_r = requests.get(
                         f"https://www.nseindia.com/api/quote-equity?symbol={base}",
                         headers=_HEADERS, timeout=8,

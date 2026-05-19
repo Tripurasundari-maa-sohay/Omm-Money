@@ -47,7 +47,7 @@ jobs:
               ts  = datetime.fromisoformat(generated.replace("Z", "+00:00"))
               age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
               print(f"Data age: {age:.1f} min  (generated: {generated})")
-              stale = age > 12  # 12 min threshold — avoids overlap with 15-min schedule
+              stale = age > 20  # 20 min — full_update runs every 15min, needs headroom to finish
           except Exception as e:
               print(f"Could not read prices file: {e} — treating as stale")
 

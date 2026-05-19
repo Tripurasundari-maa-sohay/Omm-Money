@@ -1488,7 +1488,8 @@ const DASH = (() => {
     };
 
     // Last update timestamp from prices
-    const ts = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().shift(); // min = stalest price
+    const _ts_vals = Object.values(S.prices).map(p=>p.as_of).filter(Boolean);
+    const ts = _ts_vals.length ? _ts_vals.reduce((a,b) => a < b ? a : b) : null; // true min ISO timestamp
     const anyLive = Object.keys(S.prices).length > 0;
 
     S.view = { fx, us, india, combined, asOf: ts || S.cost.as_of, anyLive };
@@ -2926,10 +2927,14 @@ const DASH = (() => {
     for (const base of ['https://query1.finance.yahoo.com','https://query2.finance.yahoo.com']) {
       const url = `${base}/v8/finance/chart/${sym}?interval=1d&range=2y`;
       for (const wrap of [s=>s, ...SIG_CORS]) {
+        const ctrl = new AbortController();
+        const tid  = setTimeout(() => ctrl.abort(), 10000);
         try {
-          const r = await fetch(wrap(url)); if (!r.ok) continue;
+          const r = await fetch(wrap(url), { signal: ctrl.signal });
+          clearTimeout(tid);
+          if (!r.ok) continue;
           const d = sigParse(await r.json()); if (d) return d;
-        } catch {}
+        } catch { clearTimeout(tid); }
       }
     }
     return null;

@@ -59,8 +59,12 @@ cd "$REPO"
 git add data/holdings_cost.json
 git diff --cached --quiet && echo "  (no changes to commit)" && exit 0
 git commit -m "sync: portfolio update $(date '+%Y-%m-%d')"
-git pull --rebase
-git push
+for attempt in 1 2 3; do
+  git rebase --abort 2>/dev/null || true
+  git pull --rebase origin main && git push && break
+  echo "  push attempt $attempt failed — retrying…"
+  sleep 3
+done
 
 echo ""
 echo "✅  Done! GitHub Actions will refresh live prices within 15 min."

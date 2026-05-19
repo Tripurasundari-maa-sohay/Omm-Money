@@ -2017,15 +2017,17 @@ const DASH = (() => {
 
       // INR return — position-level: cost-weighted avg fx_buy as anchor
       // Each position bought at different INR rate → weighted avg is correct base
+      // Weighted avg fx_buy from positions (position-level accuracy)
       const _openWithFx = (S.view && S.view.us) ? S.view.us.open.filter(p => p.fx_buy && p.cost > 0) : [];
       const _totalCost  = _openWithFx.reduce((s,p) => s + p.cost, 0);
       const _wtdFxBuy   = _totalCost > 0
         ? _openWithFx.reduce((s,p) => s + p.fx_buy * (p.cost/_totalCost), 0)
         : null;
-      // Monthly INR return: uses per-position weighted fx_buy as base, monthly fx for current value
-      const inrLine = (S.inrFxMon && S.inrFxMon.length === m.labels.length && _wtdFxBuy)
+      // Fallback: use inr_fx_monthly[0] (portfolio start rate) if fx_buy not yet loaded
+      const _fxBase = _wtdFxBuy || (S.inrFxMon && S.inrFxMon[0]) || null;
+      const inrLine = (S.inrFxMon && S.inrFxMon.length === m.labels.length && _fxBase)
         ? m.port_return_cum_pct.map((v, i) =>
-            +((((1 + v/100) * (S.inrFxMon[i] / _wtdFxBuy)) - 1) * 100).toFixed(2))
+            +((((1 + v/100) * (S.inrFxMon[i] / _fxBase)) - 1) * 100).toFixed(2))
         : null;
 
       const _chartCallback = ctx => {

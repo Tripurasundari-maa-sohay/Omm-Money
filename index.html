@@ -1332,7 +1332,11 @@ const DASH = (() => {
       fetchJSON('data/processed/audit.json'),
     ]);
     if (cost)    S.cost = cost;
-    if (prices)  { S.prices = prices.prices || {}; S.demoPrices = prices.demo_prices || {}; }
+    if (prices)  {
+      S.prices    = prices.prices || {};
+      S.demoPrices = prices.demo_prices || {};
+      S.snpActual = prices.snp_actual_cum_pct || null;  // real ^GSPC returns
+    }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;
     // Load demo portfolio (data/demo_portfolio.json) for demo mode
@@ -1973,13 +1977,17 @@ const DASH = (() => {
       const _cumCs   = getComputedStyle(document.documentElement);
       const _cumGain = _cumCs.getPropertyValue('--gain').trim() || '#00d4aa';
       const _cumWarn = _cumCs.getPropertyValue('--warn').trim() || '#f0b429';
+      // Use real ^GSPC data if available, fall back to broker benchmark
+      const snpSeries = (S.snpActual && S.snpActual.length === m.labels.length)
+        ? S.snpActual : m.snp_return_cum_pct;
+      const snpLabel  = (S.snpActual && S.snpActual.length === m.labels.length)
+        ? 'S&P 500 (actual ^GSPC)' : 'S&P 500 (broker benchmark)';
       const alphaData = m.port_return_cum_pct.map((v, i) =>
-        +((v - (m.snp_return_cum_pct[i] || 0)).toFixed(2)));
-      const alphaColor = (alphaData.at(-1) || 0) >= 0 ? _cumGain : '#ff5c5c';
+        +((v - (snpSeries[i] || 0)).toFixed(2)));
       mkChart('cumulative-chart', { type:'line',
         data: { labels: m.labels, datasets: [
           { label:'Portfolio', data:m.port_return_cum_pct, borderColor:_cumGain, ...darkLine },
-          { label:'S&P 500',   data:m.snp_return_cum_pct,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
+          { label:snpLabel,    data:snpSeries, borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
           { label:'Alpha vs S&P', data:alphaData,
             borderColor: _cumWarn, borderWidth:1.5, borderDash:[3,3],
             tension:0.3, pointRadius:0, fill:false,
@@ -1994,7 +2002,7 @@ const DASH = (() => {
         }}})
       });
       const portPct = m.port_return_cum_pct.at(-1) || 0;
-      const snpPct  = m.snp_return_cum_pct.at(-1)  || 0;
+      const snpPct  = snpSeries.at(-1) || 0;
       setText('cum-port',  sign(portPct) + pct(portPct));
       setText('cum-snp',   sign(snpPct)  + pct(snpPct));
       setText('cum-alpha', sign(portPct-snpPct) + pct(portPct - snpPct));

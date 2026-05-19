@@ -80,35 +80,84 @@ def market_status(market: str) -> str:
     return "CLOSED"
 
 
+_YF_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+}
+
+
+def fetch_quote_direct(yf_symbol: str) -> dict | None:
+    """
+    Attempt 3 fallback: direct HTTP to Yahoo Finance chart API, bypassing the
+    yfinance library entirely.  Tries query1 then query2.  Works for US + India.
+    Returns {'ltp': float, 'pc': float|None} or None on failure.
+    """
+    for host in ("query1", "query2"):
+        try:
+            url = (
+                f"https://{host}.finance.yahoo.com/v8/finance/chart/{yf_symbol}"
+                f"?interval=1d&range=5d&includePrePost=false"
+            )
+            r = requests.get(url, headers=_YF_HEADERS, timeout=10)
+            if r.status_code != 200:
+                continue
+            result = r.json().get("chart", {}).get("result", [None])[0]
+            if not result:
+                continue
+            meta = result.get("meta", {})
+            ltp  = meta.get("regularMarketPrice")
+            pc   = meta.get("chartPreviousClose") or meta.get("previousClose")
+            if ltp and float(ltp) > 0:
+                print(f"  direct/{host}  {yf_symbol} → {float(ltp):.2f}")
+                return {
+                    "ltp": round(float(ltp), 4),
+                    "pc":  round(float(pc), 4) if pc else None,
+                }
+        except Exception as exc:
+            print(f"  WARN  direct/{host} {yf_symbol}: {exc}", file=sys.stderr)
+    return None
+
+
 def fetch_quote(yf_symbol: str) -> dict | None:
-    """Return {'ltp': float, 'pc': float} or None on failure."""
-    # Attempt 1: fast_info — queries Yahoo's live quote endpoint,
-    # gives true intraday LTP + official previous close.
+    """
+    Return {'ltp': float, 'pc': float|None} or None on complete failure.
+    Three-layer fallback:
+      1. yfinance fast_info  (live intraday price + official prev close)
+      2. yfinance history()  (2d daily candles — slower, survives rate limits)
+      3. Direct Yahoo chart API via requests (bypasses yfinance library)
+    """
+    # Attempt 1: fast_info
     try:
-        fi = yf.Ticker(yf_symbol).fast_info
+        fi  = yf.Ticker(yf_symbol).fast_info
         ltp = fi.last_price
         pc  = fi.previous_close
-        # Explicit None check: fast_info can silently return None without raising
         if ltp is not None and float(ltp) > 0:
             if pc is None:
-                # previous_close not yet published (e.g. market just opened) →
-                # fall through to history() which has yesterday's actual close
-                raise ValueError("previous_close is None — falling through to history fallback")
+                raise ValueError("previous_close is None — falling through")
             return {"ltp": round(float(ltp), 4), "pc": round(float(pc), 4)}
     except Exception as exc:
         print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
 
-    # Attempt 2: daily history fallback (works when fast_info is unavailable)
+    # Attempt 2: yfinance history (2d candles)
     try:
-        hist = yf.Ticker(yf_symbol).history(period="2d", interval="1d", auto_adjust=False)
-        if hist.empty:
-            return None
-        ltp = float(hist["Close"].iloc[-1])
-        pc  = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else ltp
-        return {"ltp": round(ltp, 4), "pc": round(pc, 4)}
+        hist = yf.Ticker(yf_symbol).history(period="5d", interval="1d", auto_adjust=False)
+        if not hist.empty:
+            # Use last two rows to get true ltp + prev-close
+            # history() during live session: iloc[-1] = today's last close-so-far
+            # iloc[-2] = yesterday's actual close
+            ltp = float(hist["Close"].iloc[-1])
+            pc  = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else None
+            if ltp > 0:
+                return {"ltp": round(ltp, 4), "pc": round(pc, 4) if pc else None}
     except Exception as exc:
         print(f"  WARN  history {yf_symbol}: {exc}", file=sys.stderr)
-        return None
+
+    # Attempt 3: direct Yahoo Finance chart API (independent of yfinance)
+    return fetch_quote_direct(yf_symbol)
 
 
 def fetch_quote_india_sme(yf_symbol: str) -> dict | None:
@@ -241,13 +290,33 @@ def build_holdings_json() -> dict:
     for tk, yf_sym in tickers:
         try:
             q = fetch_quote(yf_sym)
-            if q is None and yf_sym.endswith(".NS"):
-                print(f"  INFO  {tk}: yfinance empty — trying SME fallback…", file=sys.stderr)
+            is_india = yf_sym.endswith((".NS", ".BO"))
+
+            # India: if fetch failed entirely → SME fallback
+            if q is None and is_india:
+                print(f"  INFO  {tk}: all yfinance attempts empty — trying NSE/Screener fallback…", file=sys.stderr)
                 q = fetch_quote_india_sme(yf_sym)
+
+            # India: if ltp OK but pc missing → use SME fallback just to get pc
+            if q is not None and q.get("pc") is None and is_india:
+                print(f"  INFO  {tk}: ltp={q['ltp']} but pc=None — fetching pc via NSE/Screener…", file=sys.stderr)
+                sme = fetch_quote_india_sme(yf_sym)
+                if sme and sme.get("pc") is not None:
+                    q["pc"] = sme["pc"]
+                    print(f"  INFO  {tk}: pc resolved → {q['pc']}", file=sys.stderr)
+
+            # US: if ltp OK but pc missing → try direct API for pc
+            if q is not None and q.get("pc") is None and not is_india:
+                print(f"  INFO  {tk}: ltp={q['ltp']} but pc=None — retrying direct API for pc…", file=sys.stderr)
+                direct = fetch_quote_direct(yf_sym)
+                if direct and direct.get("pc") is not None:
+                    q["pc"] = direct["pc"]
+                    print(f"  INFO  {tk}: pc resolved → {q['pc']}", file=sys.stderr)
+
             if q is None:
-                print(f"  FAIL  {tk} ({yf_sym}): no price obtained", file=sys.stderr)
+                print(f"  FAIL  {tk} ({yf_sym}): no price obtained after all fallbacks", file=sys.stderr)
                 continue
-            pc         = q["pc"]    # may be None for SME stocks with no prev-close
+            pc         = q["pc"]    # may still be None if all sources lack prev-close
             change     = round(q["ltp"] - pc, 4) if pc is not None else None
             change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
             fresh_prices[tk] = {

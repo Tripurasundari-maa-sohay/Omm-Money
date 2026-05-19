@@ -1349,8 +1349,9 @@ const DASH = (() => {
     if (prices)  {
       S.prices    = prices.prices || {};
       S.demoPrices = prices.demo_prices || {};
-      S.snpActual = prices.snp_actual_cum_pct || null;  // real ^GSPC returns
-      S.inrFxMon  = prices.inr_fx_monthly    || null;  // monthly INR/USD rates for INR return line
+      S.snpActual  = prices.snp_actual_cum_pct || null;
+      S.inrFxMon   = prices.inr_fx_monthly    || null;
+      S.weeklyChart = prices.weekly_chart     || null;  // Friday-close weekly chart data
     }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;
@@ -2007,57 +2008,56 @@ const DASH = (() => {
       return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
     };
 
-    // Cumulative chart (portfolio)
+    // Cumulative chart (portfolio) — weekly Friday data preferred, monthly fallback
     if (m && m.labels) {
       const _cumCs   = getComputedStyle(document.documentElement);
       const _cumGain = _cumCs.getPropertyValue('--gain').trim() || '#00d4aa';
       const _cumWarn = _cumCs.getPropertyValue('--warn').trim() || '#f0b429';
+      const wc = S.weeklyChart;  // weekly_chart from holdings_prices.json
 
-      // S&P series — real ^GSPC preferred
-      const snpSeries = (S.snpActual && S.snpActual.length === m.labels.length)
-        ? S.snpActual : m.snp_return_cum_pct;
-      const snpLabel  = (S.snpActual && S.snpActual.length === m.labels.length)
-        ? 'S&P 500 (^GSPC)' : 'S&P 500 (broker)';
+      // Use weekly Friday data when available, else fall back to monthly broker data
+      const _labels   = wc ? wc.labels   : m.labels;
+      const _portData = wc ? wc.port_ret : m.port_return_cum_pct;
+      const _snpData  = wc ? wc.snp_ret  : (S.snpActual || m.snp_return_cum_pct);
+      const _inrData  = wc ? wc.inr_ret  : null;
+      const _dates    = wc ? wc.dates    : null;  // for tooltip date display
+      const snpLabel  = 'S&P 500 (^GSPC)';
 
-      // INR return — position-level: cost-weighted avg fx_buy as anchor
-      // Each position bought at different INR rate → weighted avg is correct base
-      // For the chart: anchor to inr_fx_monthly[0] (portfolio inception FX rate)
-      // This ensures all 3 lines start at 0% on the same date — apples-to-apples comparison
-      // (weighted fx_buy is only used for per-position tile/table, not the time-series chart)
-      const _fxBase = (S.inrFxMon && S.inrFxMon[0]) || null;
-      const inrLine = (S.inrFxMon && S.inrFxMon.length === m.labels.length && _fxBase)
+      // Monthly fallback: compute INR line from inr_fx_monthly
+      const _fxBase = (!wc && S.inrFxMon && S.inrFxMon[0]) ? S.inrFxMon[0] : null;
+      const inrLine = _inrData || (_fxBase && S.inrFxMon && S.inrFxMon.length === m.labels.length
         ? m.port_return_cum_pct.map((v, i) =>
             +((((1 + v/100) * (S.inrFxMon[i] / _fxBase)) - 1) * 100).toFixed(2))
-        : null;
+        : null);
 
       const _chartCallback = ctx => {
         const v = ctx.parsed.y, s = v>=0?'+':'';
-        if (ctx.dataset.label && ctx.dataset.label === 'INR Return') {
-          return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%`;
-        }
+        const dateStr = _dates ? ` · ${_dates[ctx.dataIndex]}` : '';
+        if (ctx.dataset.label === 'INR Return' || ctx.dataset.label === 'Alpha due to INR FX')
+          return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%${dateStr}`;
         const usdDelta = cashBase * (v/100);
-        return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
+        return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})${dateStr}`;
       };
 
       const _datasets = [
-        { label:'Portfolio (USD)', data:m.port_return_cum_pct, borderColor:_cumGain, ...darkLine },
-        { label:snpLabel,          data:snpSeries, borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
+        { label:'Portfolio (USD)', data:_portData, borderColor:_cumGain, ...darkLine },
+        { label:snpLabel,          data:_snpData,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
         ...(inrLine ? [{ label:'INR Return',
           data:inrLine, borderColor:_cumWarn, borderWidth:2.5,
-          tension:0.3, pointRadius:2, fill:false, backgroundColor:'transparent' }] : []),
+          tension:0.3, pointRadius:wc ? 1 : 2, fill:false, backgroundColor:'transparent' }] : []),
       ];
 
       mkChart('cumulative-chart', {
-        type:'line', data:{ labels:m.labels, datasets:_datasets },
+        type:'line', data:{ labels:_labels, datasets:_datasets },
         options: lineOpts({ callbacks:{ label:_chartCallback } })
       });
       mkChart('us-perf-chart', {
-        type:'line', data:{ labels:m.labels, datasets:_datasets },
+        type:'line', data:{ labels:_labels, datasets:_datasets },
         options: lineOpts({ callbacks:{ label:_chartCallback } })
       });
 
-      const portPct = m.port_return_cum_pct.at(-1) || 0;
-      const snpPct  = snpSeries.at(-1) || 0;
+      const portPct = _portData.at(-1) || 0;
+      const snpPct  = _snpData.at(-1)  || 0;
       const inrPct  = inrLine ? (inrLine.at(-1) || 0) : null;
       setText('cum-port', sign(portPct) + pct(portPct));
       setText('cum-snp',  sign(snpPct)  + pct(snpPct));

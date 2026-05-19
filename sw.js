@@ -1,7 +1,7 @@
 // Service Worker — Portfolio Dashboard PWA
 // Uses relative paths — works on GitHub Pages subpath (/portfolio-dashboard/)
 
-const CACHE = 'portfolio-v29';
+const CACHE = 'portfolio-v30';
 const BASE = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/'));
 
 const SHELL = [

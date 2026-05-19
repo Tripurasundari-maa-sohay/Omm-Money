@@ -1415,9 +1415,9 @@ const DASH = (() => {
     const cost    = (holding.avg || 0) * holding.qty;
     const ret     = cost ? (uplNet / cost) * 100 : 0;    // true net return %
     // INR-adjusted return: accounts for USD/INR movement since buy date
-    // inrCost = avg_USD × fx_buy;  inrValue = ltp_USD × fx_today
+    // fx_buy in S.prices (network-first) — always fresh, not from cached holdings_cost
     const fx_today = (S.cost && S.cost.fx_inr_usd) || FX_DEFAULT;
-    const fx_buy   = holding.fx_buy || null;   // null if buy_date not yet fetched
+    const fx_buy   = (S.prices[holding.tk] && S.prices[holding.tk].fx_buy) || null;
     const inrRet   = (fx_buy && holding.avg)
       ? (((ltp * fx_today) - (holding.avg * fx_buy)) / (holding.avg * fx_buy)) * 100
       : null;   // null = no historical fx rate yet
@@ -2017,13 +2017,16 @@ const DASH = (() => {
 
       // INR return — position-level: cost-weighted avg fx_buy as anchor
       // Each position bought at different INR rate → weighted avg is correct base
-      // Weighted avg fx_buy from positions (position-level accuracy)
-      const _openWithFx = (S.view && S.view.us) ? S.view.us.open.filter(p => p.fx_buy && p.cost > 0) : [];
-      const _totalCost  = _openWithFx.reduce((s,p) => s + p.cost, 0);
+      // fx_buy lives in S.prices (network-first) — always fresh regardless of holdings_cost cache
+      const _openPos    = (S.view && S.view.us) ? S.view.us.open.filter(p => p.cost > 0) : [];
+      const _totalCost  = _openPos.reduce((s,p) => s + p.cost, 0);
       const _wtdFxBuy   = _totalCost > 0
-        ? _openWithFx.reduce((s,p) => s + p.fx_buy * (p.cost/_totalCost), 0)
+        ? _openPos.reduce((s,p) => {
+            const fxb = (S.prices[p.tk] && S.prices[p.tk].fx_buy) || 0;
+            return fxb ? s + fxb * (p.cost/_totalCost) : s;
+          }, 0) || null
         : null;
-      // Fallback: use inr_fx_monthly[0] (portfolio start rate) if fx_buy not yet loaded
+      // Fallback to inr_fx_monthly[0] if prices not loaded yet
       const _fxBase = _wtdFxBuy || (S.inrFxMon && S.inrFxMon[0]) || null;
       const inrLine = (S.inrFxMon && S.inrFxMon.length === m.labels.length && _fxBase)
         ? m.port_return_cum_pct.map((v, i) =>

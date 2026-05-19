@@ -422,6 +422,38 @@ def build_demo_prices() -> dict:
 
 
 # ── ACTUAL S&P 500 MONTHLY RETURNS ───────────────────────────────────────
+def build_inr_monthly(label_dates: list[str | None]) -> list[float] | None:
+    """Fetch INR/USD closing rate for each label_date. Returns list of floats or None."""
+    valid = [d for d in label_dates if d]
+    if len(valid) < 2:
+        return None
+    try:
+        from datetime import timedelta
+        start = valid[0]
+        end_dt = datetime.strptime(valid[-1], "%Y-%m-%d") + timedelta(days=7)
+        hist = yf.Ticker("INR=X").history(
+            start=start, end=end_dt.strftime("%Y-%m-%d"), interval="1d", auto_adjust=False)
+        if hist.empty:
+            print("  WARN  build_inr_monthly: INR=X history empty", file=sys.stderr)
+            return None
+        hist.index = hist.index.tz_localize(None) if hist.index.tzinfo else hist.index
+        rates: list[float] = []
+        for d in label_dates:
+            target = datetime.strptime(d, "%Y-%m-%d") if d else None
+            if target is None:
+                rates.append(rates[-1] if rates else 84.0)
+                continue
+            subset = hist[hist.index <= target + timedelta(days=1)]
+            rates.append(round(float(subset["Close"].iloc[-1]), 4) if not subset.empty
+                         else (rates[-1] if rates else 84.0))
+        print(f"  INR/USD monthly  {label_dates[0]} → {label_dates[-1]}"
+              f"  start=₹{rates[0]}  end=₹{rates[-1]}")
+        return rates
+    except Exception as exc:
+        print(f"  WARN  build_inr_monthly failed: {exc}", file=sys.stderr)
+        return None
+
+
 def build_snp_actual(label_dates: list[str | None]) -> list[float] | None:
     """
     Given ISO date strings matching portfolio monthly labels,
@@ -569,6 +601,10 @@ def main() -> int:
                 snp_actual = build_snp_actual(label_dates)
                 if snp_actual:
                     holdings["snp_actual_cum_pct"] = snp_actual
+                print("Fetching monthly INR/USD rates…")
+                inr_monthly = build_inr_monthly(label_dates)
+                if inr_monthly:
+                    holdings["inr_fx_monthly"] = inr_monthly
         except Exception as exc:
             print(f"  WARN  snp_actual fetch failed: {exc}", file=sys.stderr)
         OUT_HOLDINGS.write_text(json.dumps(holdings, indent=2))

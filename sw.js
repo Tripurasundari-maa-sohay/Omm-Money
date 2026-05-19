@@ -1,7 +1,7 @@
 // Service Worker — Portfolio Dashboard PWA
 // Uses relative paths — works on GitHub Pages subpath (/portfolio-dashboard/)
 
-const CACHE = 'portfolio-v33';
+const CACHE = 'portfolio-v34';
 const BASE = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/'));
 
 const SHELL = [
@@ -31,7 +31,7 @@ self.addEventListener('fetch', e => {
   const path = url.pathname;
 
   // Always network-first for data files (never serve stale prices)
-  if (path.includes('/data/processed/') || path.includes('/data/history/')) {
+  if (path.includes('/data/processed/') || path.includes('/data/history/') || path.includes('/data/holdings_cost.json')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }

@@ -698,6 +698,18 @@
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
         <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div></div>
+        <div class="metric-card" style="border-color:var(--accent-y);border-width:1.5px" title="Return in INR terms vs pure USD return — gap = currency effect">
+          <label style="color:var(--accent-y)">💱 RETURN IN INR</label>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px">
+            <div class="mval pv" id="us-inr-ret">—</div>
+            <div class="mchg" id="us-inr-ret-vs" style="font-size:10px;color:var(--text-dim)"></div>
+          </div>
+          <div style="margin-top:6px;display:flex;gap:12px;font-size:11px">
+            <span>USD: <strong id="us-usd-ret" style="color:var(--text-sec)">—</strong></span>
+            <span>FX add: <strong id="us-fx-add" style="color:var(--warn)">—</strong></span>
+          </div>
+          <div class="mdesc" id="us-inr-ret-desc">Run parser to activate</div>
+        </div>
       </div>
     </div>
 
@@ -1618,6 +1630,25 @@ const DASH = (() => {
     setText('us-account-value',usd(us.totalValue));
     setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');
     setText('us-etf-count',    us.open.filter(p=>p.cls==='ETF').length + ' positions');
+
+    // 💱 INR Return tile — only renders when fx_buy populated via parser
+    const withFx = us.open.filter(p => p.inrRet !== null && p.cost > 0);
+    if (withFx.length > 0) {
+      // Weighted average by cost (USD invested)
+      const totalCostUSD  = withFx.reduce((s,p) => s + p.cost, 0);
+      const wtdUSDRet     = withFx.reduce((s,p) => s + p.ret    * (p.cost/totalCostUSD), 0);
+      const wtdINRRet     = withFx.reduce((s,p) => s + p.inrRet * (p.cost/totalCostUSD), 0);
+      const fxAdd         = wtdINRRet - wtdUSDRet;
+      const covered       = withFx.length;
+      const total         = us.open.length;
+      setText('us-inr-ret',    sign(wtdINRRet) + pct(wtdINRRet));
+      setClass('us-inr-ret', 'mval pv ' + pn(wtdINRRet));
+      setText('us-inr-ret-vs', covered < total ? `(${covered}/${total} positions)` : '');
+      setText('us-usd-ret',    sign(wtdUSDRet) + pct(wtdUSDRet));
+      setText('us-fx-add',     sign(fxAdd) + pct(fxAdd));
+      $('us-fx-add') && ($('us-fx-add').style.color = fxAdd >= 0 ? 'var(--gain)' : 'var(--loss)');
+      setText('us-inr-ret-desc', `Weighted avg · ${covered} position${covered>1?'s':''}`);
+    }
   }
 
   function renderIndiaMetrics() {

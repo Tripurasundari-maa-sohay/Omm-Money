@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "15-May-2026",
-  "fx_inr_usd": 96.4275,
+  "as_of": "18-May-2026",
+  "fx_inr_usd": 96.42,
   "us": {
     "broker": "Doha Bank Global",
     "cash": 537.98,
     "cash_infusion_itd": 15875.07,
-    "account_value_statement": 18808.77,
-    "total_pl_statement": 2933.7,
+    "account_value_statement": 18117.98,
+    "total_pl_statement": 2242.91,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -17,6 +17,15 @@
         "Mar",
         "Apr",
         "May-26"
+      ],
+      "label_dates": [
+        "2025-11-30",
+        "2025-12-31",
+        "2026-01-31",
+        "2026-02-28",
+        "2026-03-31",
+        "2026-04-30",
+        "2026-05-18"
       ],
       "cash_balance": [
         0.0,
@@ -34,7 +43,7 @@
         14248.11,
         13692.49,
         16432.87,
-        18808.77
+        18117.98
       ],
       "monthly_pct_return": [
         0.0,
@@ -43,7 +52,7 @@
         -5.1,
         -6.8,
         20.0,
-        8.3
+        4.3
       ],
       "monthly_bench_return": [
         0.0,
@@ -52,7 +61,7 @@
         -1.0,
         -5.0,
         10.6,
-        3.9
+        2.5
       ],
       "monthly_pl": [
         0.0,
@@ -61,7 +70,7 @@
         -766.0,
         -966.58,
         2740.38,
-        1375.9
+        685.11
       ],
       "monthly_cost": [
         0.0,
@@ -70,7 +79,7 @@
         -51.7,
         -54.91,
         -72.54,
-        -49.3
+        -49.38
       ],
       "port_return_cum_pct": [
         0.0,
@@ -79,7 +88,7 @@
         -0.24,
         -7.02,
         11.57,
-        20.83
+        16.37
       ],
       "snp_return_cum_pct": [
         0.0,
@@ -88,7 +97,7 @@
         0.59,
         -4.44,
         5.69,
-        9.81
+        8.33
       ],
       "cash_deployed": [
         0.0,
@@ -101,16 +110,6 @@
       ]
     },
     "open": [
-      {
-        "tk": "HUMN",
-        "yf": "HUMN",
-        "name": "Roundhill Humanoid Robotics ETF",
-        "cls": "ETF",
-        "qty": 25,
-        "avg": 38.1,
-        "fees": -5.0,
-        "income": 0.0
-      },
       {
         "tk": "GOOG",
         "yf": "GOOG",
@@ -128,7 +127,7 @@
         "cls": "Stock",
         "qty": 10,
         "avg": 249.726,
-        "fees": -10.0,
+        "fees": -20.0,
         "income": 0.0
       },
       {
@@ -178,8 +177,8 @@
         "cls": "Stock",
         "qty": 1,
         "avg": 492.0,
-        "fees": -5.0,
-        "income": 0.0
+        "fees": -25.03,
+        "income": 0.3
       },
       {
         "tk": "MSFT",
@@ -208,7 +207,7 @@
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": -5.0,
+        "fees": -35.04,
         "income": 0.0
       },
       {
@@ -228,6 +227,16 @@
         "cls": "ETF",
         "qty": 9,
         "avg": 187.51,
+        "fees": -22.05,
+        "income": 0.0
+      },
+      {
+        "tk": "HUMN",
+        "yf": "HUMN",
+        "name": "RoundhillHumanoid RoboticsETF",
+        "cls": "ETF",
+        "qty": 25,
+        "avg": 38.1,
         "fees": -5.0,
         "income": 0.0
       },
@@ -253,23 +262,13 @@
         "ret_pct": -11.18
       },
       {
-        "tk": "GOOG",
-        "name": "AlphabetInc.ClassC",
-        "cls": "Stock",
-        "income": 0.63,
-        "costs": 0.0,
-        "realised": 256.38,
-        "ret_pct": 27.37,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
         "tk": "AMZN",
         "name": "Amazon.comInc.",
         "cls": "Stock",
         "income": 0.0,
         "costs": 0.0,
-        "realised": 30.94,
-        "ret_pct": -2.41,
+        "realised": 7.34,
+        "ret_pct": -3.27,
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
@@ -278,18 +277,8 @@
         "cls": "Stock",
         "income": 4.55,
         "costs": 0.0,
-        "realised": 385.56,
-        "ret_pct": 27.84,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "GLW",
-        "name": "CorningInc.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 151.66,
-        "ret_pct": 13.81,
+        "realised": 309.24,
+        "ret_pct": 22.3,
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
@@ -311,16 +300,6 @@
         "ret_pct": 40.14
       },
       {
-        "tk": "GEV",
-        "name": "GEVernovaInc",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": -11.61,
-        "ret_pct": -1.03,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
         "tk": "INOD",
         "name": "InnodataInc.",
         "cls": "Stock",
@@ -339,16 +318,6 @@
         "ret_pct": -3.35
       },
       {
-        "tk": "KEEL",
-        "name": "KeelInfrastructureCorp",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 106.0,
-        "ret_pct": 12.99,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
         "tk": "META",
         "name": "MetaPlatformsInc.",
         "cls": "Stock",
@@ -363,28 +332,8 @@
         "cls": "Stock",
         "income": 0.3,
         "costs": 0.0,
-        "realised": 620.76,
-        "ret_pct": 99.38,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "MSFT",
-        "name": "MicrosoftCorp.",
-        "cls": "Stock",
-        "income": 2.73,
-        "costs": 0.0,
-        "realised": -52.9,
-        "ret_pct": -14.12,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "MP",
-        "name": "MPMaterialsCorp.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 68.1,
-        "ret_pct": 12.7,
+        "realised": 526.29,
+        "ret_pct": 75.1,
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
@@ -402,8 +351,8 @@
         "cls": "Stock",
         "income": 0.0,
         "costs": 0.0,
-        "realised": 465.61,
-        "ret_pct": 125.44,
+        "realised": 458.66,
+        "ret_pct": 123.07,
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
@@ -421,8 +370,8 @@
         "cls": "Stock",
         "income": 8.01,
         "costs": 0.0,
-        "realised": 67.0,
-        "ret_pct": 10.02,
+        "realised": 83.08,
+        "ret_pct": 12.44,
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
@@ -458,8 +407,8 @@
         "cls": "ETF",
         "income": 0.0,
         "costs": 0.0,
-        "realised": 451.42,
-        "ret_pct": 28.02,
+        "realised": 321.64,
+        "ret_pct": 18.33,
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
@@ -468,15 +417,15 @@
         "cls": "ETF",
         "income": 3.49,
         "costs": 0.0,
-        "realised": 175.89,
-        "ret_pct": 13.24,
+        "realised": 142.41,
+        "ret_pct": 10.72,
         "_note": "costs counted in open position (same ticker, re-opened)"
       }
     ],
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -1.92
+        "amt": -2.0
       },
       {
         "type": "Custody Fee (ongoing)",

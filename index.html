@@ -94,8 +94,8 @@
     box-shadow: 0 2px 10px rgba(184,122,0,0.35);
   }
   [data-theme="ivory"] .metric-card {
-    background:#fffdf7; border-color:#ddd5c0;
-    box-shadow: 0 2px 8px rgba(42,30,10,0.08);
+    background:#fff8ec; border-color:#c8b89a; border-width:1.5px;
+    box-shadow: 0 2px 8px rgba(42,30,10,0.12);
   }
   [data-theme="ivory"] .analytics-section {
     background:#fffdf7; border-color:#ddd5c0;
@@ -143,8 +143,8 @@
     box-shadow: 0 2px 10px rgba(2,132,199,0.35);
   }
   [data-theme="arctic"] .metric-card {
-    background:#ffffff; border-color:#b8c8e8;
-    box-shadow: 0 2px 8px rgba(10,22,62,0.08);
+    background:#f0f7ff; border-color:#7aaad8; border-width:1.5px;
+    box-shadow: 0 2px 8px rgba(10,22,62,0.12);
   }
   [data-theme="arctic"] .analytics-section {
     background:#ffffff; border-color:#b8c8e8;
@@ -1524,9 +1524,9 @@ const DASH = (() => {
     setText('hero-day-label',   `TODAY'S GAIN (${ccy})`);
 
     // Values — all USD-based numbers go through hero()
-    setText('hero-us-value',   hero(us.totalValue));
-    setText('hero-india-value', hero(india.mv / (S.view.fx || FX_DEFAULT)));
-    setText('hero-total-value', hero(combined.totalUSD));
+    setText('hero-us-value',    hero(us.totalValue));    setClass('hero-us-value','mval pv');
+    setText('hero-india-value', hero(india.mv / (S.view.fx || FX_DEFAULT))); setClass('hero-india-value','mval pv');
+    setText('hero-total-value', hero(combined.totalUSD)); setClass('hero-total-value','mval pv');
     setText('hero-total-return', sign(combined.returnPct) + pct(combined.returnPct) + ' ITD');
     setClass('hero-total-return', 'mchg pv ' + pn(combined.returnPct));
     setText('hero-total-pl', sign(combined.unrealPL_USD) + hero(Math.abs(combined.unrealPL_USD)));
@@ -1571,9 +1571,9 @@ const DASH = (() => {
   function renderUSMetrics() {
     if (!S.view) return;
     const us = S.view.us;
-    setText('us-stocks-value', usd(us.stocksMV));
-    setText('us-etf-value',    usd(us.etfsMV));
-    setText('us-cash-value',   usd(us.cash || 0));
+    setText('us-stocks-value', usd(us.stocksMV)); setClass('us-stocks-value','mval pv');
+    setText('us-etf-value',    usd(us.etfsMV));  setClass('us-etf-value','mval pv');
+    setText('us-cash-value',   usd(us.cash || 0)); setClass('us-cash-value','mval pv');
     setText('us-unreal-pl',    sign(us.returnPct) + pct(us.returnPct));
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
@@ -1604,7 +1604,7 @@ const DASH = (() => {
   function renderIndiaMetrics() {
     if (!S.view) return;
     const ind = S.view.india;
-    setText('in-equities-value', inr(ind.mv));
+    setText('in-equities-value', inr(ind.mv)); setClass('in-equities-value','mval pv');
     setText('in-equities-count', ind.open.length + ' positions');
     const inCostBasis = ind.open.reduce((s,p)=>s+(p.cost||0), 0);
     const inUnrealPct = inCostBasis ? (ind.unrealPL / inCostBasis) * 100 : 0;

@@ -529,7 +529,7 @@
           <button class="fs-btn" onclick="DASH.fsAdjust(+1)">A+</button>
         </div>
         <button class="privacy-btn" id="theme-btn" onclick="DASH.toggleTheme()" title="Toggle light/dark theme">🌙</button>
-        <button class="privacy-btn" id="privacy-btn" onclick="DASH.togglePrivacy()" title="Show demo data">👁</button>
+        <button class="privacy-btn" id="privacy-btn" onclick="DASH.toggleDemoMode()" title="Show demo data">👁</button>
       </div>
       <div class="banner-right">
         <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
@@ -1313,11 +1313,14 @@ const DASH = (() => {
 
   /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
   const fetchJSON = async (path) => {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 10000); // 10s timeout
     try {
-      const r = await fetch(path, { cache: 'no-store' });
+      const r = await fetch(path, { cache: 'no-store', signal: ctrl.signal });
+      clearTimeout(tid);
       if (!r.ok) return null;
       return await r.json();
-    } catch { return null; }
+    } catch { clearTimeout(tid); return null; }
   };
 
   async function load() {
@@ -1423,7 +1426,8 @@ const DASH = (() => {
       exitCost:     usOpen.length * -5,                   // -$5 per position to close
     };
     us.totalValue = us.mv + (us.cash||0);
-    us.dayPct     = us.totalValue ? (us.dayPL / (us.totalValue - us.dayPL)) * 100 : 0;
+    const _usDen  = us.totalValue - us.dayPL;
+    us.dayPct     = (_usDen && us.totalValue) ? (us.dayPL / _usDen) * 100 : 0;
     us.returnPct  = us.cashInfusion ? ((us.totalValue - us.cashInfusion) / us.cashInfusion) * 100 : 0;
     us.realisedPL = us.closed.reduce((s,p)=>s+p.realised,0);
     us.dividends  = us.open.reduce((s,p)=>s+(p.income||0),0) + us.closed.reduce((s,p)=>s+(p.income||0),0);
@@ -1443,7 +1447,8 @@ const DASH = (() => {
       dayPL:        inOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
     };
     india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
-    india.dayPct = india.mv ? (india.dayPL / (india.mv - india.dayPL)) * 100 : 0;
+    const _inDen = india.mv - india.dayPL;
+    india.dayPct = (_inDen && india.mv) ? (india.dayPL / _inDen) * 100 : 0;
 
     // Combined
     const totalUSD = us.totalValue + india.mv / fx;
@@ -1533,7 +1538,8 @@ const DASH = (() => {
     setClass('hero-total-pl', 'mval pv ' + pn(combined.unrealPL_USD));
     setText('hero-day-pl', sign(combined.dayPL_USD) + hero(Math.abs(combined.dayPL_USD)));
     setClass('hero-day-pl', 'mval pv ' + pn(combined.dayPL_USD));
-    const dayPct = combined.totalUSD ? (combined.dayPL_USD / (combined.totalUSD - combined.dayPL_USD)) * 100 : 0;
+    const _cmDen = combined.totalUSD - combined.dayPL_USD;
+    const dayPct = (_cmDen && combined.totalUSD) ? (combined.dayPL_USD / _cmDen) * 100 : 0;
     setText('hero-day-pl-pct', sign(dayPct) + pct(dayPct));
     setClass('hero-day-pl-pct', 'mchg pv ' + pn(dayPct));
     setText('hero-cash-infused', hero(us.cashInfusion || 0));
@@ -2535,7 +2541,7 @@ const DASH = (() => {
     };
   }
 
-  function togglePrivacy() {
+  function toggleDemoMode() {
     S.ui.demo = !S.ui.demo;
     S.ui.privacy = false;               // never blur — view has fake data
     document.body.classList.remove('privacy');
@@ -2817,7 +2823,7 @@ const DASH = (() => {
   async function refresh() {
     await load();
     render();
-    refreshSignals();   // pick up new stock_signals.json if Actions pushed one
+    await refreshSignals();   // pick up new stock_signals.json if Actions pushed one
   }
 
   /* ══ SIGNALS ENGINE ═════════════════════════════════════════════ */
@@ -3482,7 +3488,7 @@ const DASH = (() => {
   // public surface for inline handlers
   fsApply();     // restore saved font size on load
   themeApply();  // restore saved theme on load
-  return { setCurrency, togglePrivacy, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme };
 })();
 
 // Register service worker for PWA installability

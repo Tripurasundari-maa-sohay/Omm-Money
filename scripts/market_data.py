@@ -227,8 +227,16 @@ def build_holdings_json() -> dict:
         for p in cost.get(region, {}).get("open", []):
             tickers.append((p["tk"], p["yf"]))
 
+    # Load existing prices for merge fallback (keeps stale data for tickers that fail this run)
+    existing_prices: dict[str, dict] = {}
+    if OUT_HOLDINGS.exists():
+        try:
+            existing_prices = json.loads(OUT_HOLDINGS.read_text()).get("prices", {})
+        except Exception:
+            pass
+
     print(f"Fetching {len(tickers)} holding quotes…")
-    prices: dict[str, dict] = {}
+    fresh_prices: dict[str, dict] = {}
     success_count = 0
     for tk, yf_sym in tickers:
         try:
@@ -242,7 +250,7 @@ def build_holdings_json() -> dict:
             pc         = q["pc"]    # may be None for SME stocks with no prev-close
             change     = round(q["ltp"] - pc, 4) if pc is not None else None
             change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
-            prices[tk] = {
+            fresh_prices[tk] = {
                 "ltp":        q["ltp"],
                 "pc":         pc,          # None means "unknown" — JS shows "–"
                 "change":     change,
@@ -254,17 +262,21 @@ def build_holdings_json() -> dict:
         except Exception as exc:
             print(f"  ERROR  {tk} ({yf_sym}): unexpected error: {exc}", file=sys.stderr)
 
-    # Guard: only write if at least 50% of tickers got prices
-    min_required = max(1, len(tickers) // 2)
-    if success_count < min_required:
+    # Merge: start from existing prices, overlay fresh results.
+    # Tickers that failed this run keep their previous price (with original as_of timestamp).
+    # This ensures dayPL never freezes due to partial fetch failures at market open.
+    merged = {**existing_prices, **fresh_prices}
+
+    # Hard guard: if we got ZERO fresh prices something is badly wrong — skip write entirely.
+    if success_count == 0:
         print(
-            f"  WARN  only {success_count}/{len(tickers)} tickers resolved "
-            f"(need ≥{min_required}) — skipping holdings_prices.json write to avoid overwriting good data",
+            f"  WARN  0/{len(tickers)} tickers resolved — skipping write to avoid corrupting prices",
             file=sys.stderr,
         )
         return {"generated": datetime.utcnow().isoformat() + "Z", "prices": {}, "_write_skipped": True}
 
-    return {"generated": datetime.utcnow().isoformat() + "Z", "prices": prices}
+    print(f"  merged {success_count} fresh + {len(merged)-success_count} carried-over prices")
+    return {"generated": datetime.utcnow().isoformat() + "Z", "prices": merged}
 
 
 # ── FX RATE ──────────────────────────────────────────────────────────────

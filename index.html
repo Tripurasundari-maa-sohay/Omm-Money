@@ -1344,7 +1344,10 @@ const DASH = (() => {
       status.textContent = 'Live prices unavailable — showing cost basis';
       status.className = 'stale';
     } else {
-      status.textContent = '● Live · last update ' + new Date().toLocaleTimeString();
+      // Show actual data timestamp (not browser clock) so stale data is visible
+      const _dataTs = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().pop();
+      const _tsStr  = _dataTs ? new Date(_dataTs).toLocaleTimeString() : new Date().toLocaleTimeString();
+      status.textContent = '● Live · data as of ' + _tsStr;
       status.className = 'live';
     }
 

@@ -624,9 +624,10 @@
       <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
       <div class="chart-stat-bar">
         <span>Portfolio (USD): <strong id="cum-port">--</strong></span>
-        <span style="color:var(--warn)">Alpha due to INR FX: <strong id="cum-inr">--</strong></span>
+        <span style="color:var(--warn)">INR Return: <strong id="cum-inr">--</strong></span>
         <span>S&amp;P 500 (^GSPC): <strong id="cum-snp">--</strong></span>
-        <span>Alpha vs S&amp;P: <strong id="cum-alpha" style="font-size:13px">--</strong></span>
+        <span>Alpha INR vs Portfolio: <strong id="cum-alpha-inr-port" style="font-size:13px">--</strong></span>
+        <span>Alpha INR vs S&amp;P: <strong id="cum-alpha-inr-snp" style="font-size:13px">--</strong></span>
       </div>
     </div>
 
@@ -2031,7 +2032,7 @@ const DASH = (() => {
 
       const _chartCallback = ctx => {
         const v = ctx.parsed.y, s = v>=0?'+':'';
-        if (ctx.dataset.label && ctx.dataset.label.includes('Alpha due to INR')) {
+        if (ctx.dataset.label && ctx.dataset.label === 'INR Return') {
           return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%`;
         }
         const usdDelta = cashBase * (v/100);
@@ -2041,7 +2042,7 @@ const DASH = (() => {
       const _datasets = [
         { label:'Portfolio (USD)', data:m.port_return_cum_pct, borderColor:_cumGain, ...darkLine },
         { label:snpLabel,          data:snpSeries, borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
-        ...(inrLine ? [{ label:'Alpha due to INR FX',
+        ...(inrLine ? [{ label:'INR Return',
           data:inrLine, borderColor:_cumWarn, borderWidth:2.5,
           tension:0.3, pointRadius:2, fill:false, backgroundColor:'transparent' }] : []),
       ];
@@ -2058,11 +2059,18 @@ const DASH = (() => {
       const portPct = m.port_return_cum_pct.at(-1) || 0;
       const snpPct  = snpSeries.at(-1) || 0;
       const inrPct  = inrLine ? (inrLine.at(-1) || 0) : null;
-      setText('cum-port',  sign(portPct) + pct(portPct));
-      setText('cum-snp',   sign(snpPct)  + pct(snpPct));
-      setText('cum-alpha', sign(portPct-snpPct) + pct(portPct - snpPct));
-      setClass('cum-alpha', pn(portPct - snpPct));
-      if (inrPct !== null) { setText('cum-inr', sign(inrPct)+pct(inrPct)); setClass('cum-inr', pn(inrPct)); }
+      setText('cum-port', sign(portPct) + pct(portPct));
+      setText('cum-snp',  sign(snpPct)  + pct(snpPct));
+      if (inrPct !== null) {
+        setText('cum-inr', sign(inrPct) + pct(inrPct));
+        setClass('cum-inr', pn(inrPct));
+        const alphaInrPort = inrPct - portPct;   // pure FX contribution
+        const alphaInrSnp  = inrPct - snpPct;    // INR total advantage over S&P
+        setText('cum-alpha-inr-port', sign(alphaInrPort) + pct(alphaInrPort));
+        setClass('cum-alpha-inr-port', pn(alphaInrPort));
+        setText('cum-alpha-inr-snp',  sign(alphaInrSnp)  + pct(alphaInrSnp));
+        setClass('cum-alpha-inr-snp',  pn(alphaInrSnp));
+      }
 
       // Cash vs Account value
       mkChart('cash-value-chart', { type:'line',

@@ -627,7 +627,6 @@
         <span style="color:var(--warn)">INR Return: <strong id="cum-inr">--</strong></span>
         <span>S&amp;P 500 (^GSPC): <strong id="cum-snp">--</strong></span>
         <span>Alpha INR vs Portfolio: <strong id="cum-alpha-inr-port" style="font-size:13px">--</strong></span>
-        <span>Alpha INR vs S&amp;P: <strong id="cum-alpha-inr-snp" style="font-size:13px">--</strong></span>
       </div>
     </div>
 
@@ -2065,11 +2064,8 @@ const DASH = (() => {
         setText('cum-inr', sign(inrPct) + pct(inrPct));
         setClass('cum-inr', pn(inrPct));
         const alphaInrPort = inrPct - portPct;   // pure FX contribution
-        const alphaInrSnp  = inrPct - snpPct;    // INR total advantage over S&P
         setText('cum-alpha-inr-port', sign(alphaInrPort) + pct(alphaInrPort));
         setClass('cum-alpha-inr-port', pn(alphaInrPort));
-        setText('cum-alpha-inr-snp',  sign(alphaInrSnp)  + pct(alphaInrSnp));
-        setClass('cum-alpha-inr-snp',  pn(alphaInrSnp));
       }
 
       // Cash vs Account value

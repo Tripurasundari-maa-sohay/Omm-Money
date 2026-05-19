@@ -623,8 +623,9 @@
       <h2>CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
       <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
       <div class="chart-stat-bar">
-        <span>Portfolio ITD: <strong id="cum-port">--</strong></span>
-        <span>S&amp;P 500 ITD: <strong id="cum-snp">--</strong></span>
+        <span>Portfolio (USD): <strong id="cum-port">--</strong></span>
+        <span style="color:var(--warn)">Portfolio (INR ₹→$→₹): <strong id="cum-inr">--</strong></span>
+        <span>S&amp;P 500 (^GSPC): <strong id="cum-snp">--</strong></span>
         <span>Alpha vs S&amp;P: <strong id="cum-alpha" style="font-size:13px">--</strong></span>
       </div>
     </div>
@@ -2030,6 +2031,9 @@ const DASH = (() => {
 
       const _chartCallback = ctx => {
         const v = ctx.parsed.y, s = v>=0?'+':'';
+        if (ctx.dataset.label && ctx.dataset.label.includes('INR')) {
+          return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%`;
+        }
         const usdDelta = cashBase * (v/100);
         return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
       };

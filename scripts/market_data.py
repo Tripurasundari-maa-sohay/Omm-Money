@@ -421,6 +421,66 @@ def build_demo_prices() -> dict:
     return demo
 
 
+# ── ACTUAL S&P 500 MONTHLY RETURNS ───────────────────────────────────────
+def build_snp_actual(label_dates: list[str | None]) -> list[float] | None:
+    """
+    Given ISO date strings matching portfolio monthly labels,
+    fetch real ^GSPC closing prices and return cumulative % returns
+    anchored to the first date (same as portfolio: 0% at start).
+
+    Returns list of floats (same length as label_dates) or None on failure.
+    """
+    valid = [d for d in label_dates if d]
+    if len(valid) < 2:
+        print("  WARN  build_snp_actual: insufficient label_dates", file=sys.stderr)
+        return None
+    try:
+        from datetime import timedelta
+        start = valid[0]
+        end_dt = datetime.strptime(valid[-1], "%Y-%m-%d") + timedelta(days=7)
+        hist = yf.Ticker("^GSPC").history(
+            start=start,
+            end=end_dt.strftime("%Y-%m-%d"),
+            interval="1d",
+            auto_adjust=True,
+        )
+        if hist.empty:
+            print("  WARN  build_snp_actual: ^GSPC history empty", file=sys.stderr)
+            return None
+
+        # For each label_date find closest available trading day close
+        closes: list[float | None] = []
+        hist.index = hist.index.tz_localize(None) if hist.index.tzinfo else hist.index
+        for d in label_dates:
+            if not d:
+                closes.append(None)
+                continue
+            target = datetime.strptime(d, "%Y-%m-%d")
+            # Find nearest row on or before target date
+            subset = hist[hist.index <= target + timedelta(days=1)]
+            if subset.empty:
+                closes.append(None)
+            else:
+                closes.append(float(subset["Close"].iloc[-1]))
+
+        # Compute cumulative return from first close
+        base = closes[0]
+        if not base:
+            return None
+        result = []
+        for c in closes:
+            if c is None:
+                result.append(result[-1] if result else 0.0)
+            else:
+                result.append(round((c / base - 1) * 100, 2))
+        print(f"  ^GSPC actual  {label_dates[0]} → {label_dates[-1]}  "
+              f"cumulative: {result[-1]:+.2f}%")
+        return result
+    except Exception as exc:
+        print(f"  WARN  build_snp_actual failed: {exc}", file=sys.stderr)
+        return None
+
+
 # ── FX BUY RATE ──────────────────────────────────────────────────────────
 def fetch_fx_on_date(date_str: str) -> float | None:
     """Return INR/USD closing rate on a specific date (YYYY-MM-DD).
@@ -500,6 +560,17 @@ def main() -> int:
         print(f"  SKIP  {OUT_HOLDINGS.relative_to(ROOT)} (insufficient price data)")
     else:
         holdings["demo_prices"] = build_demo_prices()
+        # Real S&P 500 cumulative returns — replaces broker's benchmark in the chart
+        try:
+            cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}
+            label_dates = cost_now.get("us", {}).get("monthly", {}).get("label_dates", [])
+            if label_dates:
+                print("Fetching actual ^GSPC returns…")
+                snp_actual = build_snp_actual(label_dates)
+                if snp_actual:
+                    holdings["snp_actual_cum_pct"] = snp_actual
+        except Exception as exc:
+            print(f"  WARN  snp_actual fetch failed: {exc}", file=sys.stderr)
         OUT_HOLDINGS.write_text(json.dumps(holdings, indent=2))
         print(f"  wrote {OUT_HOLDINGS.relative_to(ROOT)}")
     return 0

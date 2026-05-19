@@ -174,10 +174,17 @@ def parse_monthly_timeline(pdf) -> dict:
     # We expect 7 monthly columns in the table; keep the first 7 we find
     dates = dates[:7]
     labels = []
+    label_dates = []   # ISO date strings (YYYY-MM-DD) — used for real S&P fetch
     for i, d in enumerate(dates):
-        mo = d.split("-")[1]
-        yr = d.split("-")[2][-2:]
+        parts = d.split("-")  # e.g. ["01", "Nov", "2025"]
+        mo = parts[1]
+        yr = parts[2][-2:]
         labels.append(f"{mo}-{yr}" if i in (0, len(dates) - 1) else mo)
+        try:
+            from datetime import datetime as _dt
+            label_dates.append(_dt.strptime(d, "%d-%b-%Y").strftime("%Y-%m-%d"))
+        except Exception:
+            label_dates.append(None)
 
     def row_starting_with(rows, label_tokens):
         """Find a row whose first tokens match label_tokens AND contains numeric data.
@@ -240,14 +247,15 @@ def parse_monthly_timeline(pdf) -> dict:
 
     return {
         "labels":               labels,
+        "label_dates":          label_dates,   # ISO dates for real S&P 500 fetch
         "cash_balance":         cash,
         "account_value":        acct,
         "monthly_pct_return":   pct,
-        "monthly_bench_return": bench,
+        "monthly_bench_return": bench,         # broker's benchmark (kept for reference)
         "monthly_pl":           pl,
         "monthly_cost":         cost,
         "port_return_cum_pct":  cum(pct),
-        "snp_return_cum_pct":   cum(bench),
+        "snp_return_cum_pct":   cum(bench),    # broker benchmark cumulative (used until real S&P fetched)
         "cash_deployed":        [round(av - sum(pl[: i + 1]), 2) for i, av in enumerate(acct)],
     }
 

@@ -561,6 +561,14 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     out = prev or {}
     out["as_of"]      = summary.get("period_to") or out.get("as_of")
     out["fx_inr_usd"] = out.get("fx_inr_usd", 83.5)
+
+    # Merge closed positions: preserve historical records not in current statement period.
+    # New statement only covers its own date range — older closed tranches would be lost
+    # without this merge. De-duplicate by ticker, preferring new data when both exist.
+    prev_closed = (prev or {}).get("us", {}).get("closed", [])
+    new_closed_tks = {p["tk"] for p in closed_full}
+    merged_closed = closed_full + [p for p in prev_closed if p["tk"] not in new_closed_tks]
+
     out["us"] = {
         "broker":                  "Doha Bank Global",
         "cash":                    round(cash, 2),
@@ -569,7 +577,7 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
         "total_pl_statement":      round(summary["total_pl"], 2),
         "monthly":                 timeline,
         "open":                    open_full,
-        "closed":                  closed_full,
+        "closed":                  merged_closed,
         "charges_breakdown":       charges,
     }
     out.setdefault("india", {"open": [], "note": "Awaiting broker statement parser"})

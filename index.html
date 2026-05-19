@@ -1348,6 +1348,7 @@ const DASH = (() => {
       S.prices    = prices.prices || {};
       S.demoPrices = prices.demo_prices || {};
       S.snpActual = prices.snp_actual_cum_pct || null;  // real ^GSPC returns
+      S.inrFxMon  = prices.inr_fx_monthly    || null;  // monthly INR/USD rates for INR return line
     }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;

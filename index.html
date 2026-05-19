@@ -241,7 +241,7 @@
   /* ── METRIC CARDS ── */
   .portfolio-overview,.portfolio-metrics{background:var(--bg-card);border:1px solid var(--accent-y);
     border-radius:8px;padding:18px;margin-bottom:22px}
-  .portfolio-metrics{border-color:var(--border)}
+  .portfolio-metrics{border-color:var(--border);position:relative;z-index:2}
   .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
   .metric-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;
     padding:12px;display:flex;flex-direction:column;gap:5px}
@@ -751,7 +751,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-weight-chart"></canvas></div>
+          <div style="height:280px;position:relative;overflow:hidden;"><canvas id="us-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
@@ -766,7 +766,7 @@
       <div style="margin-top:16px;display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;">
         <div>
           <h3 style="margin-bottom:8px;">Signal Score Distribution</h3>
-          <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-signal-dist-chart"></canvas></div>
+          <div style="height:220px;position:relative;overflow:hidden;"><canvas id="us-signal-dist-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
@@ -837,7 +837,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
-          <div style="height:260px;position:relative;overflow:visible;"><canvas id="india-weight-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:hidden;"><canvas id="india-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
@@ -845,7 +845,7 @@
         </div>
         <div>
           <h3 style="margin-bottom:8px;">By Brokerage (Invested ₹)</h3>
-          <div style="height:260px;position:relative;overflow:visible;"><canvas id="india-broker-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:hidden;"><canvas id="india-broker-chart"></canvas></div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">

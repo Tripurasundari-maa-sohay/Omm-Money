@@ -1137,7 +1137,9 @@ def main() -> int:
                     print(f"  prepended {len(_pre['dates'])} Oct–Nov Fridays ($0) to weekly_chart")
                 holdings["weekly_chart"] = weekly
         except Exception as exc:
+            import traceback
             print(f"  WARN  weekly_chart build failed: {exc}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
 
         # India weekly chart — uses data/history/india/*.csv
         india_weekly = None

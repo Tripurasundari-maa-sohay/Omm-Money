@@ -208,7 +208,7 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
   h2{font-size:13px;color:var(--accent-y);font-weight:700;letter-spacing:1px;margin-bottom:14px}
-  h3{font-size:12px;color:var(--accent-g);font-weight:600;letter-spacing:1px;margin-bottom:10px}
+  h3{font-size:12px;color:var(--accent-g);font-weight:600;letter-spacing:1px;margin-bottom:10px;margin-top:0}
 
   /* ── MARKET STATUS ── */
   .markets-status{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
@@ -521,11 +521,8 @@
       justify-content: flex-start !important;
     }
 
-    /* Analytics 3-col grid → single column on mobile */
-    .analytics-section > div[style*="grid-template-columns:1fr 1fr 1fr"] {
-      grid-template-columns: 1fr !important;
-    }
-    .analytics-section > div[style*="grid-template-columns:1fr 1fr"] {
+    /* Analytics grids → single column on mobile */
+    .analytics-section > div[style*="grid-template-columns"] {
       grid-template-columns: 1fr !important;
     }
 
@@ -906,42 +903,42 @@
       <div class="metrics-grid">
         <div class="metric-card"><label>EQUITIES VALUE</label><div class="mval loading pv" id="in-equities-value">…</div><div class="mdesc" id="in-equities-count">-- positions</div></div>
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="in-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card" style="flex-direction:row;align-items:stretch;gap:0">
+        <div class="metric-card" style="flex-direction:row;align-items:stretch;gap:0;flex-wrap:wrap">
           <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:0">
             <label>TODAY'S P&amp;L</label>
             <div class="mval loading pv" id="in-day-pl">…</div>
             <div class="mchg pv" id="in-day-pl-pct">--</div>
           </div>
-          <div style="width:1px;background:var(--border);margin:4px 10px;flex-shrink:0"></div>
-          <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:5px;flex-shrink:0"></div>
+          <div style="width:1px;background:var(--border);margin:4px 8px;flex-shrink:0"></div>
+          <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:4px;flex-shrink:0;max-width:160px;overflow:hidden"></div>
         </div>
       </div>
     </div>
 
     <div class="analytics-section">
       <div class="analytics-header"><h2>🇮🇳 INDIA PORTFOLIO · ANALYTICS</h2></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-        <div>
-          <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
-          <div style="height:260px;position:relative;overflow:hidden;"><canvas id="india-weight-chart"></canvas></div>
-        </div>
+      <!-- Row 1: Return % bar (2/3 width) + Holdings donut (1/3 width) -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start;">
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
-          <div id="india-upl-wrap" style="height:260px;position:relative;overflow:visible;"><canvas id="india-upl-chart"></canvas></div>
+          <div id="india-upl-wrap" style="height:380px;position:relative;overflow:visible;"><canvas id="india-upl-chart"></canvas></div>
         </div>
         <div>
-          <h3 style="margin-bottom:8px;">By Brokerage (Invested ₹)</h3>
-          <div style="height:260px;position:relative;overflow:hidden;"><canvas id="india-broker-chart"></canvas></div>
+          <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
+          <div style="height:280px;position:relative;overflow:hidden;"><canvas id="india-weight-chart"></canvas></div>
+          <h3 style="margin-bottom:8px;margin-top:16px;">By Brokerage (Invested ₹)</h3>
+          <div style="height:180px;position:relative;overflow:hidden;"><canvas id="india-broker-chart"></canvas></div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <!-- Row 2: Monthly heatmap + Broker P&L -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
         <div>
           <h3 style="margin-bottom:8px;">Monthly P&L Heatmap</h3>
           <div id="india-monthly-heatmap" style="display:flex;flex-wrap:wrap;gap:5px;min-height:80px;"></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Broker P&L Comparison (Unrealised)</h3>
-          <div style="height:160px;position:relative;overflow:visible;"><canvas id="india-broker-pl-chart"></canvas></div>
+          <div style="height:180px;position:relative;overflow:visible;"><canvas id="india-broker-pl-chart"></canvas></div>
         </div>
       </div>
     </div>
@@ -2827,8 +2824,8 @@ const DASH = (() => {
     const _igridC = _ics.getPropertyValue('--border').trim() || '#2a2a4a';
     const _isecC  = _ics.getPropertyValue('--text-sec').trim()||'#8892aa';
     const _ipriC  = _ics.getPropertyValue('--text-pri').trim()||'#e8eaf0';
-    const _rowH = window.innerWidth < 480 ? 28 : 32;
-    const _inH  = Math.max(300, uplSorted.length * _rowH);
+    const _rowH = window.innerWidth < 480 ? 28 : 34;
+    const _inH  = Math.max(380, uplSorted.length * _rowH);
     const _inWrap = document.getElementById('india-upl-wrap');
     if (_inWrap) _inWrap.style.height = _inH + 'px';
     mkChart('india-upl-chart', { type:'bar',

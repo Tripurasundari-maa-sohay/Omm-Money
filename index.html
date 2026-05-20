@@ -162,9 +162,19 @@
   [data-theme="arctic"] .mchg.positive,[data-theme="arctic"] .mval.positive { color:#0a7a50; }
   [data-theme="arctic"] .mchg.negative,[data-theme="arctic"] .mval.negative { color:#c02020; }
   [data-theme="arctic"] h2 { color:#0a1e3e; }
-  :root{--fs-scale:1}
+  :root{
+    --fs-scale:1;
+    /* Fluid type scale — clamp(min, preferred, max) */
+    --fs-xs:   clamp(9px,  1.0vw, 11px);
+    --fs-sm:   clamp(10px, 1.1vw, 12px);
+    --fs-base: clamp(11px, 1.2vw, 13px);
+    --fs-md:   clamp(12px, 1.3vw, 14px);
+    --fs-lg:   clamp(14px, 1.6vw, 18px);
+    --fs-xl:   clamp(18px, 2.0vw, 24px);
+    --fs-hero: clamp(20px, 2.5vw, 30px);
+  }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg-base);color:var(--text-pri);font-family:'Inter',system-ui,Arial,sans-serif;font-size:13px}
+  body{background:var(--bg-base);color:var(--text-pri);font-family:'Inter',system-ui,Arial,sans-serif;font-size:var(--fs-base)}
 
   /* ── BANNER ── */
   .top-banner{position:fixed;top:0;left:0;right:0;
@@ -181,14 +191,14 @@
   .tab-button:hover{background:rgba(79,142,247,.1);border-color:var(--accent-b);color:var(--accent-b)}
   .tab-button.active{background:var(--accent-y);color:#0f0f1a;border-color:var(--accent-y);
     box-shadow:0 0 12px rgba(240,180,41,.35)}
-  .banner-right{font-size:11px;color:var(--text-sec);text-align:right}
+  .banner-right{font-size:var(--fs-xs);color:var(--text-sec);text-align:right}
   .banner-row1{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
   .banner-metrics{display:flex;align-items:center;gap:6px;padding:3px 0;border-top:1px solid var(--border);flex-wrap:wrap}
   .bm-item{display:flex;flex-direction:column;align-items:center;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:2px 10px;min-width:80px}
   .bm-label{font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-  .bm-val{font-size:12px;font-weight:700;font-family:Monaco,monospace;color:var(--accent-g)}
+  .bm-val{font-size:var(--fs-sm);font-weight:700;font-family:Monaco,monospace;color:var(--accent-g)}
   #update-time{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace}
-  #fetch-status{font-size:10px;color:var(--text-dim);margin-top:2px}
+  #fetch-status{font-size:var(--fs-xs);color:var(--text-dim);margin-top:2px}
   #fetch-status.live{color:var(--accent-g)}
   #fetch-status.stale{color:var(--warn)}
   #fetch-status.error{color:var(--loss)}
@@ -207,11 +217,11 @@
   .tab-content.active{display:block;animation:fadeIn .3s ease-in-out}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-  h2{font-size:13px;color:var(--accent-y);font-weight:700;letter-spacing:1px;margin-bottom:14px}
-  h3{font-size:12px;color:var(--accent-g);font-weight:600;letter-spacing:1px;margin-bottom:10px;margin-top:0}
+  h2{font-size:var(--fs-md);color:var(--accent-y);font-weight:700;letter-spacing:1px;margin-bottom:14px}
+  h3{font-size:var(--fs-sm);color:var(--accent-g);font-weight:600;letter-spacing:1px;margin-bottom:10px;margin-top:0}
 
   /* ── MARKET STATUS ── */
-  .markets-status{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+  .markets-status{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
   .market-card{background:var(--bg-card);border:2px solid var(--accent-b);border-radius:8px;padding:16px}
   .market-card.india-market{border-color:var(--warn)}
   .market-header{display:flex;justify-content:space-between;align-items:center;
@@ -225,40 +235,40 @@
   .index-item{display:flex;justify-content:space-between;align-items:center;
     padding:8px 10px;background:var(--bg-card2);border-radius:4px}
   .index-name{color:var(--accent-b);font-weight:600}
-  .index-value{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace;font-size:13px}
-  .index-change{font-size:12px;font-weight:700;margin-left:8px}
+  .index-value{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace;font-size:var(--fs-base)}
+  .index-change{font-size:var(--fs-sm);font-weight:700;margin-left:8px}
   .index-change.positive{color:var(--gain)}
   .index-change.negative{color:var(--loss)}
-  .market-time{font-size:10px;color:var(--text-dim);font-style:italic}
+  .market-time{font-size:var(--fs-xs);color:var(--text-dim);font-style:italic}
   .market-countdown{display:flex;justify-content:space-between;align-items:center;
     margin-top:8px;padding:8px 10px;background:var(--bg-card2);
     border:1px dashed var(--border);border-radius:4px;font-size:11px}
   .countdown-label{color:var(--accent-b);font-weight:700;letter-spacing:.5px}
-  .countdown-value{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace;font-size:13px}
+  .countdown-value{color:var(--accent-g);font-weight:700;font-family:Monaco,monospace;font-size:var(--fs-base)}
   .countdown-value.warn{color:var(--warn)}
   .countdown-value.alert{color:var(--loss)}
 
   /* ── METRIC CARDS ── */
   .portfolio-overview,.portfolio-metrics{background:var(--bg-card);border:1px solid var(--accent-y);
-    border-radius:8px;padding:18px;margin-bottom:22px}
+    border-radius:8px;padding:14px;margin-bottom:14px}
   .portfolio-metrics{border-color:var(--border);position:relative;z-index:2}
-  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
   .metric-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;
-    padding:12px;display:flex;flex-direction:column;gap:5px}
-  .metric-card label{color:var(--text-sec);font-size:10px;font-weight:700;
+    padding:10px;display:flex;flex-direction:column;gap:4px}
+  .metric-card label{color:var(--text-sec);font-size:var(--fs-xs);font-weight:700;
     text-transform:uppercase;letter-spacing:1px}
-  .metric-card .mval{color:var(--text-pri);font-size:18px;font-weight:700;font-family:Monaco,monospace}
-  .metric-card .mchg{font-size:11px}
+  .metric-card .mval{color:var(--text-pri);font-size:var(--fs-xl);font-weight:700;font-family:Monaco,monospace}
+  .metric-card .mchg{font-size:var(--fs-xs)}
   .metric-card .mchg.positive{color:var(--gain)}
   .metric-card .mchg.negative{color:var(--loss)}
-  .metric-card .mdesc{font-size:10px;color:var(--text-dim)}
+  .metric-card .mdesc{font-size:var(--fs-xs);color:var(--text-dim)}
   .metric-card .mval.positive{color:var(--gain)}
   .metric-card .mval.negative{color:var(--loss)}
-  .metric-card .mval.loading{color:var(--text-dim);font-size:14px}
+  .metric-card .mval.loading{color:var(--text-dim);font-size:var(--fs-md)}
 
   /* ── CHARTS ── */
   .analytics-section{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
-    padding:18px;margin-bottom:22px}
+    padding:14px;margin-bottom:14px}
   .analytics-header{display:flex;align-items:center;justify-content:space-between;
     flex-wrap:wrap;gap:10px;margin-bottom:14px}
   .analytics-header h2{margin-bottom:0}
@@ -266,14 +276,14 @@
   .chart-wide{height:280px}
   .chart-square{height:260px}
   .chart-stat-bar{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;
-    padding:8px 12px;background:var(--bg-card2);border-radius:4px;font-size:11px}
+    padding:8px 12px;background:var(--bg-card2);border-radius:4px;font-size:var(--fs-xs)}
   .chart-stat-bar strong{color:var(--accent-b)}
   .analytics-two-col{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start}
 
   /* ── TABLES ── */
   .holdings-section,.holdings-preview,.tab-section{background:var(--bg-card);border:1px solid var(--border);
-    border-radius:8px;padding:18px;margin-bottom:22px;overflow-x:auto}
-  table{width:100%;border-collapse:collapse;font-size:12px}
+    border-radius:8px;padding:14px;margin-bottom:14px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
   thead th{background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;
     font-weight:700;font-size:11px;letter-spacing:.5px;white-space:nowrap;
     border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
@@ -303,7 +313,7 @@
     padding:16px;margin-bottom:18px}
   .index-card.india{border-color:var(--warn)}
   .index-main{display:flex;align-items:center;gap:20px;margin-top:10px}
-  .index-value-large{color:var(--accent-g);font-size:30px;font-weight:700;font-family:Monaco,monospace}
+  .index-value-large{color:var(--accent-g);font-size:clamp(20px,2.5vw,30px);font-weight:700;font-family:Monaco,monospace}
   .index-change-large{font-size:15px;font-weight:700}
   .index-time{font-size:10px;color:var(--text-dim)}
 
@@ -433,7 +443,6 @@
     .banner-tabs{gap:5px}
     .tab-button{padding:5px 10px;font-size:10px}
     .main-content{padding:14px}
-    .index-value-large{font-size:22px}
     .dashboard-container{padding-top:140px}
   }
 
@@ -462,7 +471,6 @@
     .holdings-preview,.tab-section{padding:12px;margin-bottom:14px;border-radius:6px}
     .metrics-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
     .metric-card .mval{font-size:16px}
-    .index-value-large{font-size:20px}
     .index-main{flex-wrap:wrap;gap:8px}
     .chart-wide{height:200px}
     .chart-square{height:180px}
@@ -489,7 +497,6 @@
     .metric-card{padding:9px}
     .metric-card .mval{font-size:14px}
     .tab-button{padding:4px 6px;font-size:9px;letter-spacing:0}
-    .index-value-large{font-size:17px}
     thead th,tbody td,tfoot td{padding:4px 5px;font-size:10px}
     .chart-wide{height:170px}
     .chart-square{height:160px}
@@ -845,7 +852,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:280px;position:relative;overflow:hidden;"><canvas id="us-weight-chart"></canvas></div>
+          <div style="height:280px;max-width:320px;position:relative;overflow:hidden;"><canvas id="us-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
@@ -946,9 +953,9 @@
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Holdings by Weight</h3>
-          <div style="height:280px;position:relative;overflow:hidden;"><canvas id="india-weight-chart"></canvas></div>
+          <div style="height:280px;max-width:320px;position:relative;overflow:hidden;"><canvas id="india-weight-chart"></canvas></div>
           <h3 style="margin-bottom:8px;margin-top:16px;">By Brokerage (Invested ₹)</h3>
-          <div style="height:180px;position:relative;overflow:hidden;"><canvas id="india-broker-chart"></canvas></div>
+          <div style="height:180px;max-width:320px;position:relative;overflow:hidden;"><canvas id="india-broker-chart"></canvas></div>
         </div>
       </div>
       <!-- Row 2: Monthly heatmap + Broker P&L -->

@@ -484,10 +484,11 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
     else:
         inception = _date(2025, 11, 28)
 
-    # Chart starts Oct 2025 so US $0 launch is visible before Dec positions opened
-    chart_start = _date(2025, 10, 1)
+    # All Fridays from inception to today (keep yfinance download from inception
+    # to avoid failures for tickers that didn't exist pre-Dec; Oct/Nov $0 padding
+    # is prepended in main() after this function returns)
     today = datetime.utcnow().date()
-    d = chart_start
+    d = inception
     while d.weekday() != 4: d += _td(days=1)
     fridays = []
     while d <= today:
@@ -564,17 +565,6 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
         mo_key  = fri.strftime("%b-%Y")
         lbl     = fri.strftime("%b-%y") if mo_key not in seen_months else ""
         seen_months.add(mo_key)
-
-        # Pre-inception (Oct–Nov): US portfolio didn't exist — show $0, 0% return
-        if fri < inception:
-            labels.append(lbl)
-            dates.append(fri.isoformat())
-            port_rets.append(0.0)
-            snp_rets.append(round(snp_ret, 2))
-            inr_rets.append(0.0)
-            fx_alphas.append(0.0)
-            us_vals.append(0)
-            continue
 
         # Compute current portfolio value from holdings
         port_val = cash
@@ -1116,6 +1106,35 @@ def main() -> int:
             print("Building weekly Friday chart data…")
             weekly = build_weekly_chart_data(cost_now)
             if weekly:
+                # Prepend Oct–Nov 2025 Fridays with us_val=0 so combined chart
+                # shows US portfolio launch from $0 (avoids inflated Dec start).
+                # Done here not inside build_weekly_chart_data to avoid extending
+                # the yfinance download range (new tickers lack pre-Dec history).
+                from datetime import date as _dpre, timedelta as _tdpre
+                _pre_start = _dpre(2025, 10, 1)
+                _d2 = _pre_start
+                while _d2.weekday() != 4:
+                    _d2 += _tdpre(days=1)
+                _first = _dpre.fromisoformat(weekly["dates"][0])
+                _seen: set[str] = set()
+                _pre: dict = {k: [] for k in
+                              ("labels","dates","port_ret","snp_ret",
+                               "inr_ret","fx_alpha","us_val_usd")}
+                while _d2 < _first:
+                    _mk = _d2.strftime("%b-%Y")
+                    _pre["labels"].append(_d2.strftime("%b-%y") if _mk not in _seen else "")
+                    _seen.add(_mk)
+                    _pre["dates"].append(_d2.isoformat())
+                    _pre["port_ret"].append(0.0)
+                    _pre["snp_ret"].append(0.0)
+                    _pre["inr_ret"].append(0.0)
+                    _pre["fx_alpha"].append(0.0)
+                    _pre["us_val_usd"].append(0)
+                    _d2 += _tdpre(days=7)
+                if _pre["dates"]:
+                    for _k in _pre:
+                        weekly[_k] = _pre[_k] + weekly[_k]
+                    print(f"  prepended {len(_pre['dates'])} Oct–Nov Fridays ($0) to weekly_chart")
                 holdings["weekly_chart"] = weekly
         except Exception as exc:
             print(f"  WARN  weekly_chart build failed: {exc}", file=sys.stderr)

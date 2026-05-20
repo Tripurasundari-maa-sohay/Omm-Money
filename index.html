@@ -2685,45 +2685,45 @@ const DASH = (() => {
       return {tk,name,cls:'Stock',qty,avg,ltp,pc:prc,live:!!dp[tk],mv,upl,uplNet,exitFee:0,dayPL,dayPct,ret,cost,houseMoney:false,broker,exch:'NSE',yf:tk+'.NS',wt:0};
     }
 
-    // ── US portfolio: 12 positions (8 profit, 4 loss) ──
+    // ── US portfolio: 12 positions — AI-heavy, strong cumulative gains ──
     // factor × LTP = entry price — recalculates automatically with real LTPs
     const usOpenRaw = [
-      uPos('AAPL', 'Apple Inc.',            'Stock',  8, 0.78, 215),  // +28%
-      uPos('MSFT', 'Microsoft Corp.',        'Stock',  5, 0.82, 450),  // +22%
-      uPos('NVDA', 'NVIDIA Corp.',           'Stock',  3, 0.55, 900),  // +82%
-      uPos('AMZN', 'Amazon.com Inc.',        'Stock', 10, 0.84, 200),  // +19%
-      uPos('META', 'Meta Platforms',         'Stock',  4, 0.86, 590),  // +16%
-      uPos('GOOGL','Alphabet Inc.',          'Stock', 12, 0.92, 172),  // +9%
-      uPos('JPM',  'JPMorgan Chase',         'Stock',  9, 0.88, 250),  // +14%
-      uPos('VTI',  'Vanguard Total Market', 'ETF',   20, 0.91, 270),  // +10%
-      uPos('QQQ',  'Invesco Nasdaq-100',    'ETF',   10, 0.89, 470),  // +12%
-      uPos('EWY',  'iShares MSCI S.Korea',  'ETF',   35, 1.05,  55),  // -5%
-      uPos('T',    'AT&T Inc.',             'Stock', 80, 1.12,  18),  // -11%
-      uPos('BA',   'Boeing Co.',            'Stock',  6, 1.18, 165),  // -15%
+      uPos('NVDA',  'NVIDIA Corp.',           'Stock', 20, 0.52, 131),  // +92% AI early bet
+      uPos('AAPL',  'Apple Inc.',             'Stock', 20, 0.75, 205),  // +33%
+      uPos('MSFT',  'Microsoft Corp.',        'Stock', 10, 0.88, 417),  // +14%
+      uPos('META',  'Meta Platforms Inc.',    'Stock',  8, 0.78, 620),  // +28%
+      uPos('AMZN',  'Amazon.com Inc.',        'Stock', 15, 0.72, 259),  // +39%
+      uPos('GOOGL', 'Alphabet Inc. ClassA',   'Stock', 25, 0.81, 170),  // +23%
+      uPos('TSLA',  'Tesla Inc.',             'Stock', 12, 0.67, 330),  // +49%
+      uPos('BRK-B', 'Berkshire Hathaway B',  'Stock',  8, 0.86, 521),  // +16%
+      uPos('V',     'Visa Inc.',              'Stock', 12, 0.70, 370),  // +43%
+      uPos('JPM',   'JPMorgan Chase & Co.',  'Stock', 14, 0.77, 270),  // +30%
+      uPos('SPY',   'SPDR S&P 500 ETF',      'ETF',    8, 0.93, 582),  // +8%
+      uPos('QQQ',   'Invesco Nasdaq-100',    'ETF',    7, 0.91, 490),  // +10%
     ];
     const usMV = usOpenRaw.reduce((s,p)=>s+p.mv,0);
     usOpenRaw.forEach(p=>p.wt=usMV?(p.mv/usMV)*100:0);
 
     const usClosed = [
-      {tk:'TSLA',name:'Tesla Inc.',        cls:'Stock',income:0, costs:-12,realised: 340,ret_pct: 18.2},
-      {tk:'NFLX',name:'Netflix Inc.',      cls:'Stock',income:0, costs: -8,realised: 215,ret_pct: 11.4},
-      {tk:'AMD', name:'AMD Inc.',          cls:'Stock',income:0, costs:-10,realised: 180,ret_pct:  9.8},
-      {tk:'DIS', name:'Walt Disney Co.',   cls:'Stock',income:0, costs: -7,realised: -95,ret_pct: -5.2},
-      {tk:'BABA',name:'Alibaba Group',     cls:'Stock',income:0, costs: -9,realised:-210,ret_pct:-14.1},
-      {tk:'SBUX',name:'Starbucks Corp.',   cls:'Stock',income:8, costs: -6,realised:  88,ret_pct:  6.1},
-      {tk:'GE',  name:'GE Aerospace',      cls:'Stock',income:0, costs: -6,realised:  67,ret_pct:  4.8},
-      {tk:'F',   name:'Ford Motor Co.',    cls:'Stock',income:12,costs: -5,realised:  45,ret_pct:  3.2},
+      {tk:'COIN',name:'Coinbase Global',        cls:'Stock',income:0, costs:-18,realised: 1240,ret_pct: 85.2},
+      {tk:'NFLX',name:'Netflix Inc.',           cls:'Stock',income:0, costs:-14,realised:  820,ret_pct: 67.1},
+      {tk:'AMD', name:'Advanced Micro Devices', cls:'Stock',income:0, costs:-12,realised:  510,ret_pct: 41.8},
+      {tk:'GS',  name:'Goldman Sachs Group',    cls:'Stock',income:18,costs:-10,realised:  385,ret_pct: 24.3},
+      {tk:'UBER',name:'Uber Technologies',      cls:'Stock',income:0, costs:-11,realised:  290,ret_pct: 30.6},
+      {tk:'PYPL',name:'PayPal Holdings',        cls:'Stock',income:0, costs: -9,realised: -148,ret_pct:-12.4},
+      {tk:'INTC',name:'Intel Corp.',            cls:'Stock',income:12,costs: -8,realised: -210,ret_pct:-17.8},
+      {tk:'LYFT',name:'Lyft Inc.',              cls:'Stock',income:0, costs: -7,realised: -175,ret_pct:-22.6},
     ];
 
     const us = {
-      cash:1240.50, cashInfusion:15875,
+      cash:2850, cashInfusion:45000,
       open:usOpenRaw, closed:usClosed,
       monthly:{
         labels:['Nov-25','Dec','Jan','Feb','Mar','Apr','May-26'],
-        port_return_cum_pct:[0,-1.2,-3.4,-5.1,-8.2,-3.1,4.8],
-        snp_return_cum_pct: [0,-0.8,-2.1,-4.3,-7.5,-1.8,2.1],
-        cash_deployed:[10000,12000,14000,16000,16000,16000,16000],
-        monthly_pl:[0,-145,-264,-221,-391,612,742],
+        port_return_cum_pct:[0, 8.4, 6.2, 3.8,-3.5,14.2,26.8],
+        snp_return_cum_pct: [0, 2.1,-0.8,-4.3,-7.5,-1.8, 2.1],
+        cash_deployed:[15000,25000,35000,40000,45000,45000,45000],
+        monthly_pl:[0,3780,-990,-1080,-3285,7965,5670],
       },
       charges:[], charges_total:0,
       stocksMV:usOpenRaw.filter(p=>p.cls==='Stock').reduce((s,p)=>s+p.mv,0),
@@ -2737,28 +2737,28 @@ const DASH = (() => {
     us.dayPct=us.totalValue?(us.dayPL/(us.totalValue-us.dayPL))*100:0;
     us.returnPct=us.cashInfusion?((us.totalValue-us.cashInfusion)/us.cashInfusion)*100:0;
     us.realisedPL=usClosed.reduce((s,p)=>s+p.realised,0);
-    us.dividends=42;
+    us.dividends=128;
 
-    // ── India portfolio: 12 positions (8 profit, 4 loss) ──
+    // ── India portfolio: 12 positions — large blue-chip concentration ──
     const inOpenRaw = [
-      iPos('RELIANCE',  'Reliance Industries',   15, 0.87, 2800, 'Zerodha'),         // +15%
-      iPos('TCS',       'Tata Consultancy Svcs',  8, 0.91, 3600, 'Zerodha'),         // +10%
-      iPos('HDFCBANK',  'HDFC Bank Ltd.',         20, 0.88, 1700, 'Motilal Oswal'),  // +14%
-      iPos('ICICIBANK', 'ICICI Bank Ltd.',         30, 0.82, 1300, 'Motilal Oswal'), // +22%
-      iPos('BAJFINANCE','Bajaj Finance Ltd.',       5, 0.78, 8000, 'Motilal Oswal'), // +28%
-      iPos('NIFTYBEES', 'Nifty BeES ETF',         100, 0.89,  280, 'Zerodha'),       // +12% ETF
-      iPos('GOLDBEES',  'Gold BeES ETF',           80, 0.94,  130, 'Zerodha'),       // +6%  ETF
-      iPos('ADANIPORTS','Adani Ports & SEZ',       18, 0.86, 1400, 'Groww'),         // +16%
-      iPos('INFY',      'Infosys Ltd.',            25, 1.08, 1550, 'Groww'),          // -7%
-      iPos('WIPRO',     'Wipro Ltd.',              50, 1.12,  450, 'Groww'),          // -11%
-      iPos('TITAN',     'Titan Company Ltd.',      10, 1.06, 3400, 'Groww'),          // -6%
-      iPos('MARUTI',    'Maruti Suzuki India',      3, 1.09,12500, 'Groww'),          // -8%
+      iPos('HDFCBANK',  'HDFC Bank Ltd.',        600, 0.73, 1850, 'Motilal Oswal'), // +37%
+      iPos('ICICIBANK', 'ICICI Bank Ltd.',        500, 0.68, 1400, 'Motilal Oswal'), // +47%
+      iPos('NIFTYBEES', 'Nifty BeES ETF',        3000, 0.84,  250, 'Zerodha'),       // +19%
+      iPos('GOLDBEES',  'Gold BeES ETF',         4000, 0.77,   65, 'Zerodha'),       // +30%
+      iPos('TCS',       'Tata Consultancy Svcs',   40, 0.92, 3400, 'Zerodha'),       // +9%
+      iPos('BAJFINANCE','Bajaj Finance Ltd.',       20, 0.75, 8000, 'Motilal Oswal'), // +33%
+      iPos('INFY',      'Infosys Ltd.',             80, 0.89, 1700, 'Groww'),         // +12%
+      iPos('KOTAKBANK', 'Kotak Mahindra Bank',      60, 0.84, 2200, 'Groww'),         // +19%
+      iPos('TITAN',     'Titan Company Ltd.',       30, 0.85, 3200, 'Groww'),         // +18%
+      iPos('MARUTI',    'Maruti Suzuki India',       8, 0.87,12000, 'Groww'),          // +15%
+      iPos('NESTLEIND', 'Nestle India Ltd.',         25, 0.94, 2200, 'Groww'),         // +6%
+      iPos('RELIANCE',  'Reliance Industries',      80, 1.28, 1400, 'Motilal Oswal'), // -22% (realism)
     ];
     const inMV=inOpenRaw.reduce((s,p)=>s+p.mv,0);
     inOpenRaw.forEach(p=>p.wt=inMV?(p.mv/inMV)*100:0);
 
     const india = {
-      cash:8500, cashInfusion:280000,
+      cash:12500, cashInfusion:3000000,
       open:inOpenRaw, closed:[],
       mv:inMV,
       unrealPL:inOpenRaw.reduce((s,p)=>s+p.uplNet,0),
@@ -2791,18 +2791,18 @@ const DASH = (() => {
       return {score,action,regime:'BULL',rsi,v200,rs,rng,vsMean,px:0,hi52:0,lo52:0,sc,sector};
     }
     return {
-      AAPL:  sig(74, 48.2,  12.3,  5.8, 68,  -3.1, 'Technology'),
-      MSFT:  sig(71, 52.1,   8.7,  4.2, 72,  -1.8, 'Technology'),
-      NVDA:  sig(82, 61.4,  41.1, 18.7, 85,   8.4, 'Technology'),
-      AMZN:  sig(68, 49.8,  10.1,  3.1, 61,  -1.2, 'Consumer Cyclical'),
-      META:  sig(76, 55.3,  17.9,  9.4, 74,   4.2, 'Communication Services'),
-      GOOGL: sig(58, 50.2,   2.4,  0.8, 48,  -6.1, 'Communication Services'),
-      JPM:   sig(63, 47.1,   8.5,  2.1, 55,  -4.3, 'Financial Services'),
-      VTI:   sig(66, 49.5,   9.1,  2.8, 63,  -2.4, 'ETF'),
-      QQQ:   sig(69, 51.8,  11.2,  4.1, 67,  -1.9, 'ETF'),
-      EWY:   sig(35, 41.2,  -4.8, -6.3, 32,  -8.2, 'ETF'),
-      T:     sig(42, 44.8,   1.2, -3.1, 38,  -5.8, 'Communication Services'),
-      BA:    sig(31, 38.4,  -8.1, -9.2, 22, -12.4, 'Industrials'),
+      NVDA:  sig(84, 62.1,  43.2, 20.1, 88,   9.8, 'Technology'),          // BUY — AI leader
+      AAPL:  sig(74, 48.2,  12.3,  5.8, 68,  -3.1, 'Technology'),          // BUY
+      MSFT:  sig(71, 52.1,   8.7,  4.2, 72,  -1.8, 'Technology'),          // BUY
+      META:  sig(77, 55.3,  17.9,  9.4, 74,   4.2, 'Communication Services'), // BUY
+      AMZN:  sig(68, 49.8,  10.1,  3.1, 61,  -1.2, 'Consumer Cyclical'),   // BUY
+      GOOGL: sig(62, 50.2,   5.4,  2.8, 52,  -4.1, 'Communication Services'), // HOLD
+      TSLA:  sig(58, 53.4,   8.8,  3.2, 57,  -2.8, 'Consumer Cyclical'),   // HOLD
+      'BRK-B': sig(65, 46.8,  10.2,  4.1, 60,  -3.8, 'Financial Services'), // HOLD
+      V:     sig(72, 47.5,  14.1,  6.2, 70,  -2.1, 'Financial Services'),  // BUY
+      JPM:   sig(66, 47.1,   8.5,  2.1, 55,  -4.3, 'Financial Services'),  // HOLD
+      SPY:   sig(68, 50.4,   9.8,  3.4, 64,  -2.2, 'ETF'),                 // BUY
+      QQQ:   sig(70, 51.8,  11.2,  4.1, 67,  -1.9, 'ETF'),                 // BUY
     };
   }
 

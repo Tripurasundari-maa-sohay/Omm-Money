@@ -696,12 +696,12 @@
 
     <!-- Combined portfolio value chart (US + India) -->
     <div class="analytics-section">
-      <h2>TOTAL PORTFOLIO GROWTH · US + INDIA · % from inception</h2>
+      <h2>TOTAL PORTFOLIO VALUE · US + INDIA (USD)</h2>
       <div class="chart-container chart-wide"><canvas id="combined-value-chart"></canvas></div>
       <div class="chart-stat-bar" id="combined-stat-bar" style="display:none">
-        <span>US return: <strong id="comb-us-val" style="color:var(--accent-b)">--</strong></span>
-        <span>India return (USD): <strong id="comb-india-val" style="color:var(--accent-y)">--</strong></span>
-        <span>Total: <strong id="comb-total-val" style="color:var(--gain)">--</strong></span>
+        <span>US: <strong id="comb-us-val" style="color:#3b82f6">--</strong></span>
+        <span>India: <strong id="comb-india-val" style="color:var(--warn)">--</strong></span>
+        <span>Combined: <strong id="comb-total-val" style="color:var(--gain)">--</strong></span>
       </div>
     </div>
 
@@ -2106,40 +2106,36 @@ const DASH = (() => {
     const _gr  = _cs.getPropertyValue('--border').trim()  || '#2a2a4a';
     const _sec = _cs.getPropertyValue('--text-sec').trim()|| '#8892aa';
 
-    // Index to 0% at start — makes chart directly comparable to cumulative return chart
-    const idx = (arr) => arr.map(v => arr[0] ? +((v / arr[0] - 1) * 100).toFixed(2) : 0);
-    const totalIdx = idx(cw.total_usd);
-    const usIdx    = idx(cw.us_usd);
-    const indiaIdx = idx(cw.india_usd);
-    const pct = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    const fmt$ = v => '$' + Math.round(v).toLocaleString('en-US');
+    // Colors that work in BOTH dark and light themes
+    const _pri = _cs.getPropertyValue('--text-pri').trim() || '#e8eaf0';
+    // Total: --gain (teal in dark, dark-green in light) — always high contrast
+    // US: explicit bright blue that works on both backgrounds
+    // India: --warn (amber) — visible on dark and light
+    const _usColor   = '#3b82f6';   // bright blue — visible on any bg
+    const _indColor  = _cs.getPropertyValue('--warn').trim() || '#f0b429';
 
     mkChart('combined-value-chart', { type:'line',
       data:{ labels: cw.labels, datasets:[
-        { label:'Total (US+India)', data:totalIdx, borderColor:_g, borderWidth:2.5, tension:0.3, pointRadius:2, fill:false },
-        { label:'US Portfolio',     data:usIdx,    borderColor:_b, borderWidth:1.5, borderDash:[4,3], tension:0.3, pointRadius:1, fill:false },
-        { label:'India (USD)',       data:indiaIdx, borderColor:_y, borderWidth:1.5, borderDash:[4,3], tension:0.3, pointRadius:1, fill:false },
+        { label:'Combined (US+India)', data:cw.total_usd, borderColor:_g,       borderWidth:3,   tension:0.3, pointRadius:2, fill:false },
+        { label:'US Portfolio ($)',     data:cw.us_usd,   borderColor:_usColor,  borderWidth:2,   tension:0.3, pointRadius:1, fill:false },
+        { label:'India (USD $)',        data:cw.india_usd, borderColor:_indColor, borderWidth:2,   borderDash:[5,3], tension:0.3, pointRadius:1, fill:false },
       ]},
       options:{ responsive:true, maintainAspectRatio:false, animation:{duration:400},
-        plugins:{ legend:{ position:'top', labels:{ color:_cs.getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12} } },
+        plugins:{ legend:{ position:'top', labels:{ color:_pri, boxWidth:14, font:{size:12}, padding:12 } },
           tooltip:{ mode:'index', intersect:false,
-            callbacks:{ label: ctx => {
-              const v = ctx.parsed.y;
-              const abs = ctx.datasetIndex === 0 ? cw.total_usd[ctx.dataIndex]
-                        : ctx.datasetIndex === 1 ? cw.us_usd[ctx.dataIndex]
-                        : cw.india_usd[ctx.dataIndex];
-              return `${ctx.dataset.label}: ${pct(v)}  ($${Math.round(abs).toLocaleString()})`;
-            }} },
+            callbacks:{ label: ctx => `${ctx.dataset.label}: ${fmt$(ctx.parsed.y)}` } },
           datalabels:{ display:false } },
         scales:{
           x:{ grid:{color:_gr}, ticks:{color:_sec} },
-          y:{ grid:{color:_gr}, ticks:{color:_sec, callback: v => pct(v)} } } }
+          y:{ grid:{color:_gr}, ticks:{color:_sec, callback: v => fmt$(v)} } } }
     });
     const last = cw.dates.length - 1;
     const stat = $('combined-stat-bar');
     if (stat) { stat.style.display = '';
-      setText('comb-us-val',    pct(usIdx[last]));
-      setText('comb-india-val', pct(indiaIdx[last]));
-      setText('comb-total-val', pct(totalIdx[last]));
+      setText('comb-us-val',    fmt$(cw.us_usd[last]));
+      setText('comb-india-val', fmt$(cw.india_usd[last]));
+      setText('comb-total-val', fmt$(cw.total_usd[last]));
     }
   }
 

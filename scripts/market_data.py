@@ -1062,6 +1062,19 @@ def main() -> int:
         except Exception as exc:
             print(f"  WARN  daily_chart build failed: {exc}", file=sys.stderr)
 
+        # Carry-forward previous chart data so failures don't blank the dashboard
+        # GitHub Actions may fail on yfinance calls — keep last good version
+        prev_holdings: dict = {}
+        if OUT_HOLDINGS.exists():
+            try:
+                prev_holdings = json.loads(OUT_HOLDINGS.read_text())
+            except Exception:
+                pass
+        for _chart_key in ("weekly_chart", "daily_chart", "india_weekly_chart",
+                           "combined_weekly_chart", "snp_actual_cum_pct", "inr_fx_monthly"):
+            if _chart_key in prev_holdings and _chart_key not in holdings:
+                holdings[_chart_key] = prev_holdings[_chart_key]
+
         # Weekly Friday chart data (US — replaces monthly in chart)
         cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}
         weekly = None

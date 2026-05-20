@@ -522,7 +522,7 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
     if not snp_inception or not inr_inception:
         return None
 
-    labels, dates, port_rets, snp_rets, inr_rets, fx_alphas = [], [], [], [], [], []
+    labels, dates, port_rets, snp_rets, inr_rets, fx_alphas, us_vals = [], [], [], [], [], [], []
     seen_months: set[str] = set()
 
     # Build a map of month-end date → broker TWR % (verified, deposit-neutral)
@@ -620,15 +620,17 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
         snp_rets.append(round(snp_ret, 2))
         inr_rets.append(round(inr_ret, 2))
         fx_alphas.append(round(fx_alpha, 2))
+        us_vals.append(round(port_val, 0))  # absolute US portfolio value in USD
 
     print(f"  weekly chart: {len(dates)} Fridays from {dates[0]} to {dates[-1]}")
     return {
-        "labels":   labels,
-        "dates":    dates,
-        "port_ret": port_rets,
-        "snp_ret":  snp_rets,
-        "inr_ret":  inr_rets,
-        "fx_alpha": fx_alphas,
+        "labels":     labels,
+        "dates":      dates,
+        "port_ret":   port_rets,
+        "snp_ret":    snp_rets,
+        "inr_ret":    inr_rets,
+        "fx_alpha":   fx_alphas,
+        "us_val_usd": us_vals,
     }
 
 
@@ -740,6 +742,174 @@ def build_daily_chart_data(cost: dict) -> dict | None:
     print(f"  daily chart: {len(dates)} days from {dates[0]} to {dates[-1]}")
     return {"labels":labels,"dates":dates,"port_ret":port_rets,
             "snp_ret":snp_rets,"inr_ret":inr_rets,"fx_alpha":fx_alphas}
+
+
+def build_india_weekly_chart(cost: dict, inrx_hist=None) -> dict | None:
+    """
+    Compute India portfolio value at each Friday using data/history/india/*.csv.
+    Uses current positions (qty × historical close price).
+    Returns dict with labels, dates, india_val_inr, india_val_usd.
+    """
+    from datetime import date as _date, timedelta as _td
+    import csv
+
+    positions = cost.get("india", {}).get("open", [])
+    if not positions:
+        return None
+
+    history_dir = ROOT / "data" / "history" / "india"
+    label_dates_all = cost.get("us", {}).get("monthly", {}).get("label_dates", [])
+    if label_dates_all and label_dates_all[0]:
+        inception = datetime.strptime(label_dates_all[0], "%Y-%m-%d").date()
+    else:
+        inception = _date(2025, 11, 30)
+
+    today = datetime.utcnow().date()
+
+    # Load historical closes per ticker — try tk first, then yf base name
+    ticker_history: dict[str, dict[str, float]] = {}
+    for pos in positions:
+        tk = pos["tk"]
+        yf_base = pos.get("yf", tk).replace(".NS", "").replace(".BO", "")
+
+        # Try tk first (e.g. SBIN), then yf base (e.g. GOLDBEES for GOLDBEES_M)
+        csv_path = history_dir / f"{tk}.csv"
+        if not csv_path.exists():
+            csv_path = history_dir / f"{yf_base}.csv"
+
+        if csv_path.exists():
+            prices: dict[str, float] = {}
+            try:
+                with open(csv_path) as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        prices[row["date"]] = float(row["adj_close"] or row["close"] or 0)
+                ticker_history[tk] = prices
+                continue
+            except Exception as exc:
+                print(f"  WARN  india history read {tk}: {exc}", file=sys.stderr)
+
+        # Fallback: fetch from yfinance for tickers not in EOD history (SME etc.)
+        try:
+            import yfinance as _yf2
+            h = _yf2.Ticker(pos.get("yf", tk + ".NS")).history(period="2y", interval="1d", auto_adjust=True)
+            if not h.empty:
+                prices = {str(d.date()): float(c) for d, c in zip(h.index, h["Close"])}
+                ticker_history[tk] = prices
+                print(f"  india history (yf fallback): {tk}")
+            else:
+                print(f"  WARN  india history not found: {tk}", file=sys.stderr)
+        except Exception as exc:
+            print(f"  WARN  india yf fallback {tk}: {exc}", file=sys.stderr)
+
+    # Load INR/USD history if not provided
+    if inrx_hist is None:
+        try:
+            import yfinance as _yf
+            inrx_raw = _yf.download("INR=X", start=inception.isoformat(),
+                                    end=(today + _td(days=1)).isoformat(),
+                                    interval="1d", auto_adjust=False, progress=False)["Close"].squeeze()
+            inrx_hist = inrx_raw
+        except Exception as exc:
+            print(f"  WARN  INR=X fetch in india weekly: {exc}", file=sys.stderr)
+            return None
+
+    import pandas as _pd
+
+    def nearest_price(price_dict: dict[str, float], target: _date) -> float | None:
+        """Find closest date on or before target in the price dict."""
+        best = None
+        for ds, px in price_dict.items():
+            d = _date.fromisoformat(ds)
+            if d <= target:
+                if best is None or d > best[0]:
+                    best = (d, px)
+        return best[1] if best else None
+
+    def nearest_fx(series, target: _date) -> float | None:
+        s = series.loc[series.index.normalize() <= _pd.Timestamp(target)]
+        return float(s.iloc[-1]) if not s.empty else None
+
+    # All Fridays from inception to today
+    d = inception
+    while d.weekday() != 4: d += _td(days=1)
+    fridays = []
+    while d <= today:
+        fridays.append(d)
+        d += _td(days=7)
+
+    labels, dates, india_inr, india_usd = [], [], [], []
+    seen_months: set[str] = set()
+
+    for fri in fridays:
+        fx = nearest_fx(inrx_hist, fri)
+        if not fx:
+            continue
+        val_inr = sum(
+            pos["qty"] * (nearest_price(ticker_history.get(pos["tk"], {}), fri) or 0)
+            for pos in positions
+        )
+        if val_inr == 0:
+            continue
+        mo_key = fri.strftime("%b-%Y")
+        lbl = fri.strftime("%b-%y") if mo_key not in seen_months else ""
+        seen_months.add(mo_key)
+        labels.append(lbl)
+        dates.append(fri.isoformat())
+        india_inr.append(round(val_inr, 0))
+        india_usd.append(round(val_inr / fx, 2))
+
+    if not dates:
+        return None
+    print(f"  india weekly: {len(dates)} Fridays, latest India val ₹{india_inr[-1]:,.0f} (${india_usd[-1]:,.0f})")
+    return {"labels": labels, "dates": dates,
+            "india_val_inr": india_inr, "india_val_usd": india_usd}
+
+
+def build_combined_weekly_chart(us_weekly: dict, india_weekly: dict,
+                                 inrx_hist=None) -> dict | None:
+    """
+    Merge US weekly and India weekly into a combined total portfolio value chart.
+    Aligns on common Friday dates.
+    Returns dict with labels, dates, us_usd, india_usd, total_usd.
+    """
+    if not us_weekly or not india_weekly:
+        return None
+
+    us_map    = dict(zip(us_weekly["dates"],    zip(us_weekly["port_ret"],   [None]*len(us_weekly["dates"]))))
+    india_map = dict(zip(india_weekly["dates"], india_weekly["india_val_usd"]))
+
+    # Need absolute US portfolio values — reconstruct from us_weekly port_ret + cash_infusion
+    # Use existing us_weekly data which has port_ret % — we need absolute value
+    # Store us_val_usd separately in us_weekly (add to build_weekly_chart_data output)
+    # For now use the combined dates
+    common_dates = sorted(set(us_weekly["dates"]) & set(india_weekly["dates"]))
+    if not common_dates:
+        return None
+
+    us_val_map = dict(zip(us_weekly.get("dates", []), us_weekly.get("us_val_usd", [])))
+    labels, dates, us_usd, india_usd_list, total_usd = [], [], [], [], []
+    seen_months: set[str] = set()
+    from datetime import date as _date
+    for ds in common_dates:
+        us_v    = us_val_map.get(ds)
+        india_v = india_map.get(ds)
+        if us_v is None or india_v is None:
+            continue
+        d = _date.fromisoformat(ds)
+        mo_key = d.strftime("%b-%Y")
+        lbl = d.strftime("%b-%y") if mo_key not in seen_months else ""
+        seen_months.add(mo_key)
+        labels.append(lbl); dates.append(ds)
+        us_usd.append(round(us_v, 0))
+        india_usd_list.append(round(india_v, 0))
+        total_usd.append(round(us_v + india_v, 0))
+
+    if not dates:
+        return None
+    print(f"  combined weekly: {len(dates)} points, latest total ${total_usd[-1]:,.0f}")
+    return {"labels": labels, "dates": dates,
+            "us_usd": us_usd, "india_usd": india_usd_list, "total_usd": total_usd}
 
 
 def build_snp_actual(label_dates: list[str | None]) -> list[float] | None:
@@ -892,15 +1062,36 @@ def main() -> int:
         except Exception as exc:
             print(f"  WARN  daily_chart build failed: {exc}", file=sys.stderr)
 
-        # Weekly Friday chart data (replaces monthly in chart)
+        # Weekly Friday chart data (US — replaces monthly in chart)
+        cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}
+        weekly = None
         try:
-            cost_now = json.loads(COST_BASIS.read_text()) if COST_BASIS.exists() else {}
             print("Building weekly Friday chart data…")
             weekly = build_weekly_chart_data(cost_now)
             if weekly:
                 holdings["weekly_chart"] = weekly
         except Exception as exc:
             print(f"  WARN  weekly_chart build failed: {exc}", file=sys.stderr)
+
+        # India weekly chart — uses data/history/india/*.csv
+        india_weekly = None
+        try:
+            print("Building India weekly chart data…")
+            india_weekly = build_india_weekly_chart(cost_now)
+            if india_weekly:
+                holdings["india_weekly_chart"] = india_weekly
+        except Exception as exc:
+            print(f"  WARN  india_weekly_chart build failed: {exc}", file=sys.stderr)
+
+        # Combined US+India weekly chart
+        if weekly and india_weekly:
+            try:
+                print("Building combined weekly chart…")
+                combined = build_combined_weekly_chart(weekly, india_weekly)
+                if combined:
+                    holdings["combined_weekly_chart"] = combined
+            except Exception as exc:
+                print(f"  WARN  combined_weekly_chart build failed: {exc}", file=sys.stderr)
 
         # fx_buy per ticker — stored here (network-first) not in holdings_cost.json (cache-first)
         print("Fetching fx_buy rates for open positions…")

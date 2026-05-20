@@ -50,6 +50,9 @@ jobs:
       - name: Audit + self-heal data
         run: python scripts/data_audit.py || echo "audit script error — skipping"
 
+      - name: Patch chart values (broker-anchored us_val_usd, Oct–Nov prepend)
+        run: python scripts/patch_chart.py || echo "patch_chart error — skipping"
+
       - name: Commit if changed
         run: |
           git add data/processed data/holdings_cost.json

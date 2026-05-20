@@ -178,7 +178,7 @@
 
   /* ── BANNER ── */
   .top-banner{position:fixed;top:0;left:0;right:0;
-    background:linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 100%);
+    background:linear-gradient(135deg,var(--bg-base) 0%,var(--bg-card) 100%);
     border-bottom:2px solid var(--accent-y);display:flex;flex-direction:column;
     align-items:stretch;padding:6px 20px 4px;z-index:1000;
     box-shadow:0 4px 16px rgba(0,0,0,0.6)}
@@ -189,7 +189,7 @@
     font-size:12px;font-weight:700;letter-spacing:1px;transition:all .25s}
   .tab-button .ts{display:none}
   .tab-button:hover{background:rgba(79,142,247,.1);border-color:var(--accent-b);color:var(--accent-b)}
-  .tab-button.active{background:var(--accent-y);color:#0f0f1a;border-color:var(--accent-y);
+  .tab-button.active{background:var(--accent-y);color:var(--bg-base);border-color:var(--accent-y);
     box-shadow:0 0 12px rgba(240,180,41,.35)}
   .banner-right{font-size:var(--fs-xs);color:var(--text-sec);text-align:right}
   .banner-row1{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
@@ -205,7 +205,7 @@
 
   /* ── ERROR BANNER ── */
   #error-banner{display:none;position:fixed;top:98px;left:0;right:0;z-index:999;
-    background:#2a0a0a;border-bottom:2px solid var(--loss);color:#ff8888;
+    background:color-mix(in srgb,var(--loss) 15%,var(--bg-base));border-bottom:2px solid var(--loss);color:var(--loss);
     font-size:12px;font-weight:700;padding:6px 20px;letter-spacing:.5px;text-align:center}
   #error-banner.visible{display:block}
 
@@ -230,7 +230,7 @@
   .market-status{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700}
   .market-status.OPEN{background:rgba(0,212,170,.15);color:var(--gain);border:1px solid var(--gain)}
   .market-status.CLOSED{background:rgba(255,92,92,.15);color:var(--loss);border:1px solid var(--loss)}
-  .market-status.PREOPEN{background:rgba(255,170,0,.15);color:var(--warn);border:1px solid #ffaa00}
+  .market-status.PREOPEN{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);border:1px solid var(--warn)}
   .market-details{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
   .index-item{display:flex;justify-content:space-between;align-items:center;
     padding:8px 10px;background:var(--bg-card2);border-radius:4px}
@@ -304,9 +304,9 @@
   .badge-buy{color:var(--accent-g);background:rgba(0,212,170,.15)}
   .badge-sell{color:var(--loss);background:rgba(255,92,92,.15)}
   .badge-hold{color:var(--warn);background:rgba(255,170,0,.15)}
-  .badge-trim{color:#cc6600;background:rgba(200,100,0,.15)}
+  .badge-trim{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
   .badge-open{color:var(--accent-b);background:rgba(79,142,247,.15)}
-  .badge-closed{color:#aabbcc;background:rgba(170,187,204,.15)}
+  .badge-closed{color:var(--text-dim);background:color-mix(in srgb,var(--text-dim) 15%,transparent)}
 
   /* ── INDEX MONITOR (US/India tabs) ── */
   .index-card{background:var(--bg-card);border:2px solid var(--accent-b);border-radius:8px;
@@ -334,7 +334,7 @@
   .txn-pill{padding:4px 10px;background:transparent;color:var(--accent-b);
     border:1px solid var(--border);border-radius:20px;cursor:pointer;
     font-size:11px;font-weight:600;transition:all .2s}
-  .txn-pill.active{background:var(--accent-b);color:#0f0f1a}
+  .txn-pill.active{background:var(--accent-b);color:var(--bg-base)}
   .txn-result-count{font-size:11px;color:var(--text-dim);margin-top:8px}
   .txn-result-count span{color:var(--accent-b);font-weight:700}
   .charges-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -344,7 +344,7 @@
   .txn-table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 
   /* ── PENDING NOTE ── */
-  .pending-note{background:rgba(255,170,0,.08);border:1px dashed #ffaa00;
+  .pending-note{background:rgba(255,170,0,.08);border:1px dashed var(--warn);
     color:var(--warn);padding:10px 14px;border-radius:6px;font-size:12px;margin-bottom:14px}
 
   /* ── PRIVACY MODE ── */
@@ -402,7 +402,7 @@
   .sig-name{color:var(--text-dim);font-size:10px;margin-top:2px}
   .sig-badge{padding:3px 10px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.5px}
   .sig-badge.BUY{background:rgba(0,212,170,.15);color:var(--accent-g);border:1px solid var(--accent-g)}
-  .sig-badge.HOLD{background:rgba(255,170,0,.15);color:var(--warn);border:1px solid #ffaa00}
+  .sig-badge.HOLD{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);border:1px solid var(--warn)}
   .sig-badge.REDUCE{background:rgba(255,92,92,.15);color:var(--loss);border:1px solid #ff5c5c}
   th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
   th.sortable:hover{color:var(--accent-b)}
@@ -2188,7 +2188,7 @@ const DASH = (() => {
 
       const _datasets = [
         { label:'Portfolio (USD)', data:_portData, borderColor:_cumGain, ...darkLine },
-        { label:snpLabel,          data:_snpData,  borderColor:'#aabbcc', borderDash:[5,4], ...darkLine },
+        { label:snpLabel,          data:_snpData,  borderColor:'var(--text-dim)', borderDash:[5,4], ...darkLine },
         ...(inrLine ? [{ label:'INR Return',
           data:inrLine, borderColor:_cumWarn, borderWidth:2.5,
           tension:0.3, pointRadius:wc ? 1 : 2, fill:false, backgroundColor:'transparent' }] : []),
@@ -2222,8 +2222,8 @@ const DASH = (() => {
       // Cash vs Account value
       mkChart('cash-value-chart', { type:'line',
         data: { labels: m.labels, datasets: [
-          { label:'Cash Deployed',  data:m.cash_deployed,  borderColor:'#4f8ef7', backgroundColor:'rgba(79,142,247,.12)', fill:true, ...darkLine },
-          { label:'Account Value',  data:m.account_value,  borderColor:'#00d4aa', backgroundColor:'rgba(0,212,170,.08)', fill:true, ...darkLine }
+          { label:'Cash Deployed',  data:m.cash_deployed,  borderColor:_thc.getPropertyValue('--accent-b').trim()||'#4f8ef7', backgroundColor:'rgba(79,142,247,.12)', fill:true, ...darkLine },
+          { label:'Account Value',  data:m.account_value,  borderColor:_gainC, backgroundColor:_gainC+'14', fill:true, ...darkLine }
         ]},
         options: lineOpts()
       });
@@ -2262,14 +2262,14 @@ const DASH = (() => {
         const maxAbs = Math.max(...m.monthly_pl.map(Math.abs).filter(v=>v>0)) || 1;
         const intensity = Math.min(1, Math.abs(pl) / maxAbs);
         const bg = pl >= 0
-          ? `rgba(0,212,170,${0.15 + intensity * 0.65})`
-          : `rgba(255,92,92,${0.15 + intensity * 0.65})`;
+          ? `color-mix(in srgb,${_gainC} ${Math.round((0.15 + intensity * 0.65)*100)}%,transparent)`
+          : `color-mix(in srgb,${_lossC} ${Math.round((0.15 + intensity * 0.65)*100)}%,transparent)`;
         const border = pl >= 0 ? 'var(--gain)' : 'var(--loss)';
         // High intensity tiles: use dark/white text so it's readable on bright bg
         const valColor = intensity > 0.4
-          ? (pl >= 0 ? '#0a3028' : '#fff')
+          ? 'var(--bg-base)'
           : (pl >= 0 ? 'var(--gain)' : 'var(--loss)');
-        const lblColor = intensity > 0.4 ? (pl >= 0 ? '#0a3028' : '#ffe0e0') : 'var(--text-sec)';
+        const lblColor = intensity > 0.4 ? 'var(--bg-base)' : 'var(--text-sec)';
         return `<div style="background:${bg};border:1px solid ${border};border-radius:6px;padding:8px 12px;min-width:90px;text-align:center;">
           <div style="font-size:12px;color:${lblColor};font-weight:700;">${mo}</div>
           <div style="font-size:13px;font-weight:700;font-family:Monaco,monospace;color:${valColor};">${S.ui.privacy?'●●':sign(pl)+usd2(pl)}</div>

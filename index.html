@@ -679,6 +679,17 @@
       </div>
     </div>
 
+    <!-- Combined portfolio value chart (US + India) -->
+    <div class="analytics-section">
+      <h2>TOTAL PORTFOLIO GROWTH · US + INDIA (USD)</h2>
+      <div class="chart-container chart-wide"><canvas id="combined-value-chart"></canvas></div>
+      <div class="chart-stat-bar" id="combined-stat-bar" style="display:none">
+        <span>US: <strong id="comb-us-val" style="color:var(--accent-b)">--</strong></span>
+        <span>India: <strong id="comb-india-val" style="color:var(--accent-y)">--</strong></span>
+        <span>Total: <strong id="comb-total-val" style="color:var(--gain)">--</strong></span>
+      </div>
+    </div>
+
     <!-- Cumulative return chart -->
     <div class="analytics-section">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -912,6 +923,16 @@
           <div style="width:1px;background:var(--border);margin:4px 8px;flex-shrink:0"></div>
           <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:4px;flex-shrink:0;max-width:160px;overflow:hidden"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- India portfolio value chart -->
+    <div class="analytics-section">
+      <h2>INDIA PORTFOLIO GROWTH (₹ Value, Weekly)</h2>
+      <div class="chart-container chart-wide"><canvas id="india-value-chart"></canvas></div>
+      <div class="chart-stat-bar" id="india-value-stat" style="display:none">
+        <span>Latest: <strong id="india-val-inr" style="color:var(--gain)">--</strong></span>
+        <span><strong id="india-val-usd" style="color:var(--accent-b)">--</strong></span>
       </div>
     </div>
 
@@ -1419,8 +1440,10 @@ const DASH = (() => {
       S.demoPrices = prices.demo_prices || {};
       S.snpActual  = prices.snp_actual_cum_pct || null;
       S.inrFxMon   = prices.inr_fx_monthly    || null;
-      S.weeklyChart = prices.weekly_chart || null;
-      S.dailyChart  = prices.daily_chart  || null;
+      S.weeklyChart     = prices.weekly_chart          || null;
+      S.dailyChart      = prices.daily_chart           || null;
+      S.indiaWeekly     = prices.india_weekly_chart    || null;
+      S.combinedWeekly  = prices.combined_weekly_chart || null;
     }
     if (indices) S.indices = indices;
     if (audit)   S.audit = audit;
@@ -2058,8 +2081,43 @@ const DASH = (() => {
     S.charts[id] = new Chart(ctx, cfg);
   }
 
+  function renderCombinedChart() {
+    const cw = S.combinedWeekly;
+    if (!cw || !cw.dates || cw.dates.length < 2) return;
+    const _cs  = getComputedStyle(document.documentElement);
+    const _g   = _cs.getPropertyValue('--gain').trim()    || '#00d4aa';
+    const _b   = _cs.getPropertyValue('--accent-b').trim()|| '#4f8ef7';
+    const _y   = _cs.getPropertyValue('--accent-y').trim()|| '#f0b429';
+    const _gr  = _cs.getPropertyValue('--border').trim()  || '#2a2a4a';
+    const _sec = _cs.getPropertyValue('--text-sec').trim()|| '#8892aa';
+    const fmt  = v => '$' + Math.round(v).toLocaleString('en-US');
+    mkChart('combined-value-chart', { type:'line',
+      data:{ labels: cw.labels, datasets:[
+        { label:'Total (US+India)', data:cw.total_usd, borderColor:_g,  borderWidth:2.5, tension:0.3, pointRadius:2, fill:false },
+        { label:'US Portfolio',     data:cw.us_usd,    borderColor:_b,  borderWidth:1.5, borderDash:[4,3], tension:0.3, pointRadius:1, fill:false },
+        { label:'India (USD)',       data:cw.india_usd, borderColor:_y,  borderWidth:1.5, borderDash:[4,3], tension:0.3, pointRadius:1, fill:false },
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, animation:{duration:400},
+        plugins:{ legend:{ position:'top', labels:{ color:_cs.getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12} } },
+          tooltip:{ mode:'index', intersect:false,
+            callbacks:{ label: ctx => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` } },
+          datalabels:{ display:false } },
+        scales:{
+          x:{ grid:{color:_gr}, ticks:{color:_sec} },
+          y:{ grid:{color:_gr}, ticks:{color:_sec, callback: v => fmt(v)} } } }
+    });
+    const last = cw.dates.length - 1;
+    const stat = $('combined-stat-bar');
+    if (stat) { stat.style.display = '';
+      setText('comb-us-val',    fmt(cw.us_usd[last]));
+      setText('comb-india-val', fmt(cw.india_usd[last]));
+      setText('comb-total-val', fmt(cw.total_usd[last]));
+    }
+  }
+
   function renderCharts() {
     if (!S.view) return;
+    safe(renderCombinedChart, 'combined-chart');
     const { us, india } = S.view;
     const COLORS = CHART_COLORS; // alias — use CHART_COLORS directly in new code
     const _thc = getComputedStyle(document.documentElement);
@@ -2804,7 +2862,39 @@ const DASH = (() => {
   function renderIndiaCharts() {
     if (!S.view) return;
     const ind = S.view.india;
-    const COLORS = CHART_COLORS; // alias — use CHART_COLORS directly in new code
+    const COLORS = CHART_COLORS;
+
+    // 0. India portfolio value over time
+    if (S.indiaWeekly && S.indiaWeekly.dates && S.indiaWeekly.dates.length > 1) {
+      const iw  = S.indiaWeekly;
+      const _cs = getComputedStyle(document.documentElement);
+      const _g  = _cs.getPropertyValue('--gain').trim()    || '#00d4aa';
+      const _y  = _cs.getPropertyValue('--accent-y').trim()|| '#f0b429';
+      const _gr = _cs.getPropertyValue('--border').trim()  || '#2a2a4a';
+      const _sc = _cs.getPropertyValue('--text-sec').trim()|| '#8892aa';
+      const fmtInr = v => '₹' + Math.round(v).toLocaleString('en-IN');
+      mkChart('india-value-chart', { type:'line',
+        data:{ labels: iw.labels, datasets:[
+          { label:'India Portfolio (₹)', data:iw.india_val_inr, borderColor:_g, borderWidth:2.5, tension:0.3, pointRadius:2, fill:false },
+          { label:'India Portfolio ($)', data:iw.india_val_usd, borderColor:_y, borderWidth:1.5, borderDash:[4,3], tension:0.3, pointRadius:1, fill:false, yAxisID:'usd' },
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false, animation:{duration:400},
+          plugins:{ legend:{ position:'top', labels:{ color:_cs.getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12} } },
+            tooltip:{ mode:'index', intersect:false,
+              callbacks:{ label: ctx => ctx.dataset.label.includes('₹') ? `${ctx.dataset.label}: ${fmtInr(ctx.parsed.y)}` : `${ctx.dataset.label}: $${Math.round(ctx.parsed.y).toLocaleString()}` } },
+            datalabels:{ display:false } },
+          scales:{
+            x:{ grid:{color:_gr}, ticks:{color:_sc} },
+            y:    { grid:{color:_gr}, ticks:{color:_sc, callback: v => fmtInr(v)}, position:'left' },
+            usd:  { grid:{display:false}, ticks:{color:_y, callback: v => '$'+Math.round(v).toLocaleString()}, position:'right' } } }
+      });
+      const last = iw.dates.length - 1;
+      const stat = $('india-value-stat');
+      if (stat) { stat.style.display = '';
+        setText('india-val-inr', fmtInr(iw.india_val_inr[last]));
+        setText('india-val-usd', '$' + Math.round(iw.india_val_usd[last]).toLocaleString());
+      }
+    }
 
     // 1. Holdings weight donut
     const sorted = [...ind.open].sort((a,b)=>b.mv-a.mv);

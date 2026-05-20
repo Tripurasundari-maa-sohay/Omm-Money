@@ -484,9 +484,10 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
     else:
         inception = _date(2025, 11, 28)
 
-    # All Fridays from inception to today
+    # Chart starts Oct 2025 so US $0 launch is visible before Dec positions opened
+    chart_start = _date(2025, 10, 1)
     today = datetime.utcnow().date()
-    d = inception
+    d = chart_start
     while d.weekday() != 4: d += _td(days=1)
     fridays = []
     while d <= today:
@@ -549,39 +550,43 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
         # Fallback: derive from cash_infusion and first TWR point
         acct_inception = cash_infusion
 
+    # Only use TWR-anchoring for anchors AFTER the first real month-end
+    valid_anchors = {k: v for k, v in twr_map.items()
+                     if k > (label_dates_all[0] if label_dates_all else "")}
+
     for fri in fridays:
         snp_px = nearest_val(snp, fri)
         inr_px = nearest_val(inrx, fri)
         if snp_px is None or inr_px is None:
             continue
 
+        snp_ret = (snp_px / snp_inception - 1) * 100
+        mo_key  = fri.strftime("%b-%Y")
+        lbl     = fri.strftime("%b-%y") if mo_key not in seen_months else ""
+        seen_months.add(mo_key)
+
+        # Pre-inception (Oct–Nov): US portfolio didn't exist — show $0, 0% return
+        if fri < inception:
+            labels.append(lbl)
+            dates.append(fri.isoformat())
+            port_rets.append(0.0)
+            snp_rets.append(round(snp_ret, 2))
+            inr_rets.append(0.0)
+            fx_alphas.append(0.0)
+            us_vals.append(0)
+            continue
+
         # Compute current portfolio value from holdings
         port_val = cash
         for pos in positions:
-            tk = pos["yf"]
-            col = tk if tk in hist.columns else None
+            col = pos["yf"] if pos["yf"] in hist.columns else None
             if col is None:
                 continue
             px = nearest_val(hist[col], fri)
             if px:
                 port_val += pos["qty"] * px
 
-        # TWR-anchored return: find nearest broker month-end anchor on or before this Friday
-        # then extend using price change from that anchor date
-        anchor_date = None
-        anchor_twr  = None
-        anchor_val  = None
-        for ld in sorted(twr_map.keys(), reverse=True):
-            if ld <= fri.isoformat():
-                anchor_date = ld
-                anchor_twr  = twr_map[ld]
-                break
-
-        # Only use TWR-anchoring for anchors AFTER the first real month-end
-        # (skip the inception Nov-30 anchor which has no actual positions yet)
-        valid_anchors = {k: v for k, v in twr_map.items()
-                         if k > (label_dates_all[0] if label_dates_all else "")}
-
+        # TWR % return — anchor to nearest past broker month-end
         anchor_date_v = None
         anchor_twr_v  = None
         for ld in sorted(valid_anchors.keys(), reverse=True):
@@ -591,36 +596,24 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
                 break
 
         if anchor_date_v and anchor_twr_v is not None:
-            # Compute portfolio value at anchor date
             anchor_port_val = cash
             for pos in positions:
-                tk = pos["yf"]
-                col = tk if tk in hist.columns else None
+                col = pos["yf"] if pos["yf"] in hist.columns else None
                 if col is None:
                     continue
-                anchor_dt = _date.fromisoformat(anchor_date_v)
-                px = nearest_val(hist[col], anchor_dt)
+                px = nearest_val(hist[col], _date.fromisoformat(anchor_date_v))
                 if px:
                     anchor_port_val += pos["qty"] * px
-            # Extend TWR using price change only — no cash flow distortion
             if anchor_port_val > 0:
                 price_change = (port_val - anchor_port_val) / anchor_port_val
                 port_ret = ((1 + anchor_twr_v / 100) * (1 + price_change) - 1) * 100
             else:
                 port_ret = anchor_twr_v
         else:
-            # Before first real broker anchor (Dec weeks) — use simple money-weighted
-            # Less accurate but only affects ~4 data points at start
             port_ret = (port_val - cash_infusion) / cash_infusion * 100
 
-        snp_ret  = (snp_px / snp_inception - 1) * 100
         inr_ret  = ((1 + port_ret / 100) * (inr_px / inr_inception) - 1) * 100
         fx_alpha = inr_ret - port_ret
-
-        # X-axis label: month abbreviation at first Friday of each month
-        mo_key = fri.strftime("%b-%Y")
-        lbl = fri.strftime("%b-%y") if mo_key not in seen_months else ""
-        seen_months.add(mo_key)
 
         labels.append(lbl)
         dates.append(fri.isoformat())
@@ -628,18 +621,24 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
         snp_rets.append(round(snp_ret, 2))
         inr_rets.append(round(inr_ret, 2))
         fx_alphas.append(round(fx_alpha, 2))
-        # Anchor absolute US portfolio value to broker account_value statements.
-        # Raw port_val (current positions × historical prices) overstates Dec because
-        # positions bought in Feb–Apr are retroactively backdated. Instead, find the
-        # nearest past month-end broker account_value and extend by price-only change.
-        us_val = port_val  # fallback if no anchor available
-        acct_anchor_ld  = None
+
+        # Absolute US value anchored to broker account_value statements.
+        # Backward anchor: nearest past month-end with real account_value.
+        # Forward anchor fallback: for Dec Fridays before Dec-31 statement.
+        us_val         = port_val
+        acct_anchor_ld = None
         acct_anchor_val = None
         for ld in sorted(acct_val_map.keys(), reverse=True):
             if ld <= fri.isoformat():
                 acct_anchor_ld  = ld
                 acct_anchor_val = acct_val_map[ld]
                 break
+        if not acct_anchor_ld:
+            for ld in sorted(acct_val_map.keys()):
+                if ld > fri.isoformat():
+                    acct_anchor_ld  = ld
+                    acct_anchor_val = acct_val_map[ld]
+                    break
         if acct_anchor_ld and acct_anchor_val:
             anchor_dt      = _date.fromisoformat(acct_anchor_ld)
             anchor_pos_val = 0.0
@@ -797,12 +796,8 @@ def build_india_weekly_chart(cost: dict, inrx_hist=None) -> dict | None:
         return None
 
     history_dir = ROOT / "data" / "history" / "india"
-    label_dates_all = cost.get("us", {}).get("monthly", {}).get("label_dates", [])
-    if label_dates_all and label_dates_all[0]:
-        inception = datetime.strptime(label_dates_all[0], "%Y-%m-%d").date()
-    else:
-        inception = _date(2025, 11, 30)
-
+    # Align India chart start with US chart (Oct 2025) for combined chart overlap
+    inception = _date(2025, 10, 1)
     today = datetime.utcnow().date()
 
     # Load historical closes per ticker — try tk first, then yf base name

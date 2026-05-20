@@ -2370,7 +2370,7 @@ const DASH = (() => {
           datalabels:{ display:true, anchor:'end',
             align: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
             formatter: v => `${sign(v)}${Math.abs(v).toFixed(1)}%`,
-            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _gainC : _lossC,
+            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _gainC : _priC,
             font:{ size:11, weight:'700' } } },
         scales:{
           x:{ grid:{color:_gridC}, ticks:{color:_secC, font:{size:11}, callback:v=>`${v}%`} },
@@ -2847,7 +2847,7 @@ const DASH = (() => {
           datalabels:{ display:true, anchor:'end',
             align: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
             formatter: v => `${sign(v)}${Math.abs(v).toFixed(1)}%`,
-            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _igainC : _ilossC,
+            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _igainC : _ipriC,
             font:{ size: window.innerWidth < 480 ? 9 : 11, weight:'700' },
             clamp: true } },
         scales:{ x:{ grid:{color:_igridC}, ticks:{color:_isecC, font:{size:11}, callback:v=>`${v}%`} },

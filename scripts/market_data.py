@@ -534,6 +534,14 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
         if ld and tv is not None:
             twr_map[ld] = tv
 
+    # Build account_value anchor map — broker-verified absolute USD values per month-end
+    # Skip zero/inception entry (Nov-30 = $0, no positions yet)
+    account_values_arr = cost.get("us", {}).get("monthly", {}).get("account_value", [])
+    acct_val_map: dict[str, float] = {
+        ld: av for ld, av in zip(label_dates_all, account_values_arr)
+        if ld and av and av > 0
+    }
+
     # Portfolio value at account inception (Nov-25 statement start)
     # Used to compute TWR for weeks within statement period
     acct_inception = cost.get("us", {}).get("monthly", {}).get("account_value", [None])[0]
@@ -620,7 +628,38 @@ def build_weekly_chart_data(cost: dict) -> dict | None:
         snp_rets.append(round(snp_ret, 2))
         inr_rets.append(round(inr_ret, 2))
         fx_alphas.append(round(fx_alpha, 2))
-        us_vals.append(round(port_val, 0))  # absolute US portfolio value in USD
+        # Anchor absolute US portfolio value to broker account_value statements.
+        # Raw port_val (current positions × historical prices) overstates Dec because
+        # positions bought in Feb–Apr are retroactively backdated. Instead, find the
+        # nearest past month-end broker account_value and extend by price-only change.
+        us_val = port_val  # fallback if no anchor available
+        acct_anchor_ld  = None
+        acct_anchor_val = None
+        for ld in sorted(acct_val_map.keys(), reverse=True):
+            if ld <= fri.isoformat():
+                acct_anchor_ld  = ld
+                acct_anchor_val = acct_val_map[ld]
+                break
+        if acct_anchor_ld and acct_anchor_val:
+            anchor_dt      = _date.fromisoformat(acct_anchor_ld)
+            anchor_pos_val = 0.0
+            fri_pos_val    = 0.0
+            for pos in positions:
+                col = pos["yf"] if pos["yf"] in hist.columns else None
+                if col is None:
+                    continue
+                apx = nearest_val(hist[col], anchor_dt)
+                fpx = nearest_val(hist[col], fri)
+                if apx:
+                    anchor_pos_val += pos["qty"] * apx
+                if fpx:
+                    fri_pos_val += pos["qty"] * fpx
+            if anchor_pos_val > 0:
+                price_delta = (fri_pos_val - anchor_pos_val) / anchor_pos_val
+                us_val = acct_anchor_val * (1 + price_delta)
+            else:
+                us_val = acct_anchor_val
+        us_vals.append(round(us_val, 0))
 
     print(f"  weekly chart: {len(dates)} Fridays from {dates[0]} to {dates[-1]}")
     return {

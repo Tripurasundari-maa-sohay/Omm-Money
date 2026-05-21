@@ -1507,15 +1507,41 @@ const DASH = (() => {
   }
 
   /* ── 2. BUILD VIEW MODEL ──────────────────────────────────────── */
+  // SME tickers that may lack live prices — support manual LTP override
+  const SME_TICKERS = ['PARAMATRIX', 'ASHALOG'];
+
   function priceFor(holding) {
     // Guard: tk can be undefined/null if a row was malformed
-    if (!holding.tk) return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false };
+    if (!holding.tk) return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false, manual: false };
     const p = S.prices[holding.tk];
-    if (p && Number.isFinite(p.ltp)) return { ltp: p.ltp, pc: p.pc ?? null, live: true };
-    return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false };
+
+    // Real live price (not a backend manual override) → always wins
+    if (p && Number.isFinite(p.ltp) && !p.manual) {
+      return { ltp: p.ltp, pc: p.pc ?? null, live: true, manual: false };
+    }
+
+    // SME tickers: localStorage manual override takes priority over backend manual_ltp
+    if (SME_TICKERS.includes(holding.tk)) {
+      const stored = localStorage.getItem('manual_ltp_' + holding.tk);
+      if (stored) {
+        const manualLTP = parseFloat(stored);
+        if (Number.isFinite(manualLTP) && manualLTP > 0) {
+          const prevPc = p && Number.isFinite(p.pc) ? p.pc : null;
+          return { ltp: manualLTP, pc: prevPc || manualLTP, live: false, manual: true };
+        }
+      }
+      // Backend manual_ltp (from holdings_cost.json) used when live failed
+      if (p && Number.isFinite(p.ltp) && p.manual) {
+        return { ltp: p.ltp, pc: p.pc ?? p.ltp, live: false, manual: true };
+      }
+    }
+
+    // Stale carry-forward (any valid price in S.prices)
+    if (p && Number.isFinite(p.ltp)) return { ltp: p.ltp, pc: p.pc ?? null, live: true, manual: false };
+    return { ltp: holding.avg || 0, pc: holding.avg || 0, live: false, manual: false };
   }
   function enrich(holding) {
-    const { ltp, pc, live } = priceFor(holding);
+    const { ltp, pc, live, manual } = priceFor(holding);
     const mv      = holding.qty * ltp;
     const fees    = holding.fees || 0;
     const upl     = (ltp - holding.avg) * holding.qty;   // raw price gain
@@ -1536,7 +1562,7 @@ const DASH = (() => {
     // houseMoney: avg===0 means purchase price unknown (e.g. NBCC pending) — treat as free shares
     // NOTE: cost IS returned here so callers can use p.cost directly
     const houseMoney = !holding.avg;  // catches both 0 and undefined/null
-    return { ...holding, ltp, pc, live, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney, inrRet, fxAlpha };
+    return { ...holding, ltp, pc, live, manual: manual || false, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney, inrRet, fxAlpha };
   }
   function build() {
     if (S.ui.demo) return;              // demo view already set — don't overwrite with real data
@@ -1901,14 +1927,18 @@ const DASH = (() => {
     let totDay=0, totPL=0, totMV=0;
     tbody.innerHTML = inRows.map(p => {
       totDay += p.dayPL; totPL += p.uplNet; totMV += p.mv;
+      const isSME = SME_TICKERS.includes(p.tk);
+      const staleTag  = (!p.live && !p.manual) ? ' <span class="preopen-tag" style="color:var(--warn);">STALE</span>' : '';
+      const manualTag = p.manual ? ' <span class="preopen-tag" style="color:#f59e0b;border-color:#f59e0b;">MANUAL</span>' : '';
+      const pencil    = isSME ? ` <span style="cursor:pointer;font-size:11px;opacity:0.7;" onclick="DASH.editSMELTP('${p.tk}',${p.ltp})" title="Set manual LTP for ${p.tk}">✏️</span>` : '';
       return `<tr>
-        <td><strong>${p.tk}</strong>${p.live?'':' <span class="preopen-tag" style="color:var(--warn);">STALE</span>'}</td>
+        <td><strong>${p.tk}</strong>${staleTag}${manualTag}</td>
         <td>${p.name}</td>
         <td>${p.broker}</td>
         <td>${p.exch}</td>
         <td>${p.qty.toLocaleString('en-IN')}</td>
         <td>${p.houseMoney ? FREE_TAG : inr2(p.avg)}</td>
-        <td><strong>${inr2(p.ltp)}</strong></td>
+        <td><strong>${inr2(p.ltp)}</strong>${pencil}</td>
         <td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>
         <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${inr(p.dayPL)}</td>
         <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
@@ -3796,7 +3826,31 @@ const DASH = (() => {
     safe(renderCharts, 'charts-cumview');
   }
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView };
+  function editSMELTP(tk, currentLTP) {
+    const stored = localStorage.getItem('manual_ltp_' + tk);
+    const current = stored ? parseFloat(stored) : currentLTP;
+    const val = prompt(
+      `Manual LTP for ${tk} (₹)\n` +
+      `Live price unavailable — enter price from NSE SME board.\n\n` +
+      `Current override: ₹${(current||0).toFixed(2)}\n` +
+      `(Enter 0 or leave blank to clear override)`,
+      (current && current > 0) ? current.toFixed(2) : ''
+    );
+    if (val === null) return;           // user cancelled
+    const trimmed = val.trim();
+    if (trimmed === '' || parseFloat(trimmed) === 0) {
+      localStorage.removeItem('manual_ltp_' + tk);
+      console.log(`[SME] Cleared manual LTP for ${tk}`);
+    } else {
+      const num = parseFloat(trimmed);
+      if (isNaN(num) || num <= 0) { alert('Invalid price — enter a positive number'); return; }
+      localStorage.setItem('manual_ltp_' + tk, num.toString());
+      console.log(`[SME] Manual LTP set: ${tk} = ₹${num.toFixed(2)}`);
+    }
+    render();   // rebuild + re-render with new value
+  }
+
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP };
 })();
 
 // Register service worker for PWA installability

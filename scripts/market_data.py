@@ -277,6 +277,15 @@ def build_holdings_json() -> dict:
         for p in cost.get(region, {}).get("open", []):
             tickers.append((p["tk"], p["yf"]))
 
+    # Build manual LTP overrides from holdings_cost.json (used when live fetch fails)
+    manual_ltps: dict[str, float] = {}
+    for region in ("us", "india"):
+        for p in cost.get(region, {}).get("open", []):
+            if p.get("manual_ltp") and float(p["manual_ltp"]) > 0:
+                manual_ltps[p["tk"]] = float(p["manual_ltp"])
+    if manual_ltps:
+        print(f"  manual LTP overrides loaded: {manual_ltps}")
+
     # Load existing prices for merge fallback (keeps stale data for tickers that fail this run)
     existing_prices: dict[str, dict] = {}
     if OUT_HOLDINGS.exists():
@@ -315,8 +324,15 @@ def build_holdings_json() -> dict:
                     print(f"  INFO  {tk}: pc resolved → {q['pc']}", file=sys.stderr)
 
             if q is None:
-                print(f"  FAIL  {tk} ({yf_sym}): no price obtained after all fallbacks", file=sys.stderr)
-                continue
+                # Last resort: use manual_ltp from holdings_cost.json if set
+                if tk in manual_ltps:
+                    mltp = manual_ltps[tk]
+                    prev_pc = existing_prices.get(tk, {}).get("ltp") or mltp
+                    q = {"ltp": mltp, "pc": prev_pc, "_manual": True}
+                    print(f"  MANU  {tk}: no live price — using manual_ltp = {mltp:,.2f}", file=sys.stderr)
+                else:
+                    print(f"  FAIL  {tk} ({yf_sym}): no price obtained after all fallbacks", file=sys.stderr)
+                    continue
             pc         = q["pc"]    # may still be None if all sources lack prev-close
             change     = round(q["ltp"] - pc, 4) if pc is not None else None
             change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
@@ -326,6 +342,7 @@ def build_holdings_json() -> dict:
                 "change":     change,
                 "change_pct": change_pct,
                 "as_of":      datetime.utcnow().isoformat() + "Z",
+                "manual":     q.get("_manual", False),  # True = manual_ltp used
             }
             success_count += 1
             print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({change_pct:+.2f}%)")

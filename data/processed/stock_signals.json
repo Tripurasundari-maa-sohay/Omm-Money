@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-21T00:13:36.554784Z",
+  "generated": "2026-05-21T00:17:43.268009Z",
   "regime": "BULL",
   "spy": {
     "px": 741.25,
@@ -359,6 +359,206 @@
     }
   },
   "india_holdings": {
+    "SBIN": {
+      "score": 31,
+      "action": "REDUCE",
+      "regime": "BULL",
+      "rsi": 30.3,
+      "v200": -1.1,
+      "rs": -26.9,
+      "hi52": 1206.06,
+      "lo52": 771.2,
+      "rng": 41,
+      "vsMean": 2.7,
+      "px": 950.9,
+      "sc": {
+        "vs200": 4,
+        "cross": 8,
+        "wk": 0,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 0,
+        "rs": 0,
+        "w52": 3,
+        "val": 6
+      },
+      "sector": "Financial Services"
+    },
+    "AVADHSUGAR": {
+      "score": 65,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 36.6,
+      "v200": 15.1,
+      "rs": 34.2,
+      "hi52": 560.39,
+      "lo52": 311.25,
+      "rng": 65,
+      "vsMean": 9.7,
+      "px": 474.4,
+      "sc": {
+        "vs200": 12,
+        "cross": 8,
+        "wk": 0,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 8,
+        "rs": 15,
+        "w52": 6,
+        "val": 6
+      },
+      "sector": "Consumer Defensive"
+    },
+    "IRBINVIT": {
+      "score": 56,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 60.9,
+      "v200": 2.2,
+      "rs": -7.7,
+      "hi52": 60.28,
+      "lo52": 48.56,
+      "rng": 96,
+      "vsMean": 4.1,
+      "px": 59.87,
+      "sc": {
+        "vs200": 8,
+        "cross": 8,
+        "wk": 10,
+        "rsi": 8,
+        "macd": 0,
+        "vol": 8,
+        "rs": 0,
+        "w52": 8,
+        "val": 6
+      },
+      "sector": "MUTUALFUND"
+    },
+    "JYOTISTRUC": {
+      "score": 45,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 39.1,
+      "v200": -2.5,
+      "rs": -7.7,
+      "hi52": 21.48,
+      "lo52": 7.97,
+      "rng": 31,
+      "vsMean": -12.0,
+      "px": 12.19,
+      "sc": {
+        "vs200": 4,
+        "cross": 0,
+        "wk": 10,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 8,
+        "rs": 0,
+        "w52": 3,
+        "val": 10
+      },
+      "sector": "Industrials"
+    },
+    "GMBREW": {
+      "score": 31,
+      "action": "REDUCE",
+      "regime": "BULL",
+      "rsi": 46.9,
+      "v200": -3.2,
+      "rs": -16.7,
+      "hi52": 1251.89,
+      "lo52": 666.3,
+      "rng": 42,
+      "vsMean": 1.8,
+      "px": 915.0,
+      "sc": {
+        "vs200": 4,
+        "cross": 8,
+        "wk": 0,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 0,
+        "rs": 0,
+        "w52": 3,
+        "val": 6
+      },
+      "sector": "Consumer Defensive"
+    },
+    "RELIANCE": {
+      "score": 30,
+      "action": "REDUCE",
+      "regime": "BULL",
+      "rsi": 45.4,
+      "v200": -4.9,
+      "rs": -10.8,
+      "hi52": 1592.3,
+      "lo52": 1304.6,
+      "rng": 19,
+      "vsMean": -5.2,
+      "px": 1359.7,
+      "sc": {
+        "vs200": 4,
+        "cross": 0,
+        "wk": 0,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 8,
+        "rs": 0,
+        "w52": 0,
+        "val": 8
+      },
+      "sector": "Energy"
+    },
+    "WAAREEENER": {
+      "score": 38,
+      "action": "REDUCE",
+      "regime": "BULL",
+      "rsi": 25.6,
+      "v200": -3.7,
+      "rs": -2.7,
+      "hi52": 3737.7,
+      "lo52": 2419.0,
+      "rng": 44,
+      "vsMean": -2.8,
+      "px": 3005.2,
+      "sc": {
+        "vs200": 4,
+        "cross": 8,
+        "wk": 0,
+        "rsi": 12,
+        "macd": 0,
+        "vol": 0,
+        "rs": 3,
+        "w52": 3,
+        "val": 8
+      },
+      "sector": "Technology"
+    },
+    "DIACABS": {
+      "score": 76,
+      "action": "BUY",
+      "regime": "BULL",
+      "rsi": 72.9,
+      "v200": 34.4,
+      "rs": 37.8,
+      "hi52": 196.45,
+      "lo52": 94.65,
+      "rng": 99,
+      "vsMean": 38.0,
+      "px": 195.1,
+      "sc": {
+        "vs200": 12,
+        "cross": 8,
+        "wk": 10,
+        "rsi": 5,
+        "macd": 10,
+        "vol": 8,
+        "rs": 15,
+        "w52": 8,
+        "val": 0
+      },
+      "sector": "Industrials"
+    },
     "FILATFASH": {
       "score": 38,
       "action": "REDUCE",
@@ -383,6 +583,31 @@
         "val": 10
       },
       "sector": "Consumer Cyclical"
+    },
+    "NBCC": {
+      "score": 41,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 46.7,
+      "v200": -9.8,
+      "rs": -9.7,
+      "hi52": 127.87,
+      "lo52": 77.52,
+      "rng": 31,
+      "vsMean": -12.3,
+      "px": 93.01,
+      "sc": {
+        "vs200": 0,
+        "cross": 0,
+        "wk": 10,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 8,
+        "rs": 0,
+        "w52": 3,
+        "val": 10
+      },
+      "sector": "Industrials"
     }
   }
 }

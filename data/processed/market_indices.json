@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-22T04:20:41.918408Z",
+  "generated": "2026-05-22T04:24:32.761471Z",
   "usa_market": {
     "status": "CLOSED",
     "indices": {
@@ -16,25 +16,25 @@
         "change_pct": 0.09
       }
     },
-    "timestamp": "2026-05-22T04:20:42.199909Z"
+    "timestamp": "2026-05-22T04:24:33.012233Z"
   },
   "india_market": {
     "status": "OPEN",
     "indices": {
       "nifty_50": {
-        "current": 23755.5,
+        "current": 23768.5996,
         "prev_close": 23648.8008,
-        "change": 106.7,
-        "change_pct": 0.45
+        "change": 119.8,
+        "change_pct": 0.51
       },
       "sensex": {
-        "current": 75624.1484,
+        "current": 75577.8984,
         "prev_close": 75183.3594,
-        "change": 440.79,
-        "change_pct": 0.59
+        "change": 394.54,
+        "change_pct": 0.52
       }
     },
-    "timestamp": "2026-05-22T04:20:42.509617Z"
+    "timestamp": "2026-05-22T04:24:33.285057Z"
   },
   "fx_rate": 96.243879
 }

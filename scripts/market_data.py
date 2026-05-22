@@ -127,31 +127,45 @@ def fetch_quote(yf_symbol: str) -> dict | None:
     Return {'ltp': float, 'pc': float|None} or None on complete failure.
     Three-layer fallback:
       1. yfinance fast_info  (live intraday price + official prev close)
-      2. yfinance history()  (2d daily candles — slower, survives rate limits)
+      2. yfinance history()  (5d daily candles — slower, survives rate limits)
       3. Direct Yahoo chart API via requests (bypasses yfinance library)
     """
-    # Attempt 1: fast_info
+    # Attempt 1: fast_info — return even if pc is None (dayPL shows "—" in UI)
+    # Do NOT fall through just because pc is missing — Attempt 2 uses history
+    # close as ltp which during pre-market = yesterday's close, not a live price.
     try:
         fi  = yf.Ticker(yf_symbol).fast_info
         ltp = fi.last_price
         pc  = fi.previous_close
         if ltp is not None and float(ltp) > 0:
-            if pc is None:
-                raise ValueError("previous_close is None — falling through")
-            return {"ltp": round(float(ltp), 4), "pc": round(float(pc), 4)}
+            return {
+                "ltp": round(float(ltp), 4),
+                "pc":  round(float(pc), 4) if pc is not None else None,
+            }
     except Exception as exc:
         print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
 
-    # Attempt 2: yfinance history (2d candles)
+    # Attempt 2: yfinance history — only use iloc[-2] as pc when TODAY's candle exists.
+    # Pre-market: history has no today row → iloc[-1]=yesterday, iloc[-2]=day-before.
+    # Using both as ltp+pc would show YESTERDAY's dayPL as today's — wrong.
+    # Fix: if last candle is not today, set pc=None so dayPL shows "—".
     try:
+        from datetime import timezone as _tz
         hist = yf.Ticker(yf_symbol).history(period="5d", interval="1d", auto_adjust=False)
         if not hist.empty:
-            # Use last two rows to get true ltp + prev-close
-            # history() during live session: iloc[-1] = today's last close-so-far
-            # iloc[-2] = yesterday's actual close
-            ltp = float(hist["Close"].iloc[-1])
-            pc  = float(hist["Close"].iloc[-2]) if len(hist) >= 2 else None
+            last_idx  = hist.index[-1]
+            last_date = (last_idx.date() if hasattr(last_idx, "date")
+                         else last_idx.to_pydatetime().date())
+            today     = datetime.now(_tz.utc).date()
+            ltp       = float(hist["Close"].iloc[-1])
             if ltp > 0:
+                if last_date == today and len(hist) >= 2:
+                    # Today's candle exists — safe: iloc[-1]=today, iloc[-2]=yesterday
+                    pc = float(hist["Close"].iloc[-2])
+                else:
+                    # Pre-market: only past candles available. ltp=yesterday's close is
+                    # fine; but pc=None prevents showing stale dayPL as today's.
+                    pc = None
                 return {"ltp": round(ltp, 4), "pc": round(pc, 4) if pc else None}
     except Exception as exc:
         print(f"  WARN  history {yf_symbol}: {exc}", file=sys.stderr)

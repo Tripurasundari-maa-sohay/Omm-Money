@@ -3790,8 +3790,16 @@ const DASH = (() => {
   /* ── INIT ── */
   /* ── BIOMETRIC AUTH (WebAuthn — Face ID / Fingerprint) ──────────────── */
   const BIOMETRIC = (() => {
-    const CRED_KEY = 'bio_cred_v1';
-    const RP_ID    = location.hostname;
+    const CRED_KEY  = 'bio_cred_v1';
+    const AUTH_TS   = 'bio_auth_ts_v1';
+    const AUTH_TTL  = 30 * 60 * 1000;   // 30 min — skip re-auth within this window
+    const RP_ID     = location.hostname;
+
+    const recentlyAuthed = () => {
+      const ts = localStorage.getItem(AUTH_TS);
+      return ts && (Date.now() - parseInt(ts)) < AUTH_TTL;
+    };
+    const markAuthed = () => localStorage.setItem(AUTH_TS, Date.now().toString());
 
     const ok = () => !!(window.PublicKeyCredential && navigator.credentials && window.crypto);
     const b64enc = arr => btoa(String.fromCharCode(...new Uint8Array(arr)));
@@ -3804,6 +3812,7 @@ const DASH = (() => {
       if (i && icon) i.textContent = icon;
     }
     function unlock() {
+      markAuthed();
       const el = document.getElementById('bio-lock');
       if (!el) return;
       el.style.opacity = '0'; el.style.transition = 'opacity .3s';
@@ -3861,8 +3870,7 @@ const DASH = (() => {
     }
 
     function skip() {
-      sessionStorage.setItem('bio_ok', 'skip');
-      unlock();
+      unlock();  // unlock() calls markAuthed() — skip also stamps the 30-min window
     }
 
     async function resetAndRegister() {
@@ -3871,7 +3879,7 @@ const DASH = (() => {
     }
 
     async function init() {
-      if (sessionStorage.getItem('bio_ok')) return;  // already authed this session
+      if (recentlyAuthed()) return;  // authed within last 30 min — skip lock
       const el = document.getElementById('bio-lock');
       if (!el) return;
       el.style.display = 'flex';

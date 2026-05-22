@@ -3822,7 +3822,11 @@ const DASH = (() => {
       const el = document.getElementById('bio-lock');
       if (!el) return;
       el.style.opacity = '0'; el.style.transition = 'opacity .3s';
-      setTimeout(() => el.style.display = 'none', 320);
+      // After overlay hides, force a fresh data fetch + render.
+      // Fixes blank prices on first install: BIOMETRIC.init() and refresh()
+      // run concurrently — network fetch may fail during SW navigation,
+      // leaving S.prices empty. Re-fetching after auth guarantees live data.
+      setTimeout(() => { el.style.display = 'none'; refresh(); }, 320);
     }
 
     async function register() {

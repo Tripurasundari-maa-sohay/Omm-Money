@@ -350,6 +350,15 @@ def build_holdings_json() -> dict:
             pc         = q["pc"]    # may still be None if all sources lack prev-close
             change     = round(q["ltp"] - pc, 4) if pc is not None else None
             change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
+
+            # Sanity check: daily move >10% for India / >15% for US is likely stale pc
+            # (XD events, distributions, stale carry-forward). Null out pc so dayPL shows "—"
+            is_india = yf_sym.endswith((".NS", ".BO"))
+            _cap = 10.0 if is_india else 15.0
+            if change_pct is not None and abs(change_pct) > _cap:
+                print(f"  WARN  {tk}: |dayChange| {change_pct:+.1f}% exceeds {_cap}% cap — pc likely stale, nulling", file=sys.stderr)
+                pc = None; change = None; change_pct = None
+
             fresh_prices[tk] = {
                 "ltp":        q["ltp"],
                 "pc":         pc,          # None means "unknown" — JS shows "–"
@@ -359,7 +368,7 @@ def build_holdings_json() -> dict:
                 "manual":     q.get("_manual", False),  # True = manual_ltp used
             }
             success_count += 1
-            print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({change_pct:+.2f}%)")
+            print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({change_pct if change_pct is not None else \"—\":}%)")
         except Exception as exc:
             print(f"  ERROR  {tk} ({yf_sym}): unexpected error: {exc}", file=sys.stderr)
 

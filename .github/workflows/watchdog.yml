@@ -1,8 +1,8 @@
 name: Watchdog — auto-heal stale market data
 
-# Runs every 30 min during market hours.
-# Checks holdings_prices.json age — if >20 min AND market open → runs full
-# update pipeline automatically. No laptop needed.
+# Runs every 5 min during market hours.
+# Checks holdings_prices.json age — if >8 min AND market open → runs full
+# update pipeline. Acts as secondary refresh between full_update (15min) cycles.
 
 on:
   schedule:
@@ -47,7 +47,7 @@ jobs:
               ts  = datetime.fromisoformat(generated.replace("Z", "+00:00"))
               age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
               print(f"Data age: {age:.1f} min  (generated: {generated})")
-              stale = age > 20  # 20 min — full_update runs every 15min, needs headroom to finish
+              stale = age > 8   # 8 min — triggers between full_update cycles (runs every 15min)
           except Exception as e:
               print(f"Could not read prices file: {e} — treating as stale")
 

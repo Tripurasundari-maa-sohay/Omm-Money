@@ -1,13 +1,24 @@
 {
-  "generated": "2026-05-22T03:29:00Z",
-  "status": "ok",
-  "alerts": [],
+  "generated": "2026-05-22T03:33:00Z",
+  "status": "alert",
+  "alerts": [
+    {
+      "type": "delisted_or_renamed",
+      "ticker": "ASHALOG",
+      "message": "Price null after all sources. Check if ASHALOG is delisted or symbol changed."
+    },
+    {
+      "type": "delisted_or_renamed",
+      "ticker": "PARAMATRIX",
+      "message": "Price null after all sources. Check if PARAMATRIX is delisted or symbol changed."
+    }
+  ],
   "healed": [
     "fx_retried_ok"
   ],
   "tickers_expected": 28,
-  "tickers_ok": 28,
-  "tickers_failed": 0,
+  "tickers_ok": 26,
+  "tickers_failed": 2,
   "fx_rate": 96.2439,
   "data_age_min": 0.26
 }

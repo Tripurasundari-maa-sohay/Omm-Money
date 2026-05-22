@@ -907,7 +907,7 @@
     </div>
     <div class="tab-section" id="us-insights-section" style="margin-top:20px;">
       <h3>🏆 US PORTFOLIO · KEY INSIGHTS</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;" id="us-insights-grid">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;" id="us-insights-grid">
         <!-- filled by JS -->
       </div>
     </div>
@@ -3113,11 +3113,11 @@ const DASH = (() => {
     const winRate = closed.length ? (wins/closed.length*100).toFixed(0) : '--';
 
     const tile = (icon, label, val, sub='', cls='') =>
-      `<div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;padding:14px;">
-        <div style="font-size:18px;margin-bottom:4px;">${icon}</div>
-        <div style="font-size:12px;color:var(--text-sec);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">${label}</div>
-        <div style="font-size:16px;font-weight:700;font-family:Monaco,monospace;color:${cls||'var(--accent-g)'};">${val}</div>
-        ${sub ? `<div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${sub}</div>` : ''}
+      `<div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="font-size:16px;margin-bottom:3px;">${icon}</div>
+        <div style="font-size:10px;color:var(--text-sec);font-weight:700;letter-spacing:.5px;margin-bottom:4px;line-height:1.3;">${label}</div>
+        <div style="font-size:13px;font-weight:700;font-family:Monaco,monospace;color:${cls||'var(--accent-g)'};word-break:break-all;">${val}</div>
+        ${sub ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${sub}</div>` : ''}
       </div>`;
 
     grid.innerHTML = [

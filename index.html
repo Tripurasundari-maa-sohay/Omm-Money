@@ -4000,6 +4000,7 @@ const DASH = (() => {
     render();   // rebuild + re-render with new value
   }
 
+  window.BIOMETRIC = BIOMETRIC;   // expose globally so onclick handlers can reach it
   return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP };
 })();
 

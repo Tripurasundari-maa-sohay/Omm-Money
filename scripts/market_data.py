@@ -110,11 +110,7 @@ def fetch_quote_direct(yf_symbol: str) -> dict | None:
                 continue
             meta = result.get("meta", {})
             ltp  = meta.get("regularMarketPrice")
-            # Use today's open as pc — matches broker (Saxo/Doha) intraday dayPL calc
-            # Falls back to previous close only if market hasn't opened yet (open = 0)
-            open_px = meta.get("regularMarketOpen")
-            pc = (open_px if (open_px and float(open_px) > 0)
-                  else meta.get("chartPreviousClose") or meta.get("previousClose"))
+            pc   = meta.get("chartPreviousClose") or meta.get("previousClose")
             if ltp and float(ltp) > 0:
                 print(f"  direct/{host}  {yf_symbol} → {float(ltp):.2f}")
                 return {
@@ -134,15 +130,11 @@ def fetch_quote(yf_symbol: str) -> dict | None:
       2. yfinance history()  (5d daily candles — slower, survives rate limits)
       3. Direct Yahoo chart API via requests (bypasses yfinance library)
     """
-    # Attempt 1: fast_info
-    # pc = today's open (matches Saxo/Doha intraday dayPL calc).
-    # Falls back to previous_close if open not available (pre-market).
+    # Attempt 1: fast_info — return even if pc is None (dayPL shows "—" in UI)
     try:
-        fi   = yf.Ticker(yf_symbol).fast_info
-        ltp  = fi.last_price
-        open_px = getattr(fi, 'open', None)
-        pc   = (open_px if (open_px and float(open_px) > 0)
-                else fi.previous_close)
+        fi  = yf.Ticker(yf_symbol).fast_info
+        ltp = fi.last_price
+        pc  = fi.previous_close
         if ltp is not None and float(ltp) > 0:
             return {
                 "ltp": round(float(ltp), 4),
@@ -151,7 +143,7 @@ def fetch_quote(yf_symbol: str) -> dict | None:
     except Exception as exc:
         print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
 
-    # Attempt 2: yfinance history — use today's Open candle as pc.
+    # Attempt 2: yfinance history — only use iloc[-2] as pc when TODAY's candle exists.
     # Pre-market: no today candle → pc=None so dayPL shows "—" (not stale value).
     try:
         from datetime import timezone as _tz
@@ -163,11 +155,9 @@ def fetch_quote(yf_symbol: str) -> dict | None:
             today     = datetime.now(_tz.utc).date()
             ltp       = float(hist["Close"].iloc[-1])
             if ltp > 0:
-                if last_date == today:
-                    # Today's candle — use Open price as pc (intraday dayPL from open)
-                    pc = float(hist["Open"].iloc[-1])
+                if last_date == today and len(hist) >= 2:
+                    pc = float(hist["Close"].iloc[-2])
                 else:
-                    # Pre-market: only past candles. Set pc=None → dayPL shows "—"
                     pc = None
                 return {"ltp": round(ltp, 4), "pc": round(pc, 4) if pc else None}
     except Exception as exc:

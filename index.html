@@ -3839,7 +3839,7 @@ const DASH = (() => {
           timeout: 60000,
         }});
         localStorage.setItem(CRED_KEY, b64enc(cred.rawId));
-        setUI('Registered! Tap Authenticate to unlock.', '✅');
+        unlock();   // registration proves biometric — unlock immediately, no second tap
         return true;
       } catch(e) {
         console.error('[bio] register:', e);

@@ -3791,15 +3791,21 @@ const DASH = (() => {
   /* ── BIOMETRIC AUTH (WebAuthn — Face ID / Fingerprint) ──────────────── */
   const BIOMETRIC = (() => {
     const CRED_KEY  = 'bio_cred_v1';
-    const AUTH_TS   = 'bio_auth_ts_v1';
-    const AUTH_TTL  = 30 * 60 * 1000;   // 30 min — skip re-auth within this window
+    const AUTH_TS   = 'bio_auth_ts_v2';  // bumped — invalidates old 30-min tokens
+    const AUTH_TTL  = 3 * 60 * 1000;    // 3 min localStorage TTL (iOS Safari refresh only)
     const RP_ID     = location.hostname;
 
+    // sessionStorage: primary (Android PWA clears on app close, survives refresh)
+    // localStorage timestamp: short-window fallback for iOS Safari which clears sessionStorage on refresh
     const recentlyAuthed = () => {
+      if (sessionStorage.getItem('bio_ok')) return true;
       const ts = localStorage.getItem(AUTH_TS);
-      return ts && (Date.now() - parseInt(ts)) < AUTH_TTL;
+      return !!(ts && (Date.now() - parseInt(ts)) < AUTH_TTL);
     };
-    const markAuthed = () => localStorage.setItem(AUTH_TS, Date.now().toString());
+    const markAuthed = () => {
+      sessionStorage.setItem('bio_ok', '1');
+      localStorage.setItem(AUTH_TS, Date.now().toString());
+    };
 
     const ok = () => !!(window.PublicKeyCredential && navigator.credentials && window.crypto);
     const b64enc = arr => btoa(String.fromCharCode(...new Uint8Array(arr)));

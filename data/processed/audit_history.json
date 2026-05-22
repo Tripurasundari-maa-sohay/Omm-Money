@@ -1,6 +1,18 @@
 {
   "history": [
     {
+      "date": "2026-05-22",
+      "status": "healed",
+      "alerts": [],
+      "healed": [
+        "fx_retried_ok"
+      ],
+      "runs": 1,
+      "tickers_ok": 28,
+      "tickers_expected": 28,
+      "data_age_min": 1.1
+    },
+    {
       "date": "2026-05-21",
       "status": "alert",
       "alerts": [

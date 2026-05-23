@@ -3944,9 +3944,12 @@ const DASH = (() => {
     DASH_SCR.initSort();
     tickCountdowns();
     setInterval(tickCountdowns, 1000);
-    BIOMETRIC.init();   // show lock screen + auto-trigger biometric before data loads
-    refresh();
-    setInterval(refresh, REFRESH_MS);
+    (async () => {
+      await BIOMETRIC.init();   // wait for biometric to complete
+      refresh();                  // NOW fetch data (lock hidden, authed)
+      setInterval(refresh, REFRESH_MS);
+    })();
+
 
     // ── Swipe tabs (mobile) ──────────────────────────────────────────────
     const TAB_ORDER = ['portfolio','us','india','transactions','signals','screener'];

@@ -484,6 +484,11 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
 
     open_tickers  = {h["tk"] for h in holdings}
 
+    # Preserve per-ticker local fields (buy_date, fx_buy) across reparses.
+    # PDF never contains these — they originate from manual entry or fx_buy
+    # backfill in market_data.py and must survive PDF reparse.
+    prev_open_meta = {p["tk"]: p for p in (prev or {}).get("us", {}).get("open", []) if "tk" in p}
+
     # Build ticker → pl_row map. Sum costs if same ticker appears twice.
     pl_by_ticker: dict[str, dict] = {}
     for r in pl_rows:
@@ -502,7 +507,7 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
             print(f"  [WARN] skipping UNKNOWN ticker in open positions: {h['tk']!r} ({h['name']!r})", file=sys.stderr)
             continue
         plr = pl_by_ticker.get(h["tk"], {})
-        open_full.append({
+        entry = {
             "tk":     h["tk"],
             "yf":     h["yf"],
             "name":   h["name"],
@@ -511,7 +516,13 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
             "avg":    h["avg"],
             "fees":   round(plr.get("costs", 0.0), 2),
             "income": round(plr.get("income", 0.0), 2),
-        })
+        }
+        prev_p = prev_open_meta.get(h["tk"])
+        if prev_p:
+            for k in ("buy_date", "fx_buy"):
+                if prev_p.get(k) is not None:
+                    entry[k] = prev_p[k]
+        open_full.append(entry)
 
     closed_full = []
     for tk, r in pl_by_ticker.items():

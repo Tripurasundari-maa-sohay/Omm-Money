@@ -106,8 +106,47 @@ Drop the latest PDF + xlsx into `inbox/` and run:
 - **Saxo** (sheets `Trades` + `Bookings`) → `patch_fees_from_xlsx.py` + `build_transactions_us.py`
 - **India** (sheet `All Transactions` or `Upstox`) → `parse_india_excel.py`
 
-Then commits `data/holdings_cost.json` + `data/transactions_us.json` and pushes.
-GitHub Actions picks up live prices within ~5 min.
+Then runs the **same pipeline GH Actions would run** so all derived chart /
+tile values catch up to the new statement *before the commit*, not 5-15 min
+later when cron fires.
+
+### Every PDF → these files must refresh (sync.sh enforces it)
+
+| File | Refreshed by | Why it must update on new PDF |
+|------|--------------|-------------------------------|
+| `data/holdings_cost.json` | `parse_broker_pdf.py` | Open positions, closed lots, cash, monthly anchors, statement totals — the new PDF *is* the source of truth |
+| `data/holdings_cost.json` (fees) | `patch_fees_from_xlsx.py` | Per-ticker commission attribution corrected from xlsx Bookings × Trades |
+| `data/transactions_us.json` | `build_transactions_us.py` | Per-trade ledger for the Transactions tab + ML/training |
+| `data/processed/holdings_prices.json` | `market_data.py` | Live LTP/pc PLUS `weekly_chart` / `combined_weekly_chart` / `inr_fx_monthly` / `snp_actual_cum_pct` / `daily_chart` — these series all depend on the new positions + the new last `account_value` anchor |
+| `data/processed/market_indices.json` | `market_data.py` | S&P 500, Nasdaq, Nifty, Sensex snapshots used in hero/USA banners |
+| `data/processed/stock_signals.json` | `signals_update.py` | Buy/Hold/Reduce signals per ticker — must reflect current open positions |
+| `data/processed/audit.json` + `audit_history.json` | `data_audit.py` | Health checks (alerts banner) recomputed against fresh state |
+| chart anchors in `holdings_prices.json` | `patch_chart.py` | `us_val_usd[]` reanchored to broker `account_value[]` so chart matches statement penny-perfect |
+
+If you skip any of these on a manual run, the dashboard will show **stale
+hero values, stale headline tiles, stale charts**, or a misaligned INR-return
+tile (when fx_buy isn't propagated). `sync.sh` runs all of them in order —
+that's the whole point.
+
+### Dashboard reads that depend on these files (index.html)
+
+| Tile / chart | Sourced from |
+|--------------|--------------|
+| Hero "Total Portfolio Value" | `S.cost.us.cash` + holdings `mv` (live from `holdings_prices.json`) + `S.view.india.mv / fx` |
+| US "ACCOUNT VALUE" tile | `us.totalValue = us.mv + us.cash` (live); secondary "Statement: $X · DD-Mon-YYYY" = `S.cost.us.account_value_statement` |
+| US Day P&L tile | `holdings_prices.json` `ltp` − `pc` × qty |
+| US "RETURN IN INR" tile | per-ticker `inrRet` derived from `holdings_prices.json[tk].fx_buy` + `S.cost.fx_inr_usd` (today FX) |
+| Weekly Friday chart | `holdings_prices.json.weekly_chart.{port_ret, snp_ret, inr_ret, us_val_usd}` |
+| Combined US+India weekly | `holdings_prices.json.combined_weekly_chart.{dates, total_usd}` |
+| S&P 500 benchmark line | `holdings_prices.json.snp_actual_cum_pct` |
+| INR overlay on returns chart | `holdings_prices.json.inr_fx_monthly` |
+| Transactions tab summary stats | `holdings_cost.json.us` (open, closed, charges_breakdown) |
+| Per-trade ledger | `data/transactions_us.json.trades[]` |
+| Cash movements table | `data/transactions_us.json.cash_moves[]` |
+| Audit banner | `data/processed/audit.json.alerts[]` |
+
+Every one of these stales the moment the PDF changes if `sync.sh` only
+commits `holdings_cost.json`. That's why sync.sh now runs the full pipeline.
 
 ### Local-only file fields (must survive PDF reparse)
 

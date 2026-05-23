@@ -130,9 +130,22 @@ git commit -m "$MSG"
 # Use `-X theirs` so that during rebase our just-generated (fresher) files
 # win — they include the latest PDF anchor and the cron's snapshot would
 # overwrite it with whatever yfinance returned a few seconds earlier.
+#
+# Stash any leftover unstaged changes first — `git pull --rebase` aborts
+# if the working tree is dirty (e.g. when the user has edits in progress
+# that weren't part of this sync). Auto-stash means sync.sh never fails
+# the push because of files outside its committed set.
 for attempt in 1 2 3; do
   git rebase --abort 2>/dev/null || true
-  git pull --rebase -X theirs origin main && git push && break
+  _STASHED=0
+  if [ -n "$(git status --porcelain)" ]; then
+    git stash push -u -m "sync.sh autostash @$(date +%s)" >/dev/null 2>&1 && _STASHED=1
+  fi
+  if git pull --rebase -X theirs origin main && git push; then
+    [ $_STASHED -eq 1 ] && git stash pop >/dev/null 2>&1 || true
+    break
+  fi
+  [ $_STASHED -eq 1 ] && git stash pop >/dev/null 2>&1 || true
   echo "  push attempt $attempt failed — retrying…"
   sleep 3
 done

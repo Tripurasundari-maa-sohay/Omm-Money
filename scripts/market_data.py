@@ -1064,6 +1064,10 @@ def main() -> int:
         print("  WARN  FX fetch failed — using stored rate", file=sys.stderr)
 
     indices = build_indices_json()
+    # Persist the live INR/USD rate alongside the index quotes so data_audit
+    # finds it without having to re-heal from open.er-api on every run.
+    if fx and 70.0 <= float(fx) <= 120.0:
+        indices["fx_rate"] = round(float(fx), 4)
     OUT_INDICES.write_text(json.dumps(indices, indent=2))
     print(f"  wrote {OUT_INDICES.relative_to(ROOT)}")
 

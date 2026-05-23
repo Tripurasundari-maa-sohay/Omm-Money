@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "22-May-2026",
+  "as_of": "18-May-2026",
   "fx_inr_usd": 95.68,
   "us": {
     "broker": "Doha Bank Global",
-    "cash": 2461.96,
-    "cash_infusion_itd": 16875.07,
-    "account_value_statement": 19496.03,
-    "total_pl_statement": 2620.96,
+    "cash": 537.98,
+    "cash_infusion_itd": 15875.07,
+    "account_value_statement": 18117.98,
+    "total_pl_statement": 2242.91,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -25,7 +25,7 @@
         "2026-02-28",
         "2026-03-31",
         "2026-04-30",
-        "2026-05-22"
+        "2026-05-18"
       ],
       "cash_balance": [
         0.0,
@@ -34,7 +34,7 @@
         1568.12,
         2016.07,
         268.16,
-        2461.96
+        537.98
       ],
       "account_value": [
         0.0,
@@ -43,7 +43,7 @@
         14248.11,
         13692.49,
         16432.87,
-        19496.03
+        18117.98
       ],
       "monthly_pct_return": [
         0.0,
@@ -52,7 +52,7 @@
         -5.1,
         -6.8,
         20.0,
-        6.5
+        4.3
       ],
       "monthly_bench_return": [
         0.0,
@@ -61,7 +61,7 @@
         -1.0,
         -5.0,
         10.6,
-        3.5
+        2.5
       ],
       "monthly_pl": [
         0.0,
@@ -70,7 +70,7 @@
         -766.0,
         -966.58,
         2740.38,
-        1063.16
+        685.11
       ],
       "monthly_cost": [
         0.0,
@@ -79,7 +79,7 @@
         -51.7,
         -54.91,
         -72.54,
-        -61.56
+        -49.38
       ],
       "port_return_cum_pct": [
         0.0,
@@ -88,7 +88,7 @@
         -0.24,
         -7.02,
         11.57,
-        18.83
+        16.37
       ],
       "snp_return_cum_pct": [
         0.0,
@@ -97,7 +97,7 @@
         0.59,
         -4.44,
         5.69,
-        9.39
+        8.33
       ],
       "cash_deployed": [
         0.0,
@@ -106,7 +106,7 @@
         14464.11,
         14875.07,
         14875.07,
-        16875.07
+        15875.07
       ]
     },
     "open": [
@@ -118,7 +118,9 @@
         "qty": 3,
         "avg": 310.19,
         "fees": -5.0,
-        "income": 0.63
+        "income": 0.63,
+        "buy_date": "2025-12-16",
+        "fx_buy": 90.7769
       },
       {
         "tk": "AMZN",
@@ -127,8 +129,10 @@
         "cls": "Stock",
         "qty": 10,
         "avg": 249.726,
-        "fees": -20.0,
-        "income": 0.0
+        "fees": -10.0,
+        "income": 0.0,
+        "buy_date": "2026-04-14",
+        "fx_buy": 94.9468
       },
       {
         "tk": "AVGO",
@@ -138,7 +142,9 @@
         "qty": 4,
         "avg": 341.695,
         "fees": -10.0,
-        "income": 4.55
+        "income": 4.55,
+        "buy_date": "2025-12-16",
+        "fx_buy": 90.7769
       },
       {
         "tk": "GLW",
@@ -148,7 +154,9 @@
         "qty": 6,
         "avg": 182.17,
         "fees": -5.0,
-        "income": 0.0
+        "income": 0.0,
+        "buy_date": "2026-05-06",
+        "fx_buy": 95.183
       },
       {
         "tk": "GEV",
@@ -158,7 +166,21 @@
         "qty": 1,
         "avg": 1097.14,
         "fees": -5.0,
-        "income": 0.0
+        "income": 0.0,
+        "buy_date": "2026-04-27",
+        "fx_buy": 94.2503
+      },
+      {
+        "tk": "KEEL",
+        "yf": "KEEL",
+        "name": "KeelInfrastructureCorp",
+        "cls": "Stock",
+        "qty": 200,
+        "avg": 4.02,
+        "fees": -12.0,
+        "income": 0.0,
+        "buy_date": "2026-05-12",
+        "fx_buy": 95.3914
       },
       {
         "tk": "MU",
@@ -167,8 +189,10 @@
         "cls": "Stock",
         "qty": 1,
         "avg": 492.0,
-        "fees": -25.03,
-        "income": 0.3
+        "fees": -5.0,
+        "income": 0.0,
+        "buy_date": "2026-04-28",
+        "fx_buy": 94.2585
       },
       {
         "tk": "MSFT",
@@ -178,7 +202,9 @@
         "qty": 6,
         "avg": 416.065,
         "fees": -15.0,
-        "income": 2.73
+        "income": 2.73,
+        "buy_date": "2025-12-26",
+        "fx_buy": 90.1059
       },
       {
         "tk": "MP",
@@ -188,7 +214,9 @@
         "qty": 10,
         "avg": 53.0,
         "fees": -5.0,
-        "income": 0.0
+        "income": 0.0,
+        "buy_date": "2025-12-17",
+        "fx_buy": 90.9489
       },
       {
         "tk": "RKLB",
@@ -197,8 +225,10 @@
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": 0.0,
-        "income": 0.0
+        "fees": -5.0,
+        "income": 0.0,
+        "buy_date": "2026-05-11",
+        "fx_buy": 94.4253
       },
       {
         "tk": "TTE",
@@ -208,7 +238,9 @@
         "qty": 8,
         "avg": 82.84,
         "fees": -7.65,
-        "income": 8.01
+        "income": 8.01,
+        "buy_date": "2026-03-13",
+        "fx_buy": 92.3899
       },
       {
         "tk": "EWY",
@@ -217,8 +249,10 @@
         "cls": "ETF",
         "qty": 9,
         "avg": 187.51,
-        "fees": -22.21,
-        "income": 0.0
+        "fees": -5.0,
+        "income": 0.0,
+        "buy_date": "2026-05-13",
+        "fx_buy": 95.633
       },
       {
         "tk": "HUMN",
@@ -228,7 +262,9 @@
         "qty": 25,
         "avg": 38.1,
         "fees": -5.0,
-        "income": 0.0
+        "income": 0.0,
+        "buy_date": "2026-05-14",
+        "fx_buy": 95.6958
       },
       {
         "tk": "VOOG",
@@ -238,7 +274,9 @@
         "qty": 18,
         "avg": 73.5759,
         "fees": -5.0,
-        "income": 3.49
+        "income": 3.49,
+        "buy_date": "2025-12-15",
+        "fx_buy": 90.577
       }
     ],
     "closed": [
@@ -257,10 +295,9 @@
         "cls": "Stock",
         "income": 0.0,
         "costs": 0.0,
-        "_costs_paid": -20.0,
-        "realised": 21.94,
-        "ret_pct": -2.73,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+        "realised": 7.34,
+        "ret_pct": -3.27,
+        "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
         "tk": "AVGO",
@@ -268,10 +305,9 @@
         "cls": "Stock",
         "income": 4.55,
         "costs": 0.0,
-        "_costs_paid": -10.0,
-        "realised": 282.96,
-        "ret_pct": 20.4,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+        "realised": 309.24,
+        "ret_pct": 22.3,
+        "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
         "tk": "COST",
@@ -293,7 +329,7 @@
       },
       {
         "tk": "INOD",
-        "name": "2025to22-May-2026 InnodataInc.",
+        "name": "InnodataInc.",
         "cls": "Stock",
         "income": 0.0,
         "costs": -20.0,
@@ -310,15 +346,6 @@
         "ret_pct": -3.35
       },
       {
-        "tk": "KEEL",
-        "name": "KeelInfrastructureCorp",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -24.02,
-        "realised": 107.98,
-        "ret_pct": 13.24
-      },
-      {
         "tk": "META",
         "name": "MetaPlatformsInc.",
         "cls": "Stock",
@@ -333,10 +360,9 @@
         "cls": "Stock",
         "income": 0.3,
         "costs": 0.0,
-        "_costs_paid": -25.03,
-        "realised": 595.75,
-        "ret_pct": 92.93,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+        "realised": 526.29,
+        "ret_pct": 75.1,
+        "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
         "tk": "NVDA",
@@ -348,15 +374,33 @@
         "ret_pct": -0.81
       },
       {
+        "tk": "RKLB",
+        "name": "RocketLabCorporation",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": 0.0,
+        "realised": 458.66,
+        "ret_pct": 123.07,
+        "_note": "costs counted in open position (same ticker, re-opened)"
+      },
+      {
+        "tk": "TOL",
+        "name": "TollBrothersInc.",
+        "cls": "Stock",
+        "income": 2.04,
+        "costs": -10.02,
+        "realised": 21.53,
+        "ret_pct": 3.85
+      },
+      {
         "tk": "TTE",
         "name": "TotalEnergiesSE",
         "cls": "Stock",
         "income": 8.01,
         "costs": 0.0,
-        "_costs_paid": -7.65,
-        "realised": 68.44,
-        "ret_pct": 10.23,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+        "realised": 83.08,
+        "ret_pct": 12.44,
+        "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
         "tk": "SIVR",
@@ -378,7 +422,7 @@
       },
       {
         "tk": "DAX",
-        "name": "2025to22-May-2026 GlobalXDAXGermanyETF",
+        "name": "GlobalXDAXGermanyETF",
         "cls": "ETF",
         "income": 0.0,
         "costs": -10.02,
@@ -391,10 +435,9 @@
         "cls": "ETF",
         "income": 0.0,
         "costs": 0.0,
-        "_costs_paid": -22.21,
-        "realised": 375.01,
-        "ret_pct": 22.32,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+        "realised": 321.64,
+        "ret_pct": 18.33,
+        "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
         "tk": "VOOG",
@@ -402,29 +445,9 @@
         "cls": "ETF",
         "income": 3.49,
         "costs": 0.0,
-        "_costs_paid": -5.0,
-        "realised": 151.05,
-        "ret_pct": 11.38,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
-      },
-      {
-        "tk": "RKLB",
-        "name": "RocketLabCorporation",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 458.66,
-        "ret_pct": 123.07,
+        "realised": 142.41,
+        "ret_pct": 10.72,
         "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "TOL",
-        "name": "TollBrothersInc.",
-        "cls": "Stock",
-        "income": 2.04,
-        "costs": -10.02,
-        "realised": 21.53,
-        "ret_pct": 3.85
       },
       {
         "tk": "GOOG",
@@ -457,6 +480,16 @@
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
+        "tk": "KEEL",
+        "name": "KeelInfrastructureCorp",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": 0.0,
+        "realised": 106.0,
+        "ret_pct": 12.99,
+        "_note": "costs counted in open position (same ticker, re-opened)"
+      },
+      {
         "tk": "MSFT",
         "name": "MicrosoftCorp.",
         "cls": "Stock",
@@ -480,7 +513,7 @@
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -2.16
+        "amt": -2.0
       },
       {
         "type": "Custody Fee (ongoing)",
@@ -488,11 +521,11 @@
       },
       {
         "type": "Exchange Fee",
-        "amt": -0.27
+        "amt": -0.25
       },
       {
         "type": "Commission",
-        "amt": -361.2
+        "amt": -349.2
       },
       {
         "type": "French FTT",
@@ -636,7 +669,7 @@
         "broker": "Motilal Oswal",
         "exch": "NSE",
         "fm": "BUY",
-        "_note": "purchase price pending — please update"
+        "_note": "purchase price pending \u2014 please update"
       },
       {
         "tk": "ASHALOG",

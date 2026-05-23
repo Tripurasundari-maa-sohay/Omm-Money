@@ -1843,28 +1843,28 @@ const DASH = (() => {
     setText('us-etf-value',    usd(us.etfsMV));  setClass('us-etf-value','mval pv');
     setText('us-cash-value',   usd(us.cash || 0)); setClass('us-cash-value','mval pv');
 
-    // Per-class return % chips — same `mchg pv` style as the TOTAL VALUE
-    // chip on the Portfolio Summary, so they render small + colored
-    // (gain green / loss red). Cash gets a neutral "% of US portfolio" chip
-    // since cash itself has no return.
-    const _stockPos = us.open.filter(p => p.cls === 'Stock');
-    const _etfPos   = us.open.filter(p => p.cls === 'ETF');
-    const _stockCost = _stockPos.reduce((s,p) => s + (p.cost || 0), 0);
-    const _etfCost   = _etfPos.reduce((s,p)   => s + (p.cost || 0), 0);
-    const _stockPL   = _stockPos.reduce((s,p) => s + (p.uplNet || 0), 0);
-    const _etfPL     = _etfPos.reduce((s,p)   => s + (p.uplNet || 0), 0);
-    const _stockRet  = _stockCost ? (_stockPL / _stockCost) * 100 : 0;
-    const _etfRet    = _etfCost   ? (_etfPL   / _etfCost)   * 100 : 0;
-    setText('us-stocks-ret', sign(_stockRet) + pct(_stockRet));
-    setClass('us-stocks-ret', 'mchg pv ' + pn(_stockRet));
-    setText('us-etf-ret',    sign(_etfRet)   + pct(_etfRet));
-    setClass('us-etf-ret',   'mchg pv ' + pn(_etfRet));
-    // Cash: share of US total
-    const _cashShare = us.totalValue ? ((us.cash || 0) / us.totalValue) * 100 : 0;
-    setText('us-cash-share', _cashShare.toFixed(1) + '% of US');
+    // Share-of-US-portfolio % chip on each tile.
+    //   stocks = stocksMV / (stocksMV + etfsMV + cash)
+    //   etf    = etfsMV   / total
+    //   cash   = cash     / total
+    // Same small `mchg pv` chip style the TOTAL VALUE tile uses. Distinct
+    // accent colors per class so the row reads at a glance.
+    const _usTot      = (us.stocksMV || 0) + (us.etfsMV || 0) + (us.cash || 0);
+    const _stockShare = _usTot ? ((us.stocksMV || 0) / _usTot) * 100 : 0;
+    const _etfShare   = _usTot ? ((us.etfsMV   || 0) / _usTot) * 100 : 0;
+    const _cashShare  = _usTot ? ((us.cash     || 0) / _usTot) * 100 : 0;
+    setText('us-stocks-ret',  _stockShare.toFixed(1) + '% of US');
+    setText('us-etf-ret',     _etfShare.toFixed(1)   + '% of US');
+    setText('us-cash-share',  _cashShare.toFixed(1)  + '% of US');
+    setClass('us-stocks-ret', 'mchg pv');
+    setClass('us-etf-ret',    'mchg pv');
     setClass('us-cash-share', 'mchg pv');
-    const _cashEl = document.getElementById('us-cash-share');
-    if (_cashEl) _cashEl.style.color = 'var(--text-dim)';
+    const _stkEl = document.getElementById('us-stocks-ret');
+    const _etfEl = document.getElementById('us-etf-ret');
+    const _csEl  = document.getElementById('us-cash-share');
+    if (_stkEl) _stkEl.style.color = 'var(--accent-b)';   // blue — stocks
+    if (_etfEl) _etfEl.style.color = 'var(--warn)';       // amber — ETF
+    if (_csEl)  _csEl.style.color  = 'var(--text-dim)';   // muted — cash
     setText('us-unreal-pl',    sign(us.returnPct) + pct(us.returnPct));
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';

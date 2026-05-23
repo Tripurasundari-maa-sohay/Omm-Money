@@ -1,4 +1,23 @@
+# Runtime deps for local sync.sh + scripts/*.py.
+# GH Actions workflows install their own subset inline — keep this list
+# aligned with .github/workflows/full_update.yml's `Install deps` step plus
+# the xlsx parsers that only run locally (openpyxl + pandas).
+
 yfinance>=0.2.40
 pytz>=2024.1
-pdfplumber>=0.11.0
 requests>=2.31.0
+
+# PDF parsing (parse_broker_pdf.py)
+pdfplumber>=0.11.0
+
+# xlsx parsing (build_transactions_us.py, patch_fees_from_xlsx.py, parse_india_excel.py)
+openpyxl>=3.1.0
+
+# Tabular / chart math (signals_update.py, screener.py, parse_india_excel.py, market_data.py)
+# yfinance brings pandas transitively but pin it for local clarity + screener.
+pandas>=2.0
+
+# Screener's pd.read_html for Wikipedia index tables
+beautifulsoup4>=4.12
+lxml>=5.0
+html5lib>=1.1

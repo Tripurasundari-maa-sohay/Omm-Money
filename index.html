@@ -579,34 +579,6 @@
 </head>
 
 <body>
-<!-- ── BIOMETRIC LOCK SCREEN ──────────────────────────────────────────── -->
-<div id="bio-lock" style="display:none;position:fixed;inset:0;z-index:9999;
-  background:var(--bg,#0f1117);flex-direction:column;align-items:center;
-  justify-content:center;gap:14px;text-align:center;padding:28px;">
-  <div id="bio-icon" style="font-size:52px;">🔒</div>
-  <div style="font-size:20px;font-weight:700;color:var(--text,#e8eaf0);">Portfolio Tracker</div>
-  <div id="bio-msg" style="font-size:13px;color:var(--text-sec,#8892a4);max-width:300px;line-height:1.5;">
-    Authenticate to view your portfolio
-  </div>
-  <button id="bio-auth-btn" onclick="BIOMETRIC.tryAuth()"
-    style="margin-top:6px;padding:14px 0;border-radius:12px;border:none;
-    background:#4f8ef7;color:#fff;font-size:15px;font-weight:700;
-    cursor:pointer;width:100%;max-width:300px;">
-    🔐 Authenticate
-  </button>
-  <button onclick="BIOMETRIC.skip()"
-    style="padding:8px 0;border-radius:8px;border:1px solid #2a2f3e;
-    background:transparent;color:#8892a4;font-size:12px;cursor:pointer;
-    width:100%;max-width:300px;">
-    Skip (view without biometric)
-  </button>
-  <button onclick="BIOMETRIC.resetAndRegister()"
-    style="padding:6px 0;border-radius:8px;border:none;
-    background:transparent;color:#555e72;font-size:11px;cursor:pointer;
-    width:100%;max-width:300px;">
-    🔑 Re-register this device
-  </button>
-</div>
 <div class="dashboard-container">
 
   <!-- ══════════ BANNER ══════════ -->
@@ -3791,131 +3763,6 @@ const DASH = (() => {
   window.DASH_SCR = DASH_SCR;  // expose to global scope for inline onchange handlers
 
   /* ── INIT ── */
-  /* ── BIOMETRIC AUTH (WebAuthn — Face ID / Fingerprint) ──────────────── */
-  const BIOMETRIC = (() => {
-    const CRED_KEY  = 'bio_cred_v1';
-    const AUTH_TS   = 'bio_auth_ts_v2';  // bumped — invalidates old 30-min tokens
-    const AUTH_TTL  = 3 * 60 * 1000;    // 3 min localStorage TTL (iOS Safari refresh only)
-    const RP_ID     = location.hostname;
-
-    // sessionStorage: primary (Android PWA clears on app close, survives refresh)
-    // localStorage timestamp: short-window fallback for iOS Safari which clears sessionStorage on refresh
-    const recentlyAuthed = () => {
-      if (sessionStorage.getItem('bio_ok')) return true;
-      const ts = localStorage.getItem(AUTH_TS);
-      return !!(ts && (Date.now() - parseInt(ts)) < AUTH_TTL);
-    };
-    const markAuthed = () => {
-      sessionStorage.setItem('bio_ok', '1');
-      localStorage.setItem(AUTH_TS, Date.now().toString());
-    };
-
-    const ok = () => !!(window.PublicKeyCredential && navigator.credentials && window.crypto);
-    const b64enc = arr => btoa(String.fromCharCode(...new Uint8Array(arr)));
-    const b64dec = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-
-    function setUI(msg, icon) {
-      const m = document.getElementById('bio-msg');
-      const i = document.getElementById('bio-icon');
-      if (m) m.textContent = msg;
-      if (i && icon) i.textContent = icon;
-    }
-    function unlock() {
-      markAuthed();
-      const el = document.getElementById('bio-lock');
-      if (!el) return;
-      el.style.opacity = '0'; el.style.transition = 'opacity .3s';
-      // After overlay hides, force a fresh data fetch + render.
-      // Fixes blank prices on first install: BIOMETRIC.init() and refresh()
-      // run concurrently — network fetch may fail during SW navigation,
-      // leaving S.prices empty. Re-fetching after auth guarantees live data.
-      setTimeout(() => { el.style.display = 'none'; refresh(); }, 320);
-    }
-
-    async function register() {
-      if (!ok()) { setUI('WebAuthn not supported on this browser.', '⚠️'); return false; }
-      setUI('Follow the device prompt to register…', '⏳');
-      try {
-        const chal = crypto.getRandomValues(new Uint8Array(32));
-        const cred = await navigator.credentials.create({ publicKey: {
-          challenge: chal,
-          rp: { name: 'Portfolio Tracker', id: RP_ID },
-          user: { id: new Uint8Array([7,3,1,4]), name: 'owner', displayName: 'Portfolio Owner' },
-          pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
-          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
-          timeout: 60000,
-        }});
-        localStorage.setItem(CRED_KEY, b64enc(cred.rawId));
-        unlock();   // registration proves biometric — unlock immediately, no second tap
-        return true;
-      } catch(e) {
-        console.error('[bio] register:', e);
-        setUI('Registration failed — ' + (e.message||e.name||'error') + '. Try again or Skip.', '❌');
-        return false;
-      }
-    }
-
-    async function tryAuth() {
-      const credB64 = localStorage.getItem(CRED_KEY);
-      if (!credB64) { await register(); return; }
-      if (!ok()) { unlock(); return; }
-      setUI('Waiting for biometric…', '⏳');
-      try {
-        const chal = crypto.getRandomValues(new Uint8Array(32));
-        await navigator.credentials.get({ publicKey: {
-          challenge: chal, rpId: RP_ID,
-          allowCredentials: [{ type: 'public-key', id: b64dec(credB64), transports: ['internal'] }],
-          userVerification: 'required', timeout: 60000,
-        }});
-        sessionStorage.setItem('bio_ok', '1');
-        unlock();
-      } catch(e) {
-        console.error('[bio] auth:', e);
-        if (e.name === 'NotAllowedError') {
-          setUI('Biometric cancelled. Tap to try again.', '🔒');
-        } else if (['InvalidStateError','NotFoundError','SecurityError'].includes(e.name)) {
-          localStorage.removeItem(CRED_KEY);
-          setUI('Credential not found on this device — tap to re-register.', '⚠️');
-        } else {
-          setUI('Auth failed (' + e.name + '). Try again or Skip.', '❌');
-        }
-      }
-    }
-
-    function skip() {
-      unlock();  // unlock() calls markAuthed() — skip also stamps the 30-min window
-    }
-
-    async function resetAndRegister() {
-      localStorage.removeItem(CRED_KEY);
-      await register();
-    }
-
-    async function init() {
-      if (recentlyAuthed()) return;  // authed within last 30 min — skip lock
-      const el = document.getElementById('bio-lock');
-      if (!el) return;
-      el.style.display = 'flex';
-      const credB64 = localStorage.getItem(CRED_KEY);
-      if (!ok()) {
-        // Browser no WebAuthn support — show skip-only UI
-        document.getElementById('bio-auth-btn').style.display = 'none';
-        setUI('Biometric not supported on this browser. Tap Skip to proceed.', '⚠️');
-        return;
-      }
-      if (credB64) {
-        // Credential exists — auto-trigger biometric immediately
-        await tryAuth();
-      } else {
-        // First visit — prompt to register
-        setUI('First time: register your biometric (Face ID / Fingerprint) to secure this dashboard.');
-        document.getElementById('bio-auth-btn').textContent = '🔐 Register & Unlock';
-      }
-    }
-
-    return { init, tryAuth, register, skip, resetAndRegister };
-  })();
-
   function init() {
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', e => switchTab(e.currentTarget.getAttribute('data-tab')));
@@ -3947,11 +3794,8 @@ const DASH = (() => {
     DASH_SCR.initSort();
     tickCountdowns();
     setInterval(tickCountdowns, 1000);
-    (async () => {
-      await BIOMETRIC.init();   // wait for biometric to complete
-      refresh();                  // NOW fetch data (lock hidden, authed)
-      setInterval(refresh, REFRESH_MS);
-    })();
+    refresh();
+    setInterval(refresh, REFRESH_MS);
 
 
     // ── Swipe tabs (mobile) ──────────────────────────────────────────────
@@ -4010,7 +3854,6 @@ const DASH = (() => {
     render();   // rebuild + re-render with new value
   }
 
-  window.BIOMETRIC = BIOMETRIC;   // expose globally so onclick handlers can reach it
   return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP };
 })();
 

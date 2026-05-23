@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "18-May-2026",
+  "as_of": "22-May-2026",
   "fx_inr_usd": 95.68,
   "us": {
     "broker": "Doha Bank Global",
-    "cash": 537.98,
-    "cash_infusion_itd": 15875.07,
-    "account_value_statement": 18117.98,
-    "total_pl_statement": 2242.91,
+    "cash": 2461.96,
+    "cash_infusion_itd": 16875.07,
+    "account_value_statement": 19496.03,
+    "total_pl_statement": 2620.96,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -25,7 +25,7 @@
         "2026-02-28",
         "2026-03-31",
         "2026-04-30",
-        "2026-05-18"
+        "2026-05-22"
       ],
       "cash_balance": [
         0.0,
@@ -34,7 +34,7 @@
         1568.12,
         2016.07,
         268.16,
-        537.98
+        2461.96
       ],
       "account_value": [
         0.0,
@@ -43,7 +43,7 @@
         14248.11,
         13692.49,
         16432.87,
-        18117.98
+        19496.03
       ],
       "monthly_pct_return": [
         0.0,
@@ -52,7 +52,7 @@
         -5.1,
         -6.8,
         20.0,
-        4.3
+        6.5
       ],
       "monthly_bench_return": [
         0.0,
@@ -61,7 +61,7 @@
         -1.0,
         -5.0,
         10.6,
-        2.5
+        3.5
       ],
       "monthly_pl": [
         0.0,
@@ -70,7 +70,7 @@
         -766.0,
         -966.58,
         2740.38,
-        685.11
+        1063.16
       ],
       "monthly_cost": [
         0.0,
@@ -79,7 +79,7 @@
         -51.7,
         -54.91,
         -72.54,
-        -49.38
+        -61.56
       ],
       "port_return_cum_pct": [
         0.0,
@@ -88,7 +88,7 @@
         -0.24,
         -7.02,
         11.57,
-        16.37
+        18.83
       ],
       "snp_return_cum_pct": [
         0.0,
@@ -97,7 +97,7 @@
         0.59,
         -4.44,
         5.69,
-        8.33
+        9.39
       ],
       "cash_deployed": [
         0.0,
@@ -106,7 +106,7 @@
         14464.11,
         14875.07,
         14875.07,
-        15875.07
+        16875.07
       ]
     },
     "open": [
@@ -171,18 +171,6 @@
         "fx_buy": 94.2503
       },
       {
-        "tk": "KEEL",
-        "yf": "KEEL",
-        "name": "KeelInfrastructureCorp",
-        "cls": "Stock",
-        "qty": 200,
-        "avg": 4.02,
-        "fees": -12.0,
-        "income": 0.0,
-        "buy_date": "2026-05-12",
-        "fx_buy": 95.3914
-      },
-      {
         "tk": "MU",
         "yf": "MU",
         "name": "MicronTechnologyInc.",
@@ -225,7 +213,7 @@
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": -35.04,
+        "fees": 0.0,
         "income": 0.0,
         "buy_date": "2026-05-11",
         "fx_buy": 94.4253
@@ -249,7 +237,7 @@
         "cls": "ETF",
         "qty": 9,
         "avg": 187.51,
-        "fees": -22.05,
+        "fees": -22.21,
         "income": 0.0,
         "buy_date": "2026-05-13",
         "fx_buy": 95.633
@@ -296,8 +284,8 @@
         "income": 0.0,
         "costs": 0.0,
         "_costs_paid": -20.0,
-        "realised": 7.34,
-        "ret_pct": -3.27,
+        "realised": 21.94,
+        "ret_pct": -2.73,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -307,8 +295,8 @@
         "income": 4.55,
         "costs": 0.0,
         "_costs_paid": -10.0,
-        "realised": 309.24,
-        "ret_pct": 22.3,
+        "realised": 282.96,
+        "ret_pct": 20.4,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -331,7 +319,7 @@
       },
       {
         "tk": "INOD",
-        "name": "InnodataInc.",
+        "name": "2025to22-May-2026 InnodataInc.",
         "cls": "Stock",
         "income": 0.0,
         "costs": -20.0,
@@ -346,6 +334,15 @@
         "costs": -10.02,
         "realised": -25.29,
         "ret_pct": -3.35
+      },
+      {
+        "tk": "KEEL",
+        "name": "KeelInfrastructureCorp",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": -24.02,
+        "realised": 107.98,
+        "ret_pct": 13.24
       },
       {
         "tk": "META",
@@ -363,8 +360,8 @@
         "income": 0.3,
         "costs": 0.0,
         "_costs_paid": -25.03,
-        "realised": 526.29,
-        "ret_pct": 75.1,
+        "realised": 595.75,
+        "ret_pct": 92.93,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -377,34 +374,14 @@
         "ret_pct": -0.81
       },
       {
-        "tk": "RKLB",
-        "name": "RocketLabCorporation",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "_costs_paid": -35.04,
-        "realised": 458.66,
-        "ret_pct": 123.07,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
-      },
-      {
-        "tk": "TOL",
-        "name": "TollBrothersInc.",
-        "cls": "Stock",
-        "income": 2.04,
-        "costs": -10.02,
-        "realised": 21.53,
-        "ret_pct": 3.85
-      },
-      {
         "tk": "TTE",
         "name": "TotalEnergiesSE",
         "cls": "Stock",
         "income": 8.01,
         "costs": 0.0,
         "_costs_paid": -7.65,
-        "realised": 83.08,
-        "ret_pct": 12.44,
+        "realised": 68.44,
+        "ret_pct": 10.23,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -427,7 +404,7 @@
       },
       {
         "tk": "DAX",
-        "name": "GlobalXDAXGermanyETF",
+        "name": "2025to22-May-2026 GlobalXDAXGermanyETF",
         "cls": "ETF",
         "income": 0.0,
         "costs": -10.02,
@@ -440,9 +417,9 @@
         "cls": "ETF",
         "income": 0.0,
         "costs": 0.0,
-        "_costs_paid": -22.05,
-        "realised": 321.64,
-        "ret_pct": 18.33,
+        "_costs_paid": -22.21,
+        "realised": 375.01,
+        "ret_pct": 22.32,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -452,9 +429,29 @@
         "income": 3.49,
         "costs": 0.0,
         "_costs_paid": -5.0,
-        "realised": 142.41,
-        "ret_pct": 10.72,
+        "realised": 151.05,
+        "ret_pct": 11.38,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+      },
+      {
+        "tk": "RKLB",
+        "name": "RocketLabCorporation",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": 0.0,
+        "_costs_paid": -35.04,
+        "realised": 458.66,
+        "ret_pct": 123.07,
+        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+      },
+      {
+        "tk": "TOL",
+        "name": "TollBrothersInc.",
+        "cls": "Stock",
+        "income": 2.04,
+        "costs": -10.02,
+        "realised": 21.53,
+        "ret_pct": 3.85
       },
       {
         "tk": "GOOG",
@@ -487,16 +484,6 @@
         "_note": "costs counted in open position (same ticker, re-opened)"
       },
       {
-        "tk": "KEEL",
-        "name": "KeelInfrastructureCorp",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 106.0,
-        "ret_pct": 12.99,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
         "tk": "MSFT",
         "name": "MicrosoftCorp.",
         "cls": "Stock",
@@ -520,7 +507,7 @@
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -2.0
+        "amt": -2.16
       },
       {
         "type": "Custody Fee (ongoing)",
@@ -528,11 +515,11 @@
       },
       {
         "type": "Exchange Fee",
-        "amt": -0.25
+        "amt": -0.27
       },
       {
         "type": "Commission",
-        "amt": -349.2
+        "amt": -361.2
       },
       {
         "type": "French FTT",
@@ -676,7 +663,7 @@
         "broker": "Motilal Oswal",
         "exch": "NSE",
         "fm": "BUY",
-        "_note": "purchase price pending \u2014 please update"
+        "_note": "purchase price pending — please update"
       },
       {
         "tk": "ASHALOG",

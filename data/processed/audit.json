@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-23T13:05:27Z",
+  "generated": "2026-05-23T13:12:35Z",
   "status": "ok",
   "alerts": [],
   "healed": [
@@ -9,5 +9,14 @@
   "tickers_ok": 27,
   "tickers_failed": 0,
   "fx_rate": 95.884,
-  "data_age_min": 0.4
+  "data_age_min": 0.5,
+  "crosscheck": {
+    "live_vs_statement_pct": 0.01,
+    "live_total_usd": 19497.52,
+    "statement_total_usd": 19496.03,
+    "pdf_age_days": 1,
+    "fees_xlsx_total": -349.2,
+    "fees_attributed_sum": -371.85,
+    "fees_diff_usd": 22.65
+  }
 }

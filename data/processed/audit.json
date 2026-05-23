@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-23T16:25:26Z",
+  "generated": "2026-05-23T16:29:25Z",
   "status": "alert",
   "alerts": [
     {
@@ -13,7 +13,7 @@
   "tickers_ok": 27,
   "tickers_failed": 0,
   "fx_rate": 95.68,
-  "data_age_min": 0.38,
+  "data_age_min": 0.34,
   "crosscheck": {
     "live_vs_statement_pct": 0.01,
     "live_total_usd": 19497.52,
@@ -41,7 +41,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-23T16:20:13Z",
+        "last_success": "2026-05-23T16:24:09Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {
@@ -58,7 +58,7 @@
       },
       ".github/workflows/screener.yml": "no_success_ever",
       ".github/workflows/ping_trigger.yml": {
-        "last_success": "2026-05-23T16:24:04Z",
+        "last_success": "2026-05-23T16:28:05Z",
         "age_days": 0
       }
     }

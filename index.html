@@ -867,9 +867,15 @@
           <div id="us-upl-wrap" style="height:280px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
         </div>
       </div>
-      <div style="margin-top:16px;">
-        <h3 style="margin-bottom:8px;">Sector Exposure (Market Value)</h3>
-        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <h3 style="margin-bottom:8px;">Stock · ETF · Cash Mix</h3>
+          <div style="height:280px;max-width:320px;position:relative;overflow:hidden;"><canvas id="us-asset-mix-chart"></canvas></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px;">Sector Exposure (Market Value)</h3>
+          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
+        </div>
       </div>
       <!-- Signal dist + Waterfall side by side -->
       <div style="margin-top:16px;display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;">
@@ -2613,6 +2619,49 @@ const DASH = (() => {
         plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
           tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/us.mv*100)})`; } } },
           datalabels:{ display:false } } }
+    });
+
+    // US asset mix: Stock vs ETF vs Cash
+    const _stockMv = usOpen.filter(p => p.cls === 'Stock').reduce((s,p) => s + (p.mv||0), 0);
+    const _etfMv   = usOpen.filter(p => p.cls === 'ETF').reduce((s,p) => s + (p.mv||0), 0);
+    const _cashMv  = us.cash || 0;
+    const _mixTot  = _stockMv + _etfMv + _cashMv;
+    const _mixLabels = ['Stock', 'ETF', 'Cash'];
+    const _mixData   = [Math.round(_stockMv), Math.round(_etfMv), Math.round(_cashMv)];
+    const _mixColors = [_gainC, '#f0b94c', _secC];   // green, amber, dim — distinct
+    mkChart('us-asset-mix-chart', { type:'doughnut',
+      data: {
+        labels: _mixLabels,
+        datasets: [{ data: _mixData, backgroundColor: _mixColors,
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a',
+          borderWidth: 2 }]
+      },
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins: {
+          legend:{ position:'right',
+            labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0',
+                     boxWidth:14, font:{size:12}, padding:8,
+                     generateLabels: chart => {
+                       const ds = chart.data.datasets[0];
+                       return chart.data.labels.map((lbl,i) => {
+                         const v = ds.data[i]||0;
+                         const p = _mixTot ? (v/_mixTot*100).toFixed(1) : '0.0';
+                         return {
+                           text: `${lbl}: ${usd(v)} (${p}%)`,
+                           fillStyle: ds.backgroundColor[i],
+                           strokeStyle: ds.backgroundColor[i],
+                           index: i,
+                         };
+                       });
+                     }
+            } },
+          tooltip:{ callbacks:{ label: ctx => {
+            const v = ctx.dataset.data[ctx.dataIndex];
+            return `${ctx.label}: ${usd(v)} (${pct(v/_mixTot*100)})`;
+          } } },
+          datalabels:{ display:false }
+        }
+      }
     });
 
     // US return % horizontal bar

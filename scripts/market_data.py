@@ -361,7 +361,8 @@ def build_holdings_json() -> dict:
                 "manual":     q.get("_manual", False),  # True = manual_ltp used
             }
             success_count += 1
-            print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({change_pct if change_pct is not None else \"—\":}%)")
+            _pct_str = f"{change_pct:+.2f}" if change_pct is not None else "—"
+            print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({_pct_str}%)")
         except Exception as exc:
             print(f"  ERROR  {tk} ({yf_sym}): unexpected error: {exc}", file=sys.stderr)
 

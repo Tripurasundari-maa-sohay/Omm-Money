@@ -1122,6 +1122,62 @@
       </div>
     </div>
 
+    <div class="tab-section">
+      <div class="txn-table-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <h3 style="margin:0">PER-TRADE LEDGER · 🇺🇸 US <span id="tx-led-period" style="font-size:11px;color:var(--text-dim);font-weight:normal;margin-left:8px;"></span></h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="tx-led-search" placeholder="Ticker / name / ISIN…" oninput="window.renderTxLedger()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;min-width:160px;">
+          <select id="tx-led-side" onchange="window.renderTxLedger()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:6px;border-radius:6px;font-size:12px;">
+            <option value="all">All sides</option>
+            <option value="buy">Buys only</option>
+            <option value="sell">Sells only</option>
+          </select>
+          <select id="tx-led-oc" onchange="window.renderTxLedger()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:6px;border-radius:6px;font-size:12px;">
+            <option value="all">Open + Close</option>
+            <option value="open">To Open</option>
+            <option value="close">To Close</option>
+          </select>
+          <span style="font-size:11px;color:var(--text-dim);">Showing <span id="tx-led-shown">0</span> / <span id="tx-led-all">0</span></span>
+        </div>
+      </div>
+      <div class="txn-summary-strip" style="grid-template-columns:repeat(6,1fr);margin-top:10px;margin-bottom:14px;">
+        <div class="txn-stat-card"><label>TRADES</label><span class="v" id="tx-led-stat-trades">--</span></div>
+        <div class="txn-stat-card"><label>GROSS BUYS</label><span class="v" id="tx-led-stat-buys">--</span></div>
+        <div class="txn-stat-card"><label>GROSS SELLS</label><span class="v" id="tx-led-stat-sells">--</span></div>
+        <div class="txn-stat-card"><label>COMMISSION</label><span class="v" id="tx-led-stat-comm">--</span></div>
+        <div class="txn-stat-card"><label>REALISED P&amp;L</label><span class="v" id="tx-led-stat-rpnl">--</span></div>
+        <div class="txn-stat-card"><label>DIVIDENDS</label><span class="v" id="tx-led-stat-div">--</span></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>DATE</th><th>TICKER</th><th>SIDE</th><th>O/C</th>
+            <th style="text-align:right;">QTY</th>
+            <th style="text-align:right;">PRICE</th>
+            <th style="text-align:right;">GROSS</th>
+            <th style="text-align:right;">COMM</th>
+            <th style="text-align:right;">NET</th>
+            <th style="text-align:right;">REALISED</th>
+            <th>ASSET</th><th>EXCHANGE</th>
+          </tr>
+        </thead>
+        <tbody id="tx-led-body"></tbody>
+      </table>
+    </div>
+
+    <div class="tab-section">
+      <h3>CASH MOVEMENTS · 🇺🇸 US</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>DATE</th><th>TYPE</th><th>EVENT / NAME</th><th>TICKER</th>
+            <th style="text-align:right;">AMOUNT</th>
+          </tr>
+        </thead>
+        <tbody id="tx-cash-body"></tbody>
+      </table>
+    </div>
+
   </div><!-- /transactions-tab -->
 
   <!-- ══════════ TAB 5 · SIGNALS ══════════ -->
@@ -1443,12 +1499,14 @@ const DASH = (() => {
   };
 
   async function load() {
-    const [cost, prices, indices, audit] = await Promise.all([
+    const [cost, prices, indices, audit, txUs] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
       fetchJSON('data/processed/market_indices.json'),
       fetchJSON('data/processed/audit.json'),
+      fetchJSON('data/transactions_us.json'),
     ]);
+    if (txUs)    S.txUs = txUs;
     if (cost)    S.cost = cost;
     if (prices)  {
       S.prices    = prices.prices || {};
@@ -2057,6 +2115,98 @@ const DASH = (() => {
       <td><strong>${usd2(totalCost)}</strong></td>
       <td><strong>${pct(Math.abs(totalCost)/us.cashInfusion*100)}</strong></td>
     </tr>`;
+  }
+
+  /* ── PER-TRADE LEDGER (US) ──────────────────────────────────────── */
+  function renderTxLedger() {
+    const tbody = $('tx-led-body');
+    if (!tbody) return;
+    const data = S.txUs;
+    if (!data || !Array.isArray(data.trades)) {
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-dim);padding:14px;">No US transaction ledger yet — drop a Saxo xlsx into inbox/ and run ./sync.sh</td></tr>';
+      return;
+    }
+    const search  = ($('tx-led-search')?.value || '').trim().toLowerCase();
+    const sideF   = $('tx-led-side')?.value || 'all';
+    const ocF     = $('tx-led-oc')?.value   || 'all';
+
+    const rows = data.trades.filter(t => {
+      if (sideF !== 'all' && t.side !== sideF) return false;
+      if (ocF   !== 'all' && t.open_close !== ocF) return false;
+      if (search) {
+        const hay = ((t.tk||'') + ' ' + (t.name||'') + ' ' + (t.isin||'')).toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    // Period label
+    const _per = $('tx-led-period');
+    if (_per && data.period_from && data.period_to) _per.textContent = `${data.period_from} → ${data.period_to}`;
+
+    // Stat strip — based on full dataset totals
+    const tot = data.totals || {};
+    setText('tx-led-stat-trades', String(tot.trades_count ?? data.trades.length));
+    setText('tx-led-stat-buys',   usd(tot.gross_buys ?? 0));
+    setText('tx-led-stat-sells',  usd(tot.gross_sells ?? 0));
+    setText('tx-led-stat-comm',   usd(tot.commission_total ?? 0));
+    setText('tx-led-stat-rpnl',   usd(tot.realised_pl_total ?? 0));
+    setText('tx-led-stat-div',    usd(tot.dividends ?? 0));
+    setClass('tx-led-stat-comm', 'v ' + pn(tot.commission_total ?? 0));
+    setClass('tx-led-stat-rpnl', 'v ' + pn(tot.realised_pl_total ?? 0));
+
+    // Showing counts
+    setText('tx-led-shown', String(rows.length));
+    setText('tx-led-all',   String(data.trades.length));
+
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-dim);padding:14px;">No trades match current filter.</td></tr>';
+      return;
+    }
+
+    const fmtNum = (n, d=2) => (n === null || n === undefined || isNaN(n)) ? '—' : Number(n).toFixed(d);
+    tbody.innerHTML = rows.map(t => {
+      const sideCol = t.side === 'buy'  ? 'var(--gain)'
+                    : t.side === 'sell' ? 'var(--loss)' : 'var(--text-dim)';
+      const rpnlCell = t.realised_pl !== null && t.realised_pl !== undefined
+        ? `<span style="color:${t.realised_pl >= 0 ? 'var(--gain)' : 'var(--loss)'}">${usd(t.realised_pl)}</span>`
+        : '—';
+      return `<tr>
+        <td>${t.date || '—'}</td>
+        <td><strong>${t.tk || '—'}</strong> <span style="color:var(--text-dim);font-size:10px;">${(t.name||'').slice(0,18)}</span></td>
+        <td><span style="color:${sideCol};font-weight:700;text-transform:uppercase;">${t.side || '—'}</span></td>
+        <td style="color:var(--text-dim);font-size:11px;">${t.open_close || '—'}</td>
+        <td style="text-align:right;">${fmtNum(t.qty, 0)}</td>
+        <td style="text-align:right;">${fmtNum(t.price, 2)}</td>
+        <td style="text-align:right;">${usd(t.gross)}</td>
+        <td style="text-align:right;color:${t.commission < 0 ? 'var(--loss)' : 'var(--text-dim)'};">${usd(t.commission)}</td>
+        <td style="text-align:right;">${usd(t.net)}</td>
+        <td style="text-align:right;">${rpnlCell}</td>
+        <td style="color:var(--text-dim);font-size:11px;">${t.asset_type || '—'}</td>
+        <td style="color:var(--text-dim);font-size:11px;">${(t.exchange||'').slice(0,18)}</td>
+      </tr>`;
+    }).join('');
+  }
+  window.renderTxLedger = renderTxLedger;
+
+  function renderTxCash() {
+    const tbody = $('tx-cash-body');
+    if (!tbody) return;
+    const data = S.txUs;
+    if (!data || !Array.isArray(data.cash_moves) || data.cash_moves.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:14px;">No cash movements yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.cash_moves.map(c => {
+      const col = (c.amount || 0) >= 0 ? 'var(--gain)' : 'var(--loss)';
+      return `<tr>
+        <td>${c.date || '—'}</td>
+        <td>${c.type || '—'}</td>
+        <td>${c.event || c.name || '—'}</td>
+        <td>${c.tk || '—'}</td>
+        <td style="text-align:right;color:${col};">${usd(c.amount)}</td>
+      </tr>`;
+    }).join('');
   }
 
   function repaintTransactions() {
@@ -3147,6 +3297,8 @@ const DASH = (() => {
     safe(renderIndiaCharts,  'india-charts');
     safe(renderTopHoldings,  'top-holdings');
     safe(renderTransactionsTab, 'tx-tab');
+    safe(renderTxLedger,        'tx-ledger');
+    safe(renderTxCash,          'tx-cash');
     safe(renderIndices,      'indices');
     safe(renderCharts,       'charts');
     safe(renderUSInsights,   'us-insights');

@@ -788,9 +788,9 @@
     <div class="portfolio-metrics">
       <h2>USA Portfolio Metrics</h2>
       <div class="metrics-grid">
-        <div class="metric-card"><label>STOCKS VALUE</label><div class="mval loading pv" id="us-stocks-value">…</div><div class="mdesc" id="us-stocks-count">-- positions</div></div>
-        <div class="metric-card"><label>ETF VALUE</label><div class="mval loading pv" id="us-etf-value">…</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
-        <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mdesc">From broker statement</div></div>
+        <div class="metric-card"><label>STOCKS VALUE</label><div class="mval loading pv" id="us-stocks-value">…</div><div class="mchg pv" id="us-stocks-ret">--</div><div class="mdesc" id="us-stocks-count">-- positions</div></div>
+        <div class="metric-card"><label>ETF VALUE</label><div class="mval loading pv" id="us-etf-value">…</div><div class="mchg pv" id="us-etf-ret">--</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
+        <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mchg pv" id="us-cash-share" style="color:var(--text-dim)">--</div><div class="mdesc">From broker statement</div></div>
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
         <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div><div class="mdesc" id="us-account-statement" style="font-size:10px;color:var(--text-dim);margin-top:2px"></div></div>
@@ -1842,6 +1842,29 @@ const DASH = (() => {
     setText('us-stocks-value', usd(us.stocksMV)); setClass('us-stocks-value','mval pv');
     setText('us-etf-value',    usd(us.etfsMV));  setClass('us-etf-value','mval pv');
     setText('us-cash-value',   usd(us.cash || 0)); setClass('us-cash-value','mval pv');
+
+    // Per-class return % chips — same `mchg pv` style as the TOTAL VALUE
+    // chip on the Portfolio Summary, so they render small + colored
+    // (gain green / loss red). Cash gets a neutral "% of US portfolio" chip
+    // since cash itself has no return.
+    const _stockPos = us.open.filter(p => p.cls === 'Stock');
+    const _etfPos   = us.open.filter(p => p.cls === 'ETF');
+    const _stockCost = _stockPos.reduce((s,p) => s + (p.cost || 0), 0);
+    const _etfCost   = _etfPos.reduce((s,p)   => s + (p.cost || 0), 0);
+    const _stockPL   = _stockPos.reduce((s,p) => s + (p.uplNet || 0), 0);
+    const _etfPL     = _etfPos.reduce((s,p)   => s + (p.uplNet || 0), 0);
+    const _stockRet  = _stockCost ? (_stockPL / _stockCost) * 100 : 0;
+    const _etfRet    = _etfCost   ? (_etfPL   / _etfCost)   * 100 : 0;
+    setText('us-stocks-ret', sign(_stockRet) + pct(_stockRet));
+    setClass('us-stocks-ret', 'mchg pv ' + pn(_stockRet));
+    setText('us-etf-ret',    sign(_etfRet)   + pct(_etfRet));
+    setClass('us-etf-ret',   'mchg pv ' + pn(_etfRet));
+    // Cash: share of US total
+    const _cashShare = us.totalValue ? ((us.cash || 0) / us.totalValue) * 100 : 0;
+    setText('us-cash-share', _cashShare.toFixed(1) + '% of US');
+    setClass('us-cash-share', 'mchg pv');
+    const _cashEl = document.getElementById('us-cash-share');
+    if (_cashEl) _cashEl.style.color = 'var(--text-dim)';
     setText('us-unreal-pl',    sign(us.returnPct) + pct(us.returnPct));
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';

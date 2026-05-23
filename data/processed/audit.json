@@ -1,15 +1,13 @@
 {
-  "generated": "2026-05-23T13:17:33Z",
+  "generated": "2026-05-23T13:20:20Z",
   "status": "ok",
   "alerts": [],
-  "healed": [
-    "fx_retried_ok"
-  ],
+  "healed": [],
   "tickers_expected": 27,
   "tickers_ok": 27,
   "tickers_failed": 0,
-  "fx_rate": 95.884,
-  "data_age_min": 1.51,
+  "fx_rate": 95.68,
+  "data_age_min": 0.28,
   "crosscheck": {
     "live_vs_statement_pct": 0.01,
     "live_total_usd": 19497.52,

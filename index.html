@@ -1793,7 +1793,7 @@ const DASH = (() => {
       setText('us-day-pl-pct', sign(us.dayPct) + pct(us.dayPct));
       setClass('us-day-pl-pct', 'mchg pv ' + pn(us.dayPct));
     }
-    setText('us-account-value',usd(us.totalValue));
+    setText('us-account-value', usd(S.costs?.us?.account_value_statement || us.totalValue));
     setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');
     setText('us-etf-count',    us.open.filter(p=>p.cls==='ETF').length + ' positions');
 

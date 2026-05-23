@@ -4000,17 +4000,41 @@ const DASH = (() => {
 
 
     // ── Swipe tabs (mobile) ──────────────────────────────────────────────
-    const TAB_ORDER = ['portfolio','us','india','transactions','signals','screener'];
-    let _swipeX = 0, _swipeY = 0;
+    // Tunables:
+    //   SWIPE_MIN_DX     minimum horizontal travel (px) — bigger = less twitchy
+    //   SWIPE_MAX_DY_RATIO   max |dy|/|dx| ratio — smaller = stricter horizontal
+    //   SWIPE_MAX_MS     max duration (ms) — short = only fast flicks count
+    //                    long, slow drags become scroll/pan, not tab swaps
+    //   SWIPE_EDGE_PX    ignore swipes starting near screen edge (iOS back gesture)
+    // Targets inside any of SWIPE_BLOCK_SELECTOR don't trigger tab swap —
+    // tables (horizontal scrolling), canvases (chart pan), .scroll-x, and
+    // any element explicitly opted out with data-no-swipe.
+    const TAB_ORDER          = ['portfolio','us','india','transactions','signals','screener'];
+    const SWIPE_MIN_DX       = 60;
+    const SWIPE_MAX_DY_RATIO = 0.5;
+    const SWIPE_MAX_MS       = 350;
+    const SWIPE_EDGE_PX      = 24;
+    const SWIPE_BLOCK_SELECTOR = 'table, canvas, .scroll-x, [data-no-swipe]';
+    let _swipeX = 0, _swipeY = 0, _swipeT = 0, _swipeBlocked = false;
     document.addEventListener('touchstart', e => {
       _swipeX = e.touches[0].clientX;
       _swipeY = e.touches[0].clientY;
+      _swipeT = Date.now();
+      const tgt = e.target;
+      _swipeBlocked = !!(tgt && tgt.closest && tgt.closest(SWIPE_BLOCK_SELECTOR));
+      // Edge guard — iOS back-gesture conflict
+      if (_swipeX < SWIPE_EDGE_PX || _swipeX > window.innerWidth - SWIPE_EDGE_PX) {
+        _swipeBlocked = true;
+      }
     }, { passive: true });
     document.addEventListener('touchend', e => {
+      if (_swipeBlocked) return;                                     // inside table / canvas / edge
+      const dt = Date.now() - _swipeT;
+      if (dt > SWIPE_MAX_MS) return;                                 // slow drag → scroll, not swipe
       const dx = e.changedTouches[0].clientX - _swipeX;
       const dy = e.changedTouches[0].clientY - _swipeY;
-      if (Math.abs(dx) < 50) return;                  // too short
-      if (Math.abs(dy) > Math.abs(dx) * 0.8) return;  // mostly vertical
+      if (Math.abs(dx) < SWIPE_MIN_DX) return;                       // too short
+      if (Math.abs(dy) > Math.abs(dx) * SWIPE_MAX_DY_RATIO) return;  // mostly vertical
       const active = document.querySelector('.tab-button.active');
       if (!active) return;
       const cur = TAB_ORDER.indexOf(active.dataset.tab);

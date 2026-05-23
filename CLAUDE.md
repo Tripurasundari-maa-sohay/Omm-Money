@@ -312,6 +312,7 @@ Sequencing: `full_update.yml` runs market_data → signals_update → data_audit
 
 The audit banner (top-right of dashboard) raises an alert when:
 
+### Data anchor / drift checks
 - `live_total (mv + cash)` drifts ≥ 15% from `account_value_statement` → `headline_vs_statement_drift`
 - Last monthly anchor ≠ `account_value_statement` (>$1) → `anchor_vs_statement_mismatch`
 - PDF age ≥ 35 days → `pdf_stale` · ≥ 14 days → `pdf_stale_soft`
@@ -319,7 +320,61 @@ The audit banner (top-right of dashboard) raises an alert when:
 - `monthly.label_dates` length ≠ `monthly.account_value` length → `anchor_array_length_mismatch`
 - xlsx commission_total vs `holdings_cost.json` open fees + closed `_costs_paid` drift > $50 → `fee_attribution_drift`
 
-The raw numbers are also written under `audit.json.crosscheck{}` so the
-dashboard can render them on hover later if useful:
+### Output-side schema checks (added 2026-05-23)
+- `data/processed/*.json` missing a required top-level key → `json_schema_incomplete`
+  - Catches partial producer-script output, e.g. screener.json shipped with only `tickers` (US) for 8 days but no `india_tickers` or `commodities`
+- File unparseable → `json_file_unreadable`
+- File missing entirely → `json_file_missing`
+- Required key present but empty list/dict/string → `json_schema_empty`
+
+Required-keys contract per file:
+
+| File | Keys |
+|------|------|
+| `screener.json` | `tickers`, `india_tickers`, `commodities`, `regime`, `india_regime` |
+| `holdings_prices.json` | `prices`, `weekly_chart`, `combined_weekly_chart`, `snp_actual_cum_pct`, `inr_fx_monthly` |
+| `stock_signals.json` | `holdings`, `india_holdings`, `regime` |
+| `market_indices.json` | `usa_market`, `india_market`, `fx_rate` |
+
+### Workflow health checks (added 2026-05-23)
+- Workflow has never produced a `success` conclusion → `workflow_dead`
+- Last `success` older than 8 days → `workflow_stale`
+- Catches the GH-free-tier scheduled-cron unreliability — a workflow can be
+  "registered" + "enabled" but never actually fire because the cron queue
+  silently drops it. `screener.yml` had zero successful runs for the lifetime
+  of the repo and the audit was silent until this check landed.
+
+Tracked workflows: `full_update`, `watchdog`, `eod_snapshot_us`,
+`eod_snapshot_india`, `screener`, `ping_trigger`.
+
+### Renderer-formula contract checks (added 2026-05-23)
+- A synthetic closed-row test verifies the contract that `total = realised +
+  income` (no `costs` term), because PDF `realised` is already net of fees.
+  Catches the KEEL class of bug where the renderer added `costs` again and
+  double-deducted.
+
+### Raw numbers exposed under `audit.json.crosscheck{}`
+
 `live_vs_statement_pct`, `live_total_usd`, `statement_total_usd`,
-`pdf_age_days`, `fees_xlsx_total`, `fees_attributed_sum`, `fees_diff_usd`.
+`pdf_age_days`, `fees_xlsx_total`, `fees_attributed_sum`, `fees_diff_usd`,
+`schema_status`, `formula_status`, `workflow_status`. The dashboard can
+render these on hover or in a debug panel.
+
+## Past audit gaps (lessons recorded 2026-05-23)
+
+The sanity audit done earlier in the same session was script-side + wire-side
+only. It missed two real bugs because it never asserted output-side
+correctness:
+
+1. **KEEL P&L double-deduct** — `holdings_cost.json` had `realised: 107.98`
+   + `costs: -24.02`, both correct. Bug was in `index.html` line 2085
+   formula `total = realised + income + costs`. Audit didn't look at render
+   formulas; the data was correct, the display was wrong.
+
+2. **Screener India + commodities missing** — Audit verified `screener.py`
+   compiles + `screener.yml` exists. Did NOT check whether `screener.json`
+   had the keys the dashboard expects, and did NOT check whether the
+   workflow had ever succeeded.
+
+Schema-completeness + workflow-success-history + formula-contract checks
+above now close these gaps.

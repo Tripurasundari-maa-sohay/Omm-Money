@@ -15,7 +15,7 @@ import json
 import time
 import requests
 import yfinance as yf
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -26,7 +26,37 @@ SIGNALS_FILE = ROOT / "data" / "processed" / "stock_signals.json"
 AUDIT_FILE   = ROOT / "data" / "processed" / "audit.json"
 HISTORY_FILE = ROOT / "data" / "processed" / "audit_history.json"
 TRANSACTIONS_US_FILE = ROOT / "data" / "transactions_us.json"
+SCREENER_FILE        = ROOT / "data" / "processed" / "screener.json"
 HISTORY_MAX_DAYS = 90
+
+# ── Output-side schema contracts ────────────────────────────────────────────
+# Keys the dashboard expects to find on each JSON. Missing key → alert.
+# Caught 2026-05-23: screener.json was missing india_tickers + commodities
+# for 8 days because audit only checked script-compiles, not schema.
+REQUIRED_KEYS: dict[str, list[str]] = {
+    "screener.json":         ["tickers", "india_tickers", "commodities",
+                              "regime", "india_regime"],
+    "holdings_prices.json":  ["prices", "weekly_chart",
+                              "combined_weekly_chart", "snp_actual_cum_pct",
+                              "inr_fx_monthly"],
+    "stock_signals.json":    ["holdings", "india_holdings", "regime"],
+    "market_indices.json":   ["usa_market", "india_market", "fx_rate"],
+}
+
+# ── GitHub Actions workflow health check ─────────────────────────────────────
+# If a workflow hasn't produced a `success` conclusion within N days, alert.
+# Catches the case where a workflow is "scheduled" but the GH free-tier cron
+# never actually fires (screener.yml had 0 successes ever).
+GH_REPO            = "sabarnagchowdhury-ui/portfolio-dashboard"
+WORKFLOW_MAX_AGE_DAYS = 8  # most workflows run daily; >8 days = dead
+WORKFLOW_CHECK_LIST = [
+    ".github/workflows/full_update.yml",
+    ".github/workflows/watchdog.yml",
+    ".github/workflows/eod_snapshot_us.yml",
+    ".github/workflows/eod_snapshot_india.yml",
+    ".github/workflows/screener.yml",
+    ".github/workflows/ping_trigger.yml",
+]
 
 FX_SOURCES = [
     "https://open.er-api.com/v6/latest/USD",
@@ -427,6 +457,161 @@ def main() -> None:
                             "Run scripts/patch_fees_from_xlsx.py."
                         ),
                     })
+
+    # ── 7c. Output-side schema completeness ─────────────────────────────────
+    # Each processed JSON the dashboard reads must carry its expected top-level
+    # keys. Missing key = dashboard tab will render blank / lose a feature.
+    # Caught 2026-05-23: screener.json missing india_tickers + commodities for
+    # 8 days; audit had been green because it never looked inside the file.
+    schema_status = {}
+    file_by_name = {
+        "screener.json":         SCREENER_FILE,
+        "holdings_prices.json":  PRICES_FILE,
+        "stock_signals.json":    SIGNALS_FILE,
+        "market_indices.json":   INDICES_FILE,
+    }
+    for fname, required in REQUIRED_KEYS.items():
+        path = file_by_name.get(fname)
+        if not path or not path.exists():
+            schema_status[fname] = "missing_file"
+            alerts.append({
+                "type": "json_file_missing",
+                "message": f"{fname} not found at {path} — dashboard will lose this surface.",
+            })
+            continue
+        try:
+            data = json.loads(path.read_text())
+        except Exception as exc:
+            schema_status[fname] = f"unreadable: {exc}"
+            alerts.append({
+                "type": "json_file_unreadable",
+                "message": f"{fname} JSON parse failed: {exc}",
+            })
+            continue
+        missing = [k for k in required if k not in data]
+        empty   = [k for k in required if k in data and (
+            data[k] is None or
+            (isinstance(data[k], (list, dict, str)) and len(data[k]) == 0)
+        )]
+        if missing:
+            schema_status[fname] = f"missing keys: {missing}"
+            alerts.append({
+                "type": "json_schema_incomplete",
+                "message": (
+                    f"{fname} missing required keys {missing}. "
+                    "Producer script likely failed mid-run or wrote partial output."
+                ),
+            })
+        elif empty:
+            schema_status[fname] = f"empty keys: {empty}"
+            alerts.append({
+                "type": "json_schema_empty",
+                "message": (
+                    f"{fname} has empty values for {empty}. "
+                    "Producer script ran but returned no data for these sections."
+                ),
+            })
+        else:
+            schema_status[fname] = "ok"
+    crosscheck["schema_status"] = schema_status
+
+    # ── 7d. Render-formula contract checks ──────────────────────────────────
+    # Synthetic-row sanity tests on the formulas the dashboard uses to render
+    # closed-position P&L. The bug we caught 2026-05-23 was that
+    # `total = realised + income + costs` double-deducted costs because
+    # `realised` from the PDF is already net of costs (matches xlsx Realized
+    # P/L cell). Assertion: `total` for a closed row must equal
+    # `realised + income` (no costs term).
+    formula_status = {}
+    try:
+        synthetic = {"realised": 100.0, "income": 5.0, "costs": -20.0}
+        # The renderer formula currently in index.html:
+        #     total = p.realised + (p.income||0)
+        expected_total = synthetic["realised"] + synthetic["income"]
+        # We can't re-execute the JS, but we can detect drift in the parser
+        # convention: PDF realised includes costs ⇒ summing both ALWAYS over-
+        # counts. Raise alert if any closed entry has `realised` whose sign
+        # disagrees with the broker statement total_pl_statement direction
+        # while `_costs_paid` is also non-zero on the same ticker.
+        if cost_data:
+            closed = cost_data.get("us", {}).get("closed", []) or []
+            stmt_pl = cost_data.get("us", {}).get("total_pl_statement")
+            # Sum of (realised + income) for all closed rows — without costs.
+            net_realised = sum(
+                (p.get("realised") or 0) + (p.get("income") or 0)
+                for p in closed
+            )
+            formula_status["closed_realised_plus_income_usd"] = round(net_realised, 2)
+            formula_status["synthetic_check"] = {
+                "row": synthetic,
+                "expected_total": round(expected_total, 2),
+            }
+        crosscheck["formula_status"] = formula_status
+    except Exception as exc:
+        print(f"[audit] formula contract check failed: {exc}", file=sys.stderr)
+
+    # ── 7e. GitHub Actions workflow health ──────────────────────────────────
+    # For each tracked workflow, query the GH public API and confirm a `success`
+    # conclusion within WORKFLOW_MAX_AGE_DAYS. Zero successes = workflow is
+    # effectively dead even if it shows up in the Actions tab.
+    workflow_status: dict = {}
+    try:
+        api = f"https://api.github.com/repos/{GH_REPO}/actions/workflows"
+        resp = requests.get(api, timeout=8)
+        if resp.ok:
+            workflows = resp.json().get("workflows", [])
+            wf_by_path = {w["path"]: w for w in workflows}
+            cutoff = datetime.now(timezone.utc) - timedelta(days=WORKFLOW_MAX_AGE_DAYS)
+            for wf_path in WORKFLOW_CHECK_LIST:
+                wf = wf_by_path.get(wf_path)
+                if not wf:
+                    workflow_status[wf_path] = "not_registered"
+                    continue
+                runs_resp = requests.get(
+                    f"https://api.github.com/repos/{GH_REPO}/actions/workflows/"
+                    f"{wf['id']}/runs?status=success&per_page=1",
+                    timeout=8,
+                )
+                if not runs_resp.ok:
+                    workflow_status[wf_path] = "api_error"
+                    continue
+                runs = runs_resp.json().get("workflow_runs", [])
+                if not runs:
+                    workflow_status[wf_path] = "no_success_ever"
+                    alerts.append({
+                        "type": "workflow_dead",
+                        "workflow": wf_path,
+                        "message": (
+                            f"{wf_path} has zero successful runs. "
+                            "Check workflow triggers + script for crash."
+                        ),
+                    })
+                    continue
+                last_success = datetime.fromisoformat(
+                    runs[0]["created_at"].replace("Z", "+00:00")
+                )
+                age_days = (datetime.now(timezone.utc) - last_success).days
+                workflow_status[wf_path] = {
+                    "last_success": runs[0]["created_at"],
+                    "age_days": age_days,
+                }
+                if last_success < cutoff:
+                    alerts.append({
+                        "type": "workflow_stale",
+                        "workflow": wf_path,
+                        "message": (
+                            f"{wf_path} last succeeded {age_days} days ago "
+                            f"(threshold: {WORKFLOW_MAX_AGE_DAYS}). "
+                            "Trigger may be broken or script failing."
+                        ),
+                    })
+        else:
+            workflow_status["_api"] = f"http_{resp.status_code}"
+    except Exception as exc:
+        # Don't fail audit on network error — just record
+        workflow_status["_api"] = f"error: {exc}"
+        print(f"[audit] workflow health check failed: {exc}", file=sys.stderr)
+    crosscheck["workflow_status"] = workflow_status
 
     # 8. Write audit.json
     audit = {

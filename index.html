@@ -2082,7 +2082,9 @@ const DASH = (() => {
       ...us.open.map(p => ({ mkt:'🇺🇸', cls:p.cls, tk:p.tk+' · '+p.name, status:'OPEN', market:'US',
         income:p.income||0, costs:p.fees, realised:0, unreal:p.uplNet, total:p.uplNet+(p.income||0), ret:p.ret, ccy:'USD' })),
       ...us.closed.map(p => ({ mkt:'🇺🇸', cls:p.cls, tk:p.tk+' · '+p.name, status:'CLOSED', market:'US',
-        income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised+p.income+p.costs, ret:p.ret_pct, ccy:'USD' }))
+        // PDF realised is already net of costs (matches xlsx Realized P/L
+        // column). Adding p.costs again double-deducts — only add income.
+        income:p.income, costs:p.costs, realised:p.realised, unreal:0, total:p.realised+(p.income||0), ret:p.ret_pct, ccy:'USD' }))
     ];
     const inRows = ind.closed.map(p => ({ mkt:'🇮🇳', cls:p.type||'Stock', tk:p.tk+' · '+(p.scrip||''), status:'CLOSED', market:'INDIA',
       income: p.sell_amt||0, costs: -(p.buy_amt||0), realised: p.rpnl||0, unreal:0, total:p.rpnl||0, ret:0, ccy:'INR' }));

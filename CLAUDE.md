@@ -240,4 +240,86 @@ grep -rln "BIOMETRIC\|biometric\|WebAuthn" index.html sw.js scripts/ .github/
 python3 scripts/parse_broker_pdf.py inbox/Portfolio_*.pdf
 python3 scripts/patch_fees_from_xlsx.py inbox/Transactions_*.xlsx
 python3 scripts/build_transactions_us.py inbox/Transactions_*.xlsx
+
+# Sanity check: which scripts get called by what
+grep -E "python3 \"\\\$SCRIPTS|python scripts/" sync.sh .github/workflows/*.yml
+
+# Verify audit cross-check after a PDF reparse
+python3 -c "import json; print(json.dumps(json.load(open('data/processed/audit.json'))['crosscheck'], indent=2))"
 ```
+
+---
+
+# Session log — 2026-05-23 (Sat) · Part 2 — post-mortem audit
+
+After all the fixes shipped earlier in the day, a full pass was done to
+catch points of failure that survived. Results:
+
+## Dead code purged
+
+| Path | Why gone |
+|------|----------|
+| `wealth.html` | Old React prototype dashboard. Zero references in `index.html`, `sw.js`, `sync.sh`, workflows or docs. |
+| `scripts/parse_transactions.py` | Earlier per-position fee computer. Superseded by `scripts/patch_fees_from_xlsx.py` which uses xlsx Bookings × Trades join. Self-only references. |
+| `scripts/backtest_v1.py` | Original backtester. `scripts/backtest.py` is the v2 (point-in-time index membership, batch yfinance, lower rate-limit failure). |
+
+## Bugs fixed in same session
+
+| Bug | Fix |
+|-----|-----|
+| `requirements.txt` missing pandas, openpyxl, beautifulsoup4, lxml, html5lib. Local fresh-clone install would crash inside India parser / Saxo builders / screener. | Full deps re-listed in `requirements.txt`. GH Actions still inline-installs its own subset per workflow. |
+| `market_data.py` did not persist `fx_rate` into `data/processed/market_indices.json`. `data_audit.py` read None on every run and "healed" from open.er-api.com — every cycle, redundantly. | `market_data.py` now writes `fx_rate = round(live_fx, 4)` into the indices payload when within sanity bounds (70 ≤ rate ≤ 120). Audit heal path becomes a true fallback. |
+| `sync.sh` push-retry loop failed silently when working tree had any unstaged change (e.g. someone editing the README). `git pull --rebase` aborts with "cannot pull with rebase: You have unstaged changes" — all 3 retries kept failing, but sync.sh still printed "✓ Done". | Push loop now auto-stashes with `git stash push -u`, pulls + pushes, then pops the stash. Either pushes cleanly or surfaces a real conflict. |
+
+## Interlock map (verified post-audit)
+
+```
+inbox/*.pdf       ──► parse_broker_pdf.py        ─► data/holdings_cost.json
+inbox/*.xlsx Saxo ──► patch_fees_from_xlsx.py    ─► data/holdings_cost.json (fees)
+                  ──► build_transactions_us.py   ─► data/transactions_us.json
+inbox/*.xlsx Ind. ──► parse_india_excel.py       ─► data/holdings_cost.json (india side; format-stale)
+
+data/holdings_cost.json ──► market_data.py       ─► data/processed/holdings_prices.json
+                                                 ─► data/processed/market_indices.json
+                        ──► signals_update.py    ─► data/processed/stock_signals.json
+                        ──► data_audit.py        ─► data/processed/audit.json + audit_history.json
+                                                    (may heal market_indices.json / holdings_prices.json)
+                        ──► patch_chart.py       ─► data/processed/holdings_prices.json (us_val_usd + combined)
+data/processed/holdings_prices.json ──► signals_update.py (reads for momentum)
+                                    ──► data_audit.py     (reads for staleness/drift)
+data/processed/stock_signals.json   ──► index.html
+
+data/history/{us,india}/*.csv ──► market_data.py (weekly chart sources)
+                              ◄── snapshot_eod.py (writes EOD bars)
+
+index.html fetches → holdings_cost.json, transactions_us.json, processed/{holdings_prices,market_indices,audit,stock_signals,screener}.json
+                     demo_portfolio.json (lazy, for demo mode only)
+```
+
+Sequencing: `full_update.yml` runs market_data → signals_update → data_audit
+→ patch_chart. `sync.sh` runs the same sequence locally after parsers.
+
+## What lives but is rarely called (kept on purpose)
+
+| File | Status |
+|------|--------|
+| `parse.sh` | Manual PDF-only quick path. Wraps venv creation + parse_broker_pdf.py. Useful when you only want to update positions, not the full sync pipeline. |
+| `scripts/snapshot.sh` | Manual `data/holdings_cost.json` snapshot to `data/snapshots/YYYY-MM-DD.json` + git tag. Ad-hoc history capture. |
+| `scripts/inbox_watch.sh` | macOS LaunchAgent helper — fires `sync.sh` when inbox/ changes. Optional auto-sync. |
+| `scripts/backtest.py` | Manual backtest runner. No workflow calls it; user-invoked. |
+
+## Audit cross-checks active in `data_audit.py`
+
+The audit banner (top-right of dashboard) raises an alert when:
+
+- `live_total (mv + cash)` drifts ≥ 15% from `account_value_statement` → `headline_vs_statement_drift`
+- Last monthly anchor ≠ `account_value_statement` (>$1) → `anchor_vs_statement_mismatch`
+- PDF age ≥ 35 days → `pdf_stale` · ≥ 14 days → `pdf_stale_soft`
+- `cash_infusion_itd` < 0 → `cash_infusion_negative`
+- `monthly.label_dates` length ≠ `monthly.account_value` length → `anchor_array_length_mismatch`
+- xlsx commission_total vs `holdings_cost.json` open fees + closed `_costs_paid` drift > $50 → `fee_attribution_drift`
+
+The raw numbers are also written under `audit.json.crosscheck{}` so the
+dashboard can render them on hover later if useful:
+`live_vs_statement_pct`, `live_total_usd`, `statement_total_usd`,
+`pdf_age_days`, `fees_xlsx_total`, `fees_attributed_sum`, `fees_diff_usd`.

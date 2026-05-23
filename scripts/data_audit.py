@@ -25,6 +25,7 @@ INDICES_FILE = ROOT / "data" / "processed" / "market_indices.json"
 SIGNALS_FILE = ROOT / "data" / "processed" / "stock_signals.json"
 AUDIT_FILE   = ROOT / "data" / "processed" / "audit.json"
 HISTORY_FILE = ROOT / "data" / "processed" / "audit_history.json"
+TRANSACTIONS_US_FILE = ROOT / "data" / "transactions_us.json"
 HISTORY_MAX_DAYS = 90
 
 FX_SOURCES = [
@@ -35,6 +36,22 @@ FX_MIN = 70.0
 FX_MAX = 120.0
 STALE_THRESHOLD_MIN = 20.0
 MAX_INDIVIDUAL_HEAL = 3   # only auto-retry if <= this many tickers failed
+
+# ── PDF / xlsx cross-check thresholds ────────────────────────────────────────
+# Tolerated drift between live (mv+cash) and PDF account_value_statement.
+# Prices drift during trading hours, so anything under HEADLINE_DRIFT_PCT_INFO
+# is normal. HEADLINE_DRIFT_PCT_ALERT means something is structurally wrong
+# (e.g. open[] qty out of sync with broker, or fx_rate misapplied).
+HEADLINE_DRIFT_PCT_INFO  = 5.0     # market move since statement date
+HEADLINE_DRIFT_PCT_ALERT = 15.0    # structural mismatch
+# How old the PDF anchor can get before we warn that a new statement is due.
+PDF_STALE_DAYS_WARN = 14
+PDF_STALE_DAYS_ALERT = 35
+# How far our per-ticker fee attribution (open fees + closed _costs_paid) can
+# stray from xlsx total commission before alerting. Some drift is expected
+# because PDF covers Dec 1- vs xlsx covers Dec 15- (~14-day window mismatch
+# observed on the 2026-05-23 reconciliation: $22.65 of pre-window close fees).
+FEE_RECONCILE_TOLERANCE_USD = 50.0
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -291,6 +308,126 @@ def main() -> None:
     final_failed = len(tickers_still_failed)
     final_ok = total_expected - final_failed
 
+    # 7b. ── PDF cross-checks (US side) ──────────────────────────────────────
+    # Compare runtime-computed numbers against the latest broker PDF anchors.
+    # PDF is source of truth for positions, cash, anchors, totals; anything
+    # the dashboard shows that disagrees with the PDF needs surfacing.
+    crosscheck = {}
+    if cost_data:
+        us = cost_data.get("us", {}) or {}
+        stmt_val   = us.get("account_value_statement")
+        stmt_pl    = us.get("total_pl_statement")
+        stmt_cash  = us.get("cash")
+        infusion   = us.get("cash_infusion_itd")
+        monthly    = us.get("monthly", {}) or {}
+        label_dates = monthly.get("label_dates", []) or []
+        anchor_av   = monthly.get("account_value", []) or []
+        as_of       = us.get("as_of") or cost_data.get("as_of")
+        open_pos    = us.get("open", []) or []
+
+        # ── (a) Live mv + cash vs statement account_value_statement ──
+        mv = 0.0
+        priced = 0
+        for h in open_pos:
+            tk  = h.get("tk")
+            qty = h.get("qty") or 0
+            p   = (prices_map.get(tk) or {})
+            ltp = p.get("ltp")
+            if isinstance(ltp, (int, float)) and ltp > 0 and qty:
+                mv += qty * ltp
+                priced += 1
+        live_total = mv + (stmt_cash or 0)
+        if stmt_val and live_total > 0 and priced == len(open_pos):
+            drift_pct = (live_total - stmt_val) / stmt_val * 100
+            crosscheck["live_vs_statement_pct"] = round(drift_pct, 2)
+            crosscheck["live_total_usd"]        = round(live_total, 2)
+            crosscheck["statement_total_usd"]   = round(stmt_val, 2)
+            if abs(drift_pct) >= HEADLINE_DRIFT_PCT_ALERT:
+                alerts.append({
+                    "type":    "headline_vs_statement_drift",
+                    "message": (
+                        f"Live total ${live_total:,.0f} vs statement "
+                        f"${stmt_val:,.0f} drifts {drift_pct:+.1f}% — "
+                        "check open[] qty / fx_rate / cash."
+                    ),
+                })
+
+        # ── (b) Last monthly anchor must equal account_value_statement ──
+        if stmt_val and anchor_av and anchor_av[-1] not in (None, 0):
+            anchor_drift = abs(anchor_av[-1] - stmt_val)
+            if anchor_drift > 1.0:   # >$1 means parser misaligned anchor vs statement
+                alerts.append({
+                    "type":    "anchor_vs_statement_mismatch",
+                    "message": (
+                        f"Last monthly anchor ${anchor_av[-1]:,.2f} does not match "
+                        f"statement account_value ${stmt_val:,.2f} "
+                        f"(diff ${anchor_drift:,.2f}). PDF parser bug or stale anchor."
+                    ),
+                })
+
+        # ── (c) Statement freshness (PDF age) ──
+        if as_of:
+            try:
+                # PDF as_of format: "22-May-2026"
+                as_of_dt = datetime.strptime(as_of, "%d-%b-%Y").replace(tzinfo=timezone.utc)
+                age_days = (datetime.now(timezone.utc) - as_of_dt).days
+                crosscheck["pdf_age_days"] = age_days
+                if age_days >= PDF_STALE_DAYS_ALERT:
+                    alerts.append({
+                        "type": "pdf_stale",
+                        "message": (
+                            f"PDF statement is {age_days} days old. "
+                            "Download the latest statement from broker portal and re-run sync.sh."
+                        ),
+                    })
+                elif age_days >= PDF_STALE_DAYS_WARN:
+                    alerts.append({
+                        "type": "pdf_stale_soft",
+                        "message": f"PDF statement is {age_days} days old. New statement due soon.",
+                    })
+            except Exception:
+                pass
+
+        # ── (d) Cash infusion sanity ──
+        if infusion is not None and infusion < 0:
+            alerts.append({
+                "type": "cash_infusion_negative",
+                "message": f"cash_infusion_itd = ${infusion:,.2f} (negative — parser bug)",
+            })
+
+        # ── (e) Anchor count consistency ──
+        if label_dates and anchor_av and len(label_dates) != len(anchor_av):
+            alerts.append({
+                "type": "anchor_array_length_mismatch",
+                "message": (
+                    f"monthly.label_dates has {len(label_dates)} entries but "
+                    f"monthly.account_value has {len(anchor_av)} — parser bug."
+                ),
+            })
+
+        # ── (f) xlsx reconciliation (only if transactions_us.json present) ──
+        tx_us = load_json(TRANSACTIONS_US_FILE)
+        if tx_us and isinstance(tx_us.get("totals"), dict):
+            xlsx_comm = tx_us["totals"].get("commission_total")
+            if xlsx_comm is not None:
+                open_fees   = sum((p.get("fees") or 0) for p in open_pos)
+                closed_cp   = sum((p.get("_costs_paid") or 0) for p in (us.get("closed", []) or []))
+                attributed  = open_fees + closed_cp
+                fee_diff    = xlsx_comm - attributed
+                crosscheck["fees_xlsx_total"]      = round(xlsx_comm, 2)
+                crosscheck["fees_attributed_sum"]  = round(attributed, 2)
+                crosscheck["fees_diff_usd"]        = round(fee_diff, 2)
+                if abs(fee_diff) > FEE_RECONCILE_TOLERANCE_USD:
+                    alerts.append({
+                        "type": "fee_attribution_drift",
+                        "message": (
+                            f"xlsx commission total ${xlsx_comm:,.2f} vs holdings "
+                            f"open fees + closed _costs_paid ${attributed:,.2f} "
+                            f"(diff ${fee_diff:+,.2f}, > ${FEE_RECONCILE_TOLERANCE_USD} tolerance). "
+                            "Run scripts/patch_fees_from_xlsx.py."
+                        ),
+                    })
+
     # 8. Write audit.json
     audit = {
         "generated": now_iso(),
@@ -302,6 +439,7 @@ def main() -> None:
         "tickers_failed": final_failed,
         "fx_rate": round(float(fx_rate), 4) if fx_rate is not None else None,
         "data_age_min": round(data_age_min, 2),
+        "crosscheck": crosscheck,
     }
     save_json(AUDIT_FILE, audit)
 

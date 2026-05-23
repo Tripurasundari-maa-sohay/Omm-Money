@@ -89,12 +89,35 @@ if [ $PDF_COUNT -eq 0 ] && [ $XL_SAXO_COUNT -eq 0 ] && [ $XL_INDIA_COUNT -eq 0 ]
   exit 0
 fi
 
+# ── Refresh live prices + all derived chart data ───────────────
+# Run the same pipeline GH Actions runs (`full_update.yml`) so the dashboard
+# tile values and chart series catch up to the new PDF *immediately*, not
+# 5-15 min later when cron fires.
+echo ""
+echo "🔄  Refreshing live prices + weekly/combined charts + signals …"
+
+# Activate the local venv if present (sync.sh sister script parse.sh creates it).
+if [ -f "$REPO/.venv/bin/activate" ]; then
+  # shellcheck disable=SC1091
+  source "$REPO/.venv/bin/activate"
+fi
+
+python3 "$SCRIPTS/market_data.py"     || echo "  ⚠ market_data.py failed — keeping last good prices file"
+python3 "$SCRIPTS/signals_update.py"  || echo "  ⚠ signals_update.py failed — signals stale"
+python3 "$SCRIPTS/data_audit.py"      || echo "  ⚠ data_audit.py failed — audit stale"
+python3 "$SCRIPTS/patch_chart.py"     || echo "  ⚠ patch_chart.py failed — chart anchor stale"
+
 # ── Git commit & push ──────────────────────────────────────────
 echo ""
 echo "📦  Committing data updates …"
 cd "$REPO"
 git add data/holdings_cost.json
 [ $XL_SAXO_COUNT -gt 0 ] && git add data/transactions_us.json
+git add data/processed/holdings_prices.json \
+        data/processed/market_indices.json   \
+        data/processed/stock_signals.json    \
+        data/processed/audit.json            \
+        data/processed/audit_history.json 2>/dev/null || true
 git diff --cached --quiet && echo "  (no changes to commit)" && exit 0
 
 MSG="sync: portfolio update $(date '+%Y-%m-%d')"
@@ -110,5 +133,6 @@ for attempt in 1 2 3; do
 done
 
 echo ""
-echo "✅  Done! GitHub Actions will refresh live prices within 15 min."
+echo "✅  Done! Dashboard tiles + charts already match the new statement."
+echo "    GitHub Actions will keep refreshing live prices every 5–15 min."
 echo "    You can safely delete files from inbox/ now."

@@ -125,9 +125,14 @@ MSG="sync: portfolio update $(date '+%Y-%m-%d')"
 [ $XL_SAXO_COUNT -gt 0 ]  && MSG="$MSG · Saxo xlsx($XL_SAXO_COUNT)"
 [ $XL_INDIA_COUNT -gt 0 ] && MSG="$MSG · India xlsx($XL_INDIA_COUNT)"
 git commit -m "$MSG"
+# Push with rebase-on-conflict. The cron-job.org-fired GH Actions may have
+# committed a new data/processed/*.json snapshot between our pull and push.
+# Use `-X theirs` so that during rebase our just-generated (fresher) files
+# win — they include the latest PDF anchor and the cron's snapshot would
+# overwrite it with whatever yfinance returned a few seconds earlier.
 for attempt in 1 2 3; do
   git rebase --abort 2>/dev/null || true
-  git pull --rebase origin main && git push && break
+  git pull --rebase -X theirs origin main && git push && break
   echo "  push attempt $attempt failed — retrying…"
   sleep 3
 done

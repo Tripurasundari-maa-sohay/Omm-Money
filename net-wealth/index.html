@@ -344,10 +344,41 @@ const ODIN = (() => {
       const usdQar = j.rates?.QAR;
       if (usdInr && usdQar) {
         S.fx.usd_to_inr = usdInr;
-        S.fx.qar_to_inr = usdInr / usdQar;   // INR/QAR = (INR/USD) / (QAR/USD)
+        S.fx.qar_to_inr = usdInr / usdQar;
         S.fx.source = 'frankfurter.app';
       }
     } catch (e) { console.warn('FX fetch failed, using seed', e); }
+  }
+
+  // Fetch India 22K selling rate from gjc.org.in via CORS proxy
+  async function loadGJCGoldRate() {
+    const target = encodeURIComponent('https://www.gjc.org.in/');
+    const proxies = [
+      `https://api.allorigins.win/raw?url=${target}`,
+      `https://corsproxy.io/?${target}`
+    ];
+    for (const url of proxies) {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) continue;
+        const html = await r.text();
+        // Extract gold_rate div text
+        const m = html.match(/<div class="gold_rate">([\s\S]*?)<\/table>/);
+        if (!m) continue;
+        // Strip tags, collapse whitespace
+        const text = m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        // Pattern: "... 22-K 18-K 14-K Buying 144100 119300 92800 Selling 148600 123000 96700"
+        const sellMatch = text.match(/Selling\s+(\d+)\s+(\d+)\s+(\d+)\s*$/);
+        if (!sellMatch) continue;
+        const per10g = parseInt(sellMatch[1], 10);     // 22K selling per 10g
+        if (per10g > 50000 && per10g < 500000) {       // sanity
+          S.portfolio.gjc_22k_per_g = per10g / 10;
+          S.portfolio.gjc_source    = url.includes('allorigins') ? 'gjc.org.in (allorigins)' : 'gjc.org.in (corsproxy)';
+          return;
+        }
+      } catch (e) { /* try next proxy */ }
+    }
+    console.warn('GJC gold rate fetch failed, falling back to estimate');
   }
   async function loadPortfolio() {
     try {
@@ -425,12 +456,14 @@ const ODIN = (() => {
     const intlGoldRate = S.portfolio.intl_gold_usd_oz
       ? (S.portfolio.intl_gold_usd_oz * fx.usd_to_inr) / 31.1035
       : indiaGoldRate;
-    // Malabar 22K rate: prefer user-set override (copied from Malabar app), else estimate
-    // 22K ≈ 24K × 0.9167 + India retail premium (~5-8%)
+    // Malabar 22K rate priority:
+    //   1. User manual override (from Malabar app)
+    //   2. Live GJC 22K Selling rate (scraped from gjc.org.in)
+    //   3. Estimate: 24K spot × 0.9167 × 1.05 (purity × India retail premium)
     const malabarManualRate = num('malabar_rate_inr_per_g', 0);
     const malabarRate = malabarManualRate > 0
       ? malabarManualRate
-      : indiaGoldRate * 0.9167 * 1.05;   // estimated 22K retail
+      : (S.portfolio.gjc_22k_per_g || indiaGoldRate * 0.9167 * 1.05);
 
     const jewel_inr        = jewel_g * indiaGoldRate;        // jewellery valued at 24K India spot
     const malabar_inr      = malabar_g * malabarRate;        // Malabar scheme valued at 22K India retail
@@ -548,7 +581,9 @@ const ODIN = (() => {
     document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
 
     document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 24K India ₹${Math.round(v.indiaGoldRate).toLocaleString('en-IN')}/g)`;
-    const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual' : 'est';
+    const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual'
+               : S.portfolio.gjc_22k_per_g          ? 'GJC live'
+               : 'est';
     document.getElementById('malabar-rate').textContent  = `(${v.malabar_g.toFixed(2)}g · 22K ₹${Math.round(v.malabarRate).toLocaleString('en-IN')}/g · ${mSrc})`;
     document.getElementById('a-jewel').textContent       = fmtINR(v.jewel_inr);
     document.getElementById('a-malabar').textContent     = fmtINR(v.malabar_inr);
@@ -860,10 +895,13 @@ const ODIN = (() => {
     loadHistory();
     await loadSeed();
     await loadHistoryFromRepo();          // merge committed history.json with local
-    await Promise.all([loadFX(), loadPortfolio()]);
+    await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
     render();
-    // Refresh portfolio + FX every 5 min
-    setInterval(async () => { await Promise.all([loadFX(), loadPortfolio()]); render(); }, 5 * 60 * 1000);
+    // Refresh portfolio + FX + GJC every 5 min
+    setInterval(async () => {
+      await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
+      render();
+    }, 5 * 60 * 1000);
   }
 
   return { init, saveInputs, snapshot, evalField, exportHistory, importHistory };

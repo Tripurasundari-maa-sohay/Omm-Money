@@ -12,21 +12,32 @@
     "malabar_maturity": "2026-09-30",
     "apartment_market_value": 6500000,
     "land_cruiser_resale_qar": 0,
-    "gratuity_qar": 84000,
-    "qatar_bank_qar": 8000,
-    "india_bank_inr": 0
+    "gratuity_qar": 84000
   },
   "liabilities": {
     "apartment_loan_inr": 3800000,
-    "apartment_loan_tenure_months_remaining": 0,
     "lc_loan_qar": 271000,
-    "lc_loan_tenure_months_remaining": 0,
-    "india_car_loan_inr": 0,
-    "india_car_loan_tenure_months_remaining": 0
+    "india_car_loan_inr": 0
   },
+  "banks_qatar": [
+    { "name": "QNB",          "balance_qar": 8000 },
+    { "name": "Doha Bank",    "balance_qar": 0 },
+    { "name": "QIB",          "balance_qar": 0 }
+  ],
+  "banks_india": [
+    { "name": "HDFC",         "balance_inr": 0 },
+    { "name": "ICICI",        "balance_inr": 0 },
+    { "name": "SBI",          "balance_inr": 0 }
+  ],
+  "loans": [
+    { "id": "apartment",  "label": "Apartment Loan",       "provider": "HDFC Home Loan",       "ccy": "INR", "outstanding": 3800000, "tenure_months_remaining": 0 },
+    { "id": "lc",         "label": "Land Cruiser Loan",    "provider": "QNB Auto Finance",     "ccy": "QAR", "outstanding": 271000,  "tenure_months_remaining": 0 },
+    { "id": "india_car",  "label": "India Car Loan",       "provider": "(future)",             "ccy": "INR", "outstanding": 0,       "tenure_months_remaining": 0 }
+  ],
   "monthly_cash_flow": {
     "salary_qar": 0,
-    "savings_target_inr": 0
+    "savings_target_inr": 0,
+    "monthly_emi_inr": 0
   },
   "fx": {
     "qar_to_inr": 23.5,
@@ -37,10 +48,6 @@
     "top_1_pct_india": 15200000,
     "target_1": 25000000,
     "target_2": 50000000
-  },
-  "bank_labels": {
-    "qatar_bank_name": "QNB",
-    "india_bank_name": "HDFC"
   },
   "gratuity_annual_increment_qar": 10500,
   "gratuity_increment_month": 1

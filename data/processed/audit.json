@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-23T23:57:25Z",
+  "generated": "2026-05-24T00:01:34Z",
   "status": "alert",
   "alerts": [
     {
@@ -18,7 +18,7 @@
     "live_vs_statement_pct": 0.01,
     "live_total_usd": 19497.52,
     "statement_total_usd": 19496.03,
-    "pdf_age_days": 1,
+    "pdf_age_days": 2,
     "fees_xlsx_total": -361.2,
     "fees_attributed_sum": -383.85,
     "fees_diff_usd": 22.65,
@@ -41,7 +41,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-23T23:52:10Z",
+        "last_success": "2026-05-23T23:56:10Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {
@@ -58,7 +58,7 @@
       },
       ".github/workflows/screener.yml": "no_success_ever",
       ".github/workflows/ping_trigger.yml": {
-        "last_success": "2026-05-23T23:56:05Z",
+        "last_success": "2026-05-24T00:00:19Z",
         "age_days": 0
       }
     }

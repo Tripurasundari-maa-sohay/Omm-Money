@@ -167,7 +167,10 @@
 
 <div class="meta-bar">
   <span>FX: <span id="fx-meta">—</span></span>
-  <span id="data-status" class="live">As of <span id="data-asof">—</span></span>
+  <span>
+    <button onclick="ODIN.refreshAll()" style="background:transparent;border:1px solid var(--gold-dim);color:var(--gold-dim);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-right:8px">🔄 Refresh now</button>
+    <span id="data-status" class="live">As of <span id="data-asof">—</span></span>
+  </span>
 </div>
 
 <!-- CURRENCY EXPOSURE -->
@@ -1058,14 +1061,19 @@ const ODIN = (() => {
     await loadHistoryFromRepo();          // merge committed history.json with local
     await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
     render();
-    // Refresh portfolio + FX + GJC every 5 min
-    setInterval(async () => {
-      await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
-      render();
-    }, 5 * 60 * 1000);
+    // Auto-refresh ONCE per day only — saves GH Pages bandwidth + CORS proxy quota.
+    // Manual refresh via 🔄 button or page reload.
+    setInterval(refreshAll, 24 * 60 * 60 * 1000);
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory };
+  async function refreshAll() {
+    flash('🔄 Refreshing…');
+    await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
+    render();
+    flash('✓ Refreshed');
+  }
+
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

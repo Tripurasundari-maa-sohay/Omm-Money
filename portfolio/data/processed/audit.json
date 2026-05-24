@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-24T16:24:20Z",
+  "generated": "2026-05-24T16:29:18Z",
   "status": "alert",
   "alerts": [
     {
@@ -61,7 +61,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-24T16:20:09Z",
+        "last_success": "2026-05-24T16:24:04Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": "no_success_ever",

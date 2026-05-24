@@ -34,7 +34,7 @@ jobs:
 
       - name: Run US snapshot
         run: |
-          python scripts/snapshot_eod.py \
+          python portfolio/scripts/snapshot_eod.py \
             --market us \
             --chunk 100 \
             --sleep 1.0 \
@@ -42,10 +42,10 @@ jobs:
 
       - name: Commit history
         run: |
-          if [[ -n "$(git status --porcelain data/history/us data/history/_meta.json 2>/dev/null)" ]]; then
+          if [[ -n "$(git status --porcelain portfolio/data/history/us portfolio/data/history/_meta.json 2>/dev/null)" ]]; then
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
-            git add data/history/us data/history/_meta.json
+            git add portfolio/data/history/us portfolio/data/history/_meta.json
             git commit -m "snapshot: US EOD $(date -u +%Y-%m-%d)"
             for attempt in 1 2 3; do
               git pull --rebase origin main && git push && break
@@ -59,10 +59,10 @@ jobs:
       - name: Report stats
         if: always()
         run: |
-          if [ -f data/history/_meta.json ]; then
+          if [ -f portfolio/data/history/_meta.json ]; then
             python3 -c "
           import json
-          m = json.load(open('data/history/_meta.json'))
+          m = json.load(open('portfolio/data/history/_meta.json'))
           us = m.get('us', {})
           print('US: universe='+str(us.get('universe',0))+' new='+str(us.get('new_tickers',0))+' updated='+str(us.get('updated',0))+' errors='+str(us.get('errors',0)))
           "

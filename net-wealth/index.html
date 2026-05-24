@@ -91,11 +91,17 @@
   .total-line .val { color: var(--gold); font-weight: 700; }
 
   /* FORM */
-  .form-grid { display: grid; grid-template-columns: 2fr 1fr 80px; gap: 8px; align-items: center; margin-bottom: 8px; }
-  .form-grid label { font-size: 12px; color: var(--text-sec); }
-  .form-grid input { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; color: var(--text); font-size: 13px; text-align: right; }
+  .form-grid { display: grid; grid-template-columns: 1.6fr 1fr 50px; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .form-grid label { font-size: 12px; color: var(--text-sec); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .form-grid input { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; color: var(--text); font-size: 13px; text-align: right; min-width: 0; }
   .form-grid input:focus { border-color: var(--gold); outline: none; }
   .form-grid .ccy { color: var(--text-dim); font-size: 11px; }
+  .form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .form-2col { grid-template-columns: 1fr; gap: 14px; } }
+  .form-col { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+  .form-col-title { margin: 0 0 8px; font-size: 12px; letter-spacing: 1.5px; padding-bottom: 6px; border-bottom: 1px solid var(--border); font-family: 'Cinzel', serif; }
+  .form-section-head { color: var(--gold-dim); font-size: 10px; letter-spacing: 1.5px; margin: 10px 0 4px; opacity: 0.85; }
+  .form-section-head:first-child { margin-top: 0; }
   .save-btn { background: var(--gold); color: #000; border: none; border-radius: 6px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-size: 13px; letter-spacing: 0.5px; margin-top: 8px; width: 100%; }
   .save-btn:hover { background: var(--gold-dim); }
   .snapshot-btn { background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 12px; }
@@ -267,9 +273,22 @@
 <div class="card">
   <h2>✏️ MANUAL INPUTS</h2>
   <p style="font-size:11px;color:var(--text-dim);margin-top:0">
-    Saved to browser localStorage. Update monthly. Quarterly fields starred (★).
+    Saved to browser localStorage. Update monthly. Quarterly fields starred (★). Type expressions like <code>11+11</code> — auto-evaluates on blur.
   </p>
-  <div id="form-host"></div>
+  <div class="form-2col">
+    <div class="form-col">
+      <h3 class="form-col-title" style="color:var(--asset)">▲ ASSETS</h3>
+      <div id="form-assets-host"></div>
+    </div>
+    <div class="form-col">
+      <h3 class="form-col-title" style="color:var(--liab)">▼ LIABILITIES</h3>
+      <div id="form-liab-host"></div>
+    </div>
+  </div>
+  <div class="form-col" style="margin-top:14px">
+    <h3 class="form-col-title">💰 CASH FLOW</h3>
+    <div id="form-flow-host"></div>
+  </div>
   <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
 </div>
 
@@ -890,74 +909,87 @@ const ODIN = (() => {
   }
 
   // ── Form ────────────────────────────────────────────────────────
-  const STATIC_FIELDS = [
+  // bucket: 'asset' | 'liab' | 'flow'
+  const ASSET_FIELDS = [
     { key: 'fo_corpus_cash',           label: 'F&O Corpus (cash)',             ccy: 'INR', section: 'Equities' },
     { key: 'fo_margin_used',           label: 'F&O Margin Used',               ccy: 'INR', section: 'Equities' },
-    { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'gold_jewellery_grams',     label: 'Gold Jewellery Grams',          ccy: 'g',   section: 'Gold' },
-    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate 24K override (₹/g)',  ccy: 'INR', section: 'Gold' },
-    { key: 'malabar_rate_inr_per_g',   label: 'Malabar 22K rate (from app)',   ccy: 'INR', section: 'Gold' },
+    { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
+    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate 24K override',        ccy: 'INR', section: 'Gold' },
+    { key: 'malabar_rate_inr_per_g',   label: 'Malabar 22K rate (override)',   ccy: 'INR', section: 'Gold' },
     { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',    ccy: 'INR', section: 'Real Estate' },
     { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR', section: 'Vehicles' },
-    { key: 'gratuity_qar',             label: 'Gratuity Accumulated',          ccy: 'QAR', section: 'Retirement' },
-    { key: 'salary_qar',               label: 'Monthly Salary',                ccy: 'QAR', section: 'Cash Flow' },
-    { key: 'monthly_emi_inr',          label: 'Total Monthly EMIs',            ccy: 'INR', section: 'Cash Flow' },
-    { key: 'savings_target_inr',       label: 'Monthly Savings Target',        ccy: 'INR', section: 'Cash Flow' }
+    { key: 'gratuity_qar',             label: 'Gratuity Accumulated',          ccy: 'QAR', section: 'Retirement' }
+  ];
+  const FLOW_FIELDS = [
+    { key: 'salary_qar',               label: 'Monthly Salary',                ccy: 'QAR' },
+    { key: 'monthly_emi_inr',          label: 'Total Monthly EMIs',            ccy: 'INR' },
+    { key: 'savings_target_inr',       label: 'Monthly Savings Target',        ccy: 'INR' }
   ];
 
   function renderForm() {
-    const host = document.getElementById('form-host');
-    host.innerHTML = '';
-
-    // Group fields by section + add dynamic bank + loan fields
-    const grouped = {};
     const seedVal = (key) => (S.seed.assets || {})[key]
                           ?? (S.seed.liabilities || {})[key]
                           ?? (S.seed.monthly_cash_flow || {})[key]
                           ?? S.seed[key];
 
-    // Static fields
-    STATIC_FIELDS.forEach(f => {
-      (grouped[f.section] ||= []).push({
+    // ── Build ASSETS grouping
+    const assetGroups = {};
+    ASSET_FIELDS.forEach(f => {
+      (assetGroups[f.section] ||= []).push({
         key: f.key, label: f.label, ccy: f.ccy,
         current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
       });
     });
-
-    // Dynamic banks
+    // Dynamic banks → assets
     (S.seed.banks_qatar || []).forEach((b, i) => {
-      (grouped['Cash · 🇶🇦 Qatar Banks'] ||= []).push({
-        key: 'bank_qa_' + i, label: b.name + ' balance', ccy: 'QAR',
+      (assetGroups['🇶🇦 Qatar Banks'] ||= []).push({
+        key: 'bank_qa_' + i, label: b.name, ccy: 'QAR',
         current: S.inputs['bank_qa_' + i] ?? b.balance_qar ?? ''
       });
     });
     (S.seed.banks_india || []).forEach((b, i) => {
-      (grouped['Cash · 🇮🇳 India Banks'] ||= []).push({
-        key: 'bank_in_' + i, label: b.name + ' balance', ccy: 'INR',
+      (assetGroups['🇮🇳 India Banks'] ||= []).push({
+        key: 'bank_in_' + i, label: b.name, ccy: 'INR',
         current: S.inputs['bank_in_' + i] ?? b.balance_inr ?? ''
       });
     });
 
-    // Dynamic loans
+    // ── Build LIABILITIES grouping (one section per loan)
+    const liabGroups = {};
     (S.seed.loans || []).forEach(ln => {
-      (grouped['Loans · ' + ln.label + ' (' + ln.provider + ')'] ||= []).push(
-        { key: 'loan_' + ln.id,         label: 'Outstanding',     ccy: ln.ccy, current: S.inputs['loan_' + ln.id] ?? ln.outstanding ?? '' },
-        { key: 'loan_tenure_' + ln.id,  label: 'Months remaining', ccy: 'mo', current: S.inputs['loan_tenure_' + ln.id] ?? ln.tenure_months_remaining ?? '' }
-      );
+      liabGroups[`${ln.label} · ${ln.provider}`] = [
+        { key: 'loan_' + ln.id,        label: 'Outstanding',       ccy: ln.ccy, current: S.inputs['loan_' + ln.id]        ?? ln.outstanding              ?? '' },
+        { key: 'loan_tenure_' + ln.id, label: 'Months remaining',  ccy: 'mo',  current: S.inputs['loan_tenure_' + ln.id] ?? ln.tenure_months_remaining ?? '' }
+      ];
     });
 
-    // Render groups
-    for (const [section, fields] of Object.entries(grouped)) {
-      const header = document.createElement('div');
-      header.style.cssText = 'color:var(--gold-dim);font-size:11px;letter-spacing:1.5px;margin:14px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px';
-      header.textContent = section.toUpperCase();
-      host.appendChild(header);
+    renderFormGroups('form-assets-host', assetGroups);
+    renderFormGroups('form-liab-host',   liabGroups);
+    // Cash flow — flat (no subsections)
+    renderFormGroups('form-flow-host',   { '': FLOW_FIELDS.map(f => ({
+      key: f.key, label: f.label, ccy: f.ccy,
+      current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
+    }))});
+  }
+
+  function renderFormGroups(hostId, groups) {
+    const host = document.getElementById(hostId);
+    if (!host) return;
+    host.innerHTML = '';
+    for (const [section, fields] of Object.entries(groups)) {
+      if (section) {
+        const head = document.createElement('div');
+        head.className = 'form-section-head';
+        head.textContent = section.toUpperCase();
+        host.appendChild(head);
+      }
       fields.forEach(f => {
         const row = document.createElement('div');
         row.className = 'form-grid';
         row.innerHTML = `
-          <label>${f.label}</label>
-          <input type="text" inputmode="decimal" data-key="${f.key}" value="${f.current}" placeholder="e.g. 11+11" onblur="ODIN.evalField(this)" />
+          <label title="${f.label}">${f.label}</label>
+          <input type="text" inputmode="decimal" data-key="${f.key}" value="${f.current}" placeholder="11+11" onblur="ODIN.evalField(this)" />
           <span class="ccy">${f.ccy}</span>`;
         host.appendChild(row);
       });
@@ -966,12 +998,12 @@ const ODIN = (() => {
 
   function saveInputs() {
     const inputs = {};
-    document.querySelectorAll('#form-host input').forEach(el => {
+    document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-flow-host input').forEach(el => {
       const k = el.dataset.key;
       const v = safeEval(el.value);
       if (Number.isFinite(v)) {
         inputs[k] = v;
-        el.value = v;   // also show evaluated value in field
+        el.value = v;
       }
     });
     S.inputs = inputs;

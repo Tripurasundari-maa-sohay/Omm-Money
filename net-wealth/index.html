@@ -546,7 +546,7 @@ const ODIN = (() => {
       const out_inr = ln.ccy === 'QAR' ? out * fx.qar_to_inr : out;
       return { ...ln, outstanding: out, tenure_months_remaining: tenure, outstanding_inr: out_inr };
     });
-    const liabTot = loans.reduce((s, ln) => s + ln.outstanding_inr, 0);
+    // (liabTot computed below from exposureLiab buckets — single source of truth)
     // Apartment loan for real-estate equity row
     const aptLoan = (loans.find(ln => ln.id === 'apartment') || {}).outstanding_inr || 0;
     const apt_equity = apt_mkt - aptLoan;

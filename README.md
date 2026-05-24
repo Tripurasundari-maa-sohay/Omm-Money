@@ -8,7 +8,7 @@ GitHub Pages.
 | Path | URL | Status |
 |------|-----|--------|
 | `portfolio/` | `https://<owner>.github.io/Omm-Money/portfolio/` | live |
-| `net-wealth/` | `https://<owner>.github.io/Omm-Money/net-wealth/` | planned |
+| `net-wealth/` | `https://<owner>.github.io/Omm-Money/net-wealth/` | live (ODIN v1) |
 | `retirement/` | `https://<owner>.github.io/Omm-Money/retirement/` | planned |
 | `realestate/` | `https://<owner>.github.io/Omm-Money/realestate/` | planned |
 

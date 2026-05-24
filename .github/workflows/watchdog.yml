@@ -41,7 +41,7 @@ jobs:
           age = 999  # default — overwritten on success; used in output regardless
           stale = True
           try:
-              with open("data/processed/holdings_prices.json") as f:
+              with open("portfolio/data/processed/holdings_prices.json") as f:
                   d = json.load(f)
               generated = d.get("generated", "")
               ts  = datetime.fromisoformat(generated.replace("Z", "+00:00"))
@@ -69,16 +69,16 @@ jobs:
         if: steps.stale_check.outputs.stale == 'true'
         run: |
           echo "Watchdog healing at $(date -u +%Y-%m-%dT%H:%M:%SZ)  (data was ${{ steps.stale_check.outputs.age_min }}m old)"
-          python scripts/market_data.py
+          python portfolio/scripts/market_data.py
 
       - name: Heal — recompute signals
         if: steps.stale_check.outputs.stale == 'true'
-        run: python scripts/signals_update.py || echo "signals failed — prices still updated"
+        run: python portfolio/scripts/signals_update.py || echo "signals failed — prices still updated"
 
       - name: Commit healed data
         if: steps.stale_check.outputs.stale == 'true'
         run: |
-          git add data/processed data/holdings_cost.json
+          git add portfolio/data/processed portfolio/data/holdings_cost.json
           if [[ -n "$(git diff --cached --name-only)" ]]; then
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"

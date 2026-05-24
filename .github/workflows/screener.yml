@@ -29,15 +29,15 @@ jobs:
         run: pip install yfinance pandas requests beautifulsoup4 lxml html5lib
 
       - name: Run screener
-        run: python scripts/screener.py || echo "WARNING: screener.py failed"
+        run: python portfolio/scripts/screener.py || echo "WARNING: screener.py failed"
 
       - name: Commit if changed
         run: |
-          if [[ -n "$(git status --porcelain data/processed/screener.json)" ]]; then
+          if [[ -n "$(git status --porcelain portfolio/data/processed/screener.json)" ]]; then
             git config pull.rebase true
             git config user.name  "github-actions"
             git config user.email "github-actions@github.com"
-            git add data/processed/screener.json
+            git add portfolio/data/processed/screener.json
             git commit -m "screener: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
             for attempt in 1 2 3; do
               git pull --rebase origin main && git push && break

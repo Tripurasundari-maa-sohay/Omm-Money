@@ -1,0 +1,47 @@
+{
+  "owner": "ODIN",
+  "as_of": "2026-05-24",
+  "assets": {
+    "india_stocks": 2734879.52,
+    "us_stocks_usd": 18400,
+    "fo_corpus_cash": 1832907.98,
+    "fo_margin_used": 5692501.35,
+    "gold_jewellery_grams": 500,
+    "malabar_grams": 68.46,
+    "malabar_grams_at_maturity": 107,
+    "malabar_maturity": "2026-09-30",
+    "apartment_market_value": 6500000,
+    "land_cruiser_resale_qar": 0,
+    "gratuity_qar": 84000,
+    "qatar_bank_qar": 8000,
+    "india_bank_inr": 0
+  },
+  "liabilities": {
+    "apartment_loan_inr": 3800000,
+    "apartment_loan_tenure_months_remaining": 0,
+    "lc_loan_qar": 271000,
+    "lc_loan_tenure_months_remaining": 0,
+    "india_car_loan_inr": 0,
+    "india_car_loan_tenure_months_remaining": 0
+  },
+  "monthly_cash_flow": {
+    "salary_qar": 0,
+    "savings_target_inr": 0
+  },
+  "fx": {
+    "qar_to_inr": 23.5,
+    "usd_to_inr": 85.5
+  },
+  "gold_rate_inr_per_gram": 8500,
+  "milestones": {
+    "top_1_pct_india": 15200000,
+    "target_1": 25000000,
+    "target_2": 50000000
+  },
+  "bank_labels": {
+    "qatar_bank_name": "QNB",
+    "india_bank_name": "HDFC"
+  },
+  "gratuity_annual_increment_qar": 10500,
+  "gratuity_increment_month": 1
+}

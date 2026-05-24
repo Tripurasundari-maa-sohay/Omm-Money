@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ODIN · Net Worth</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFD700">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ODIN">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0a0f;
+    --bg-card:   #14141f;
+    --bg-card2: #1d1d2c;
+    --border:    #2a2a3a;
+    --gold:      #FFD700;
+    --gold-dim:  #c9a300;
+    --text:      #f0eada;
+    --text-sec:  #948a73;
+    --text-dim:  #5a5247;
+    --gain:      #4ade80;
+    --loss:      #f87171;
+    --asset:     #4ade80;
+    --liab:      #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+  body { padding: 14px; max-width: 1280px; margin: 0 auto; }
+  h1, h2, h3 { font-family: 'Cinzel', serif; letter-spacing: 1px; }
+  h1 { color: var(--gold); font-size: 28px; margin: 0 0 4px; text-align: center; font-weight: 700; }
+  h2 { color: var(--gold); font-size: 16px; margin: 0 0 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; font-weight: 500; }
+  h3 { font-size: 13px; margin: 0 0 8px; color: var(--text-sec); font-weight: 500; }
+  .subtitle { text-align: center; color: var(--text-sec); font-size: 12px; margin-bottom: 18px; letter-spacing: 2px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 760px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #14141f 0%, #1d1d2c 100%); border: 1.5px solid var(--gold); padding: 22px; text-align: center; box-shadow: 0 0 30px rgba(255,215,0,0.08); }
+  .hero .label { color: var(--text-sec); font-size: 11px; letter-spacing: 3px; }
+  .hero .net-worth { color: var(--gold); font-size: 44px; font-weight: 800; margin: 8px 0; letter-spacing: -1px; }
+  .hero .breakdown { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin-top: 10px; }
+  .hero .breakdown span { font-size: 13px; }
+  .hero .breakdown .asset { color: var(--asset); }
+  .hero .breakdown .liab { color: var(--liab); }
+  .hero .breakdown b { font-weight: 700; }
+  @media (max-width: 760px) { .hero .net-worth { font-size: 32px; } }
+
+  /* PROGRESS BARS */
+  .progress { margin-top: 14px; }
+  .progress .row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--text-sec); }
+  .progress .row b { color: var(--gold); }
+  .bar { height: 8px; background: var(--bg-card2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); border-radius: 4px; transition: width 0.6s ease; }
+  .bar-fill.done { background: linear-gradient(90deg, var(--gain), #16a34a); }
+
+  /* ASSET ROWS */
+  .row-line { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px dotted var(--border); }
+  .row-line:last-child { border-bottom: none; }
+  .row-line .name { color: var(--text); font-size: 13px; }
+  .row-line .val { color: var(--gold); font-weight: 600; font-size: 13px; }
+  .row-line .sub { color: var(--text-dim); font-size: 10px; margin-left: 8px; }
+  .total-line { display: flex; justify-content: space-between; padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--gold-dim); font-size: 14px; }
+  .total-line .name { color: var(--gold); font-weight: 700; }
+  .total-line .val { color: var(--gold); font-weight: 700; }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 2fr 1fr 80px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .form-grid label { font-size: 12px; color: var(--text-sec); }
+  .form-grid input { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; color: var(--text); font-size: 13px; text-align: right; }
+  .form-grid input:focus { border-color: var(--gold); outline: none; }
+  .form-grid .ccy { color: var(--text-dim); font-size: 11px; }
+  .save-btn { background: var(--gold); color: #000; border: none; border-radius: 6px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-size: 13px; letter-spacing: 0.5px; margin-top: 8px; width: 100%; }
+  .save-btn:hover { background: var(--gold-dim); }
+  .snapshot-btn { background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 6px; padding: 8px 14px; cursor: pointer; font-size: 12px; }
+  .snapshot-btn:hover { background: var(--gold); color: #000; }
+
+  /* KPI */
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+  @media (max-width: 760px) { .kpi-strip { grid-template-columns: 1fr 1fr; } }
+  .kpi-tile { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .kpi-tile .lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .kpi-tile .val { font-size: 18px; color: var(--gold); font-weight: 700; margin-top: 4px; }
+  .kpi-tile .delta { font-size: 11px; margin-top: 2px; }
+  .kpi-tile .delta.pos { color: var(--gain); }
+  .kpi-tile .delta.neg { color: var(--loss); }
+
+  /* MILESTONE */
+  .milestone { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card2); margin-bottom: 8px; }
+  .milestone.done { border-color: var(--gain); }
+  .milestone .title { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .milestone .title b { color: var(--gold); }
+  .milestone.done .title b { color: var(--gain); }
+
+  /* CHART */
+  .chart-wrap { height: 240px; position: relative; }
+
+  /* META */
+  .meta-bar { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); padding: 6px 4px; margin-top: 8px; }
+  .meta-bar .live { color: var(--gain); }
+  .meta-bar .stale { color: var(--loss); }
+
+  /* LOADING */
+  .loading::after { content: '…'; color: var(--gold-dim); animation: dots 1s steps(4) infinite; }
+  @keyframes dots { 0%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
+</style>
+</head>
+<body>
+
+<h1>⚔️ ODIN ⚔️</h1>
+<div class="subtitle">NET WORTH SENTINEL</div>
+
+<!-- HERO -->
+<div class="card hero">
+  <div class="label">TOTAL NET WORTH (INR)</div>
+  <div class="net-worth" id="hero-net">₹ <span class="loading"></span></div>
+  <div class="breakdown">
+    <span>Assets: <b class="asset" id="hero-assets">—</b></span>
+    <span>Liabilities: <b class="liab" id="hero-liab">—</b></span>
+  </div>
+  <div class="progress">
+    <div class="row"><span>Top 1% India · ₹1.52 Cr</span><span id="m0-pct">—</span></div>
+    <div class="bar"><div class="bar-fill" id="m0-bar" style="width:0"></div></div>
+  </div>
+  <div class="progress">
+    <div class="row"><span>Target · <b>₹2.5 Cr</b></span><span id="m1-pct">—</span></div>
+    <div class="bar"><div class="bar-fill" id="m1-bar" style="width:0"></div></div>
+  </div>
+  <div class="progress">
+    <div class="row"><span>Target · <b>₹5 Cr</b></span><span id="m2-pct">—</span></div>
+    <div class="bar"><div class="bar-fill" id="m2-bar" style="width:0"></div></div>
+  </div>
+</div>
+
+<div class="meta-bar">
+  <span>FX: <span id="fx-meta">—</span></span>
+  <span id="data-status" class="live">As of <span id="data-asof">—</span></span>
+</div>
+
+<!-- ASSET BREAKDOWN -->
+<div class="grid-2">
+  <div class="card">
+    <h2>📊 EQUITIES</h2>
+    <div class="row-line"><span class="name">India Stocks <span class="sub" id="india-tickers">—</span></span><span class="val" id="a-india-stocks">—</span></div>
+    <div class="row-line"><span class="name">US Stocks <span class="sub" id="us-tickers">—</span></span><span class="val" id="a-us-stocks">—</span></div>
+    <div class="row-line"><span class="name">F&amp;O Corpus (Cash + Margin)</span><span class="val" id="a-fo">—</span></div>
+    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-eq-tot">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>🏆 GOLD</h2>
+    <div class="row-line"><span class="name">Jewellery (500g)</span><span class="val" id="a-jewel">—</span></div>
+    <div class="row-line"><span class="name">Malabar Scheme <span class="sub" id="malabar-grams">—</span></span><span class="val" id="a-malabar">—</span></div>
+    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-gold-tot">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>🏠 REAL ESTATE</h2>
+    <div class="row-line"><span class="name">Apartment Market Value</span><span class="val" id="a-apt-mkt">—</span></div>
+    <div class="row-line"><span class="name">(−) Apartment Loan</span><span class="val" style="color:var(--loss)" id="a-apt-loan">—</span></div>
+    <div class="total-line"><span class="name">Apartment Equity</span><span class="val" id="a-apt-eq">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>🚗 VEHICLES</h2>
+    <div class="row-line"><span class="name">Land Cruiser (resale, QAR)</span><span class="val" id="a-lc">—</span></div>
+    <div class="row-line"><span class="name">(−) LC Loan (QAR)</span><span class="val" style="color:var(--loss)" id="a-lc-loan">—</span></div>
+    <div class="total-line"><span class="name">Vehicle Equity</span><span class="val" id="a-veh-eq">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>💵 CASH</h2>
+    <div class="row-line"><span class="name">Qatar Bank <span class="sub" id="qatar-bank-name">—</span></span><span class="val" id="a-qa-cash">—</span></div>
+    <div class="row-line"><span class="name">India Bank <span class="sub" id="india-bank-name">—</span></span><span class="val" id="a-in-cash">—</span></div>
+    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-cash-tot">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>👴 RETIREMENT</h2>
+    <div class="row-line"><span class="name">Gratuity (QAR)</span><span class="val" id="a-grat">—</span></div>
+    <div class="row-line"><span class="name">Next +QAR 10,500 (Jan)</span><span class="val" id="a-grat-next">—</span></div>
+    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-ret-tot">—</span></div>
+  </div>
+</div>
+
+<!-- LIABILITY TRACKER -->
+<div class="card">
+  <h2>📉 LIABILITY TRACKER</h2>
+  <div class="row-line"><span class="name">Apartment Loan (INR) <span class="sub" id="l-apt-tenure">—</span></span><span class="val" style="color:var(--loss)" id="l-apt">—</span></div>
+  <div class="row-line"><span class="name">Land Cruiser Loan (QAR) <span class="sub" id="l-lc-tenure">—</span></span><span class="val" style="color:var(--loss)" id="l-lc">—</span></div>
+  <div class="row-line"><span class="name">India Car Loan (INR) <span class="sub" id="l-icar-tenure">—</span></span><span class="val" style="color:var(--loss)" id="l-icar">—</span></div>
+  <div class="total-line"><span class="name">Total Liabilities (INR)</span><span class="val" style="color:var(--loss)" id="l-tot">—</span></div>
+</div>
+
+<!-- KPI -->
+<div class="card">
+  <h2>⭐ KPI · NET WORTH TRACKING</h2>
+  <div class="kpi-strip">
+    <div class="kpi-tile"><div class="lbl">CURRENT NET WORTH</div><div class="val" id="kpi-now">—</div></div>
+    <div class="kpi-tile"><div class="lbl">LAST MONTH</div><div class="val" id="kpi-last">—</div><div class="delta" id="kpi-mom">—</div></div>
+    <div class="kpi-tile"><div class="lbl">CONSERVATIVE EST</div><div class="val" id="kpi-est">—</div><div class="delta" id="kpi-vs-est">—</div></div>
+    <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
+  </div>
+  <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
+  <button class="snapshot-btn" onclick="ODIN.snapshot()" style="margin-top:10px">📸 Snapshot Now (save to history)</button>
+</div>
+
+<!-- MONTHLY CASH FLOW -->
+<div class="card">
+  <h2>💰 MONTHLY CASH FLOW</h2>
+  <div class="kpi-strip">
+    <div class="kpi-tile"><div class="lbl">SALARY (INR)</div><div class="val" id="cf-salary">—</div></div>
+    <div class="kpi-tile"><div class="lbl">TOTAL EMIs (INR)</div><div class="val" id="cf-emi">—</div></div>
+    <div class="kpi-tile"><div class="lbl">SAVINGS TARGET</div><div class="val" id="cf-target">—</div></div>
+    <div class="kpi-tile"><div class="lbl">SAVINGS RATE</div><div class="val" id="cf-rate">—</div></div>
+  </div>
+</div>
+
+<!-- MANUAL INPUTS -->
+<div class="card">
+  <h2>✏️ MANUAL INPUTS</h2>
+  <p style="font-size:11px;color:var(--text-dim);margin-top:0">
+    Saved to browser localStorage. Update monthly. Quarterly fields starred (★).
+  </p>
+  <div id="form-host"></div>
+  <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+</div>
+
+<!-- MILESTONES -->
+<div class="card">
+  <h2>🎯 MILESTONE TRACKER</h2>
+  <div id="milestone-host"></div>
+</div>
+
+<div class="meta-bar">
+  <span>ODIN v1 · Net Worth Sentinel</span>
+  <span><a href="../portfolio/" style="color:var(--gold-dim);text-decoration:none">→ Portfolio</a></span>
+</div>
+
+<script>
+const ODIN = (() => {
+  const S = {
+    seed: null,
+    fx: { qar_to_inr: 23.5, usd_to_inr: 85.5, source: 'seed' },
+    portfolio: { india_stocks_inr: 0, us_stocks_usd: 0, india_tickers: 0, us_tickers: 0, prices_asof: null },
+    inputs: {},          // manual overrides from localStorage
+    history: [],         // [{date, net_worth, assets, liab}]
+    charts: {}
+  };
+  const LS_INPUTS = 'odin_manual_inputs_v1';
+  const LS_HISTORY = 'odin_history_v1';
+
+  // ── Formatting ──────────────────────────────────────────────────
+  const fmtINR = v => {
+    if (!Number.isFinite(v)) return '—';
+    const abs = Math.abs(v);
+    if (abs >= 1e7) return '₹' + (v/1e7).toFixed(2) + ' Cr';
+    if (abs >= 1e5) return '₹' + (v/1e5).toFixed(2) + ' L';
+    return '₹' + Math.round(v).toLocaleString('en-IN');
+  };
+  const fmtINRfull = v => Number.isFinite(v) ? '₹' + Math.round(v).toLocaleString('en-IN') : '—';
+  const fmtQAR = v => Number.isFinite(v) ? 'QAR ' + Math.round(v).toLocaleString('en-US') : '—';
+  const fmtUSD = v => Number.isFinite(v) ? '$' + Math.round(v).toLocaleString('en-US') : '—';
+  const pct = (a, b) => b > 0 ? (a/b * 100) : 0;
+
+  // ── Load ────────────────────────────────────────────────────────
+  async function loadSeed() {
+    try { const r = await fetch('data/seed.json?_=' + Date.now()); S.seed = await r.json(); }
+    catch (e) { console.error('seed load failed', e); S.seed = {}; }
+  }
+  function loadInputs() {
+    try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); }
+    catch { S.inputs = {}; }
+  }
+  function loadHistory() {
+    try { S.history = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]'); }
+    catch { S.history = []; }
+  }
+  async function loadFX() {
+    // Frankfurter is free + no key required; falls back to seed values on fail
+    try {
+      const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR,QAR');
+      const j = await r.json();
+      const usdInr = j.rates?.INR;
+      const usdQar = j.rates?.QAR;
+      if (usdInr && usdQar) {
+        S.fx.usd_to_inr = usdInr;
+        S.fx.qar_to_inr = usdInr / usdQar;   // INR/QAR = (INR/USD) / (QAR/USD)
+        S.fx.source = 'frankfurter.app';
+      }
+    } catch (e) { console.warn('FX fetch failed, using seed', e); }
+  }
+  async function loadPortfolio() {
+    try {
+      const [costR, pricesR] = await Promise.all([
+        fetch('../portfolio/data/holdings_cost.json?_=' + Date.now()),
+        fetch('../portfolio/data/processed/holdings_prices.json?_=' + Date.now())
+      ]);
+      const cost   = await costR.json();
+      const prices = await pricesR.json();
+      const p = prices.prices || {};
+      S.portfolio.prices_asof = prices.generated || null;
+
+      // INDIA — qty * live INR ltp
+      let indiaSum = 0, indiaCount = 0;
+      for (const h of (cost.india?.open || [])) {
+        const px = p[h.tk]?.ltp ?? h.avg ?? 0;
+        indiaSum += (h.qty || 0) * px;
+        indiaCount++;
+      }
+      S.portfolio.india_stocks_inr = indiaSum;
+      S.portfolio.india_tickers    = indiaCount;
+
+      // US — qty * live USD ltp
+      let usSum = 0, usCount = 0;
+      for (const h of (cost.us?.open || [])) {
+        const px = p[h.tk]?.ltp ?? h.avg ?? 0;
+        usSum += (h.qty || 0) * px;
+        usCount++;
+      }
+      S.portfolio.us_stocks_usd = usSum;
+      S.portfolio.us_tickers    = usCount;
+    } catch (e) {
+      console.warn('portfolio fetch failed, falling back to seed', e);
+      S.portfolio.india_stocks_inr = S.seed.assets?.india_stocks || 0;
+      S.portfolio.us_stocks_usd    = S.seed.assets?.us_stocks_usd || 0;
+    }
+  }
+
+  // ── Compute ─────────────────────────────────────────────────────
+  function view() {
+    const a = S.seed.assets || {};
+    const l = S.seed.liabilities || {};
+    const fx = S.fx;
+    const goldRate = num('gold_rate_inr_per_gram', S.seed.gold_rate_inr_per_gram || 8500);
+
+    // ASSETS
+    const india_stocks_inr = S.portfolio.india_stocks_inr || a.india_stocks || 0;
+    const us_stocks_usd    = S.portfolio.us_stocks_usd    || a.us_stocks_usd || 0;
+    const us_stocks_inr    = us_stocks_usd * fx.usd_to_inr;
+    const fo_inr           = num('fo_corpus_cash', a.fo_corpus_cash || 0) + num('fo_margin_used', a.fo_margin_used || 0);
+    const jewel_g          = num('gold_jewellery_grams', a.gold_jewellery_grams || 500);
+    const malabar_g        = num('malabar_grams', a.malabar_grams || 0);
+    const jewel_inr        = jewel_g * goldRate;
+    const malabar_inr      = malabar_g * goldRate;
+    const apt_mkt          = num('apartment_market_value', a.apartment_market_value || 0);
+    const apt_loan         = num('apartment_loan_inr', l.apartment_loan_inr || 0);
+    const apt_equity       = apt_mkt - apt_loan;
+    const lc_qar           = num('land_cruiser_resale_qar', a.land_cruiser_resale_qar || 0);
+    const lc_loan_qar      = num('lc_loan_qar', l.lc_loan_qar || 0);
+    const lc_qar_inr       = lc_qar * fx.qar_to_inr;
+    const lc_loan_qar_inr  = lc_loan_qar * fx.qar_to_inr;
+    const veh_equity_inr   = lc_qar_inr - lc_loan_qar_inr;
+    const qa_cash_qar      = num('qatar_bank_qar', a.qatar_bank_qar || 0);
+    const in_cash_inr      = num('india_bank_inr', a.india_bank_inr || 0);
+    const qa_cash_inr      = qa_cash_qar * fx.qar_to_inr;
+    const cash_tot_inr     = qa_cash_inr + in_cash_inr;
+    const grat_qar         = num('gratuity_qar', a.gratuity_qar || 0);
+    const grat_inr         = grat_qar * fx.qar_to_inr;
+    const icar_loan        = num('india_car_loan_inr', l.india_car_loan_inr || 0);
+
+    // TOTALS
+    const assetsTot = india_stocks_inr + us_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + lc_qar_inr + cash_tot_inr + grat_inr;
+    const liabTot   = apt_loan + lc_loan_qar_inr + icar_loan;
+    const netWorth  = assetsTot - liabTot;
+
+    return {
+      india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
+      jewel_g, jewel_inr, malabar_g, malabar_inr,
+      apt_mkt, apt_loan, apt_equity,
+      lc_qar, lc_loan_qar, lc_qar_inr, lc_loan_qar_inr, veh_equity_inr,
+      qa_cash_qar, qa_cash_inr, in_cash_inr, cash_tot_inr,
+      grat_qar, grat_inr,
+      icar_loan,
+      assetsTot, liabTot, netWorth, goldRate
+    };
+  }
+
+  function num(key, fallback) {
+    const v = parseFloat(S.inputs[key]);
+    return Number.isFinite(v) ? v : (Number.isFinite(fallback) ? fallback : 0);
+  }
+
+  // ── Render ──────────────────────────────────────────────────────
+  function render() {
+    const v = view();
+
+    // FX meta
+    document.getElementById('fx-meta').textContent =
+      `USD/INR ${S.fx.usd_to_inr.toFixed(2)} · QAR/INR ${S.fx.qar_to_inr.toFixed(2)} (${S.fx.source})`;
+    document.getElementById('data-asof').textContent = S.portfolio.prices_asof
+      ? new Date(S.portfolio.prices_asof).toLocaleString()
+      : new Date().toLocaleString();
+
+    // Hero
+    document.getElementById('hero-net').textContent = fmtINR(v.netWorth);
+    document.getElementById('hero-assets').textContent = fmtINR(v.assetsTot);
+    document.getElementById('hero-liab').textContent = fmtINR(v.liabTot);
+
+    // Milestones progress
+    const m = S.seed.milestones || {};
+    setProgress('m0', v.netWorth, m.top_1_pct_india || 15200000);
+    setProgress('m1', v.netWorth, m.target_1 || 25000000);
+    setProgress('m2', v.netWorth, m.target_2 || 50000000);
+
+    // ── Asset breakdown
+    const it = S.portfolio.india_tickers, ut = S.portfolio.us_tickers;
+    document.getElementById('india-tickers').textContent = it ? `(${it} pos)` : '';
+    document.getElementById('us-tickers').textContent    = ut ? `(${ut} pos · $${Math.round(v.us_stocks_usd).toLocaleString()})` : '';
+    document.getElementById('a-india-stocks').textContent = fmtINR(v.india_stocks_inr);
+    document.getElementById('a-us-stocks').textContent    = fmtINR(v.us_stocks_inr);
+    document.getElementById('a-fo').textContent           = fmtINR(v.fo_inr);
+    document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
+
+    document.getElementById('malabar-grams').textContent = `(${v.malabar_g.toFixed(2)}g)`;
+    document.getElementById('a-jewel').textContent       = fmtINR(v.jewel_inr);
+    document.getElementById('a-malabar').textContent     = fmtINR(v.malabar_inr);
+    document.getElementById('a-gold-tot').textContent    = fmtINR(v.jewel_inr + v.malabar_inr);
+
+    document.getElementById('a-apt-mkt').textContent  = fmtINR(v.apt_mkt);
+    document.getElementById('a-apt-loan').textContent = '(' + fmtINR(v.apt_loan) + ')';
+    document.getElementById('a-apt-eq').textContent   = fmtINR(v.apt_equity);
+
+    document.getElementById('a-lc').textContent       = v.lc_qar ? fmtQAR(v.lc_qar) + ' · ' + fmtINR(v.lc_qar_inr) : fmtINR(0);
+    document.getElementById('a-lc-loan').textContent  = '(' + fmtQAR(v.lc_loan_qar) + ' · ' + fmtINR(v.lc_loan_qar_inr) + ')';
+    document.getElementById('a-veh-eq').textContent   = fmtINR(v.veh_equity_inr);
+
+    const bl = S.seed.bank_labels || {};
+    document.getElementById('qatar-bank-name').textContent = bl.qatar_bank_name ? `(${bl.qatar_bank_name})` : '';
+    document.getElementById('india-bank-name').textContent = bl.india_bank_name ? `(${bl.india_bank_name})` : '';
+    document.getElementById('a-qa-cash').textContent  = fmtQAR(v.qa_cash_qar) + ' · ' + fmtINR(v.qa_cash_inr);
+    document.getElementById('a-in-cash').textContent  = fmtINR(v.in_cash_inr);
+    document.getElementById('a-cash-tot').textContent = fmtINR(v.cash_tot_inr);
+
+    document.getElementById('a-grat').textContent     = fmtQAR(v.grat_qar) + ' · ' + fmtINR(v.grat_inr);
+    document.getElementById('a-grat-next').textContent = '+' + fmtQAR(S.seed.gratuity_annual_increment_qar || 10500);
+    document.getElementById('a-ret-tot').textContent  = fmtINR(v.grat_inr);
+
+    // Liabilities
+    document.getElementById('l-apt').textContent  = fmtINR(v.apt_loan);
+    document.getElementById('l-lc').textContent   = fmtQAR(v.lc_loan_qar) + ' · ' + fmtINR(v.lc_loan_qar_inr);
+    document.getElementById('l-icar').textContent = fmtINR(v.icar_loan);
+    document.getElementById('l-tot').textContent  = fmtINR(v.liabTot);
+
+    // Cash flow
+    const cf = S.seed.monthly_cash_flow || {};
+    const salaryQAR = num('salary_qar', cf.salary_qar || 0);
+    const salaryINR = salaryQAR * S.fx.qar_to_inr;
+    const emiINR    = monthlyEMI();
+    const savTarget = num('savings_target_inr', cf.savings_target_inr || 0);
+    const savRate   = salaryINR > 0 ? ((salaryINR - emiINR) / salaryINR * 100) : 0;
+    document.getElementById('cf-salary').textContent = fmtINR(salaryINR);
+    document.getElementById('cf-emi').textContent    = fmtINR(emiINR);
+    document.getElementById('cf-target').textContent = fmtINR(savTarget);
+    document.getElementById('cf-rate').textContent   = savRate.toFixed(1) + '%';
+
+    // KPI
+    renderKPI(v.netWorth);
+
+    // Manual inputs form
+    renderForm();
+
+    // Milestones list
+    renderMilestones(v.netWorth);
+  }
+
+  function setProgress(prefix, current, target) {
+    const p = Math.min(100, (current / target) * 100);
+    document.getElementById(prefix + '-pct').textContent = p.toFixed(1) + '%';
+    const bar = document.getElementById(prefix + '-bar');
+    bar.style.width = p + '%';
+    if (p >= 100) bar.classList.add('done'); else bar.classList.remove('done');
+  }
+
+  // monthly EMI estimate — uses manual override only (no amortization computed)
+  function monthlyEMI() {
+    return num('monthly_emi_inr', 0);
+  }
+
+  // ── KPI ─────────────────────────────────────────────────────────
+  function renderKPI(currentNW) {
+    document.getElementById('kpi-now').textContent = fmtINR(currentNW);
+    const hist = S.history.slice();   // sorted ascending by date
+    const last = hist[hist.length - 1];
+    const last30 = lastMonthSnapshot(hist);
+    document.getElementById('kpi-last').textContent = last30 ? fmtINR(last30.net_worth) : '—';
+    if (last30) {
+      const d = currentNW - last30.net_worth;
+      const dPct = last30.net_worth ? (d / last30.net_worth * 100) : 0;
+      const el = document.getElementById('kpi-mom');
+      el.textContent = (d >= 0 ? '+' : '') + fmtINR(d) + ' (' + dPct.toFixed(2) + '%)';
+      el.className = 'delta ' + (d >= 0 ? 'pos' : 'neg');
+    } else {
+      document.getElementById('kpi-mom').textContent = 'no prior snapshot';
+    }
+    // Conservative estimate: last snapshot + 1.5%/month growth
+    const est = last30 ? last30.net_worth * 1.015 : currentNW;
+    document.getElementById('kpi-est').textContent = fmtINR(est);
+    const vsEst = currentNW - est;
+    const vsEstEl = document.getElementById('kpi-vs-est');
+    vsEstEl.textContent = (vsEst >= 0 ? '+' : '') + fmtINR(vsEst) + ' vs est';
+    vsEstEl.className = 'delta ' + (vsEst >= 0 ? 'pos' : 'neg');
+
+    const last12 = hist.slice(-12);
+    const hi12 = last12.length ? Math.max(...last12.map(h => h.net_worth), currentNW) : currentNW;
+    document.getElementById('kpi-12hi').textContent = fmtINR(hi12);
+
+    drawKPIChart(currentNW);
+  }
+
+  function lastMonthSnapshot(hist) {
+    if (!hist.length) return null;
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 3600 * 1000;
+    // find latest snapshot at least 28 days old
+    for (let i = hist.length - 1; i >= 0; i--) {
+      if (new Date(hist[i].date).getTime() <= thirtyDaysAgo) return hist[i];
+    }
+    return hist[0];
+  }
+
+  function drawKPIChart(currentNW) {
+    const ctx = document.getElementById('kpi-chart');
+    if (!ctx) return;
+    if (S.charts.kpi) S.charts.kpi.destroy();
+    const data = S.history.slice().concat([{ date: new Date().toISOString(), net_worth: currentNW }]);
+    const labels = data.map(d => new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+    const values = data.map(d => d.net_worth / 1e7);   // crores
+    S.charts.kpi = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Net Worth (₹ Cr)',
+          data: values,
+          borderColor: '#FFD700',
+          backgroundColor: 'rgba(255,215,0,0.12)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: '#FFD700'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#948a73' } } },
+        scales: {
+          x: { ticks: { color: '#5a5247', font: { size: 10 } }, grid: { color: '#2a2a3a' } },
+          y: { ticks: { color: '#948a73', callback: v => '₹' + v + ' Cr' }, grid: { color: '#2a2a3a' } }
+        }
+      }
+    });
+  }
+
+  function snapshot() {
+    const v = view();
+    const entry = {
+      date: new Date().toISOString(),
+      net_worth: v.netWorth,
+      assets: v.assetsTot,
+      liab: v.liabTot,
+      india_stocks_inr: v.india_stocks_inr,
+      us_stocks_inr: v.us_stocks_inr
+    };
+    // Replace today's snapshot if exists
+    const today = entry.date.slice(0, 10);
+    S.history = S.history.filter(h => h.date.slice(0, 10) !== today);
+    S.history.push(entry);
+    S.history.sort((a, b) => a.date.localeCompare(b.date));
+    localStorage.setItem(LS_HISTORY, JSON.stringify(S.history));
+    render();
+    flash('📸 Snapshot saved');
+  }
+
+  // ── Form ────────────────────────────────────────────────────────
+  const FIELDS = [
+    { key: 'qatar_bank_qar',           label: 'Qatar Bank Balance',           ccy: 'QAR' },
+    { key: 'india_bank_inr',           label: 'India Bank Balance',           ccy: 'INR' },
+    { key: 'apartment_loan_inr',       label: 'Apartment Loan Outstanding',   ccy: 'INR' },
+    { key: 'lc_loan_qar',              label: 'Land Cruiser Loan Outstanding', ccy: 'QAR' },
+    { key: 'fo_corpus_cash',           label: 'F&O Corpus (cash)',            ccy: 'INR' },
+    { key: 'fo_margin_used',           label: 'F&O Margin Used',              ccy: 'INR' },
+    { key: 'india_car_loan_inr',       label: 'India Car Loan (future)',      ccy: 'INR' },
+    { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR' },
+    { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',   ccy: 'INR' },
+    { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g' },
+    { key: 'gratuity_qar',             label: 'Gratuity Accumulated',         ccy: 'QAR' },
+    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate (₹/g)',              ccy: 'INR' },
+    { key: 'salary_qar',               label: 'Monthly Salary',               ccy: 'QAR' },
+    { key: 'monthly_emi_inr',          label: 'Total Monthly EMIs',           ccy: 'INR' },
+    { key: 'savings_target_inr',       label: 'Monthly Savings Target',       ccy: 'INR' }
+  ];
+
+  function renderForm() {
+    const host = document.getElementById('form-host');
+    host.innerHTML = '';
+    for (const f of FIELDS) {
+      const seedVal = (S.seed.assets || {})[f.key] ?? (S.seed.liabilities || {})[f.key] ?? (S.seed.monthly_cash_flow || {})[f.key] ?? S.seed[f.key];
+      const cur = S.inputs[f.key] ?? seedVal ?? '';
+      const row = document.createElement('div');
+      row.className = 'form-grid';
+      row.innerHTML = `
+        <label>${f.label}</label>
+        <input type="number" step="any" data-key="${f.key}" value="${cur}" />
+        <span class="ccy">${f.ccy}</span>
+      `;
+      host.appendChild(row);
+    }
+  }
+
+  function saveInputs() {
+    const inputs = {};
+    document.querySelectorAll('#form-host input').forEach(el => {
+      const k = el.dataset.key;
+      const v = parseFloat(el.value);
+      if (Number.isFinite(v)) inputs[k] = v;
+    });
+    S.inputs = inputs;
+    localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
+    render();
+    flash('💾 Saved');
+  }
+
+  // ── Milestones list ─────────────────────────────────────────────
+  function renderMilestones(nw) {
+    const host = document.getElementById('milestone-host');
+    host.innerHTML = '';
+    const m = S.seed.milestones || {};
+    const items = [
+      { label: 'Top 1% India',    target: m.top_1_pct_india || 15200000 },
+      { label: 'Target ₹2.5 Cr',  target: m.target_1 || 25000000 },
+      { label: 'Target ₹5 Cr',    target: m.target_2 || 50000000 }
+    ];
+    items.forEach(it => {
+      const p = (nw / it.target) * 100;
+      const done = p >= 100;
+      const div = document.createElement('div');
+      div.className = 'milestone' + (done ? ' done' : '');
+      div.innerHTML = `
+        <div class="title">
+          <span>${done ? '✅' : '🎯'} ${it.label} <b>(${fmtINR(it.target)})</b></span>
+          <span>${p.toFixed(1)}%</span>
+        </div>
+        <div class="bar"><div class="bar-fill ${done ? 'done' : ''}" style="width:${Math.min(100, p)}%"></div></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">
+          ${done ? 'Crossed — surplus ' + fmtINR(nw - it.target) : 'Remaining: ' + fmtINR(it.target - nw)}
+        </div>
+      `;
+      host.appendChild(div);
+    });
+  }
+
+  // ── flash toast ─────────────────────────────────────────────────
+  function flash(msg) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;padding:10px 18px;border-radius:6px;font-weight:700;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.4)';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+
+  // ── Boot ────────────────────────────────────────────────────────
+  async function init() {
+    loadInputs();
+    loadHistory();
+    await loadSeed();
+    await Promise.all([loadFX(), loadPortfolio()]);
+    render();
+    // Refresh portfolio + FX every 5 min
+    setInterval(async () => { await Promise.all([loadFX(), loadPortfolio()]); render(); }, 5 * 60 * 1000);
+  }
+
+  return { init, saveInputs, snapshot };
+})();
+
+document.addEventListener('DOMContentLoaded', () => ODIN.init());
+
+// PWA SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(console.error);
+}
+</script>
+</body>
+</html>

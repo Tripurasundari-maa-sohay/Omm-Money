@@ -912,7 +912,7 @@ const ODIN = (() => {
         plugins: { legend: { labels: { color: '#948a73' } } },
         scales: {
           x: { ticks: { color: '#5a5247', font: { size: 10 } }, grid: { color: '#2a2a3a' } },
-          y: { ticks: { color: '#948a73', callback: v => '₹' + v + ' Cr' }, grid: { color: '#2a2a3a' } }
+          y: { ticks: { color: '#948a73', callback: v => '₹' + Number(v).toFixed(2) + ' Cr' }, grid: { color: '#2a2a3a' } }
         }
       }
     });

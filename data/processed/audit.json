@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-24T09:21:24Z",
+  "generated": "2026-05-24T09:25:23Z",
   "status": "alert",
   "alerts": [
     {
@@ -41,7 +41,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-24T09:16:09Z",
+        "last_success": "2026-05-24T09:20:14Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {
@@ -58,7 +58,7 @@
       },
       ".github/workflows/screener.yml": "no_success_ever",
       ".github/workflows/ping_trigger.yml": {
-        "last_success": "2026-05-24T09:20:09Z",
+        "last_success": "2026-05-24T09:24:05Z",
         "age_days": 0
       }
     }

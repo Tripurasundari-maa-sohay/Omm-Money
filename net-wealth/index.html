@@ -274,6 +274,18 @@
 
 <!-- ═══ ASSETS TAB ═══ -->
 <div class="tab-content" id="tab-assets">
+  <!-- Reconciliation summary + MoM -->
+  <div class="card">
+    <h2>📋 ASSET RECONCILIATION</h2>
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="lbl">TOTAL ASSETS</div><div class="val" id="a-recon-total">—</div></div>
+      <div class="kpi-tile"><div class="lbl">LAST MONTH</div><div class="val" id="a-recon-last">—</div><div class="delta" id="a-recon-mom">—</div></div>
+      <div class="kpi-tile"><div class="lbl">FROM NOV-25</div><div class="val" id="a-recon-since">—</div><div class="delta" id="a-recon-since-pct">—</div></div>
+      <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="a-recon-12hi">—</div></div>
+    </div>
+    <div id="a-recon-rows" style="margin-top:14px"></div>
+  </div>
+
   <div class="grid-2">
     <div class="card">
       <h2>📊 EQUITIES</h2>
@@ -294,7 +306,9 @@
       <h2>🏠 REAL ESTATE</h2>
       <div class="row-line"><span class="name">Apartment Market Value</span><span class="val" id="a-apt-mkt">—</span></div>
       <div class="row-line"><span class="name">(−) Apartment Loan</span><span class="val" style="color:var(--loss)" id="a-apt-loan">—</span></div>
-      <div class="total-line"><span class="name">Apartment Equity</span><span class="val" id="a-apt-eq">—</span></div>
+      <div class="row-line"><span class="name">Apartment Equity</span><span class="val" id="a-apt-eq">—</span></div>
+      <div id="custom-realestate-host"></div>
+      <div class="total-line"><span class="name">Real Estate Total</span><span class="val" id="a-re-tot">—</span></div>
     </div>
 
     <div class="card">
@@ -316,7 +330,6 @@
     <div class="card">
       <h2>👴 RETIREMENT</h2>
       <div class="row-line"><span class="name">Gratuity (QAR)</span><span class="val" id="a-grat">—</span></div>
-      <div class="row-line"><span class="name">Next +QAR 10,500 (Jan)</span><span class="val" id="a-grat-next">—</span></div>
       <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-ret-tot">—</span></div>
     </div>
   </div>
@@ -334,6 +347,17 @@
 
 <!-- ═══ LIABILITIES TAB ═══ -->
 <div class="tab-content" id="tab-liab">
+  <div class="card">
+    <h2>📋 LIABILITY RECONCILIATION</h2>
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="lbl">TOTAL LIABILITIES</div><div class="val" id="l-recon-total">—</div></div>
+      <div class="kpi-tile"><div class="lbl">LAST MONTH</div><div class="val" id="l-recon-last">—</div><div class="delta" id="l-recon-mom">—</div></div>
+      <div class="kpi-tile"><div class="lbl">FROM NOV-25</div><div class="val" id="l-recon-since">—</div><div class="delta" id="l-recon-since-pct">—</div></div>
+      <div class="kpi-tile"><div class="lbl">12-MONTH LOW</div><div class="val" id="l-recon-12lo">—</div></div>
+    </div>
+    <div id="l-recon-rows" style="margin-top:14px"></div>
+  </div>
+
   <div class="card">
     <h2>📉 LIABILITY TRACKER</h2>
     <div id="liab-host"></div>
@@ -605,13 +629,31 @@ const ODIN = (() => {
     const lcLoanQAR_INR= lcLoanQAR * fx.qar_to_inr;
     const veh_equity_inr = lc_qar_inr - lcLoanQAR_INR;
 
+    // ── CUSTOM ASSETS (user-defined like Maa Tala Bari) ─────────
+    const customAssets = (S.seed.custom_assets || []).map(a => {
+      const v = num('custom_' + a.id, a.value || 0);
+      const inrVal = a.ccy === 'USD' ? v * fx.usd_to_inr
+                    : a.ccy === 'QAR' ? v * fx.qar_to_inr
+                    : v;
+      return { ...a, value: v, value_inr: inrVal };
+    });
+    const customAssetsByCategory = {};
+    customAssets.forEach(a => {
+      (customAssetsByCategory[a.category || 'Other'] ||= []).push(a);
+    });
+    const customAssetsTotalInr = customAssets.reduce((s, a) => s + a.value_inr, 0);
+
     // ── CURRENCY EXPOSURE BUCKETING ─────────────────────────────
     // Each asset/liability tagged with its NATIVE currency
     // Assets (positive)
+    const customByCcy = customAssets.reduce((acc, a) => {
+      acc[a.ccy || 'INR'] = (acc[a.ccy || 'INR'] || 0) + a.value_inr;
+      return acc;
+    }, { USD: 0, INR: 0, QAR: 0 });
     const exposureAssets = {
-      USD: us_stocks_usd * fx.usd_to_inr,                            // US stocks → native USD
-      INR: india_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + cash_in_inr,
-      QAR: (banksQA.reduce((s,b)=>s+b.balance_qar,0) + lc_qar + grat_qar) * fx.qar_to_inr
+      USD: us_stocks_usd * fx.usd_to_inr + (customByCcy.USD || 0),
+      INR: india_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + cash_in_inr + (customByCcy.INR || 0),
+      QAR: (banksQA.reduce((s,b)=>s+b.balance_qar,0) + lc_qar + grat_qar) * fx.qar_to_inr + (customByCcy.QAR || 0)
     };
     // Liabilities (negative)
     const exposureLiab = {
@@ -652,7 +694,8 @@ const ODIN = (() => {
       loans,
       assetsTot, liabTot, netWorth, goldRate,
       netWorth_usd, netWorth_qar,
-      exposureAssets, exposureLiab, exposureNet
+      exposureAssets, exposureLiab, exposureNet,
+      customAssets, customAssetsByCategory, customAssetsTotalInr
     };
   }
 
@@ -736,6 +779,15 @@ const ODIN = (() => {
     document.getElementById('a-apt-mkt').textContent  = fmtINR(v.apt_mkt);
     document.getElementById('a-apt-loan').textContent = '(' + fmtINR(v.apt_loan) + ')';
     document.getElementById('a-apt-eq').textContent   = fmtINR(v.apt_equity);
+    // Custom real-estate assets (e.g. Maa Tala Bari)
+    const reHost = document.getElementById('custom-realestate-host');
+    const reCustom = (v.customAssetsByCategory['Real Estate'] || []);
+    reHost.innerHTML = reCustom.map(a => `
+      <div class="row-line"><span class="name">${a.label}</span>
+        <span class="val">${a.value ? fmtINR(a.value_inr) : '<span style="color:var(--text-dim)">—</span>'}</span>
+      </div>`).join('');
+    const reTotal = v.apt_equity + reCustom.reduce((s, a) => s + a.value_inr, 0);
+    document.getElementById('a-re-tot').textContent = fmtINR(reTotal);
 
     document.getElementById('a-lc').textContent       = v.lc_qar ? fmtQAR(v.lc_qar) + ' · ' + fmtINR(v.lc_qar_inr) : fmtINR(0);
     document.getElementById('a-lc-loan').textContent  = '(' + fmtQAR(v.lc_loan_qar) + ' · ' + fmtINR(v.lc_loan_qar_inr) + ')';
@@ -755,7 +807,6 @@ const ODIN = (() => {
     document.getElementById('a-cash-tot').textContent = fmtINR(v.cash_tot_inr);
 
     document.getElementById('a-grat').textContent     = fmtQAR(v.grat_qar) + ' · ' + fmtINR(v.grat_inr);
-    document.getElementById('a-grat-next').textContent = '+' + fmtQAR(S.seed.gratuity_annual_increment_qar || 10500);
     document.getElementById('a-ret-tot').textContent  = fmtINR(v.grat_inr);
 
     // Liabilities — render per-loan rows (each shows lender, even if 0)
@@ -789,6 +840,10 @@ const ODIN = (() => {
 
     // KPI
     renderKPI(v.netWorth);
+
+    // Reconciliation per tab
+    renderAssetReconciliation(v);
+    renderLiabReconciliation(v);
 
     // Manual inputs form
     renderForm();
@@ -898,6 +953,95 @@ const ODIN = (() => {
     drawKPIChart(currentNW);
   }
 
+  // ── Asset / Liability reconciliation tiles ─────────────────────
+  function renderAssetReconciliation(v) {
+    const total = v.assetsTot;
+    const hist = S.history;
+    const lastMo = lastMonthSnapshot(hist);
+    const first  = hist[0];
+    const last12 = hist.slice(-12);
+
+    document.getElementById('a-recon-total').textContent = fmtINR(total);
+    document.getElementById('a-recon-last').textContent  = lastMo ? fmtINR(lastMo.assets) : '—';
+    const aMom = lastMo ? total - lastMo.assets : 0;
+    const aMomPct = lastMo && lastMo.assets ? (aMom / lastMo.assets * 100) : 0;
+    setDelta('a-recon-mom', aMom, aMomPct, lastMo);
+
+    if (first) {
+      document.getElementById('a-recon-since').textContent = fmtINR(first.assets);
+      const aSince = total - first.assets;
+      const aSincePct = first.assets ? (aSince / first.assets * 100) : 0;
+      setDelta('a-recon-since-pct', aSince, aSincePct, true);
+    }
+
+    const hi12 = last12.length ? Math.max(...last12.map(h => h.assets), total) : total;
+    document.getElementById('a-recon-12hi').textContent = fmtINR(hi12);
+
+    // Per-category breakdown
+    const cats = [
+      { label: '📊 Equities',     val: v.india_stocks_inr + v.us_stocks_inr + v.fo_inr },
+      { label: '🏆 Gold',         val: v.jewel_inr + v.malabar_inr },
+      { label: '🏠 Real Estate',  val: v.apt_mkt + (v.customAssetsByCategory['Real Estate'] || []).reduce((s,a)=>s+a.value_inr,0) },
+      { label: '🚗 Vehicles',     val: v.lc_qar_inr },
+      { label: '💵 Cash · Banks', val: v.cash_tot_inr },
+      { label: '👴 Retirement',   val: v.grat_inr }
+    ];
+    const otherCats = Object.keys(v.customAssetsByCategory).filter(c => c !== 'Real Estate');
+    otherCats.forEach(c => cats.push({ label: '🏛 ' + c, val: v.customAssetsByCategory[c].reduce((s,a)=>s+a.value_inr,0) }));
+
+    document.getElementById('a-recon-rows').innerHTML = cats
+      .filter(c => c.val > 0)
+      .map(c => {
+        const pct = total > 0 ? (c.val / total * 100).toFixed(1) : 0;
+        return `<div class="row-line"><span class="name">${c.label} <span class="sub">${pct}%</span></span><span class="val">${fmtINR(c.val)}</span></div>`;
+      }).join('') +
+      `<div class="total-line"><span class="name">Σ Assets Subtotals</span><span class="val">${fmtINR(total)}</span></div>`;
+  }
+
+  function renderLiabReconciliation(v) {
+    const total = v.liabTot;
+    const hist = S.history;
+    const lastMo = lastMonthSnapshot(hist);
+    const first = hist[0];
+    const last12 = hist.slice(-12);
+
+    document.getElementById('l-recon-total').textContent = fmtINR(total);
+    document.getElementById('l-recon-last').textContent  = lastMo ? fmtINR(lastMo.liab) : '—';
+    // For liabilities: paying down = good → invert sign convention
+    const lMom = lastMo ? total - lastMo.liab : 0;
+    const lMomPct = lastMo && lastMo.liab ? (lMom / lastMo.liab * 100) : 0;
+    setDelta('l-recon-mom', lMom, lMomPct, lastMo, true);   // invert: negative = good
+
+    if (first) {
+      document.getElementById('l-recon-since').textContent = fmtINR(first.liab);
+      const lSince = total - first.liab;
+      const lSincePct = first.liab ? (lSince / first.liab * 100) : 0;
+      setDelta('l-recon-since-pct', lSince, lSincePct, true, true);
+    }
+
+    const lo12 = last12.length ? Math.min(...last12.map(h => h.liab), total) : total;
+    document.getElementById('l-recon-12lo').textContent = fmtINR(lo12);
+
+    // Per-loan breakdown
+    document.getElementById('l-recon-rows').innerHTML = v.loans
+      .filter(ln => ln.outstanding_inr > 0)
+      .map(ln => {
+        const pct = total > 0 ? (ln.outstanding_inr / total * 100).toFixed(1) : 0;
+        return `<div class="row-line"><span class="name">${ln.label} <span class="sub">${ln.provider} · ${pct}%</span></span><span class="val" style="color:var(--loss)">${fmtINR(ln.outstanding_inr)}</span></div>`;
+      }).join('') +
+      `<div class="total-line"><span class="name">Σ Total Liabilities</span><span class="val" style="color:var(--loss)">${fmtINR(total)}</span></div>`;
+  }
+
+  function setDelta(elId, abs, pct, hasPrior, invertColors = false) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!hasPrior) { el.textContent = 'no prior data'; el.className = 'delta'; return; }
+    const sign = abs >= 0 ? '+' : '';
+    el.textContent = sign + fmtINR(abs) + ' (' + sign + pct.toFixed(2) + '%)';
+    const isGood = invertColors ? abs < 0 : abs >= 0;
+    el.className = 'delta ' + (isGood ? 'pos' : 'neg');
+  }
+
   function lastMonthSnapshot(hist) {
     if (!hist.length) return null;
     const thirtyDaysAgo = Date.now() - 30 * 24 * 3600 * 1000;
@@ -1002,6 +1146,14 @@ const ODIN = (() => {
         current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
       });
     });
+    // Custom assets (Maa Tala Bari etc) → assets
+    (S.seed.custom_assets || []).forEach(a => {
+      (assetGroups['🏛 Other / ' + (a.category || 'Other')] ||= []).push({
+        key: 'custom_' + a.id, label: a.label, ccy: a.ccy || 'INR',
+        current: S.inputs['custom_' + a.id] ?? a.value ?? ''
+      });
+    });
+
     // Dynamic banks → assets
     (S.seed.banks_qatar || []).forEach((b, i) => {
       (assetGroups['🇶🇦 Qatar Banks'] ||= []).push({

@@ -30,6 +30,28 @@
     --asset:     #4ade80;
     --liab:      #f87171;
   }
+  [data-theme="light"] {
+    --bg:        #faf6ec;
+    --bg-card:   #ffffff;
+    --bg-card2:  #f3ecd9;
+    --border:    #d9cdaa;
+    --gold:      #b8860b;
+    --gold-dim:  #8b6914;
+    --text:      #1f1608;
+    --text-sec:  #5a4824;
+    --text-dim:  #8a7644;
+    --gain:      #16a34a;
+    --loss:      #b91c1c;
+    --asset:     #16a34a;
+    --liab:      #b91c1c;
+  }
+  [data-theme="light"] .hero { background: linear-gradient(135deg, #fffbef 0%, #f5ecd0 100%); box-shadow: 0 4px 24px rgba(184,134,11,0.18); }
+  [data-theme="light"] .tab-btn.active { background: linear-gradient(135deg, #b8860b, #d4a017); color: #fff; }
+  [data-theme="light"] .kpi-tile { background: #fffbef; }
+  [data-theme="light"] .form-col { background: #fffbef; }
+  [data-theme="light"] .save-btn { color: #fff; background: var(--gold); }
+  [data-theme="light"] .save-btn:hover { background: var(--gold-dim); }
+  [data-theme="light"] .chart-modal-backdrop { background: rgba(0,0,0,0.55); }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
   body { padding: 14px; max-width: 1280px; margin: 0 auto; }
@@ -150,11 +172,12 @@
 <h1>⚔️ ODIN ⚔️</h1>
 <div class="subtitle">NET WORTH SENTINEL</div>
 
-<!-- TAB NAV -->
+<!-- TAB NAV + THEME -->
 <div class="tabs">
   <button class="tab-btn active" data-tab="overall">🏛️ OVERALL</button>
   <button class="tab-btn" data-tab="assets">▲ ASSETS</button>
   <button class="tab-btn" data-tab="liab">▼ LIABILITIES</button>
+  <button class="tab-btn" id="theme-toggle" onclick="ODIN.toggleTheme()" title="Toggle theme" style="padding:8px 12px">🌙</button>
 </div>
 
 <!-- ═══ OVERALL TAB ═══ -->
@@ -817,14 +840,14 @@ const ODIN = (() => {
         datasets: [{
           data: items.map(i => Math.round(i.inr)),
           backgroundColor: ['#16a34a','#c2410c','#6d28d9'],
-          borderColor: '#0a0a0f', borderWidth: 3,
-          spacing: 2, hoverOffset: 6
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0a0a0f',
+          borderWidth: 3, spacing: 2, hoverOffset: 6
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '60%',
         plugins: {
-          legend: { position: 'bottom', labels: { color: '#948a73', font: { size: 11 }, padding: 8 } },
+          legend: { position: 'bottom', labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73', font: { size: 11 }, padding: 8 } },
           tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmtINR(ctx.parsed)}` } }
         }
       }
@@ -889,9 +912,16 @@ const ODIN = (() => {
     const ctx = document.getElementById('kpi-chart');
     if (!ctx) return;
     if (S.charts.kpi) S.charts.kpi.destroy();
+    const _cs = getComputedStyle(document.documentElement);
+    const _gold = _cs.getPropertyValue('--gold').trim() || '#FFD700';
+    const _sec  = _cs.getPropertyValue('--text-sec').trim() || '#948a73';
+    const _dim  = _cs.getPropertyValue('--text-dim').trim() || '#5a5247';
+    const _grid = _cs.getPropertyValue('--border').trim() || '#2a2a3a';
+    const _goldRgb = hexToRgb(_gold);
+    const _bgFill  = _goldRgb ? `rgba(${_goldRgb.r},${_goldRgb.g},${_goldRgb.b},0.12)` : 'rgba(255,215,0,0.12)';
     const data = S.history.slice().concat([{ date: new Date().toISOString(), net_worth: currentNW }]);
     const labels = data.map(d => new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
-    const values = data.map(d => d.net_worth / 1e7);   // crores
+    const values = data.map(d => d.net_worth / 1e7);
     S.charts.kpi = new Chart(ctx, {
       type: 'line',
       data: {
@@ -899,23 +929,24 @@ const ODIN = (() => {
         datasets: [{
           label: 'Net Worth (₹ Cr)',
           data: values,
-          borderColor: '#FFD700',
-          backgroundColor: 'rgba(255,215,0,0.12)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 3,
-          pointBackgroundColor: '#FFD700'
+          borderColor: _gold,
+          backgroundColor: _bgFill,
+          fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: _gold
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#948a73' } } },
+        plugins: { legend: { labels: { color: _sec } } },
         scales: {
-          x: { ticks: { color: '#5a5247', font: { size: 10 } }, grid: { color: '#2a2a3a' } },
-          y: { ticks: { color: '#948a73', callback: v => '₹' + Number(v).toFixed(2) + ' Cr' }, grid: { color: '#2a2a3a' } }
+          x: { ticks: { color: _dim, font: { size: 10 } }, grid: { color: _grid } },
+          y: { ticks: { color: _sec, callback: v => '₹' + Number(v).toFixed(2) + ' Cr' }, grid: { color: _grid } }
         }
       }
     });
+  }
+  function hexToRgb(h) {
+    const m = (h || '').match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+    return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : null;
   }
 
   function snapshot() {
@@ -1080,6 +1111,27 @@ const ODIN = (() => {
     setTimeout(() => el.remove(), 1500);
   }
 
+  // ── Theme ──────────────────────────────────────────────────────
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+    // Redraw charts so colors pick up new theme
+    if (S.charts.kpi) { S.charts.kpi.destroy(); S.charts.kpi = null; }
+    if (S.charts.exp) { S.charts.exp.destroy(); S.charts.exp = null; }
+    if (S.seed) render();
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    const next = cur === 'light' ? 'dark' : 'light';
+    localStorage.setItem('odin_theme', next);
+    applyTheme(next);
+  }
+  function _loadTheme() {
+    const t = localStorage.getItem('odin_theme') || 'dark';
+    applyTheme(t);
+  }
+
   // ── Tab switching ───────────────────────────────────────────────
   function switchTab(name) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -1104,6 +1156,7 @@ const ODIN = (() => {
 
   // ── Boot ────────────────────────────────────────────────────────
   async function init() {
+    _loadTheme();
     _wireTabs();
     loadInputs();
     loadHistory();
@@ -1121,7 +1174,7 @@ const ODIN = (() => {
     flash('✓ Refreshed');
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll, toggleTheme };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

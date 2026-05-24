@@ -53,6 +53,24 @@
   .hero .breakdown .liab { color: var(--liab); }
   .hero .breakdown b { font-weight: 700; }
   @media (max-width: 760px) { .hero .net-worth { font-size: 32px; } }
+  .multi-ccy { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin: 4px 0 10px; font-size: 14px; color: var(--text-sec); }
+  .multi-ccy span { white-space: nowrap; }
+  .multi-ccy b { color: var(--gold-dim); font-weight: 600; }
+
+  /* CURRENCY EXPOSURE */
+  .exp-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: center; }
+  @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
+  .exp-row { display: grid; grid-template-columns: 40px 60px 1fr 110px; gap: 8px; align-items: center; padding: 6px 0; font-size: 12px; }
+  .exp-row .flag { font-size: 18px; }
+  .exp-row .ccy { color: var(--gold); font-weight: 700; }
+  .exp-row .bar { height: 10px; background: var(--bg-card2); border-radius: 5px; overflow: hidden; }
+  .exp-row .bar-fill { height: 100%; border-radius: 5px; }
+  .exp-row .bar-fill.usd { background: linear-gradient(90deg, #4ade80, #16a34a); }
+  .exp-row .bar-fill.inr { background: linear-gradient(90deg, #fb923c, #c2410c); }
+  .exp-row .bar-fill.qar { background: linear-gradient(90deg, #a78bfa, #6d28d9); }
+  .exp-row .amt { text-align: right; color: var(--text); font-weight: 600; }
+  .exp-row .amt .pct { color: var(--text-dim); font-size: 10px; margin-left: 4px; }
+  .exp-pie-wrap { height: 220px; position: relative; }
 
   /* PROGRESS BARS */
   .progress { margin-top: 14px; }
@@ -120,8 +138,9 @@
 
 <!-- HERO -->
 <div class="card hero">
-  <div class="label">TOTAL NET WORTH (INR)</div>
+  <div class="label">TOTAL NET WORTH</div>
   <div class="net-worth" id="hero-net">₹ <span class="loading"></span></div>
+  <div class="multi-ccy" id="hero-multi-ccy"></div>
   <div class="breakdown">
     <span>Assets: <b class="asset" id="hero-assets">—</b></span>
     <span>Liabilities: <b class="liab" id="hero-liab">—</b></span>
@@ -143,6 +162,18 @@
 <div class="meta-bar">
   <span>FX: <span id="fx-meta">—</span></span>
   <span id="data-status" class="live">As of <span id="data-asof">—</span></span>
+</div>
+
+<!-- CURRENCY EXPOSURE -->
+<div class="card">
+  <h2>🌍 CURRENCY EXPOSURE</h2>
+  <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+    Net worth split by the currency each asset is <em>natively denominated in</em> — shows your real FX risk.
+  </p>
+  <div class="exp-grid">
+    <div id="exp-rows"></div>
+    <div class="exp-pie-wrap"><canvas id="exp-pie"></canvas></div>
+  </div>
 </div>
 
 <!-- ASSET BREAKDOWN -->
@@ -502,9 +533,41 @@ const ODIN = (() => {
     const lcLoanQAR_INR= lcLoanQAR * fx.qar_to_inr;
     const veh_equity_inr = lc_qar_inr - lcLoanQAR_INR;
 
+    // ── CURRENCY EXPOSURE BUCKETING ─────────────────────────────
+    // Each asset/liability tagged with its NATIVE currency
+    // Assets (positive)
+    const exposureAssets = {
+      USD: us_stocks_usd * fx.usd_to_inr,                            // US stocks → native USD
+      INR: india_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + cash_in_inr,
+      QAR: (banksQA.reduce((s,b)=>s+b.balance_qar,0) + lc_qar + grat_qar) * fx.qar_to_inr
+    };
+    // Liabilities (negative)
+    const exposureLiab = {
+      USD: 0,
+      INR: 0,
+      QAR: 0
+    };
+    loans.forEach(ln => {
+      const inrVal = ln.outstanding_inr;
+      if (ln.ccy === 'USD') exposureLiab.USD += inrVal;
+      else if (ln.ccy === 'QAR') exposureLiab.QAR += inrVal;
+      else exposureLiab.INR += inrVal;
+    });
+    // Net exposure per currency (INR equivalent)
+    const exposureNet = {
+      USD: exposureAssets.USD - exposureLiab.USD,
+      INR: exposureAssets.INR - exposureLiab.INR,
+      QAR: exposureAssets.QAR - exposureLiab.QAR
+    };
+
     // TOTALS
-    const assetsTot = india_stocks_inr + us_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + lc_qar_inr + cash_tot_inr + grat_inr;
+    const assetsTot = exposureAssets.USD + exposureAssets.INR + exposureAssets.QAR;
+    const liabTot   = exposureLiab.USD   + exposureLiab.INR   + exposureLiab.QAR;
     const netWorth  = assetsTot - liabTot;
+
+    // Multi-currency net worth (same net worth, three frames)
+    const netWorth_usd = netWorth / fx.usd_to_inr;
+    const netWorth_qar = netWorth / fx.qar_to_inr;
 
     return {
       india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
@@ -515,7 +578,9 @@ const ODIN = (() => {
       banksQA, banksIN, cash_qa_inr, cash_in_inr, cash_tot_inr,
       grat_qar, grat_inr,
       loans,
-      assetsTot, liabTot, netWorth, goldRate
+      assetsTot, liabTot, netWorth, goldRate,
+      netWorth_usd, netWorth_qar,
+      exposureAssets, exposureLiab, exposureNet
     };
   }
 
@@ -560,10 +625,17 @@ const ODIN = (() => {
       ? new Date(S.portfolio.prices_asof).toLocaleString()
       : new Date().toLocaleString();
 
-    // Hero
+    // Hero — multi-currency display
     document.getElementById('hero-net').textContent = fmtINR(v.netWorth);
+    document.getElementById('hero-multi-ccy').innerHTML =
+      `<span><b>$</b>${Math.round(v.netWorth_usd).toLocaleString('en-US')}</span>` +
+      `<span><b>QAR</b> ${Math.round(v.netWorth_qar).toLocaleString('en-US')}</span>` +
+      `<span><b>₹</b>${Math.round(v.netWorth).toLocaleString('en-IN')}</span>`;
     document.getElementById('hero-assets').textContent = fmtINR(v.assetsTot);
     document.getElementById('hero-liab').textContent = fmtINR(v.liabTot);
+
+    // Currency exposure rows + pie
+    renderExposure(v);
 
     // Milestones progress
     const m = S.seed.milestones || {};
@@ -651,6 +723,63 @@ const ODIN = (() => {
 
     // Milestones list
     renderMilestones(v.netWorth);
+  }
+
+  function renderExposure(v) {
+    const totAssets = v.exposureAssets.USD + v.exposureAssets.INR + v.exposureAssets.QAR;
+    if (totAssets <= 0) return;
+    const items = [
+      { ccy: 'USD', flag: '🇺🇸', native: v.exposureAssets.USD / S.fx.usd_to_inr,                inr: v.exposureAssets.USD, liab_inr: v.exposureLiab.USD, net_inr: v.exposureNet.USD, color: 'usd' },
+      { ccy: 'INR', flag: '🇮🇳', native: v.exposureAssets.INR,                                  inr: v.exposureAssets.INR, liab_inr: v.exposureLiab.INR, net_inr: v.exposureNet.INR, color: 'inr' },
+      { ccy: 'QAR', flag: '🇶🇦', native: v.exposureAssets.QAR / S.fx.qar_to_inr,                inr: v.exposureAssets.QAR, liab_inr: v.exposureLiab.QAR, net_inr: v.exposureNet.QAR, color: 'qar' }
+    ];
+    const host = document.getElementById('exp-rows');
+    host.innerHTML = items.map(it => {
+      const pctAssets = (it.inr / totAssets) * 100;
+      const pctNet    = v.netWorth > 0 ? (it.net_inr / v.netWorth) * 100 : 0;
+      const nativeFmt = it.ccy === 'INR' ? fmtINR(it.native)
+                      : it.ccy === 'USD' ? '$' + Math.round(it.native).toLocaleString('en-US')
+                      : 'QAR ' + Math.round(it.native).toLocaleString('en-US');
+      const liabBadge = it.liab_inr > 0 ? `<div style="font-size:10px;color:var(--loss);margin-top:2px">−${fmtINR(it.liab_inr)} loans</div>` : '';
+      return `<div class="exp-row">
+        <span class="flag">${it.flag}</span>
+        <span class="ccy">${it.ccy}</span>
+        <div>
+          <div class="bar"><div class="bar-fill ${it.color}" style="width:${pctAssets.toFixed(1)}%"></div></div>
+          ${liabBadge}
+        </div>
+        <div class="amt">${nativeFmt}<span class="pct">${pctAssets.toFixed(1)}%</span></div>
+      </div>`;
+    }).join('');
+    // Net exposure summary
+    const netRow = document.createElement('div');
+    netRow.style.cssText = 'font-size:11px;color:var(--text-dim);margin-top:10px;border-top:1px dotted var(--border);padding-top:8px;line-height:1.6';
+    netRow.innerHTML = `<b style="color:var(--gold-dim)">NET (after liabilities):</b><br>` +
+      items.map(it => `${it.flag} ${it.ccy}: ${fmtINR(it.net_inr)} (${v.netWorth > 0 ? (it.net_inr/v.netWorth*100).toFixed(1) : '0'}% of net worth)`).join(' · ');
+    host.appendChild(netRow);
+
+    // Pie chart
+    const ctx = document.getElementById('exp-pie');
+    if (S.charts.exp) S.charts.exp.destroy();
+    S.charts.exp = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: items.map(i => `${i.ccy} (${(i.inr/totAssets*100).toFixed(1)}%)`),
+        datasets: [{
+          data: items.map(i => Math.round(i.inr)),
+          backgroundColor: ['#16a34a','#c2410c','#6d28d9'],
+          borderColor: '#0a0a0f', borderWidth: 3,
+          spacing: 2, hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#948a73', font: { size: 11 }, padding: 8 } },
+          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmtINR(ctx.parsed)}` } }
+        }
+      }
+    });
   }
 
   function setProgress(prefix, current, target) {

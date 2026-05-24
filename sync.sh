@@ -3,9 +3,9 @@
 #  sync.sh  — drop files into inbox/ and run this once
 #
 #  Supported inbox files:
-#    *.pdf   → US portfolio PDF  (Doha Bank / Saxo statement)
+#    *.pdf   → US portfolio PDF (broker statement)
 #    *.xlsx  → either:
-#               • Saxo transactions xlsx (sheets: Transactions/Trades/Bookings)
+#               • US broker transactions xlsx (sheets: Transactions/Trades/Bookings)
 #                 → fee patch onto holdings_cost.json + build transactions_us.json
 #               • Upstox/India consolidated xlsx (sheet: "All Transactions")
 #                 → India holdings update
@@ -40,8 +40,8 @@ for f in "$INBOX"/*.pdf "$INBOX"/*.PDF; do
 done
 
 # ── Process xlsx ───────────────────────────────────────────────
-# Sniff sheet names to decide if file is Saxo (US) or India (Upstox)
-XL_SAXO_COUNT=0
+# Sniff sheet names to decide if file is US broker or India (Upstox)
+XL_US_COUNT=0
 XL_INDIA_COUNT=0
 for f in "$INBOX"/*.xlsx "$INBOX"/*.XLSX; do
   [ -f "$f" ] || continue
@@ -57,7 +57,7 @@ except Exception as e:
     print("unknown")
     sys.exit(0)
 if {"Trades", "Bookings"}.issubset(sheets):
-    print("saxo")
+    print("us")
 elif {"All Transactions"}.issubset(sheets) or {"Upstox"}.issubset(sheets):
     print("india")
 else:
@@ -65,11 +65,11 @@ else:
 PYEOF
 )
   case "$KIND" in
-    saxo)
-      echo "   → Saxo/Doha format · patching fees + building transactions_us.json"
+    us)
+      echo "   → US broker format · patching fees + building transactions_us.json"
       python3 "$SCRIPTS/patch_fees_from_xlsx.py" "$f"
       python3 "$SCRIPTS/build_transactions_us.py" "$f"
-      XL_SAXO_COUNT=$((XL_SAXO_COUNT + 1))
+      XL_US_COUNT=$((XL_US_COUNT + 1))
       ;;
     india)
       echo "   → India/Upstox format"
@@ -77,12 +77,12 @@ PYEOF
       XL_INDIA_COUNT=$((XL_INDIA_COUNT + 1))
       ;;
     *)
-      echo "   ⚠ unknown xlsx format (sheets do not match Saxo or Upstox layouts) — skipping"
+      echo "   ⚠ unknown xlsx format (sheets do not match US broker or Upstox layouts) — skipping"
       ;;
   esac
 done
 
-if [ $PDF_COUNT -eq 0 ] && [ $XL_SAXO_COUNT -eq 0 ] && [ $XL_INDIA_COUNT -eq 0 ]; then
+if [ $PDF_COUNT -eq 0 ] && [ $XL_US_COUNT -eq 0 ] && [ $XL_INDIA_COUNT -eq 0 ]; then
   echo ""
   echo "⚠  No files found in inbox/."
   echo "   Drop a .pdf (US) or .xlsx (US or India) into the inbox/ folder and re-run."
@@ -112,7 +112,7 @@ echo ""
 echo "📦  Committing data updates …"
 cd "$REPO"
 git add data/holdings_cost.json
-[ $XL_SAXO_COUNT -gt 0 ] && git add data/transactions_us.json
+[ $XL_US_COUNT -gt 0 ] && git add data/transactions_us.json
 git add data/processed/holdings_prices.json \
         data/processed/market_indices.json   \
         data/processed/stock_signals.json    \
@@ -122,7 +122,7 @@ git diff --cached --quiet && echo "  (no changes to commit)" && exit 0
 
 MSG="sync: portfolio update $(date '+%Y-%m-%d')"
 [ $PDF_COUNT -gt 0 ]      && MSG="$MSG · PDF($PDF_COUNT)"
-[ $XL_SAXO_COUNT -gt 0 ]  && MSG="$MSG · Saxo xlsx($XL_SAXO_COUNT)"
+[ $XL_US_COUNT -gt 0 ]  && MSG="$MSG · US xlsx($XL_US_COUNT)"
 [ $XL_INDIA_COUNT -gt 0 ] && MSG="$MSG · India xlsx($XL_INDIA_COUNT)"
 git commit -m "$MSG"
 # Push with rebase-on-conflict. The cron-job.org-fired GH Actions may have

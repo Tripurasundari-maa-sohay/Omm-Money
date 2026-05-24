@@ -5,8 +5,8 @@
 Single-page portfolio dashboard hosted on **GitHub Pages** as a PWA. Tracks two
 brokerage accounts:
 
-- **🇺🇸 US** — Doha Bank Global (Saxo white-label). Source of truth = PDF
-  statement + Saxo transactions xlsx.
+- **🇺🇸 US** — US broker. Source of truth = PDF
+  statement + US broker transactions xlsx.
 - **🇮🇳 India** — Motilal Oswal / Upstox / Mirae Asset (FY24-26). Source =
   consolidated transactions xlsx.
 
@@ -21,10 +21,10 @@ inbox/*.pdf  ──► scripts/parse_broker_pdf.py
                  ├── extracts open/closed/monthly/cash/charges
                  └── preserves buy_date + fx_buy from prior holdings_cost.json
                                                               │
-inbox/*.xlsx (Saxo) ─► scripts/patch_fees_from_xlsx.py        │
+inbox/*.xlsx (US) ─► scripts/patch_fees_from_xlsx.py        │
                        └── Open/Close commission split        │
                                                               │
-inbox/*.xlsx (Saxo) ─► scripts/build_transactions_us.py       ▼
+inbox/*.xlsx (US) ─► scripts/build_transactions_us.py       ▼
                        └── per-trade ledger + cash moves   data/holdings_cost.json
                                                               │
 inbox/*.xlsx (India) ─► scripts/parse_india_excel.py          │  (also feeds
@@ -103,7 +103,7 @@ Drop the latest PDF + xlsx into `inbox/` and run:
 ```
 
 `sync.sh` sniffs each xlsx by sheet names:
-- **Saxo** (sheets `Trades` + `Bookings`) → `patch_fees_from_xlsx.py` + `build_transactions_us.py`
+- **US broker** (sheets `Trades` + `Bookings`) → `patch_fees_from_xlsx.py` + `build_transactions_us.py`
 - **India** (sheet `All Transactions` or `Upstox`) → `parse_india_excel.py`
 
 Then runs the **same pipeline GH Actions would run** so all derived chart /
@@ -197,8 +197,8 @@ interpolate. First successful GH Actions run at 11:24 UTC same day.
 | `49676292` | **Root-cause fix**: `market_data.py` f-string SyntaxError. |
 | `f51be11b` | **Removed biometric** entirely — bio-lock overlay HTML, BIOMETRIC IIFE, `window.BIOMETRIC` export, async wrapper around `refresh()`. Source of 5+ recurring refresh-flow bugs. `refresh()` now runs directly on `DOMContentLoaded`. SW v64. |
 | `43934753` | 22-May PDF reparsed with the fixed parser. Account $19,496.03, 13 open positions. |
-| `683d5841` | New `scripts/patch_fees_from_xlsx.py`. Reads Saxo xlsx Bookings × Trades, joins on Trade ID, splits commissions Open/Close per ticker. Overlays correct fees onto `holdings_cost.json`. Example: RKLB open `fees: $0 → -$25`. xlsx total -$361.20 reconciled (residual $22.65 = PDF window covering Dec 1-14 not in xlsx). |
-| `9bcd787b` | New `scripts/build_transactions_us.py` → `data/transactions_us.json`. Per-trade rows with date, ticker, side, qty, price, gross, commission, FTT, exchange_fee, net, open_close, realised_pl, ISIN, asset_type, exchange. Separate `cash_moves[]` for deposits, dividends, custody, interest, withholding. Dedup'd Saxo double-entry rows. `sync.sh` now sniffs xlsx flavor (Saxo vs India) by sheet names. |
+| `683d5841` | New `scripts/patch_fees_from_xlsx.py`. Reads US broker xlsx Bookings × Trades, joins on Trade ID, splits commissions Open/Close per ticker. Overlays correct fees onto `holdings_cost.json`. Example: RKLB open `fees: $0 → -$25`. xlsx total -$361.20 reconciled (residual $22.65 = PDF window covering Dec 1-14 not in xlsx). |
+| `9bcd787b` | New `scripts/build_transactions_us.py` → `data/transactions_us.json`. Per-trade rows with date, ticker, side, qty, price, gross, commission, FTT, exchange_fee, net, open_close, realised_pl, ISIN, asset_type, exchange. Separate `cash_moves[]` for deposits, dividends, custody, interest, withholding. Dedup'd US broker double-entry rows. `sync.sh` now sniffs xlsx flavor (US vs India) by sheet names. |
 | `9c5e80f8` | UI: added two new sections under Transactions tab — **PER-TRADE LEDGER · US** (filter by side / open-close, search by ticker/name/ISIN, stat strip) and **CASH MOVEMENTS · US**. `load()` fetches `data/transactions_us.json` into `S.txUs`. SW v65. |
 
 ## Pipeline / cron — confirmed alive after fix
@@ -215,7 +215,7 @@ interpolate. First successful GH Actions run at 11:24 UTC same day.
 3. **F-strings with backslash** are illegal in Python <3.12. Always extract.
 4. **PWA / SW caching** — bump `sw.js` `CACHE` const on every shipped change to `index.html` or the user will see stale UI on iOS until they close + reopen.
 5. **PDF parser is non-authoritative for per-ticker fees** — it misattributes for re-opened tickers. xlsx Bookings × Trades is the authoritative source. Use `patch_fees_from_xlsx.py` after every PDF reparse.
-6. **xlsx schema differs between brokers**. Saxo has `Transactions`/`Trades`/`Bookings`. Upstox/India has `All Transactions` + `Upstox`. `sync.sh` sniffs by sheet name — don't assume by filename.
+6. **xlsx schema differs between brokers**. US broker has `Transactions`/`Trades`/`Bookings`. Upstox/India has `All Transactions` + `Upstox`. `sync.sh` sniffs by sheet name — don't assume by filename.
 7. **GH Actions logs require auth** to fetch via API. Reproduce failures locally with `python3 scripts/<name>.py` first.
 
 ## Known not-fixed (low priority)
@@ -227,7 +227,7 @@ interpolate. First successful GH Actions run at 11:24 UTC same day.
 
 ```bash
 # Check GH Actions status without gh CLI
-curl -s "https://api.github.com/repos/sabarnagchowdhury-ui/portfolio-dashboard/actions/runs?per_page=5" \
+curl -s "https://api.github.com/repos/${GH_REPO:-<owner>/portfolio-dashboard}/actions/runs?per_page=5" \
   | python3 -c "import json,sys; [print(r['created_at'], r['name'][:40], r['status'], r['conclusion']) for r in json.load(sys.stdin)['workflow_runs'][:5]]"
 
 # Reproduce a failed market_data.py run locally
@@ -267,7 +267,7 @@ catch points of failure that survived. Results:
 
 | Bug | Fix |
 |-----|-----|
-| `requirements.txt` missing pandas, openpyxl, beautifulsoup4, lxml, html5lib. Local fresh-clone install would crash inside India parser / Saxo builders / screener. | Full deps re-listed in `requirements.txt`. GH Actions still inline-installs its own subset per workflow. |
+| `requirements.txt` missing pandas, openpyxl, beautifulsoup4, lxml, html5lib. Local fresh-clone install would crash inside India parser / US builders / screener. | Full deps re-listed in `requirements.txt`. GH Actions still inline-installs its own subset per workflow. |
 | `market_data.py` did not persist `fx_rate` into `data/processed/market_indices.json`. `data_audit.py` read None on every run and "healed" from open.er-api.com — every cycle, redundantly. | `market_data.py` now writes `fx_rate = round(live_fx, 4)` into the indices payload when within sanity bounds (70 ≤ rate ≤ 120). Audit heal path becomes a true fallback. |
 | `sync.sh` push-retry loop failed silently when working tree had any unstaged change (e.g. someone editing the README). `git pull --rebase` aborts with "cannot pull with rebase: You have unstaged changes" — all 3 retries kept failing, but sync.sh still printed "✓ Done". | Push loop now auto-stashes with `git stash push -u`, pulls + pushes, then pops the stash. Either pushes cleanly or surfaces a real conflict. |
 
@@ -275,7 +275,7 @@ catch points of failure that survived. Results:
 
 ```
 inbox/*.pdf       ──► parse_broker_pdf.py        ─► data/holdings_cost.json
-inbox/*.xlsx Saxo ──► patch_fees_from_xlsx.py    ─► data/holdings_cost.json (fees)
+inbox/*.xlsx US ──► patch_fees_from_xlsx.py    ─► data/holdings_cost.json (fees)
                   ──► build_transactions_us.py   ─► data/transactions_us.json
 inbox/*.xlsx Ind. ──► parse_india_excel.py       ─► data/holdings_cost.json (india side; format-stale)
 

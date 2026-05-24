@@ -280,6 +280,28 @@
   .chart-stat-bar strong{color:var(--accent-b)}
   .analytics-two-col{display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start}
 
+  /* ── CHART PAIR (LAPTOP 2-COL, MOBILE 1-COL) ── */
+  .chart-pair-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  @media (max-width:1024px){.chart-pair-2col{grid-template-columns:1fr}}
+  .chart-pair-2col > .analytics-section{margin-bottom:0}
+  /* Hint user the chart is clickable */
+  .chart-expandable{cursor:zoom-in;position:relative;transition:transform .15s ease, box-shadow .15s ease}
+  .chart-expandable:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.3)}
+  .chart-expandable::after{content:'⤢ click to expand';position:absolute;top:8px;right:10px;
+    font-size:10px;color:var(--text-dim);opacity:0.6;pointer-events:none;letter-spacing:0.5px}
+  /* Fullscreen modal overlay */
+  .chart-modal-backdrop{position:fixed;inset:0;background:rgba(5,5,15,0.85);backdrop-filter:blur(4px);
+    z-index:9998;display:none;align-items:center;justify-content:center;padding:24px}
+  .chart-modal-backdrop.active{display:flex}
+  .chart-modal-content{background:var(--bg-card);border:1.5px solid var(--accent-y);border-radius:12px;
+    padding:24px;width:100%;max-width:1400px;height:85vh;position:relative;overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
+  .chart-modal-close{position:absolute;top:10px;right:14px;background:transparent;border:none;
+    color:var(--text-sec);font-size:24px;cursor:pointer;padding:4px 10px;border-radius:4px;z-index:2}
+  .chart-modal-close:hover{color:var(--text-pri);background:var(--bg-card2)}
+  .chart-modal-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:auto}
+  .chart-modal-body .chart-container{flex:1;min-height:400px}
+
   /* ── TABLES ── */
   .holdings-section,.holdings-preview,.tab-section{background:var(--bg-card);border:1px solid var(--border);
     border-radius:8px;padding:14px;margin-bottom:14px;overflow-x:auto}
@@ -694,34 +716,48 @@
       </div>
     </div>
 
-    <!-- Combined portfolio value chart (US + India) -->
-    <div class="analytics-section">
-      <h2>TOTAL PORTFOLIO VALUE · US + INDIA (USD)</h2>
-      <div class="chart-container chart-wide"><canvas id="combined-value-chart"></canvas></div>
-      <div class="chart-stat-bar" id="combined-stat-bar" style="display:none">
-        <span>US: <strong id="comb-us-val" style="color:#3b82f6">--</strong></span>
-        <span>India: <strong id="comb-india-val" style="color:var(--warn)">--</strong></span>
-        <span>Combined: <strong id="comb-total-val" style="color:var(--gain)">--</strong></span>
+    <!-- Paired charts: TOTAL VALUE + CUMULATIVE RETURN (laptop: 2-col, mobile: stacked) -->
+    <div class="chart-pair-2col">
+      <!-- Combined portfolio value chart (US + India) -->
+      <div class="analytics-section chart-expandable" data-chart-id="combined-value-chart" data-chart-title="TOTAL PORTFOLIO VALUE · US + INDIA (USD)">
+        <h2>TOTAL PORTFOLIO VALUE · US + INDIA (USD)</h2>
+        <div class="chart-container chart-wide"><canvas id="combined-value-chart"></canvas></div>
+        <div class="chart-stat-bar" id="combined-stat-bar" style="display:none">
+          <span>US: <strong id="comb-us-val" style="color:#3b82f6">--</strong></span>
+          <span>India: <strong id="comb-india-val" style="color:var(--warn)">--</strong></span>
+          <span>Combined: <strong id="comb-total-val" style="color:var(--gain)">--</strong></span>
+        </div>
+      </div>
+
+      <!-- Cumulative return chart -->
+      <div class="analytics-section chart-expandable" data-chart-id="cumulative-chart" data-chart-title="CUMULATIVE RETURN · US PORTFOLIO vs S&P 500">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <h2 style="margin-bottom:0">CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
+          <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
+            <button id="cum-view-daily"   onclick="event.stopPropagation();DASH.setCumView('daily')"   style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Daily</button>
+            <button id="cum-view-weekly"  onclick="event.stopPropagation();DASH.setCumView('weekly')"  style="padding:3px 10px;border:1px solid var(--accent-b);border-radius:4px;background:var(--accent-b);color:#fff;cursor:pointer;font-size:11px;font-weight:700">Weekly</button>
+            <button id="cum-view-monthly" onclick="event.stopPropagation();DASH.setCumView('monthly')" style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Monthly</button>
+          </div>
+        </div>
+        <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
+        <div class="chart-stat-bar">
+          <span>Portfolio (USD): <strong id="cum-port">--</strong></span>
+          <span style="color:var(--warn)">INR Return: <strong id="cum-inr">--</strong></span>
+          <span>S&amp;P 500 (^GSPC): <strong id="cum-snp">--</strong></span>
+          <span>Alpha INR vs Portfolio: <strong id="cum-alpha-inr-port" style="font-size:13px">--</strong></span>
+          <span>Alpha INR vs S&amp;P: <strong id="cum-alpha-inr-snp" style="font-size:13px">--</strong></span>
+        </div>
       </div>
     </div>
 
-    <!-- Cumulative return chart -->
-    <div class="analytics-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-        <h2 style="margin-bottom:0">CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
-        <div style="display:flex;gap:4px">
-          <button id="cum-view-daily"   onclick="DASH.setCumView('daily')"   style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Daily</button>
-          <button id="cum-view-weekly"  onclick="DASH.setCumView('weekly')"  style="padding:3px 10px;border:1px solid var(--accent-b);border-radius:4px;background:var(--accent-b);color:#fff;cursor:pointer;font-size:11px;font-weight:700">Weekly</button>
-          <button id="cum-view-monthly" onclick="DASH.setCumView('monthly')" style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Monthly</button>
+    <!-- Chart expand modal -->
+    <div class="chart-modal-backdrop" id="chart-modal-backdrop" onclick="if(event.target===this)DASH.closeChartModal()">
+      <div class="chart-modal-content">
+        <button class="chart-modal-close" onclick="DASH.closeChartModal()" aria-label="Close">✕</button>
+        <h2 id="chart-modal-title" style="margin:0 0 12px 0;padding-right:40px"></h2>
+        <div class="chart-modal-body">
+          <div class="chart-container" id="chart-modal-host"><canvas id="chart-modal-canvas"></canvas></div>
         </div>
-      </div>
-      <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
-      <div class="chart-stat-bar">
-        <span>Portfolio (USD): <strong id="cum-port">--</strong></span>
-        <span style="color:var(--warn)">INR Return: <strong id="cum-inr">--</strong></span>
-        <span>S&amp;P 500 (^GSPC): <strong id="cum-snp">--</strong></span>
-        <span>Alpha INR vs Portfolio: <strong id="cum-alpha-inr-port" style="font-size:13px">--</strong></span>
-        <span>Alpha INR vs S&amp;P: <strong id="cum-alpha-inr-snp" style="font-size:13px">--</strong></span>
       </div>
     </div>
 
@@ -4233,7 +4269,72 @@ const DASH = (() => {
     render();   // rebuild + re-render with new value
   }
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP };
+  /* ── Chart expand-to-modal ── */
+  let _chartModalState = null;  // { canvasId, origParent, origNext }
+  function openChartModal(canvasId, title) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const origContainer = canvas.parentElement;          // .chart-container
+    const modalBackdrop = document.getElementById('chart-modal-backdrop');
+    const modalHost     = document.getElementById('chart-modal-host');
+    const modalTitle    = document.getElementById('chart-modal-title');
+    if (!modalBackdrop || !modalHost || !origContainer) return;
+    // Remember original location to restore
+    _chartModalState = {
+      canvasId,
+      origParent: origContainer.parentElement,
+      origContainer
+    };
+    // Replace modal-host child canvas with the real one
+    modalHost.innerHTML = '';
+    modalHost.appendChild(canvas);
+    modalTitle.textContent = title || '';
+    modalBackdrop.classList.add('active');
+    // Force chart resize
+    const chartInst = S.charts[canvasId];
+    if (chartInst) setTimeout(() => chartInst.resize(), 50);
+    // ESC to close
+    document.addEventListener('keydown', _chartModalEsc);
+  }
+  function closeChartModal() {
+    const modalBackdrop = document.getElementById('chart-modal-backdrop');
+    if (!modalBackdrop || !_chartModalState) { if (modalBackdrop) modalBackdrop.classList.remove('active'); return; }
+    const { canvasId, origContainer } = _chartModalState;
+    const canvas = document.getElementById(canvasId);
+    if (canvas && origContainer) {
+      origContainer.appendChild(canvas);
+    }
+    modalBackdrop.classList.remove('active');
+    const chartInst = S.charts[canvasId];
+    if (chartInst) setTimeout(() => chartInst.resize(), 50);
+    _chartModalState = null;
+    document.removeEventListener('keydown', _chartModalEsc);
+  }
+  function _chartModalEsc(e) {
+    if (e.key === 'Escape') closeChartModal();
+  }
+  // Wire up click handlers on .chart-expandable cards
+  function _wireChartExpand() {
+    document.querySelectorAll('.chart-expandable').forEach(card => {
+      if (card.dataset._wired) return;
+      card.dataset._wired = '1';
+      card.addEventListener('click', (e) => {
+        // Ignore clicks on interactive controls inside the card
+        if (e.target.closest('button, a, input, select')) return;
+        const id    = card.dataset.chartId;
+        const title = card.dataset.chartTitle;
+        if (id) openChartModal(id, title);
+      });
+    });
+  }
+  // Run after DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _wireChartExpand);
+  } else {
+    _wireChartExpand();
+  }
+
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal };
 })();
 
 // Register service worker for PWA installability

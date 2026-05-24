@@ -2697,10 +2697,11 @@ const DASH = (() => {
     if (_wRest.length) _wData.push({ tk: 'OTHER', mv: _wRest.reduce((s,p)=>s+p.mv, 0) });
     // Pastel palette — alternating mint, violet, lavender, soft-purple (Public.com style)
     const _wPalette = ['#4be8c4','#a78bfa','#95efd0','#c4b5fd','#6ee7d0','#b8a4f5','#7fecd0','#d4c5fc'];
-    // All-time return % for center label — sum cost vs market value of open positions
-    const _wCost = usOpen.reduce((s,p) => s + (p.qty * (p.avg || 0)), 0);
-    const _wMv   = usOpen.reduce((s,p) => s + (p.mv || 0), 0);
-    const _allTimeRet = _wCost > 0 ? ((_wMv - _wCost) / _wCost) * 100 : 0;
+    // Cash % of total account value for center label
+    const _wMvAll   = usOpen.reduce((s,p) => s + (p.mv || 0), 0);
+    const _wCashAmt = us.cash || 0;
+    const _wTotalV  = _wMvAll + _wCashAmt;
+    const _cashPct  = _wTotalV > 0 ? (_wCashAmt / _wTotalV) * 100 : 0;
     // Center-text plugin (inline)
     const _centerText = {
       id: 'centerText',
@@ -2709,16 +2710,15 @@ const DASH = (() => {
         const cx = (left + right) / 2, cy = (top + bottom) / 2;
         ctx.save();
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        // Return %
-        const retStr = (_allTimeRet >= 0 ? '+' : '') + _allTimeRet.toFixed(2) + '%';
-        const retColor = _allTimeRet >= 0 ? '#34d399' : '#f87171';
-        ctx.fillStyle = retColor;
+        // Cash %
+        const cashStr = _cashPct.toFixed(2) + '%';
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-y').trim() || '#f0b429';
         ctx.font = '700 22px Inter, system-ui, sans-serif';
-        ctx.fillText(retStr, cx, cy - 8);
-        // "All-time" label
+        ctx.fillText(cashStr, cx, cy - 8);
+        // "Cash held" label
         ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#8892aa';
         ctx.font = '500 11px Inter, system-ui, sans-serif';
-        ctx.fillText('All-time', cx, cy + 14);
+        ctx.fillText('Cash held', cx, cy + 14);
         ctx.restore();
       }
     };

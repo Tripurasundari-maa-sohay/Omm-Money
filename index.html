@@ -860,7 +860,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:280px;max-width:320px;position:relative;overflow:hidden;"><canvas id="us-weight-chart"></canvas></div>
+          <div style="height:340px;max-width:420px;position:relative;overflow:visible;padding:20px;"><canvas id="us-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
@@ -2685,20 +2685,84 @@ const DASH = (() => {
                   datalabels: _DL_PCT } }
     });
 
-    // US open positions pie
+    // US open positions — Public.com style donut with outside badges + center stat
     const usOpen = us.open.filter(p=>p.mv>0);
     const usSorted = [...usOpen].sort((a,b)=>b.mv-a.mv);
+    const _wTot = usSorted.reduce((s,p)=>s+p.mv, 0);
+    // Group positions <3% into OTHER
+    const _MIN_W = 0.03;
+    const _wMain = usSorted.filter(p => (p.mv/_wTot) >= _MIN_W);
+    const _wRest = usSorted.filter(p => (p.mv/_wTot) <  _MIN_W);
+    const _wData = _wMain.map(p => ({ tk: p.tk, mv: p.mv }));
+    if (_wRest.length) _wData.push({ tk: 'OTHER', mv: _wRest.reduce((s,p)=>s+p.mv, 0) });
+    // Pastel palette — alternating mint, violet, lavender, soft-purple (Public.com style)
+    const _wPalette = ['#4be8c4','#a78bfa','#95efd0','#c4b5fd','#6ee7d0','#b8a4f5','#7fecd0','#d4c5fc'];
+    // All-time return % for center label — sum cost vs market value of open positions
+    const _wCost = usOpen.reduce((s,p) => s + (p.qty * (p.avg || 0)), 0);
+    const _wMv   = usOpen.reduce((s,p) => s + (p.mv || 0), 0);
+    const _allTimeRet = _wCost > 0 ? ((_wMv - _wCost) / _wCost) * 100 : 0;
+    // Center-text plugin (inline)
+    const _centerText = {
+      id: 'centerText',
+      afterDraw(chart) {
+        const {ctx, chartArea: {left, right, top, bottom}} = chart;
+        const cx = (left + right) / 2, cy = (top + bottom) / 2;
+        ctx.save();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        // Return %
+        const retStr = (_allTimeRet >= 0 ? '+' : '') + _allTimeRet.toFixed(2) + '%';
+        const retColor = _allTimeRet >= 0 ? '#34d399' : '#f87171';
+        ctx.fillStyle = retColor;
+        ctx.font = '700 22px Inter, system-ui, sans-serif';
+        ctx.fillText(retStr, cx, cy - 8);
+        // "All-time" label
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#8892aa';
+        ctx.font = '500 11px Inter, system-ui, sans-serif';
+        ctx.fillText('All-time', cx, cy + 14);
+        ctx.restore();
+      }
+    };
     mkChart('us-weight-chart', { type:'doughnut',
       data: {
-        labels: usSorted.map(p=>p.tk),
-        datasets: [{ data: usSorted.map(p=>Math.round(p.mv)),
-          backgroundColor: COLORS.slice(0, usSorted.length),
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a', borderWidth: 2 }]
+        labels: _wData.map(p=>p.tk),
+        datasets: [{ data: _wData.map(p=>Math.round(p.mv)),
+          backgroundColor: _wPalette.slice(0, _wData.length),
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a',
+          borderWidth: 3,
+          borderRadius: 4,
+          spacing: 2,
+          hoverOffset: 8 }]
       },
       options: { responsive:true, maintainAspectRatio:false,
-        plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
-          tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/us.mv*100)})`; } } },
-          datalabels: _DL_PCT } }
+        cutout: '72%',
+        layout: { padding: 36 },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/_wTot*100)})`; } } },
+          datalabels: {
+            display: ctx => {
+              const v = ctx.dataset.data[ctx.dataIndex] || 0;
+              return (v / _wTot) * 100 >= 3;
+            },
+            anchor: 'end',
+            align: 'end',
+            offset: 10,
+            color: getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim() || '#e8eaf0',
+            backgroundColor: 'rgba(20,20,32,0.85)',
+            borderColor: ctx => ctx.dataset.backgroundColor[ctx.dataIndex],
+            borderWidth: 1.5,
+            borderRadius: 14,
+            padding: { top: 4, bottom: 4, left: 8, right: 8 },
+            font: { size: 11, weight: '600' },
+            formatter: (v, ctx) => {
+              const tk = ctx.chart.data.labels[ctx.dataIndex];
+              const pctV = (v / _wTot) * 100;
+              return `${tk}  ${pctV.toFixed(0)}%`;
+            }
+          }
+        }
+      },
+      plugins: [_centerText]
     });
 
     // US asset mix: Stock vs ETF vs Cash

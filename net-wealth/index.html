@@ -135,12 +135,30 @@
   /* LOADING */
   .loading::after { content: '…'; color: var(--gold-dim); animation: dots 1s steps(4) infinite; }
   @keyframes dots { 0%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
+  .tab-btn { background: var(--bg-card); color: var(--text-sec); border: 1px solid var(--border); border-radius: 6px; padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: 1px; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+  .tab-btn:hover { color: var(--gold-dim); border-color: var(--gold-dim); }
+  .tab-btn.active { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border-color: var(--gold); box-shadow: 0 2px 12px rgba(255,215,0,0.25); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 </style>
 </head>
 <body>
 
 <h1>⚔️ ODIN ⚔️</h1>
 <div class="subtitle">NET WORTH SENTINEL</div>
+
+<!-- TAB NAV -->
+<div class="tabs">
+  <button class="tab-btn active" data-tab="overall">🏛️ OVERALL</button>
+  <button class="tab-btn" data-tab="assets">▲ ASSETS</button>
+  <button class="tab-btn" data-tab="liab">▼ LIABILITIES</button>
+</div>
+
+<!-- ═══ OVERALL TAB ═══ -->
+<div class="tab-content active" id="tab-overall">
 
 <!-- HERO -->
 <div class="card hero">
@@ -185,62 +203,7 @@
   </div>
 </div>
 
-<!-- ASSET BREAKDOWN -->
-<div class="grid-2">
-  <div class="card">
-    <h2>📊 EQUITIES</h2>
-    <div class="row-line"><span class="name">India Stocks <span class="sub" id="india-tickers">—</span></span><span class="val" id="a-india-stocks">—</span></div>
-    <div class="row-line"><span class="name">US Stocks <span class="sub" id="us-tickers">—</span></span><span class="val" id="a-us-stocks">—</span></div>
-    <div class="row-line"><span class="name">F&amp;O Corpus (Cash + Margin)</span><span class="val" id="a-fo">—</span></div>
-    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-eq-tot">—</span></div>
-  </div>
-
-  <div class="card">
-    <h2>🏆 GOLD</h2>
-    <div class="row-line"><span class="name">Jewellery <span class="sub" id="jewel-rate">—</span></span><span class="val" id="a-jewel">—</span></div>
-    <div class="row-line"><span class="name">Malabar Scheme <span class="sub" id="malabar-rate">—</span></span><span class="val" id="a-malabar">—</span></div>
-    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-gold-tot">—</span></div>
-  </div>
-
-  <div class="card">
-    <h2>🏠 REAL ESTATE</h2>
-    <div class="row-line"><span class="name">Apartment Market Value</span><span class="val" id="a-apt-mkt">—</span></div>
-    <div class="row-line"><span class="name">(−) Apartment Loan</span><span class="val" style="color:var(--loss)" id="a-apt-loan">—</span></div>
-    <div class="total-line"><span class="name">Apartment Equity</span><span class="val" id="a-apt-eq">—</span></div>
-  </div>
-
-  <div class="card">
-    <h2>🚗 VEHICLES</h2>
-    <div class="row-line"><span class="name">Land Cruiser (resale, QAR)</span><span class="val" id="a-lc">—</span></div>
-    <div class="row-line"><span class="name">(−) LC Loan (QAR)</span><span class="val" style="color:var(--loss)" id="a-lc-loan">—</span></div>
-    <div class="total-line"><span class="name">Vehicle Equity</span><span class="val" id="a-veh-eq">—</span></div>
-  </div>
-
-  <div class="card">
-    <h2>💵 CASH · BANKS</h2>
-    <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">🇶🇦 Qatar</div>
-    <div id="cash-qatar-host"></div>
-    <div style="font-size:11px;color:var(--text-dim);margin:8px 0 6px">🇮🇳 India</div>
-    <div id="cash-india-host"></div>
-    <div class="total-line"><span class="name">Cash Subtotal</span><span class="val" id="a-cash-tot">—</span></div>
-  </div>
-
-  <div class="card">
-    <h2>👴 RETIREMENT</h2>
-    <div class="row-line"><span class="name">Gratuity (QAR)</span><span class="val" id="a-grat">—</span></div>
-    <div class="row-line"><span class="name">Next +QAR 10,500 (Jan)</span><span class="val" id="a-grat-next">—</span></div>
-    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-ret-tot">—</span></div>
-  </div>
-</div>
-
-<!-- LIABILITY TRACKER -->
-<div class="card">
-  <h2>📉 LIABILITY TRACKER</h2>
-  <div id="liab-host"></div>
-  <div class="total-line"><span class="name">Total Liabilities (INR)</span><span class="val" style="color:var(--loss)" id="l-tot">—</span></div>
-</div>
-
-<!-- KPI -->
+<!-- KPI (Overall) -->
 <div class="card">
   <h2>⭐ KPI · NET WORTH TRACKING</h2>
   <div class="kpi-strip">
@@ -261,7 +224,7 @@
   </p>
 </div>
 
-<!-- MONTHLY CASH FLOW -->
+<!-- MONTHLY CASH FLOW (Overall) -->
 <div class="card">
   <h2>💰 MONTHLY CASH FLOW</h2>
   <div class="kpi-strip">
@@ -270,36 +233,100 @@
     <div class="kpi-tile"><div class="lbl">SAVINGS TARGET</div><div class="val" id="cf-target">—</div></div>
     <div class="kpi-tile"><div class="lbl">SAVINGS RATE</div><div class="val" id="cf-rate">—</div></div>
   </div>
-</div>
-
-<!-- MANUAL INPUTS -->
-<div class="card">
-  <h2>✏️ MANUAL INPUTS</h2>
-  <p style="font-size:11px;color:var(--text-dim);margin-top:0">
-    Saved to browser localStorage. Update monthly. Quarterly fields starred (★). Type expressions like <code>11+11</code> — auto-evaluates on blur.
-  </p>
-  <div class="form-2col">
-    <div class="form-col">
-      <h3 class="form-col-title" style="color:var(--asset)">▲ ASSETS</h3>
-      <div id="form-assets-host"></div>
-    </div>
-    <div class="form-col">
-      <h3 class="form-col-title" style="color:var(--liab)">▼ LIABILITIES</h3>
-      <div id="form-liab-host"></div>
-    </div>
-  </div>
-  <div class="form-col" style="margin-top:14px">
-    <h3 class="form-col-title">💰 CASH FLOW</h3>
+  <div style="margin-top:12px">
+    <h3 class="form-col-title" style="font-size:11px">CASH FLOW INPUTS</h3>
     <div id="form-flow-host"></div>
+    <button class="save-btn" onclick="ODIN.saveInputs()" style="margin-top:8px">💾 SAVE</button>
   </div>
-  <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
 </div>
 
-<!-- MILESTONES -->
+<!-- MILESTONES (Overall) -->
 <div class="card">
   <h2>🎯 MILESTONE TRACKER</h2>
   <div id="milestone-host"></div>
 </div>
+
+</div><!-- /tab-overall -->
+
+
+<!-- ═══ ASSETS TAB ═══ -->
+<div class="tab-content" id="tab-assets">
+  <div class="grid-2">
+    <div class="card">
+      <h2>📊 EQUITIES</h2>
+      <div class="row-line"><span class="name">India Stocks <span class="sub" id="india-tickers">—</span></span><span class="val" id="a-india-stocks">—</span></div>
+      <div class="row-line"><span class="name">US Stocks <span class="sub" id="us-tickers">—</span></span><span class="val" id="a-us-stocks">—</span></div>
+      <div class="row-line"><span class="name">F&amp;O Corpus (Cash + Margin)</span><span class="val" id="a-fo">—</span></div>
+      <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-eq-tot">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>🏆 GOLD</h2>
+      <div class="row-line"><span class="name">Jewellery <span class="sub" id="jewel-rate">—</span></span><span class="val" id="a-jewel">—</span></div>
+      <div class="row-line"><span class="name">Malabar Scheme <span class="sub" id="malabar-rate">—</span></span><span class="val" id="a-malabar">—</span></div>
+      <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-gold-tot">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>🏠 REAL ESTATE</h2>
+      <div class="row-line"><span class="name">Apartment Market Value</span><span class="val" id="a-apt-mkt">—</span></div>
+      <div class="row-line"><span class="name">(−) Apartment Loan</span><span class="val" style="color:var(--loss)" id="a-apt-loan">—</span></div>
+      <div class="total-line"><span class="name">Apartment Equity</span><span class="val" id="a-apt-eq">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>🚗 VEHICLES</h2>
+      <div class="row-line"><span class="name">Land Cruiser (resale, QAR)</span><span class="val" id="a-lc">—</span></div>
+      <div class="row-line"><span class="name">(−) LC Loan (QAR)</span><span class="val" style="color:var(--loss)" id="a-lc-loan">—</span></div>
+      <div class="total-line"><span class="name">Vehicle Equity</span><span class="val" id="a-veh-eq">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>💵 CASH · BANKS</h2>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">🇶🇦 Qatar</div>
+      <div id="cash-qatar-host"></div>
+      <div style="font-size:11px;color:var(--text-dim);margin:8px 0 6px">🇮🇳 India</div>
+      <div id="cash-india-host"></div>
+      <div class="total-line"><span class="name">Cash Subtotal</span><span class="val" id="a-cash-tot">—</span></div>
+    </div>
+
+    <div class="card">
+      <h2>👴 RETIREMENT</h2>
+      <div class="row-line"><span class="name">Gratuity (QAR)</span><span class="val" id="a-grat">—</span></div>
+      <div class="row-line"><span class="name">Next +QAR 10,500 (Jan)</span><span class="val" id="a-grat-next">—</span></div>
+      <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-ret-tot">—</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>✏️ ASSET INPUTS</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:0">
+      Saved to browser localStorage. Quarterly fields starred (★). Type expressions like <code>11+11</code> — auto-evaluates on blur.
+    </p>
+    <div id="form-assets-host"></div>
+    <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+  </div>
+</div><!-- /tab-assets -->
+
+
+<!-- ═══ LIABILITIES TAB ═══ -->
+<div class="tab-content" id="tab-liab">
+  <div class="card">
+    <h2>📉 LIABILITY TRACKER</h2>
+    <div id="liab-host"></div>
+    <div class="total-line"><span class="name">Total Liabilities (INR)</span><span class="val" style="color:var(--loss)" id="l-tot">—</span></div>
+  </div>
+
+  <div class="card">
+    <h2>✏️ LIABILITY INPUTS</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:0">
+      Loans + credit cards. Type expressions like <code>250000-12000</code> — auto-evaluates.
+    </p>
+    <div id="form-liab-host"></div>
+    <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+  </div>
+</div><!-- /tab-liab -->
+
 
 <div class="meta-bar">
   <span>ODIN v1 · Net Worth Sentinel</span>
@@ -1053,16 +1080,37 @@ const ODIN = (() => {
     setTimeout(() => el.remove(), 1500);
   }
 
+  // ── Tab switching ───────────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const tab = document.getElementById('tab-' + name);
+    const btn = document.querySelector(`.tab-btn[data-tab="${name}"]`);
+    if (tab) tab.classList.add('active');
+    if (btn) btn.classList.add('active');
+    try { localStorage.setItem('odin_active_tab', name); } catch {}
+  }
+  function _wireTabs() {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.addEventListener('click', () => switchTab(b.dataset.tab));
+    });
+    try {
+      const saved = localStorage.getItem('odin_active_tab');
+      if (saved && ['overall','assets','liab'].includes(saved) && saved !== 'overall') {
+        switchTab(saved);
+      }
+    } catch {}
+  }
+
   // ── Boot ────────────────────────────────────────────────────────
   async function init() {
+    _wireTabs();
     loadInputs();
     loadHistory();
     await loadSeed();
-    await loadHistoryFromRepo();          // merge committed history.json with local
+    await loadHistoryFromRepo();
     await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
     render();
-    // Auto-refresh ONCE per day only — saves GH Pages bandwidth + CORS proxy quota.
-    // Manual refresh via 🔄 button or page reload.
     setInterval(refreshAll, 24 * 60 * 60 * 1000);
   }
 

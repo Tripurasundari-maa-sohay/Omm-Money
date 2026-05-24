@@ -177,10 +177,12 @@
   </div>
 
   <div class="card">
-    <h2>💵 CASH</h2>
-    <div class="row-line"><span class="name">Qatar Bank <span class="sub" id="qatar-bank-name">—</span></span><span class="val" id="a-qa-cash">—</span></div>
-    <div class="row-line"><span class="name">India Bank <span class="sub" id="india-bank-name">—</span></span><span class="val" id="a-in-cash">—</span></div>
-    <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-cash-tot">—</span></div>
+    <h2>💵 CASH · BANKS</h2>
+    <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">🇶🇦 Qatar</div>
+    <div id="cash-qatar-host"></div>
+    <div style="font-size:11px;color:var(--text-dim);margin:8px 0 6px">🇮🇳 India</div>
+    <div id="cash-india-host"></div>
+    <div class="total-line"><span class="name">Cash Subtotal</span><span class="val" id="a-cash-tot">—</span></div>
   </div>
 
   <div class="card">
@@ -194,9 +196,7 @@
 <!-- LIABILITY TRACKER -->
 <div class="card">
   <h2>📉 LIABILITY TRACKER</h2>
-  <div class="row-line"><span class="name">Apartment Loan (INR) <span class="sub" id="l-apt-tenure">—</span></span><span class="val" style="color:var(--loss)" id="l-apt">—</span></div>
-  <div class="row-line"><span class="name">Land Cruiser Loan (QAR) <span class="sub" id="l-lc-tenure">—</span></span><span class="val" style="color:var(--loss)" id="l-lc">—</span></div>
-  <div class="row-line"><span class="name">India Car Loan (INR) <span class="sub" id="l-icar-tenure">—</span></span><span class="val" style="color:var(--loss)" id="l-icar">—</span></div>
+  <div id="liab-host"></div>
   <div class="total-line"><span class="name">Total Liabilities (INR)</span><span class="val" style="color:var(--loss)" id="l-tot">—</span></div>
 </div>
 
@@ -338,7 +338,6 @@ const ODIN = (() => {
   // ── Compute ─────────────────────────────────────────────────────
   function view() {
     const a = S.seed.assets || {};
-    const l = S.seed.liabilities || {};
     const fx = S.fx;
     const goldRate = num('gold_rate_inr_per_gram', S.seed.gold_rate_inr_per_gram || 8500);
 
@@ -352,34 +351,52 @@ const ODIN = (() => {
     const jewel_inr        = jewel_g * goldRate;
     const malabar_inr      = malabar_g * goldRate;
     const apt_mkt          = num('apartment_market_value', a.apartment_market_value || 0);
-    const apt_loan         = num('apartment_loan_inr', l.apartment_loan_inr || 0);
-    const apt_equity       = apt_mkt - apt_loan;
     const lc_qar           = num('land_cruiser_resale_qar', a.land_cruiser_resale_qar || 0);
-    const lc_loan_qar      = num('lc_loan_qar', l.lc_loan_qar || 0);
     const lc_qar_inr       = lc_qar * fx.qar_to_inr;
-    const lc_loan_qar_inr  = lc_loan_qar * fx.qar_to_inr;
-    const veh_equity_inr   = lc_qar_inr - lc_loan_qar_inr;
-    const qa_cash_qar      = num('qatar_bank_qar', a.qatar_bank_qar || 0);
-    const in_cash_inr      = num('india_bank_inr', a.india_bank_inr || 0);
-    const qa_cash_inr      = qa_cash_qar * fx.qar_to_inr;
-    const cash_tot_inr     = qa_cash_inr + in_cash_inr;
     const grat_qar         = num('gratuity_qar', a.gratuity_qar || 0);
     const grat_inr         = grat_qar * fx.qar_to_inr;
-    const icar_loan        = num('india_car_loan_inr', l.india_car_loan_inr || 0);
+
+    // BANKS (each bank: bal in seed or localStorage override by key `bank_<country>_<idx>`)
+    const banksQA = (S.seed.banks_qatar || []).map((b, i) => {
+      const bal = num('bank_qa_' + i, b.balance_qar || 0);
+      return { name: b.name, balance_qar: bal, balance_inr: bal * fx.qar_to_inr };
+    });
+    const banksIN = (S.seed.banks_india || []).map((b, i) => {
+      const bal = num('bank_in_' + i, b.balance_inr || 0);
+      return { name: b.name, balance_inr: bal };
+    });
+    const cash_qa_inr = banksQA.reduce((s, b) => s + b.balance_inr, 0);
+    const cash_in_inr = banksIN.reduce((s, b) => s + b.balance_inr, 0);
+    const cash_tot_inr = cash_qa_inr + cash_in_inr;
+
+    // LOANS (each loan: outstanding in seed or localStorage override by key `loan_<id>`)
+    const loans = (S.seed.loans || []).map(ln => {
+      const out = num('loan_' + ln.id, ln.outstanding || 0);
+      const tenure = num('loan_tenure_' + ln.id, ln.tenure_months_remaining || 0);
+      const out_inr = ln.ccy === 'QAR' ? out * fx.qar_to_inr : out;
+      return { ...ln, outstanding: out, tenure_months_remaining: tenure, outstanding_inr: out_inr };
+    });
+    const liabTot = loans.reduce((s, ln) => s + ln.outstanding_inr, 0);
+    // Apartment loan for real-estate equity row
+    const aptLoan = (loans.find(ln => ln.id === 'apartment') || {}).outstanding_inr || 0;
+    const apt_equity = apt_mkt - aptLoan;
+    // LC loan for vehicle equity
+    const lcLoanQAR    = (loans.find(ln => ln.id === 'lc') || {}).outstanding || 0;
+    const lcLoanQAR_INR= lcLoanQAR * fx.qar_to_inr;
+    const veh_equity_inr = lc_qar_inr - lcLoanQAR_INR;
 
     // TOTALS
     const assetsTot = india_stocks_inr + us_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + lc_qar_inr + cash_tot_inr + grat_inr;
-    const liabTot   = apt_loan + lc_loan_qar_inr + icar_loan;
     const netWorth  = assetsTot - liabTot;
 
     return {
       india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
       jewel_g, jewel_inr, malabar_g, malabar_inr,
-      apt_mkt, apt_loan, apt_equity,
-      lc_qar, lc_loan_qar, lc_qar_inr, lc_loan_qar_inr, veh_equity_inr,
-      qa_cash_qar, qa_cash_inr, in_cash_inr, cash_tot_inr,
+      apt_mkt, apt_loan: aptLoan, apt_equity,
+      lc_qar, lc_loan_qar: lcLoanQAR, lc_qar_inr, lc_loan_qar_inr: lcLoanQAR_INR, veh_equity_inr,
+      banksQA, banksIN, cash_qa_inr, cash_in_inr, cash_tot_inr,
       grat_qar, grat_inr,
-      icar_loan,
+      loans,
       assetsTot, liabTot, netWorth, goldRate
     };
   }
@@ -433,21 +450,38 @@ const ODIN = (() => {
     document.getElementById('a-lc-loan').textContent  = '(' + fmtQAR(v.lc_loan_qar) + ' · ' + fmtINR(v.lc_loan_qar_inr) + ')';
     document.getElementById('a-veh-eq').textContent   = fmtINR(v.veh_equity_inr);
 
-    const bl = S.seed.bank_labels || {};
-    document.getElementById('qatar-bank-name').textContent = bl.qatar_bank_name ? `(${bl.qatar_bank_name})` : '';
-    document.getElementById('india-bank-name').textContent = bl.india_bank_name ? `(${bl.india_bank_name})` : '';
-    document.getElementById('a-qa-cash').textContent  = fmtQAR(v.qa_cash_qar) + ' · ' + fmtINR(v.qa_cash_inr);
-    document.getElementById('a-in-cash').textContent  = fmtINR(v.in_cash_inr);
+    // Banks — render per-bank rows (Qatar + India)
+    const qHost = document.getElementById('cash-qatar-host');
+    qHost.innerHTML = v.banksQA.map(b => `
+      <div class="row-line"><span class="name">${b.name}</span>
+        <span class="val">${b.balance_qar ? fmtQAR(b.balance_qar) + ' · ' + fmtINR(b.balance_inr) : '<span style="color:var(--text-dim)">—</span>'}</span>
+      </div>`).join('');
+    const iHost = document.getElementById('cash-india-host');
+    iHost.innerHTML = v.banksIN.map(b => `
+      <div class="row-line"><span class="name">${b.name}</span>
+        <span class="val">${b.balance_inr ? fmtINR(b.balance_inr) : '<span style="color:var(--text-dim)">—</span>'}</span>
+      </div>`).join('');
     document.getElementById('a-cash-tot').textContent = fmtINR(v.cash_tot_inr);
 
     document.getElementById('a-grat').textContent     = fmtQAR(v.grat_qar) + ' · ' + fmtINR(v.grat_inr);
     document.getElementById('a-grat-next').textContent = '+' + fmtQAR(S.seed.gratuity_annual_increment_qar || 10500);
     document.getElementById('a-ret-tot').textContent  = fmtINR(v.grat_inr);
 
-    // Liabilities
-    document.getElementById('l-apt').textContent  = fmtINR(v.apt_loan);
-    document.getElementById('l-lc').textContent   = fmtQAR(v.lc_loan_qar) + ' · ' + fmtINR(v.lc_loan_qar_inr);
-    document.getElementById('l-icar').textContent = fmtINR(v.icar_loan);
+    // Liabilities — render per-loan rows (each shows lender, even if 0)
+    const lHost = document.getElementById('liab-host');
+    lHost.innerHTML = v.loans.map(ln => {
+      const isZero = !ln.outstanding;
+      const valStr = ln.ccy === 'QAR'
+        ? fmtQAR(ln.outstanding) + ' · ' + fmtINR(ln.outstanding_inr)
+        : fmtINR(ln.outstanding_inr);
+      const tenureStr = ln.tenure_months_remaining
+        ? ` · ${ln.tenure_months_remaining} mo left`
+        : '';
+      return `<div class="row-line">
+        <span class="name">${ln.label} <span class="sub">${ln.provider}${tenureStr}</span></span>
+        <span class="val" style="color:${isZero ? 'var(--text-dim)' : 'var(--loss)'}">${isZero ? '—' : '(' + valStr + ')'}</span>
+      </div>`;
+    }).join('');
     document.getElementById('l-tot').textContent  = fmtINR(v.liabTot);
 
     // Cash flow
@@ -580,38 +614,76 @@ const ODIN = (() => {
   }
 
   // ── Form ────────────────────────────────────────────────────────
-  const FIELDS = [
-    { key: 'qatar_bank_qar',           label: 'Qatar Bank Balance',           ccy: 'QAR' },
-    { key: 'india_bank_inr',           label: 'India Bank Balance',           ccy: 'INR' },
-    { key: 'apartment_loan_inr',       label: 'Apartment Loan Outstanding',   ccy: 'INR' },
-    { key: 'lc_loan_qar',              label: 'Land Cruiser Loan Outstanding', ccy: 'QAR' },
-    { key: 'fo_corpus_cash',           label: 'F&O Corpus (cash)',            ccy: 'INR' },
-    { key: 'fo_margin_used',           label: 'F&O Margin Used',              ccy: 'INR' },
-    { key: 'india_car_loan_inr',       label: 'India Car Loan (future)',      ccy: 'INR' },
-    { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR' },
-    { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',   ccy: 'INR' },
-    { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g' },
-    { key: 'gratuity_qar',             label: 'Gratuity Accumulated',         ccy: 'QAR' },
-    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate (₹/g)',              ccy: 'INR' },
-    { key: 'salary_qar',               label: 'Monthly Salary',               ccy: 'QAR' },
-    { key: 'monthly_emi_inr',          label: 'Total Monthly EMIs',           ccy: 'INR' },
-    { key: 'savings_target_inr',       label: 'Monthly Savings Target',       ccy: 'INR' }
+  const STATIC_FIELDS = [
+    { key: 'fo_corpus_cash',           label: 'F&O Corpus (cash)',             ccy: 'INR', section: 'Equities' },
+    { key: 'fo_margin_used',           label: 'F&O Margin Used',               ccy: 'INR', section: 'Equities' },
+    { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
+    { key: 'gold_jewellery_grams',     label: 'Gold Jewellery Grams',          ccy: 'g',   section: 'Gold' },
+    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate (₹/g)',               ccy: 'INR', section: 'Gold' },
+    { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',    ccy: 'INR', section: 'Real Estate' },
+    { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR', section: 'Vehicles' },
+    { key: 'gratuity_qar',             label: 'Gratuity Accumulated',          ccy: 'QAR', section: 'Retirement' },
+    { key: 'salary_qar',               label: 'Monthly Salary',                ccy: 'QAR', section: 'Cash Flow' },
+    { key: 'monthly_emi_inr',          label: 'Total Monthly EMIs',            ccy: 'INR', section: 'Cash Flow' },
+    { key: 'savings_target_inr',       label: 'Monthly Savings Target',        ccy: 'INR', section: 'Cash Flow' }
   ];
 
   function renderForm() {
     const host = document.getElementById('form-host');
     host.innerHTML = '';
-    for (const f of FIELDS) {
-      const seedVal = (S.seed.assets || {})[f.key] ?? (S.seed.liabilities || {})[f.key] ?? (S.seed.monthly_cash_flow || {})[f.key] ?? S.seed[f.key];
-      const cur = S.inputs[f.key] ?? seedVal ?? '';
-      const row = document.createElement('div');
-      row.className = 'form-grid';
-      row.innerHTML = `
-        <label>${f.label}</label>
-        <input type="number" step="any" data-key="${f.key}" value="${cur}" />
-        <span class="ccy">${f.ccy}</span>
-      `;
-      host.appendChild(row);
+
+    // Group fields by section + add dynamic bank + loan fields
+    const grouped = {};
+    const seedVal = (key) => (S.seed.assets || {})[key]
+                          ?? (S.seed.liabilities || {})[key]
+                          ?? (S.seed.monthly_cash_flow || {})[key]
+                          ?? S.seed[key];
+
+    // Static fields
+    STATIC_FIELDS.forEach(f => {
+      (grouped[f.section] ||= []).push({
+        key: f.key, label: f.label, ccy: f.ccy,
+        current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
+      });
+    });
+
+    // Dynamic banks
+    (S.seed.banks_qatar || []).forEach((b, i) => {
+      (grouped['Cash · 🇶🇦 Qatar Banks'] ||= []).push({
+        key: 'bank_qa_' + i, label: b.name + ' balance', ccy: 'QAR',
+        current: S.inputs['bank_qa_' + i] ?? b.balance_qar ?? ''
+      });
+    });
+    (S.seed.banks_india || []).forEach((b, i) => {
+      (grouped['Cash · 🇮🇳 India Banks'] ||= []).push({
+        key: 'bank_in_' + i, label: b.name + ' balance', ccy: 'INR',
+        current: S.inputs['bank_in_' + i] ?? b.balance_inr ?? ''
+      });
+    });
+
+    // Dynamic loans
+    (S.seed.loans || []).forEach(ln => {
+      (grouped['Loans · ' + ln.label + ' (' + ln.provider + ')'] ||= []).push(
+        { key: 'loan_' + ln.id,         label: 'Outstanding',     ccy: ln.ccy, current: S.inputs['loan_' + ln.id] ?? ln.outstanding ?? '' },
+        { key: 'loan_tenure_' + ln.id,  label: 'Months remaining', ccy: 'mo', current: S.inputs['loan_tenure_' + ln.id] ?? ln.tenure_months_remaining ?? '' }
+      );
+    });
+
+    // Render groups
+    for (const [section, fields] of Object.entries(grouped)) {
+      const header = document.createElement('div');
+      header.style.cssText = 'color:var(--gold-dim);font-size:11px;letter-spacing:1.5px;margin:14px 0 6px;border-bottom:1px solid var(--border);padding-bottom:4px';
+      header.textContent = section.toUpperCase();
+      host.appendChild(header);
+      fields.forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'form-grid';
+        row.innerHTML = `
+          <label>${f.label}</label>
+          <input type="number" step="any" data-key="${f.key}" value="${f.current}" />
+          <span class="ccy">${f.ccy}</span>`;
+        host.appendChild(row);
+      });
     }
   }
 

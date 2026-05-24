@@ -20,19 +20,25 @@
     "india_car_loan_inr": 0
   },
   "banks_qatar": [
-    { "name": "QNB",          "balance_qar": 8000 },
-    { "name": "Doha Bank",    "balance_qar": 0 },
-    { "name": "QIB",          "balance_qar": 0 }
+    { "name": "Doha Bank · Savings",  "balance_qar": 0 },
+    { "name": "Doha Bank · Current",  "balance_qar": 0 },
+    { "name": "HSBC Qatar",           "balance_qar": 0 }
   ],
   "banks_india": [
-    { "name": "HDFC",         "balance_inr": 0 },
-    { "name": "ICICI",        "balance_inr": 0 },
-    { "name": "SBI",          "balance_inr": 0 }
+    { "name": "Axis (NRE)",          "balance_inr": 0 },
+    { "name": "IDFC FB (NRE)",       "balance_inr": 0 },
+    { "name": "IndusInd PIS NRE",    "balance_inr": 0 },
+    { "name": "IndusInd PIS NRO",    "balance_inr": 0 },
+    { "name": "IndusInd NRE",        "balance_inr": 0 },
+    { "name": "IndusInd NRO",        "balance_inr": 0 },
+    { "name": "SBI (NRO)",           "balance_inr": 0 }
   ],
   "loans": [
-    { "id": "apartment",  "label": "Apartment Loan",       "provider": "HDFC Home Loan",       "ccy": "INR", "outstanding": 3800000, "tenure_months_remaining": 0 },
-    { "id": "lc",         "label": "Land Cruiser Loan",    "provider": "QNB Auto Finance",     "ccy": "QAR", "outstanding": 271000,  "tenure_months_remaining": 0 },
-    { "id": "india_car",  "label": "India Car Loan",       "provider": "(future)",             "ccy": "INR", "outstanding": 0,       "tenure_months_remaining": 0 }
+    { "id": "apartment",  "label": "Apartment Loan",      "provider": "HDFC Home Loan",      "ccy": "INR", "outstanding": 3800000, "tenure_months_remaining": 0 },
+    { "id": "lc",         "label": "Land Cruiser Loan",   "provider": "QNB Auto Finance",    "ccy": "QAR", "outstanding": 271000,  "tenure_months_remaining": 0 },
+    { "id": "india_car",  "label": "India Car Loan",      "provider": "(future)",            "ccy": "INR", "outstanding": 0,       "tenure_months_remaining": 0 },
+    { "id": "cc_qa",      "label": "QA Credit Card",      "provider": "Qatar Airways CC",    "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 },
+    { "id": "cc_lulu",    "label": "Lulu Credit Card",    "provider": "Lulu CC",             "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 }
   ],
   "monthly_cash_flow": {
     "salary_qar": 0,

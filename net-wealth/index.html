@@ -210,7 +210,15 @@
     <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
-  <button class="snapshot-btn" onclick="ODIN.snapshot()" style="margin-top:10px">📸 Snapshot Now (save to history)</button>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+    <button class="snapshot-btn" onclick="ODIN.snapshot()">📸 Snapshot Now</button>
+    <button class="snapshot-btn" onclick="ODIN.exportHistory()">⬇️ Export history.json</button>
+    <button class="snapshot-btn" onclick="document.getElementById('hist-import').click()">⬆️ Import history.json</button>
+    <input type="file" id="hist-import" accept="application/json" style="display:none" onchange="ODIN.importHistory(event)" />
+  </div>
+  <p style="font-size:11px;color:var(--text-dim);margin:8px 0 0">
+    History saved to browser localStorage. Click "Export" → commit the JSON file to <code>net-wealth/data/history.json</code> for cross-device persistence.
+  </p>
 </div>
 
 <!-- MONTHLY CASH FLOW -->
@@ -283,6 +291,49 @@ const ODIN = (() => {
   function loadHistory() {
     try { S.history = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]'); }
     catch { S.history = []; }
+  }
+  // Load committed history.json from repo and merge (repo wins for older entries, local wins for today)
+  async function loadHistoryFromRepo() {
+    try {
+      const r = await fetch('data/history.json?_=' + Date.now());
+      if (!r.ok) return;
+      const repoHist = await r.json();
+      if (!Array.isArray(repoHist)) return;
+      // Merge by date (YYYY-MM-DD key); local overrides same-day, repo fills older gaps
+      const byDate = new Map();
+      repoHist.forEach(h => byDate.set((h.date || '').slice(0, 10), h));
+      S.history.forEach(h => byDate.set((h.date || '').slice(0, 10), h));   // local wins
+      S.history = Array.from(byDate.values()).filter(h => h.date).sort((a, b) => a.date.localeCompare(b.date));
+      localStorage.setItem(LS_HISTORY, JSON.stringify(S.history));
+    } catch { /* no committed history yet — fine */ }
+  }
+  function exportHistory() {
+    const blob = new Blob([JSON.stringify(S.history, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'history.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    flash('⬇️ history.json downloaded');
+  }
+  function importHistory(ev) {
+    const file = ev.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const arr = JSON.parse(e.target.result);
+        if (!Array.isArray(arr)) throw new Error('not an array');
+        const byDate = new Map();
+        S.history.forEach(h => byDate.set((h.date || '').slice(0, 10), h));
+        arr.forEach(h => byDate.set((h.date || '').slice(0, 10), h));    // imported wins
+        S.history = Array.from(byDate.values()).filter(h => h.date).sort((a, b) => a.date.localeCompare(b.date));
+        localStorage.setItem(LS_HISTORY, JSON.stringify(S.history));
+        render();
+        flash('⬆️ Imported ' + arr.length + ' entries');
+      } catch (err) { flash('❌ Import failed: ' + err.message); }
+    };
+    reader.readAsText(file);
   }
   async function loadFX() {
     // Frankfurter is free + no key required; falls back to seed values on fail
@@ -368,15 +419,21 @@ const ODIN = (() => {
     const malabar_g        = num('malabar_grams', a.malabar_grams || 0);
 
     // ── Gold rates ─────────────────────────────────────────────
-    // India spot (₹/g) from GOLDBEES NAV; fallback to manual override
+    // India 24K spot (₹/g) from GOLDBEES NAV ×100
     const indiaGoldRate = S.portfolio.india_gold_rate || goldRate;
-    // International (₹/g) from GC=F (USD/oz) × FX / 31.1035 g/oz
+    // International (₹/g) from GC=F (USD/oz) × FX / 31.1035
     const intlGoldRate = S.portfolio.intl_gold_usd_oz
       ? (S.portfolio.intl_gold_usd_oz * fx.usd_to_inr) / 31.1035
-      : indiaGoldRate;   // fallback if screener not loaded
+      : indiaGoldRate;
+    // Malabar 22K rate: prefer user-set override (copied from Malabar app), else estimate
+    // 22K ≈ 24K × 0.9167 + India retail premium (~5-8%)
+    const malabarManualRate = num('malabar_rate_inr_per_g', 0);
+    const malabarRate = malabarManualRate > 0
+      ? malabarManualRate
+      : indiaGoldRate * 0.9167 * 1.05;   // estimated 22K retail
 
-    const jewel_inr        = jewel_g * indiaGoldRate;       // Indian jewellery — India spot
-    const malabar_inr      = malabar_g * intlGoldRate;      // Malabar — international rate
+    const jewel_inr        = jewel_g * indiaGoldRate;        // jewellery valued at 24K India spot
+    const malabar_inr      = malabar_g * malabarRate;        // Malabar scheme valued at 22K India retail
     const apt_mkt          = num('apartment_market_value', a.apartment_market_value || 0);
     const lc_qar           = num('land_cruiser_resale_qar', a.land_cruiser_resale_qar || 0);
     const lc_qar_inr       = lc_qar * fx.qar_to_inr;
@@ -419,7 +476,7 @@ const ODIN = (() => {
     return {
       india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
       jewel_g, jewel_inr, malabar_g, malabar_inr,
-      indiaGoldRate, intlGoldRate,
+      indiaGoldRate, intlGoldRate, malabarRate,
       apt_mkt, apt_loan: aptLoan, apt_equity,
       lc_qar, lc_loan_qar: lcLoanQAR, lc_qar_inr, lc_loan_qar_inr: lcLoanQAR_INR, veh_equity_inr,
       banksQA, banksIN, cash_qa_inr, cash_in_inr, cash_tot_inr,
@@ -490,8 +547,9 @@ const ODIN = (() => {
     document.getElementById('a-fo').textContent           = fmtINR(v.fo_inr);
     document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
 
-    document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · India ₹${Math.round(v.indiaGoldRate).toLocaleString('en-IN')}/g)`;
-    document.getElementById('malabar-rate').textContent  = `(${v.malabar_g.toFixed(2)}g · Intl ₹${Math.round(v.intlGoldRate).toLocaleString('en-IN')}/g)`;
+    document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 24K India ₹${Math.round(v.indiaGoldRate).toLocaleString('en-IN')}/g)`;
+    const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual' : 'est';
+    document.getElementById('malabar-rate').textContent  = `(${v.malabar_g.toFixed(2)}g · 22K ₹${Math.round(v.malabarRate).toLocaleString('en-IN')}/g · ${mSrc})`;
     document.getElementById('a-jewel').textContent       = fmtINR(v.jewel_inr);
     document.getElementById('a-malabar').textContent     = fmtINR(v.malabar_inr);
     document.getElementById('a-gold-tot').textContent    = fmtINR(v.jewel_inr + v.malabar_inr);
@@ -673,7 +731,8 @@ const ODIN = (() => {
     { key: 'fo_margin_used',           label: 'F&O Margin Used',               ccy: 'INR', section: 'Equities' },
     { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'gold_jewellery_grams',     label: 'Gold Jewellery Grams',          ccy: 'g',   section: 'Gold' },
-    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate (₹/g)',               ccy: 'INR', section: 'Gold' },
+    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate 24K override (₹/g)',  ccy: 'INR', section: 'Gold' },
+    { key: 'malabar_rate_inr_per_g',   label: 'Malabar 22K rate (from app)',   ccy: 'INR', section: 'Gold' },
     { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',    ccy: 'INR', section: 'Real Estate' },
     { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR', section: 'Vehicles' },
     { key: 'gratuity_qar',             label: 'Gratuity Accumulated',          ccy: 'QAR', section: 'Retirement' },
@@ -800,13 +859,14 @@ const ODIN = (() => {
     loadInputs();
     loadHistory();
     await loadSeed();
+    await loadHistoryFromRepo();          // merge committed history.json with local
     await Promise.all([loadFX(), loadPortfolio()]);
     render();
     // Refresh portfolio + FX every 5 min
     setInterval(async () => { await Promise.all([loadFX(), loadPortfolio()]); render(); }, 5 * 60 * 1000);
   }
 
-  return { init, saveInputs, snapshot, evalField };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

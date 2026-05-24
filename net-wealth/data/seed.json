@@ -19,6 +19,9 @@
     "lc_loan_qar": 271000,
     "india_car_loan_inr": 0
   },
+  "custom_assets": [
+    { "id": "maa_tala_bari", "label": "Maa Tala Bari", "ccy": "INR", "value": 1100000, "category": "Real Estate" }
+  ],
   "banks_qatar": [
     { "name": "Doha Bank · Savings",  "balance_qar": 0 },
     { "name": "Doha Bank · Current",  "balance_qar": 0 },
@@ -27,6 +30,7 @@
   "banks_india": [
     { "name": "Axis (NRE)",          "balance_inr": 0 },
     { "name": "IDFC FB (NRE)",       "balance_inr": 0 },
+    { "name": "IDFC FB (BABA)",      "balance_inr": 0 },
     { "name": "IndusInd PIS NRE",    "balance_inr": 0 },
     { "name": "IndusInd PIS NRO",    "balance_inr": 0 },
     { "name": "IndusInd NRE",        "balance_inr": 0 },
@@ -38,7 +42,8 @@
     { "id": "lc",         "label": "Land Cruiser Loan",   "provider": "QNB Auto Finance",    "ccy": "QAR", "outstanding": 271000,  "tenure_months_remaining": 0 },
     { "id": "india_car",  "label": "India Car Loan",      "provider": "(future)",            "ccy": "INR", "outstanding": 0,       "tenure_months_remaining": 0 },
     { "id": "cc_qa",      "label": "QA Credit Card",      "provider": "Qatar Airways CC",    "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 },
-    { "id": "cc_lulu",    "label": "Lulu Credit Card",    "provider": "Lulu CC",             "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 }
+    { "id": "cc_lulu",    "label": "Lulu Credit Card",    "provider": "Lulu CC",             "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 },
+    { "id": "sulagna",    "label": "Sulagna Loan",        "provider": "Personal",            "ccy": "INR", "outstanding": 854000,  "tenure_months_remaining": 0 }
   ],
   "monthly_cash_flow": {
     "salary_qar": 0,
@@ -54,7 +59,5 @@
     "top_1_pct_india": 15200000,
     "target_1": 25000000,
     "target_2": 50000000
-  },
-  "gratuity_annual_increment_qar": 10500,
-  "gratuity_increment_month": 1
+  }
 }

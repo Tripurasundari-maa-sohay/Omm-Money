@@ -1066,7 +1066,7 @@
   <div id="transactions-tab" class="tab-content">
 
     <h2 style="margin-bottom:6px;">TRANSACTION HISTORY · 🌍 ALL PORTFOLIOS</h2>
-    <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">🇺🇸 Doha Bank Global · 🇮🇳 Motilal Oswal, Upstox, Mirae Asset (FY24-26)</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">🇺🇸 US Broker · 🇮🇳 Motilal Oswal, Upstox, Mirae Asset (FY24-26)</div>
 
     <div class="r-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
       <div style="background:var(--bg-card);border:1px solid var(--accent-b);border-radius:8px;padding:14px;">
@@ -2225,7 +2225,7 @@ const DASH = (() => {
     if (!tbody) return;
     const data = S.txUs;
     if (!data || !Array.isArray(data.trades)) {
-      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-dim);padding:14px;">No US transaction ledger yet — drop a Saxo xlsx into inbox/ and run ./sync.sh</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-dim);padding:14px;">No US transaction ledger yet — drop broker xlsx into inbox/ and run ./sync.sh</td></tr>';
       return;
     }
     const search  = ($('tx-led-search')?.value || '').trim().toLowerCase();

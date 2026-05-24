@@ -10,6 +10,8 @@ Exits with code 0 always (informational — does not break CI pipeline).
 
 from __future__ import annotations
 
+import os
+import re
 import sys
 import json
 import time
@@ -47,7 +49,25 @@ REQUIRED_KEYS: dict[str, list[str]] = {
 # If a workflow hasn't produced a `success` conclusion within N days, alert.
 # Catches the case where a workflow is "scheduled" but the GH free-tier cron
 # never actually fires (screener.yml had 0 successes ever).
-GH_REPO            = "sabarnagchowdhury-ui/portfolio-dashboard"
+def _detect_gh_repo() -> str:
+    """Detect repo from env var or git remote (no hardcoded owner)."""
+    if os.environ.get("GH_REPO"):
+        return os.environ["GH_REPO"]
+    try:
+        import subprocess
+        url = subprocess.check_output(
+            ["git", "config", "--get", "remote.origin.url"],
+            text=True, stderr=subprocess.DEVNULL
+        ).strip()
+        # Handles both https://github.com/owner/repo(.git) and git@github.com:owner/repo(.git)
+        m = re.search(r"github\.com[:/]([^/]+/[^/.]+?)(?:\.git)?$", url)
+        if m:
+            return m.group(1)
+    except Exception:
+        pass
+    return ""  # empty → workflow check will be silently skipped
+
+GH_REPO            = _detect_gh_repo()
 WORKFLOW_MAX_AGE_DAYS = 8  # most workflows run daily; >8 days = dead
 WORKFLOW_CHECK_LIST = [
     ".github/workflows/full_update.yml",

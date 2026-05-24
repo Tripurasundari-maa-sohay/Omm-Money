@@ -1,5 +1,5 @@
 """
-build_transactions_us.py — produce data/transactions_us.json from the Saxo/Doha
+build_transactions_us.py — produce data/transactions_us.json from the US broker
 transactions xlsx.
 
 Each output row is a single trade with full attribution: date, ticker, side,
@@ -225,7 +225,7 @@ def build(xl_path: Path) -> dict:
 
     return {
         "generated":  datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
-        "source":     "Saxo / Doha Bank transactions xlsx",
+        "source":     "US broker transactions xlsx",
         "period_from": period_start,
         "period_to":   period_end,
         "trades":      trades,
@@ -250,7 +250,7 @@ def build(xl_path: Path) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("xlsx", help="Saxo/Doha transactions xlsx")
+    ap.add_argument("xlsx", help="US broker transactions xlsx")
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()

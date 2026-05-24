@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-parse_broker_pdf.py — Doha Bank Global statement → holdings_cost.json
+parse_broker_pdf.py — US broker statement → holdings_cost.json
 
 Usage:
     python scripts/parse_broker_pdf.py path/to/statement.pdf
@@ -288,7 +288,9 @@ def parse_pl_breakdown(pdf) -> list[dict]:
         cropped = page.crop((50, 0, page.width, page.height))
         for row in page_rows(cropped):
             line = " ".join(row)
-            if not line or "Page" in line or "DohaBank" in line:
+            # Skip page headers/footers. Add your broker's header string here if it bleeds into rows.
+            _SKIP_TOKENS = ("Page", "DohaBank")
+            if not line or any(t in line for t in _SKIP_TOKENS):
                 continue
             m = PL_ROW_RE.match(line)
             if not m:
@@ -582,7 +584,7 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     merged_closed = closed_full + [p for p in prev_closed if p["tk"] not in new_closed_tks]
 
     out["us"] = {
-        "broker":                  "Doha Bank Global",
+        "broker":                  "US Broker",
         "cash":                    round(cash, 2),
         "cash_infusion_itd":       round(summary["net_deposits"], 2),
         "account_value_statement": round(summary["end_value"], 2),
@@ -598,7 +600,7 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
 
 # ───────────────────────── CLI ─────────────────────────
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Parse Doha Bank statement → holdings_cost.json")
+    ap = argparse.ArgumentParser(description="Parse US broker statement → holdings_cost.json")
     ap.add_argument("pdf", help="Path to broker statement PDF")
     ap.add_argument("--output", "-o", default="data/holdings_cost.json")
     args = ap.parse_args()

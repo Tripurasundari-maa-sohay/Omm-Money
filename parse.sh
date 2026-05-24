@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# parse.sh — local-only Doha Bank PDF → holdings_cost.json
+# parse.sh — local-only broker PDF → holdings_cost.json
 #
 # Usage (from repo root):
-#     ./parse.sh ~/Downloads/Portfolio_21550276_*.pdf
+#     ./parse.sh ~/Downloads/Portfolio_*.pdf
 #
 # The PDF NEVER leaves your machine.  Only the resulting JSON
 # (data/holdings_cost.json — free of names, account numbers, addresses)
@@ -21,7 +21,7 @@ if [ -z "${1:-}" ]; then
   echo "Usage: ./parse.sh <path-to-statement.pdf>"
   echo
   echo "Example:"
-  echo "    ./parse.sh ~/Downloads/Portfolio_21550276_96900_1341710_2025-12-01_2026-05-08.pdf"
+  echo "    ./parse.sh ~/Downloads/Portfolio_2025-12-01_2026-05-08.pdf"
   exit 1
 fi
 PDF="$1"

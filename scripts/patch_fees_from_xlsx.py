@@ -1,5 +1,5 @@
 """
-patch_fees_from_xlsx.py — overlay per-ticker commission fees from the Saxo/Doha
+patch_fees_from_xlsx.py — overlay per-ticker commission fees from the US broker
 transaction xlsx onto data/holdings_cost.json.
 
 Background:
@@ -148,7 +148,7 @@ def patch_holdings(
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("xlsx", help="Path to Saxo/Doha transactions xlsx")
+    ap.add_argument("xlsx", help="Path to US broker transactions xlsx")
     ap.add_argument(
         "--cost-file",
         default=str(ROOT / "data" / "holdings_cost.json"),

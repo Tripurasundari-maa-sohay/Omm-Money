@@ -157,8 +157,8 @@
 
   <div class="card">
     <h2>🏆 GOLD</h2>
-    <div class="row-line"><span class="name">Jewellery (500g)</span><span class="val" id="a-jewel">—</span></div>
-    <div class="row-line"><span class="name">Malabar Scheme <span class="sub" id="malabar-grams">—</span></span><span class="val" id="a-malabar">—</span></div>
+    <div class="row-line"><span class="name">Jewellery <span class="sub" id="jewel-rate">—</span></span><span class="val" id="a-jewel">—</span></div>
+    <div class="row-line"><span class="name">Malabar Scheme <span class="sub" id="malabar-rate">—</span></span><span class="val" id="a-malabar">—</span></div>
     <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-gold-tot">—</span></div>
   </div>
 
@@ -300,9 +300,10 @@ const ODIN = (() => {
   }
   async function loadPortfolio() {
     try {
-      const [costR, pricesR] = await Promise.all([
+      const [costR, pricesR, screenerR] = await Promise.all([
         fetch('../portfolio/data/holdings_cost.json?_=' + Date.now()),
-        fetch('../portfolio/data/processed/holdings_prices.json?_=' + Date.now())
+        fetch('../portfolio/data/processed/holdings_prices.json?_=' + Date.now()),
+        fetch('../portfolio/data/processed/screener.json?_=' + Date.now()).catch(() => null)
       ]);
       const cost   = await costR.json();
       const prices = await pricesR.json();
@@ -328,6 +329,23 @@ const ODIN = (() => {
       }
       S.portfolio.us_stocks_usd = usSum;
       S.portfolio.us_tickers    = usCount;
+
+      // ── GOLD rates ──
+      // India gold spot: GOLDBEES NAV × 100 (each unit = 0.01g of 24k)
+      const gb = p['GOLDBEES_M']?.ltp || p['GOLDBEES_U']?.ltp || p['GOLDBEES']?.ltp;
+      if (gb) {
+        S.portfolio.india_gold_rate = gb * 100;     // ₹/g
+        S.portfolio.india_gold_source = 'GOLDBEES NAV ×100';
+      }
+      // International gold: GC=F (Gold Futures USD/oz) → INR/g
+      if (screenerR && screenerR.ok) {
+        const scr = await screenerR.json();
+        const gc = (scr.commodities || []).find(c => c.tk === 'GC=F');
+        if (gc?.px) {
+          S.portfolio.intl_gold_usd_oz = gc.px;
+          // Set later in view() once FX is known
+        }
+      }
     } catch (e) {
       console.warn('portfolio fetch failed, falling back to seed', e);
       S.portfolio.india_stocks_inr = S.seed.assets?.india_stocks || 0;
@@ -348,8 +366,17 @@ const ODIN = (() => {
     const fo_inr           = num('fo_corpus_cash', a.fo_corpus_cash || 0) + num('fo_margin_used', a.fo_margin_used || 0);
     const jewel_g          = num('gold_jewellery_grams', a.gold_jewellery_grams || 500);
     const malabar_g        = num('malabar_grams', a.malabar_grams || 0);
-    const jewel_inr        = jewel_g * goldRate;
-    const malabar_inr      = malabar_g * goldRate;
+
+    // ── Gold rates ─────────────────────────────────────────────
+    // India spot (₹/g) from GOLDBEES NAV; fallback to manual override
+    const indiaGoldRate = S.portfolio.india_gold_rate || goldRate;
+    // International (₹/g) from GC=F (USD/oz) × FX / 31.1035 g/oz
+    const intlGoldRate = S.portfolio.intl_gold_usd_oz
+      ? (S.portfolio.intl_gold_usd_oz * fx.usd_to_inr) / 31.1035
+      : indiaGoldRate;   // fallback if screener not loaded
+
+    const jewel_inr        = jewel_g * indiaGoldRate;       // Indian jewellery — India spot
+    const malabar_inr      = malabar_g * intlGoldRate;      // Malabar — international rate
     const apt_mkt          = num('apartment_market_value', a.apartment_market_value || 0);
     const lc_qar           = num('land_cruiser_resale_qar', a.land_cruiser_resale_qar || 0);
     const lc_qar_inr       = lc_qar * fx.qar_to_inr;
@@ -392,6 +419,7 @@ const ODIN = (() => {
     return {
       india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
       jewel_g, jewel_inr, malabar_g, malabar_inr,
+      indiaGoldRate, intlGoldRate,
       apt_mkt, apt_loan: aptLoan, apt_equity,
       lc_qar, lc_loan_qar: lcLoanQAR, lc_qar_inr, lc_loan_qar_inr: lcLoanQAR_INR, veh_equity_inr,
       banksQA, banksIN, cash_qa_inr, cash_in_inr, cash_tot_inr,
@@ -404,6 +432,31 @@ const ODIN = (() => {
   function num(key, fallback) {
     const v = parseFloat(S.inputs[key]);
     return Number.isFinite(v) ? v : (Number.isFinite(fallback) ? fallback : 0);
+  }
+
+  // Safe expression evaluator — allows digits, + - * / ( ) . and whitespace only
+  function safeEval(expr) {
+    if (expr === '' || expr === null || expr === undefined) return NaN;
+    const s = String(expr).trim();
+    // If already plain number, fast path
+    const direct = parseFloat(s);
+    if (!isNaN(direct) && /^-?\d*\.?\d+$/.test(s)) return direct;
+    // Reject if any disallowed char
+    if (/[^0-9+\-*/().\s]/.test(s)) return NaN;
+    try {
+      const r = Function('"use strict"; return (' + s + ')')();
+      return Number.isFinite(r) ? r : NaN;
+    } catch { return NaN; }
+  }
+
+  // Called on input blur — evaluates expression in place, shows result
+  function evalField(el) {
+    const r = safeEval(el.value);
+    if (Number.isFinite(r)) {
+      el.value = r;
+      el.style.color = 'var(--gold)';
+      setTimeout(() => { el.style.color = ''; }, 400);
+    }
   }
 
   // ── Render ──────────────────────────────────────────────────────
@@ -437,7 +490,8 @@ const ODIN = (() => {
     document.getElementById('a-fo').textContent           = fmtINR(v.fo_inr);
     document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
 
-    document.getElementById('malabar-grams').textContent = `(${v.malabar_g.toFixed(2)}g)`;
+    document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · India ₹${Math.round(v.indiaGoldRate).toLocaleString('en-IN')}/g)`;
+    document.getElementById('malabar-rate').textContent  = `(${v.malabar_g.toFixed(2)}g · Intl ₹${Math.round(v.intlGoldRate).toLocaleString('en-IN')}/g)`;
     document.getElementById('a-jewel').textContent       = fmtINR(v.jewel_inr);
     document.getElementById('a-malabar').textContent     = fmtINR(v.malabar_inr);
     document.getElementById('a-gold-tot').textContent    = fmtINR(v.jewel_inr + v.malabar_inr);
@@ -680,7 +734,7 @@ const ODIN = (() => {
         row.className = 'form-grid';
         row.innerHTML = `
           <label>${f.label}</label>
-          <input type="number" step="any" data-key="${f.key}" value="${f.current}" />
+          <input type="text" inputmode="decimal" data-key="${f.key}" value="${f.current}" placeholder="e.g. 11+11" onblur="ODIN.evalField(this)" />
           <span class="ccy">${f.ccy}</span>`;
         host.appendChild(row);
       });
@@ -691,8 +745,11 @@ const ODIN = (() => {
     const inputs = {};
     document.querySelectorAll('#form-host input').forEach(el => {
       const k = el.dataset.key;
-      const v = parseFloat(el.value);
-      if (Number.isFinite(v)) inputs[k] = v;
+      const v = safeEval(el.value);
+      if (Number.isFinite(v)) {
+        inputs[k] = v;
+        el.value = v;   // also show evaluated value in field
+      }
     });
     S.inputs = inputs;
     localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
@@ -749,7 +806,7 @@ const ODIN = (() => {
     setInterval(async () => { await Promise.all([loadFX(), loadPortfolio()]); render(); }, 5 * 60 * 1000);
   }
 
-  return { init, saveInputs, snapshot };
+  return { init, saveInputs, snapshot, evalField };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

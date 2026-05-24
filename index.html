@@ -2960,6 +2960,8 @@ const DASH = (() => {
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
     if (name === 'signals') loadSignals();
     if (name === 'screener') DASH_SCR.init();
+    // Persist active tab — refresh returns to same view
+    try { localStorage.setItem('active_tab', name); } catch(e) {}
   }
   /* ── Font size control ────────────────────────────────────────── */
   const FS_STEPS = [0.75, 0.85, 1, 1.1, 1.2, 1.35, 1.5];
@@ -4112,6 +4114,14 @@ const DASH = (() => {
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', e => switchTab(e.currentTarget.getAttribute('data-tab')));
     });
+    // Restore last active tab (refresh persistence)
+    try {
+      const _savedTab = localStorage.getItem('active_tab');
+      const _validTabs = ['portfolio','us','india','transactions','signals','screener'];
+      if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
+        switchTab(_savedTab);
+      }
+    } catch(e) {}
     // Sortable US holdings table
     document.querySelectorAll('#us-holdings-table th.sortable').forEach(th => {
       th.addEventListener('click', () => {

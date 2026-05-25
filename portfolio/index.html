@@ -616,6 +616,13 @@
         <button class="tab-button" data-tab="screener"><span class="tl">🔍 SCREENER</span><span class="ts">SCREEN</span></button>
       </div>
       <div class="banner-controls">
+        <!-- FX Rates Display -->
+        <div style="display:flex;gap:12px;align-items:center;font-size:11px;color:var(--text-sec);border-right:1px solid var(--border);padding-right:12px;">
+          <span>USD <span id="fx-usd-inr" style="color:var(--gold);font-weight:600;">—</span> ₹</span>
+          <span>QAR <span id="fx-qar-inr" style="color:var(--gold);font-weight:600;">—</span> ₹</span>
+        </div>
+        <!-- Edit Mode Code -->
+        <input type="password" id="edit-code" placeholder="enter code" style="width:80px;padding:4px 6px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:3px;font-size:11px;" title="Enter code for edit mode">
         <div class="ccy-group">
           <button class="ccy-btn active" data-ccy="USD" onclick="DASH.setCurrency(this)">$ USD</button>
           <button class="ccy-btn"        data-ccy="QAR" onclick="DASH.setCurrency(this)">﷼ QAR</button>
@@ -4146,7 +4153,42 @@ const DASH = (() => {
   window.DASH_SCR = DASH_SCR;  // expose to global scope for inline onchange handlers
 
   /* ── INIT ── */
+  async function loadFXRates() {
+    const QAR_PER_USD = 3.6413;
+    try {
+      const r = await fetch('./data/processed/market_indices.json?_=' + Date.now());
+      const j = await r.json();
+      const usdInr = j.fx_rate;
+      if (usdInr && usdInr > 50) {
+        const qarInr = usdInr / QAR_PER_USD;
+        document.getElementById('fx-usd-inr').textContent = usdInr.toFixed(2);
+        document.getElementById('fx-qar-inr').textContent = qarInr.toFixed(2);
+      }
+    } catch(e) {
+      console.warn('FX load failed', e);
+    }
+  }
+
+  function checkEditCode() {
+    const codeInput = document.getElementById('edit-code');
+    const enteredCode = codeInput ? codeInput.value.trim() : '';
+    const EDIT_CODE = '84';
+    if (enteredCode === EDIT_CODE) {
+      codeInput.value = '';
+      alert('✅ Edit mode enabled');
+      // Enable editing here (remove read-only attributes, show edit buttons, etc)
+    }
+  }
+
+  // Enter key on code field
+  if (document.getElementById('edit-code')) {
+    document.getElementById('edit-code').addEventListener('keypress', e => {
+      if (e.key === 'Enter') checkEditCode();
+    });
+  }
+
   function init() {
+    loadFXRates();
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', e => switchTab(e.currentTarget.getAttribute('data-tab')));
     });

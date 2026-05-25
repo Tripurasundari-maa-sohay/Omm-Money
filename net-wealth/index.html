@@ -243,14 +243,14 @@
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-    <button class="snapshot-btn" onclick="ODIN.snapshot()">📸 Snapshot Now</button>
-    <button class="snapshot-btn" onclick="ODIN.exportHistory()">⬇️ Export history.json</button>
-    <button class="snapshot-btn" onclick="document.getElementById('hist-import').click()">⬆️ Import history.json</button>
+    <button class="snapshot-btn" onclick="ODIN.snapshot()">Snapshot Now</button>
+    <button class="snapshot-btn" onclick="ODIN.exportHistory()">Export history.json</button>
+    <button class="snapshot-btn" onclick="document.getElementById('hist-import').click()">Import history.json</button>
     <input type="file" id="hist-import" accept="application/json" style="display:none" onchange="ODIN.importHistory(event)" />
-    <button class="snapshot-btn" onclick="ODIN.exportExcel()">📊 Export Excel</button>
-    <button class="snapshot-btn" onclick="document.getElementById('excel-import').click()">📥 Import Excel</button>
+    <button class="snapshot-btn" onclick="ODIN.exportExcel()">Export Excel</button>
+    <button class="snapshot-btn" onclick="document.getElementById('excel-import').click()">Import Excel</button>
     <input type="file" id="excel-import" accept=".xlsx,.xls,.csv" style="display:none" onchange="ODIN.importExcel(event)" />
-    <button class="snapshot-btn" onclick="ODIN.exportToGitHub()">💾 Export to GitHub</button>
+    <button class="snapshot-btn" onclick="ODIN.exportToGitHub()">Export to GitHub</button>
   </div>
   <p style="font-size:11px;color:var(--text-dim);margin:8px 0 0">
     History saved to browser localStorage. Click "Export" → commit the JSON file to <code>net-wealth/data/history.json</code> for cross-device persistence.
@@ -374,7 +374,7 @@
       </div>
     </div>
 
-    <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+    <button class="save-btn" onclick="ODIN.saveInputs()">SAVE</button>
   </div>
 </div><!-- /tab-assets -->
 
@@ -407,7 +407,7 @@
     </p>
     <!-- Code Gate for Firebase Sync -->
     <div id="form-liab-host"></div>
-    <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+    <button class="save-btn" onclick="ODIN.saveInputs()">SAVE</button>
   </div>
 </div><!-- /tab-liab -->
 
@@ -438,7 +438,7 @@
     </p>
     <!-- Code Gate for Firebase Sync -->
     <div id="form-fire-host"></div>
-    <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+    <button class="save-btn" onclick="ODIN.saveInputs()">SAVE</button>
   </div>
 </div><!-- /tab-fire -->
 
@@ -556,7 +556,7 @@ const ODIN = (() => {
     a.href = url; a.download = 'history.json';
     a.click();
     URL.revokeObjectURL(url);
-    flash('⬇️ history.json downloaded');
+    flash('history.json downloaded');
   }
   async function importHistory(ev) {
     const file = ev.target.files[0];
@@ -578,9 +578,9 @@ const ODIN = (() => {
           for (const h of arr) {
             await FirebaseSync.addHistoryEntry(h);
           }
-          flash('⬆️ Imported ' + arr.length + ' entries → Firebase synced');
+          flash('Imported ' + arr.length + ' entries');
         } else {
-          flash('⬆️ Imported ' + arr.length + ' entries (Firebase not ready)');
+          flash('Imported ' + arr.length + ' entries');
         }
 
         render();
@@ -607,7 +607,7 @@ const ODIN = (() => {
 
     XLSX.utils.book_append_sheet(wb, ws, 'Import Data');
     XLSX.writeFile(wb, 'ODIN-Data.xlsx');
-    flash('📊 Data exported to ODIN-Data.xlsx');
+    flash('Data exported to ODIN-Data.xlsx');
   }
   async function importExcel(ev) {
     const file = ev.target.files[0];
@@ -642,9 +642,9 @@ const ODIN = (() => {
         // Sync to Firebase
         if (FirebaseSync.isReady) {
           await FirebaseSync.saveInputs(S.inputs);
-          flash(`📥 Imported ${imported} fields → Firebase synced`);
+          flash(`Imported ${imported} fields`);
         } else {
-          flash(`📥 Imported ${imported} fields (Firebase not ready)`);
+          flash(`Imported ${imported} fields`);
         }
 
         render();
@@ -982,7 +982,7 @@ const ODIN = (() => {
 
     // FX meta
     document.getElementById('fx-meta').textContent =
-      `USD/INR ${S.fx.usd_to_inr.toFixed(2)} · QAR/INR ${S.fx.qar_to_inr.toFixed(2)} (${S.fx.source})`;
+      `$ to ₹${S.fx.usd_to_inr.toFixed(2)} · QAR to ₹${S.fx.qar_to_inr.toFixed(2)} (${S.fx.source})`;
     document.getElementById('data-asof').textContent = S.portfolio.prices_asof
       ? new Date(S.portfolio.prices_asof).toLocaleString()
       : new Date().toLocaleString();
@@ -1595,10 +1595,10 @@ const ODIN = (() => {
 
     if (FirebaseSync.isReady) {
       await FirebaseSync.addHistoryEntry(entry);
-      flash('📸 Snapshot synced');
+      flash('Snapshot saved');
     } else {
       localStorage.setItem(LS_HISTORY, JSON.stringify(S.history));
-      flash('📸 Snapshot saved locally');
+      flash('Snapshot saved');
     }
 
     render();
@@ -1720,7 +1720,7 @@ const ODIN = (() => {
     // Save to localStorage
     localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
     S.inputs = { ...S.inputs, ...inputs };
-    flash('💾 Saved to localStorage');
+    flash('Saved to localStorage');
 
     render();
   }
@@ -1740,7 +1740,7 @@ const ODIN = (() => {
     a.download = 'inputs.json';
     a.click();
     URL.revokeObjectURL(url);
-    flash('📥 Downloaded inputs.json — commit to GitHub');
+    flash('Downloaded inputs.json — commit to GitHub');
     console.log('Exported inputs:', exportData);
   }
 
@@ -1790,7 +1790,7 @@ const ODIN = (() => {
     // Redraw charts so colors pick up new theme
     if (S.charts.kpi) { S.charts.kpi.destroy(); S.charts.kpi = null; }
     if (S.charts.exp) { S.charts.exp.destroy(); S.charts.exp = null; }
-    if (S.seed) render();
+    if (S.seed) location.reload();
   }
   function toggleTheme() {
     const cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';

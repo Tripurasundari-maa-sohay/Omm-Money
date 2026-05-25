@@ -256,22 +256,6 @@
   </p>
 </div>
 
-<!-- MONTHLY CASH FLOW (Overall) -->
-<div class="card">
-  <h2>💰 MONTHLY CASH FLOW</h2>
-  <div class="kpi-strip">
-    <div class="kpi-tile"><div class="lbl">SALARY (INR)</div><div class="val" id="cf-salary">—</div></div>
-    <div class="kpi-tile"><div class="lbl">TOTAL EMIs (INR)</div><div class="val" id="cf-emi">—</div></div>
-    <div class="kpi-tile"><div class="lbl">SAVINGS TARGET</div><div class="val" id="cf-target">—</div></div>
-    <div class="kpi-tile"><div class="lbl">SAVINGS RATE</div><div class="val" id="cf-rate">—</div></div>
-  </div>
-  <div style="margin-top:12px">
-    <h3 class="form-col-title" style="font-size:11px">CASH FLOW INPUTS</h3>
-    <div id="form-flow-host"></div>
-    <button class="save-btn" onclick="ODIN.saveInputs()" style="margin-top:8px">💾 SAVE</button>
-  </div>
-</div>
-
 <!-- TODO LIST (Overall) -->
 <div class="card">
   <h2>📋 NET WORTH TO-DO</h2>
@@ -482,18 +466,17 @@ const ODIN = (() => {
     const abs = Math.abs(v);
     if (abs >= 1e7) return '₹' + (v/1e7).toFixed(2) + ' Cr';
     if (abs >= 1e5) return '₹' + (v/1e5).toFixed(2) + ' L';
-    return '₹' + Math.round(v).toLocaleString('en-IN');
+    return '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
-  const fmtINRfull = v => Number.isFinite(v) ? '₹' + Math.round(v).toLocaleString('en-IN') : '—';
+  const fmtINRfull = v => Number.isFinite(v) ? '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
   const fmtINRwithCr = v => {
     if (!Number.isFinite(v)) return '—';
-    const rounded = Math.round(v);
-    const fullNum = rounded.toLocaleString('en-IN');
+    const fullNum = v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     const crVal = (v / 1e7).toFixed(2);
     return `₹${fullNum} (${crVal} Cr)`;
   };
-  const fmtQAR = v => Number.isFinite(v) ? 'QAR ' + Math.round(v).toLocaleString('en-US') : '—';
-  const fmtUSD = v => Number.isFinite(v) ? '$' + Math.round(v).toLocaleString('en-US') : '—';
+  const fmtQAR = v => Number.isFinite(v) ? 'QAR ' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
+  const fmtUSD = v => Number.isFinite(v) ? '$' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
   const pct = (a, b) => b > 0 ? (a/b * 100) : 0;
 
   // ── Load ────────────────────────────────────────────────────────
@@ -1602,11 +1585,6 @@ const ODIN = (() => {
     { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR', section: 'Vehicles' },
     { key: 'gratuity_qar',             label: 'Gratuity Accumulated',          ccy: 'QAR', section: 'Retirement' }
   ];
-  const FLOW_FIELDS = [
-    { key: 'salary_qar',               label: 'Monthly Salary',                ccy: 'QAR' },
-    { key: 'monthly_emi_inr',          label: 'Total Monthly EMIs',            ccy: 'INR' },
-    { key: 'savings_target_inr',       label: 'Monthly Savings Target',        ccy: 'INR' }
-  ];
 
   function renderForm() {
     const seedVal = (key) => (S.seed.assets || {})[key]
@@ -1655,11 +1633,6 @@ const ODIN = (() => {
 
     renderFormGroups('form-assets-host', assetGroups);
     renderFormGroups('form-liab-host',   liabGroups);
-    // Cash flow — flat (no subsections)
-    renderFormGroups('form-flow-host',   { '': FLOW_FIELDS.map(f => ({
-      key: f.key, label: f.label, ccy: f.ccy,
-      current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
-    }))});
     // FIRE form
     const f = S.seed.fire || {};
     const FIRE_FIELDS = [
@@ -1704,7 +1677,7 @@ const ODIN = (() => {
 
   async function saveInputs() {
     const inputs = {};
-    document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-flow-host input, #form-fire-host input').forEach(el => {
+    document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-fire-host input').forEach(el => {
       const k = el.dataset.key;
       const v = safeEval(el.value);
       if (Number.isFinite(v)) {

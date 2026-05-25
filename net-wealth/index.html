@@ -177,6 +177,7 @@
   <button class="tab-btn active" data-tab="overall">🏛️ OVERALL</button>
   <button class="tab-btn" data-tab="assets">▲ ASSETS</button>
   <button class="tab-btn" data-tab="liab">▼ LIABILITIES</button>
+  <button class="tab-btn" data-tab="fire">🔥 FIRE</button>
   <button class="tab-btn" id="theme-toggle" onclick="ODIN.toggleTheme()" title="Toggle theme" style="padding:8px 12px">🌙</button>
 </div>
 
@@ -263,6 +264,20 @@
   </div>
 </div>
 
+<!-- TODO LIST (Overall) -->
+<div class="card">
+  <h2>📋 NET WORTH TO-DO</h2>
+  <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+    Pre-seeded action items. Check off when done. Add custom items below.
+  </p>
+  <div id="todo-host"></div>
+  <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+    <input type="text" id="todo-new-title" placeholder="New item title" style="flex:2;min-width:160px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px" />
+    <input type="text" id="todo-new-note" placeholder="Optional note" style="flex:2;min-width:160px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px" />
+    <button class="snapshot-btn" onclick="ODIN.addTodo()">+ Add</button>
+  </div>
+</div>
+
 <!-- MILESTONES (Overall) -->
 <div class="card">
   <h2>🎯 MILESTONE TRACKER</h2>
@@ -284,6 +299,8 @@
       <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="a-recon-12hi">—</div></div>
     </div>
     <div id="a-recon-rows" style="margin-top:14px"></div>
+    <h3 style="margin:14px 0 6px;color:var(--gold-dim);font-size:11px;letter-spacing:1.5px">ASSETS TREND</h3>
+    <div class="chart-wrap"><canvas id="asset-trend-chart"></canvas></div>
   </div>
 
   <div class="grid-2">
@@ -356,6 +373,8 @@
       <div class="kpi-tile"><div class="lbl">12-MONTH LOW</div><div class="val" id="l-recon-12lo">—</div></div>
     </div>
     <div id="l-recon-rows" style="margin-top:14px"></div>
+    <h3 style="margin:14px 0 6px;color:var(--gold-dim);font-size:11px;letter-spacing:1.5px">LIABILITIES TREND</h3>
+    <div class="chart-wrap"><canvas id="liab-trend-chart"></canvas></div>
   </div>
 
   <div class="card">
@@ -375,6 +394,36 @@
 </div><!-- /tab-liab -->
 
 
+<!-- ═══ FIRE TAB ═══ -->
+<div class="tab-content" id="tab-fire">
+  <div class="card hero" style="text-align:center">
+    <div class="label">FIRE NUMBER (25× annual expenses · 4% SWR)</div>
+    <div class="net-worth" id="fire-target">₹ <span class="loading"></span></div>
+    <div class="multi-ccy" id="fire-progress" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 FIRE PROJECTIONS</h2>
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="lbl">CURRENT NW</div><div class="val" id="fire-current">—</div></div>
+      <div class="kpi-tile"><div class="lbl">YEARS TO FIRE</div><div class="val" id="fire-years">—</div><div class="delta" id="fire-age-at-fire">—</div></div>
+      <div class="kpi-tile"><div class="lbl">MONTHLY INVEST NEEDED</div><div class="val" id="fire-monthly-need">—</div><div class="delta" id="fire-monthly-cur">—</div></div>
+      <div class="kpi-tile"><div class="lbl">SHORTFALL/SURPLUS</div><div class="val" id="fire-gap">—</div><div class="delta" id="fire-gap-pct">—</div></div>
+    </div>
+    <div class="chart-wrap" style="height:300px;margin-top:14px"><canvas id="fire-chart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h2>✏️ FIRE INPUTS</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:0">
+      4% Safe Withdrawal Rate (SWR) = Trinity Study standard for 30-yr retirement. Lower SWR (3-3.5%) for longer horizons.
+    </p>
+    <div id="form-fire-host"></div>
+    <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
+  </div>
+</div><!-- /tab-fire -->
+
+
 <div class="meta-bar">
   <span>ODIN v1 · Net Worth Sentinel</span>
   <span><a href="../portfolio/" style="color:var(--gold-dim);text-decoration:none">→ Portfolio</a></span>
@@ -388,6 +437,7 @@ const ODIN = (() => {
     portfolio: { india_stocks_inr: 0, us_stocks_usd: 0, india_tickers: 0, us_tickers: 0, prices_asof: null },
     inputs: {},          // manual overrides from localStorage
     history: [],         // [{date, net_worth, assets, liab}]
+    todos: [],
     charts: {}
   };
   const LS_INPUTS = 'odin_manual_inputs_v1';
@@ -845,6 +895,16 @@ const ODIN = (() => {
     renderAssetReconciliation(v);
     renderLiabReconciliation(v);
 
+    // Trend charts (Assets + Liab tabs)
+    drawTrendChart('asset-trend-chart', S.history, v.assetsTot, 'assets',  'Assets (₹ Cr)', false);
+    drawTrendChart('liab-trend-chart',  S.history, v.liabTot,   'liab',    'Liabilities (₹ Cr)', true);
+
+    // TODO list
+    renderTodos();
+
+    // FIRE
+    renderFire(v);
+
     // Manual inputs form
     renderForm();
 
@@ -1093,6 +1153,217 @@ const ODIN = (() => {
     return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : null;
   }
 
+  // ── Asset / Liability trend chart ──────────────────────────────
+  function drawTrendChart(canvasId, history, currentValue, field, label, isLiab) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    if (S.charts[canvasId]) S.charts[canvasId].destroy();
+    const _cs = getComputedStyle(document.documentElement);
+    const _sec  = _cs.getPropertyValue('--text-sec').trim() || '#948a73';
+    const _dim  = _cs.getPropertyValue('--text-dim').trim() || '#5a5247';
+    const _grid = _cs.getPropertyValue('--border').trim() || '#2a2a3a';
+    const _color = isLiab ? (_cs.getPropertyValue('--loss').trim() || '#f87171')
+                          : (_cs.getPropertyValue('--gain').trim() || '#4ade80');
+    const _rgb = hexToRgb(_color);
+    const _fill = _rgb ? `rgba(${_rgb.r},${_rgb.g},${_rgb.b},0.12)` : 'rgba(74,222,128,0.12)';
+
+    const data = history.slice().concat([{ date: new Date().toISOString(), [field]: currentValue }]);
+    const labels = data.map(d => new Date(d.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' }));
+    const values = data.map(d => (d[field] || 0) / 1e7);
+
+    S.charts[canvasId] = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{
+        label, data: values,
+        borderColor: _color, backgroundColor: _fill,
+        fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: _color
+      }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: _sec } } },
+        scales: {
+          x: { ticks: { color: _dim, font: { size: 10 } }, grid: { color: _grid } },
+          y: { ticks: { color: _sec, callback: v => '₹' + Number(v).toFixed(2) + ' Cr' }, grid: { color: _grid } }
+        }
+      }
+    });
+  }
+
+  // ── TODO list ──────────────────────────────────────────────────
+  const LS_TODOS = 'odin_todos_v1';
+  function loadTodos() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_TODOS) || 'null');
+      S.todos = Array.isArray(stored) ? stored : (S.seed.todos || []);
+    } catch { S.todos = S.seed.todos || []; }
+  }
+  function saveTodos() {
+    localStorage.setItem(LS_TODOS, JSON.stringify(S.todos));
+  }
+  function renderTodos() {
+    const host = document.getElementById('todo-host');
+    if (!host) return;
+    if (!S.todos || !S.todos.length) {
+      host.innerHTML = '<p style="color:var(--text-dim);font-size:12px">No items.</p>';
+      return;
+    }
+    host.innerHTML = S.todos.map((t, idx) => {
+      const done = t.status === 'done';
+      const icon = done ? '✅' : '⬜';
+      return `<div class="row-line" style="padding:8px 0;align-items:flex-start">
+        <span class="name" style="flex:1">
+          <button onclick="ODIN.toggleTodo(${idx})" style="background:transparent;border:none;cursor:pointer;font-size:16px;padding:0 6px 0 0">${icon}</button>
+          <b style="color:${done ? 'var(--gain)' : 'var(--text)'};${done ? 'text-decoration:line-through;opacity:0.7' : ''}">${t.title}</b>
+          ${t.note ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;margin-left:24px">${t.note}</div>` : ''}
+        </span>
+        <button onclick="ODIN.deleteTodo(${idx})" style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:14px" title="Delete">✕</button>
+      </div>`;
+    }).join('');
+  }
+  function addTodo() {
+    const t = document.getElementById('todo-new-title');
+    const n = document.getElementById('todo-new-note');
+    if (!t || !t.value.trim()) return;
+    S.todos.push({
+      id: 'custom_' + Date.now(),
+      title: t.value.trim(),
+      note: n.value.trim(),
+      status: 'pending',
+      due: ''
+    });
+    t.value = ''; n.value = '';
+    saveTodos();
+    renderTodos();
+  }
+  function toggleTodo(idx) {
+    if (!S.todos[idx]) return;
+    S.todos[idx].status = S.todos[idx].status === 'done' ? 'pending' : 'done';
+    saveTodos();
+    renderTodos();
+  }
+  function deleteTodo(idx) {
+    S.todos.splice(idx, 1);
+    saveTodos();
+    renderTodos();
+  }
+
+  // ── FIRE calculator ────────────────────────────────────────────
+  function renderFire(v) {
+    const f = S.seed.fire || {};
+    const curAge   = num('fire_current_age',  f.current_age || 36);
+    const retAge   = num('fire_retire_age',   f.retire_age || 50);
+    const annExp   = num('fire_annual_expenses_inr', f.annual_expenses_inr || 1800000);
+    const retPct   = num('fire_expected_return_pct', f.expected_return_pct || 11) / 100;
+    const inflPct  = num('fire_inflation_pct', f.inflation_pct || 6) / 100;
+    const swrPct   = num('fire_swr_pct',      f.swr_pct || 4) / 100;
+    const realRet  = (1 + retPct) / (1 + inflPct) - 1;
+
+    const fireTarget = annExp / swrPct;
+    const currentNW  = v.netWorth;
+    const yrsLeft    = retAge - curAge;
+    const gap        = fireTarget - currentNW;
+    const gapPct     = fireTarget > 0 ? (currentNW / fireTarget * 100) : 0;
+
+    // Monthly investment needed: PMT for FV = fireTarget, PV = currentNW, n = yrsLeft*12, r = realRet/12
+    const monthsLeft = Math.max(1, yrsLeft * 12);
+    const rMo = realRet / 12;
+    const futureFromCurrent = currentNW * Math.pow(1 + rMo, monthsLeft);
+    const remainingNeeded   = fireTarget - futureFromCurrent;
+    let monthlyNeed = 0;
+    if (remainingNeeded > 0 && rMo > 0) {
+      monthlyNeed = (remainingNeeded * rMo) / (Math.pow(1 + rMo, monthsLeft) - 1);
+    } else if (remainingNeeded > 0) {
+      monthlyNeed = remainingNeeded / monthsLeft;
+    }
+
+    // Years to FIRE (if user invests $monthlyCurrent or 0 — assume 0 SIP, just current NW compounding)
+    let yrsToFireAtCur = -1;
+    if (currentNW < fireTarget) {
+      const yrs = Math.log(fireTarget / currentNW) / Math.log(1 + realRet);
+      yrsToFireAtCur = isFinite(yrs) ? yrs : -1;
+    } else {
+      yrsToFireAtCur = 0;
+    }
+
+    // ── Render tiles + hero ──
+    document.getElementById('fire-target').textContent  = fmtINR(fireTarget);
+    document.getElementById('fire-current').textContent = fmtINR(currentNW);
+    document.getElementById('fire-progress').innerHTML  =
+      `<span><b>Progress</b> ${gapPct.toFixed(1)}%</span>` +
+      `<span><b>Real return</b> ${(realRet*100).toFixed(2)}%/yr</span>` +
+      `<span><b>Age at FIRE</b> ${curAge + Math.ceil(yrsToFireAtCur)}</span>`;
+    document.getElementById('fire-years').textContent = yrsToFireAtCur >= 0 ? yrsToFireAtCur.toFixed(1) + ' yrs' : '—';
+    document.getElementById('fire-age-at-fire').textContent = `Age ${curAge + Math.ceil(yrsToFireAtCur)} (no further SIP)`;
+    document.getElementById('fire-age-at-fire').className = 'delta';
+    document.getElementById('fire-monthly-need').textContent = fmtINR(monthlyNeed);
+    document.getElementById('fire-monthly-cur').textContent = `to FIRE at age ${retAge}`;
+    document.getElementById('fire-monthly-cur').className = 'delta';
+    const gapEl  = document.getElementById('fire-gap');
+    const gapPctEl = document.getElementById('fire-gap-pct');
+    if (gap > 0) {
+      gapEl.textContent = '−' + fmtINR(gap);
+      gapEl.style.color = 'var(--loss)';
+      gapPctEl.textContent = (100 - gapPct).toFixed(1) + '% remaining';
+      gapPctEl.className = 'delta neg';
+    } else {
+      gapEl.textContent = '+' + fmtINR(-gap);
+      gapEl.style.color = 'var(--gain)';
+      gapPctEl.textContent = 'FIRE achieved ✓';
+      gapPctEl.className = 'delta pos';
+    }
+
+    // ── Projection chart ──
+    drawFireChart(curAge, retAge, currentNW, monthlyNeed, realRet, fireTarget, annExp, inflPct, swrPct);
+  }
+
+  function drawFireChart(curAge, retAge, currentNW, monthlyInvest, realRet, fireTarget, annExpToday, inflPct, swrPct) {
+    const ctx = document.getElementById('fire-chart');
+    if (!ctx) return;
+    if (S.charts.fire) S.charts.fire.destroy();
+    const _cs = getComputedStyle(document.documentElement);
+    const _gold = _cs.getPropertyValue('--gold').trim() || '#FFD700';
+    const _gain = _cs.getPropertyValue('--gain').trim() || '#4ade80';
+    const _loss = _cs.getPropertyValue('--loss').trim() || '#f87171';
+    const _sec  = _cs.getPropertyValue('--text-sec').trim() || '#948a73';
+    const _grid = _cs.getPropertyValue('--border').trim() || '#2a2a3a';
+
+    const ages = [], nwPath = [], targetPath = [];
+    const yrsMax = Math.max(retAge + 5, curAge + 30);
+    let nw = currentNW;
+    const rMo = realRet / 12;
+    for (let a = curAge; a <= yrsMax; a++) {
+      ages.push(a);
+      nwPath.push(nw / 1e7);
+      // Inflate target via current expenses growing
+      const inflYrs = a - curAge;
+      const expAtAge = annExpToday * Math.pow(1 + inflPct, inflYrs);
+      targetPath.push(expAtAge / swrPct / 1e7);
+      // Compound NW for next year (with monthly SIP until retAge)
+      for (let m = 0; m < 12; m++) {
+        nw = nw * (1 + rMo);
+        if (a < retAge) nw += monthlyInvest;
+      }
+    }
+    S.charts.fire = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ages.map(a => 'Age ' + a),
+        datasets: [
+          { label: 'Net Worth (₹ Cr)',  data: nwPath,      borderColor: _gold, backgroundColor: 'transparent', fill: false, tension: 0.25, pointRadius: 0, borderWidth: 2.5 },
+          { label: 'FIRE Target (₹ Cr)', data: targetPath, borderColor: _loss, backgroundColor: 'transparent', fill: false, tension: 0.25, pointRadius: 0, borderWidth: 1.5, borderDash: [6,4] }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: _sec, font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: _sec, font: { size: 10 } }, grid: { color: _grid } },
+          y: { ticks: { color: _sec, callback: v => '₹' + Number(v).toFixed(1) + ' Cr' }, grid: { color: _grid } }
+        }
+      }
+    });
+  }
+
   function snapshot() {
     const v = view();
     const entry = {
@@ -1184,6 +1455,20 @@ const ODIN = (() => {
       key: f.key, label: f.label, ccy: f.ccy,
       current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
     }))});
+    // FIRE form
+    const f = S.seed.fire || {};
+    const FIRE_FIELDS = [
+      { key: 'fire_current_age',          label: 'Current Age',                ccy: 'yrs', seed: f.current_age },
+      { key: 'fire_retire_age',           label: 'Target Retire Age',          ccy: 'yrs', seed: f.retire_age },
+      { key: 'fire_annual_expenses_inr',  label: 'Annual Expenses (today)',    ccy: 'INR', seed: f.annual_expenses_inr },
+      { key: 'fire_expected_return_pct',  label: 'Expected Return %',          ccy: '%',   seed: f.expected_return_pct },
+      { key: 'fire_inflation_pct',        label: 'Inflation %',                ccy: '%',   seed: f.inflation_pct },
+      { key: 'fire_swr_pct',              label: 'Safe Withdrawal Rate %',     ccy: '%',   seed: f.swr_pct }
+    ];
+    renderFormGroups('form-fire-host', { '': FIRE_FIELDS.map(ff => ({
+      key: ff.key, label: ff.label, ccy: ff.ccy,
+      current: S.inputs[ff.key] ?? ff.seed ?? ''
+    }))});
   }
 
   function renderFormGroups(hostId, groups) {
@@ -1211,7 +1496,7 @@ const ODIN = (() => {
 
   function saveInputs() {
     const inputs = {};
-    document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-flow-host input').forEach(el => {
+    document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-flow-host input, #form-fire-host input').forEach(el => {
       const k = el.dataset.key;
       const v = safeEval(el.value);
       if (Number.isFinite(v)) {
@@ -1300,7 +1585,7 @@ const ODIN = (() => {
     });
     try {
       const saved = localStorage.getItem('odin_active_tab');
-      if (saved && ['overall','assets','liab'].includes(saved) && saved !== 'overall') {
+      if (saved && ['overall','assets','liab','fire'].includes(saved) && saved !== 'overall') {
         switchTab(saved);
       }
     } catch {}
@@ -1313,6 +1598,7 @@ const ODIN = (() => {
     loadInputs();
     loadHistory();
     await loadSeed();
+    loadTodos();
     await loadHistoryFromRepo();
     await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
     render();
@@ -1326,7 +1612,7 @@ const ODIN = (() => {
     flash('✓ Refreshed');
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll, toggleTheme };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

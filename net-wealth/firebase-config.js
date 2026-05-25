@@ -1,12 +1,13 @@
-// Firebase Configuration — FILL IN YOUR CREDENTIALS
+// Firebase Configuration — FILLED IN
 // Get these from Firebase Console: Project Settings > Your apps > Web
 const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyD9EIwDM5vhQXbWpRITNO5SoWqkj6kRd2I",
+  authDomain: "odin-net-worth.firebaseapp.com",
+  projectId: "odin-net-worth",
+  storageBucket: "odin-net-worth.firebasestorage.app",
+  messagingSenderId: "1089470339706",
+  appId: "1:1089470339706:web:8aebc9f3ab77b45e0db9c3",
+  measurementId: "G-27FFNNN7D5"
 };
 
 // Firebase Sync Module

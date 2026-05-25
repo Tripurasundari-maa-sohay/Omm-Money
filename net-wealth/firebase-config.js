@@ -1,13 +1,13 @@
 // Firebase Configuration — FILLED IN
 // Get these from Firebase Console: Project Settings > Your apps > Web
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD9EIwDM5vhQXbWpRITNO5SoWqkj6kRd2I",
-  authDomain: "odin-net-worth.firebaseapp.com",
-  projectId: "odin-net-worth",
-  storageBucket: "odin-net-worth.firebasestorage.app",
-  messagingSenderId: "1089470339706",
-  appId: "1:1089470339706:web:8aebc9f3ab77b45e0db9c3",
-  measurementId: "G-27FFNNN7D5"
+  apiKey: "AIzaSyApWqRinHrG___uLckBB47H09LHVwQ0ya8",
+  authDomain: "odin-a9ce7.firebaseapp.com",
+  projectId: "odin-a9ce7",
+  storageBucket: "odin-a9ce7.firebasestorage.app",
+  messagingSenderId: "461548506429",
+  appId: "1:461548506429:web:2d0ba662c2834334af4954",
+  measurementId: "G-S0N0FKP7Z3"
 };
 
 // Firebase Sync Module

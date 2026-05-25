@@ -4,39 +4,45 @@
   "assets": {
     "india_stocks": 2734879.52,
     "us_stocks_usd": 18400,
-    "fo_corpus_cash": 1832907.98,
-    "fo_margin_used": 5692501.35,
-    "gold_jewellery_grams": 500,
-    "malabar_grams": 68.46,
+    "fo_corpus_cash": 1818693.78,
+    "fo_margin_used": 5706715.55,
+    "gold_jewellery_grams": 471,
+    "jewel_22k_rate_inr_per_g": 14580,
+    "malabar_grams": 68.4,
     "malabar_grams_at_maturity": 107,
     "malabar_maturity": "2026-09-30",
+    "malabar_rate_inr_per_g": 11925.5,
     "apartment_market_value": 6500000,
-    "land_cruiser_resale_qar": 0,
+    "land_cruiser_resale_qar": 195000,
     "gratuity_qar": 84000
   },
   "liabilities": {
-    "apartment_loan_inr": 3800000,
-    "lc_loan_qar": 271000,
-    "india_car_loan_inr": 0
+    "apartment_loan_inr": 3004117,
+    "lc_loan_qar": 271110.92,
+    "india_car_loan_inr": 0,
+    "cc_qa_balance_qar": 7373.84,
+    "cc_lulu_balance_qar": 7372.17,
+    "bou_loan_inr": 1097100
   },
   "custom_assets": [
     { "id": "maa_tala_bari", "label": "Maa Tala Bari", "ccy": "INR", "value": 1100000, "category": "Real Estate" }
   ],
   "banks_qatar": [
-    { "name": "Doha Bank · Savings",  "balance_qar": 0 },
-    { "name": "Doha Bank · Current",  "balance_qar": 0 },
-    { "name": "HSBC Qatar",           "balance_qar": 0 }
+    { "name": "Doha Bank · Savings",  "balance_qar": 175.98 },
+    { "name": "Doha Bank · Current",  "balance_qar": 8220.51 },
+    { "name": "HSBC - SAVINGS",       "balance_qar": 4307 }
   ],
   "banks_india": [
-    { "name": "Axis (NRE)",          "balance_inr": 0 },
-    { "name": "IDFC FB (NRE)",       "balance_inr": 0 },
-    { "name": "IDFC FB (BABA)",      "balance_inr": 0 },
-    { "name": "HDFC (Bou)",          "balance_inr": 450000 },
-    { "name": "IndusInd PIS NRE",    "balance_inr": 0 },
+    { "name": "Axis (NRE)",          "balance_inr": 3330 },
+    { "name": "IDFC FB (NRE)",       "balance_inr": 7055 },
+    { "name": "IDFC FB (BABA)",      "balance_inr": 206005 },
+    { "name": "HDFC (Bou)",          "balance_inr": 2 },
+    { "name": "IndusInd PIS NRE",    "balance_inr": 1207.08 },
     { "name": "IndusInd PIS NRO",    "balance_inr": 0 },
-    { "name": "IndusInd NRE",        "balance_inr": 0 },
-    { "name": "IndusInd NRO",        "balance_inr": 0 },
-    { "name": "SBI (NRO)",           "balance_inr": 0 }
+    { "name": "IndusInd NRE",        "balance_inr": 13843.08 },
+    { "name": "IndusInd NRO",        "balance_inr": 1751.02 },
+    { "name": "SBI NRO",             "balance_inr": 13008.88 },
+    { "name": "Canara Bank NRO",     "balance_inr": 10500 }
   ],
   "loans": [
     { "id": "apartment",  "label": "Apartment Loan",      "provider": "HDFC Home Loan",      "ccy": "INR", "outstanding": 3800000, "tenure_months_remaining": 0 },

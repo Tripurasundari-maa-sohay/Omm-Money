@@ -365,6 +365,25 @@
       Saved to browser localStorage. Quarterly fields starred (★). Type expressions like <code>11+11</code> — auto-evaluates on blur.
     </p>
     <div id="form-assets-host"></div>
+
+    <!-- Gold Rate Override Boxes -->
+    <div id="gold-rate-boxes" style="display:none;margin-bottom:12px;">
+      <div style="margin-bottom:8px;">
+        <label style="font-size:11px;color:var(--text-sec);">Jewellery 22K ₹/10g</label>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="jewel-rate-override" placeholder="Override ₹/10g" style="flex:1;padding:6px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:12px;">
+          <button onclick="ODIN.saveJewelRateOverride()" style="padding:6px 10px;background:var(--gold);color:#000;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Save</button>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-sec);">Malabar 22K QAR/g</label>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="malabar-rate-override" placeholder="Override QAR/g" style="flex:1;padding:6px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:12px;">
+          <button onclick="ODIN.saveMalabarRateOverride()" style="padding:6px 10px;background:var(--gold);color:#000;border:none;border-radius:4px;cursor:pointer;font-size:11px;">Save</button>
+        </div>
+      </div>
+    </div>
+
     <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
   </div>
 </div><!-- /tab-assets -->
@@ -982,6 +1001,9 @@ const ODIN = (() => {
 
     // Milestones list
     renderMilestones(v.netWorth);
+
+    // Update gold rate boxes
+    if (typeof updateGoldRateBoxes === 'function') updateGoldRateBoxes();
   }
 
   function renderExposure(v) {
@@ -1470,9 +1492,6 @@ const ODIN = (() => {
     { key: 'fo_margin_used',           label: 'F&O Margin Used',               ccy: 'INR', section: 'Equities' },
     { key: 'gold_jewellery_grams',     label: 'Gold Jewellery Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
-    { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate 24K override',        ccy: 'INR', section: 'Gold' },
-    { key: 'jewel_22k_rate_inr_per_g', label: 'Jewellery 22K rate (override)', ccy: 'INR', section: 'Gold' },
-    { key: 'malabar_rate_inr_per_g',   label: 'Malabar 22K rate (override)',   ccy: 'INR', section: 'Gold' },
     { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',    ccy: 'INR', section: 'Real Estate' },
     { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR', section: 'Vehicles' },
     { key: 'gratuity_qar',             label: 'Gratuity Accumulated',          ccy: 'QAR', section: 'Retirement' }
@@ -1549,6 +1568,9 @@ const ODIN = (() => {
       key: ff.key, label: ff.label, ccy: ff.ccy,
       current: S.inputs[ff.key] ?? ff.seed ?? ''
     }))});
+
+    // Setup Gold rate boxes
+    setupGoldRateBoxes();
   }
 
   function renderFormGroups(hostId, groups) {
@@ -1729,7 +1751,78 @@ const ODIN = (() => {
     flash('✓ Refreshed');
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo };
+  function setupGoldRateBoxes() {
+    const jewelInput = document.querySelector('input[data-key="gold_jewellery_grams"]');
+    const malabarInput = document.querySelector('input[data-key="malabar_grams"]');
+    if (!jewelInput || !malabarInput) return;
+
+    // Create clickable rate boxes
+    const createRateBox = (label, getValue, inputId) => {
+      const box = document.createElement('span');
+      box.style.cssText = 'display:inline-block;padding:4px 8px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:11px;color:var(--gold);font-weight:600;margin-left:6px;';
+      box.textContent = getValue();
+      box.title = 'Click to override';
+      box.onclick = () => {
+        const box = document.getElementById('gold-rate-boxes');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        document.getElementById(inputId).focus();
+      };
+      return box;
+    };
+
+    // Helper to get rates
+    const getJewelRate = () => {
+      const v = view();
+      const per10g = Math.round(v.jewel22kRate * 10);
+      const src = num('jewel_22k_rate_inr_per_g', 0) > 0 ? '(manual)' : S.portfolio.ibja_22k_per_g ? '(IBJA)' : '(est)';
+      return `₹${per10g.toLocaleString('en-IN')}/10g ${src}`;
+    };
+
+    const getMalabarRate = () => {
+      const v = view();
+      const mRate = v.malabarRate * (1 / S.fx.inr_to_qar);
+      const src = num('malabar_rate_inr_per_g', 0) > 0 ? '(manual)' : S.portfolio.gjc_22k_per_g ? '(GJC)' : '(est)';
+      return `QAR ${mRate.toFixed(2)}/g ${src}`;
+    };
+
+    // Add rate boxes after inputs
+    const jewelBox = createRateBox('₹/10g', getJewelRate, 'jewel-rate-override');
+    const malabarBox = createRateBox('QAR/g', getMalabarRate, 'malabar-rate-override');
+
+    jewelInput.parentElement.appendChild(jewelBox);
+    malabarInput.parentElement.appendChild(malabarBox);
+
+    // Update boxes on render
+    const origRender = render;
+    window.updateGoldRateBoxes = () => {
+      jewelBox.textContent = getJewelRate();
+      malabarBox.textContent = getMalabarRate();
+    };
+  }
+
+  function saveJewelRateOverride() {
+    const val = parseFloat(document.getElementById('jewel-rate-override').value);
+    if (isNaN(val) || val <= 0) {
+      S.inputs['jewel_22k_rate_inr_per_g'] = 0;
+    } else {
+      S.inputs['jewel_22k_rate_inr_per_g'] = val / 10; // convert from /10g to /g
+    }
+    render();
+    saveInputs();
+  }
+
+  function saveMalabarRateOverride() {
+    const val = parseFloat(document.getElementById('malabar-rate-override').value);
+    if (isNaN(val) || val <= 0) {
+      S.inputs['malabar_rate_inr_per_g'] = 0;
+    } else {
+      S.inputs['malabar_rate_inr_per_g'] = val * S.fx.inr_to_qar; // convert from QAR/g to INR/g
+    }
+    render();
+    saveInputs();
+  }
+
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

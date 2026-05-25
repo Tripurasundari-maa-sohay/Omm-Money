@@ -497,6 +497,15 @@ const ODIN = (() => {
       try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); }
       catch { S.inputs = {}; }
     }
+    // Also restore portfolio values from localStorage if cached
+    const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));
+    if (Number.isFinite(cachedIndiaStocks)) S.portfolio.india_stocks_inr = cachedIndiaStocks;
+    const cachedUSStocks = parseFloat(localStorage.getItem('portfolio_us_stocks_usd'));
+    if (Number.isFinite(cachedUSStocks)) S.portfolio.us_stocks_usd = cachedUSStocks;
+    const cachedUSCash = parseFloat(localStorage.getItem('portfolio_us_cash_usd'));
+    if (Number.isFinite(cachedUSCash)) S.portfolio.us_cash_usd = cachedUSCash;
+    const cachedGoldRate = parseFloat(localStorage.getItem('portfolio_india_gold_rate'));
+    if (Number.isFinite(cachedGoldRate)) S.portfolio.india_gold_rate = cachedGoldRate;
   }
   async function loadHistory() {
     if (FirebaseSync.isReady) {
@@ -652,6 +661,8 @@ const ODIN = (() => {
       }
       S.portfolio.india_stocks_inr = indiaSum;
       S.portfolio.india_tickers    = indiaCount;
+      localStorage.setItem('portfolio_india_stocks_inr', indiaSum);
+      localStorage.setItem('portfolio_india_tickers', indiaCount);
 
       // US — qty * live USD ltp + cash
       let usSum = 0, usCount = 0;
@@ -665,6 +676,9 @@ const ODIN = (() => {
       S.portfolio.us_cash_usd = usCash;
       S.portfolio.us_stocks_usd = usSum + usCash;
       S.portfolio.us_tickers    = usCount;
+      localStorage.setItem('portfolio_us_stocks_usd', S.portfolio.us_stocks_usd);
+      localStorage.setItem('portfolio_us_cash_usd', usCash);
+      localStorage.setItem('portfolio_us_tickers', usCount);
 
       // ── GOLD rates ──
       // India gold spot: GOLDBEES NAV × 100 (each unit = 0.01g of 24k)
@@ -672,6 +686,7 @@ const ODIN = (() => {
       if (gb) {
         S.portfolio.india_gold_rate = gb * 100;     // ₹/g
         S.portfolio.india_gold_source = 'GOLDBEES NAV ×100';
+        localStorage.setItem('portfolio_india_gold_rate', S.portfolio.india_gold_rate);
       }
       // International gold: GC=F (Gold Futures USD/oz) → INR/g
       if (screenerR && screenerR.ok) {
@@ -679,13 +694,20 @@ const ODIN = (() => {
         const gc = (scr.commodities || []).find(c => c.tk === 'GC=F');
         if (gc?.px) {
           S.portfolio.intl_gold_usd_oz = gc.px;
+          localStorage.setItem('portfolio_intl_gold_usd_oz', gc.px);
           // Set later in view() once FX is known
         }
       }
+      // Save timestamp
+      localStorage.setItem('portfolio_fetched_at', new Date().toISOString());
     } catch (e) {
-      console.warn('portfolio fetch failed, falling back to seed', e);
-      S.portfolio.india_stocks_inr = S.seed.assets?.india_stocks || 0;
-      S.portfolio.us_stocks_usd    = S.seed.assets?.us_stocks_usd || 0;
+      console.warn('portfolio fetch failed, falling back to localStorage/seed', e);
+      // Try localStorage first, then seed
+      S.portfolio.india_stocks_inr = parseFloat(localStorage.getItem('portfolio_india_stocks_inr')) || S.seed.assets?.india_stocks || 0;
+      S.portfolio.us_stocks_usd    = parseFloat(localStorage.getItem('portfolio_us_stocks_usd')) || S.seed.assets?.us_stocks_usd || 0;
+      S.portfolio.us_cash_usd      = parseFloat(localStorage.getItem('portfolio_us_cash_usd')) || 0;
+      S.portfolio.india_gold_rate  = parseFloat(localStorage.getItem('portfolio_india_gold_rate')) || (S.seed.gold_rate_inr_per_gram || 8500);
+      S.portfolio.intl_gold_usd_oz = parseFloat(localStorage.getItem('portfolio_intl_gold_usd_oz')) || null;
     }
   }
 
@@ -1615,9 +1637,18 @@ const ODIN = (() => {
     localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
     S.inputs = { ...S.inputs, ...inputs };
 
-    // Then sync to Firebase if ready
+    // Then sync to Firebase if ready (include portfolio values)
     if (FirebaseSync.isReady) {
-      const success = await FirebaseSync.saveInputs(inputs);
+      // Add portfolio values to sync payload
+      const portfolioData = {
+        portfolio_india_stocks_inr: S.portfolio.india_stocks_inr || 0,
+        portfolio_us_stocks_usd: S.portfolio.us_stocks_usd || 0,
+        portfolio_us_cash_usd: S.portfolio.us_cash_usd || 0,
+        portfolio_india_gold_rate: S.portfolio.india_gold_rate || 0,
+        portfolio_fetched_at: localStorage.getItem('portfolio_fetched_at') || new Date().toISOString()
+      };
+      const syncPayload = { ...inputs, ...portfolioData };
+      const success = await FirebaseSync.saveInputs(syncPayload);
       flash(success ? '☁️ Synced to Firebase' : '💾 Saved to localStorage');
     } else {
       flash('💾 Saved to localStorage');

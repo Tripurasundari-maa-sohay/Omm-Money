@@ -661,7 +661,15 @@ const ODIN = (() => {
     const intlGoldRate = S.portfolio.intl_gold_usd_oz
       ? (S.portfolio.intl_gold_usd_oz * fx.usd_to_inr) / 31.1035
       : indiaGoldRate;
-    // Malabar 22K rate priority:
+    // Jewellery 22K rate priority:
+    //   1. User manual override
+    //   2. Live GJC 22K Selling rate (scraped from gjc.org.in)
+    //   3. Estimate: 24K spot × 0.9167 × 1.05 (purity × India retail premium)
+    const jewelManualRate = num('jewel_22k_rate_inr_per_g', 0);
+    const jewel22kRate = jewelManualRate > 0
+      ? jewelManualRate
+      : (S.portfolio.gjc_22k_per_g || indiaGoldRate * 0.9167 * 1.05);
+    // Malabar 22K rate priority (same as jewel, but separate override):
     //   1. User manual override (from Malabar app)
     //   2. Live GJC 22K Selling rate (scraped from gjc.org.in)
     //   3. Estimate: 24K spot × 0.9167 × 1.05 (purity × India retail premium)
@@ -670,7 +678,7 @@ const ODIN = (() => {
       ? malabarManualRate
       : (S.portfolio.gjc_22k_per_g || indiaGoldRate * 0.9167 * 1.05);
 
-    const jewel_inr        = jewel_g * indiaGoldRate;        // jewellery valued at 24K India spot
+    const jewel_inr        = jewel_g * jewel22kRate;         // jewellery valued at 22K India rate
     const malabar_inr      = malabar_g * malabarRate;        // Malabar scheme valued at 22K India retail
     const apt_mkt          = num('apartment_market_value', a.apartment_market_value || 0);
     const lc_qar           = num('land_cruiser_resale_qar', a.land_cruiser_resale_qar || 0);
@@ -764,7 +772,7 @@ const ODIN = (() => {
     return {
       india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
       jewel_g, jewel_inr, malabar_g, malabar_inr,
-      indiaGoldRate, intlGoldRate, malabarRate,
+      indiaGoldRate, intlGoldRate, jewel22kRate, malabarRate,
       apt_mkt, apt_loan: aptLoan, apt_equity,
       lc_qar, lc_loan_qar: lcLoanQAR, lc_qar_inr, lc_loan_qar_inr: lcLoanQAR_INR, veh_equity_inr,
       banksQA, banksIN, cash_qa_inr, cash_in_inr, cash_tot_inr,
@@ -845,7 +853,10 @@ const ODIN = (() => {
     document.getElementById('a-fo').textContent           = fmtINR(v.fo_inr);
     document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
 
-    document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 24K India ₹${Math.round(v.indiaGoldRate).toLocaleString('en-IN')}/g)`;
+    const jSrc = num('jewel_22k_rate_inr_per_g', 0) > 0 ? 'manual'
+               : S.portfolio.gjc_22k_per_g          ? 'GJC live'
+               : 'est';
+    document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 22K ₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g · ${jSrc})`;
     const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual'
                : S.portfolio.gjc_22k_per_g          ? 'GJC live'
                : 'est';
@@ -1427,6 +1438,7 @@ const ODIN = (() => {
     { key: 'gold_jewellery_grams',     label: 'Gold Jewellery Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'gold_rate_inr_per_gram',   label: 'Gold Rate 24K override',        ccy: 'INR', section: 'Gold' },
+    { key: 'jewel_22k_rate_inr_per_g', label: 'Jewellery 22K rate (override)', ccy: 'INR', section: 'Gold' },
     { key: 'malabar_rate_inr_per_g',   label: 'Malabar 22K rate (override)',   ccy: 'INR', section: 'Gold' },
     { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',    ccy: 'INR', section: 'Real Estate' },
     { key: 'land_cruiser_resale_qar',  label: 'LC Resale Value (★ quarterly)', ccy: 'QAR', section: 'Vehicles' },

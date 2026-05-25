@@ -214,6 +214,7 @@
   <span>FX: <span id="fx-meta">—</span></span>
   <span>
     <button onclick="ODIN.refreshAll()" style="background:transparent;border:1px solid var(--gold-dim);color:var(--gold-dim);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:10px;margin-right:8px">🔄 Refresh now</button>
+    <span id="firebase-status" style="font-size:10px;color:var(--text-dim);margin-right:8px">🔥 <span id="firebase-status-text">Initializing...</span></span>
     <span id="data-status" class="live">As of <span id="data-asof">—</span></span>
   </span>
 </div>
@@ -506,11 +507,11 @@ const ODIN = (() => {
     URL.revokeObjectURL(url);
     flash('⬇️ history.json downloaded');
   }
-  function importHistory(ev) {
+  async function importHistory(ev) {
     const file = ev.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = async e => {
       try {
         const arr = JSON.parse(e.target.result);
         if (!Array.isArray(arr)) throw new Error('not an array');
@@ -518,9 +519,20 @@ const ODIN = (() => {
         S.history.forEach(h => byDate.set((h.date || '').slice(0, 10), h));
         arr.forEach(h => byDate.set((h.date || '').slice(0, 10), h));    // imported wins
         S.history = Array.from(byDate.values()).filter(h => h.date).sort((a, b) => a.date.localeCompare(b.date));
+
         localStorage.setItem(LS_HISTORY, JSON.stringify(S.history));
+
+        // Sync to Firebase if ready
+        if (FirebaseSync.isReady) {
+          for (const h of arr) {
+            await FirebaseSync.addHistoryEntry(h);
+          }
+          flash('⬆️ Imported ' + arr.length + ' entries → Firebase synced');
+        } else {
+          flash('⬆️ Imported ' + arr.length + ' entries (Firebase not ready)');
+        }
+
         render();
-        flash('⬆️ Imported ' + arr.length + ' entries');
       } catch (err) { flash('❌ Import failed: ' + err.message); }
     };
     reader.readAsText(file);
@@ -592,14 +604,17 @@ const ODIN = (() => {
       S.portfolio.india_stocks_inr = indiaSum;
       S.portfolio.india_tickers    = indiaCount;
 
-      // US — qty * live USD ltp
+      // US — qty * live USD ltp + cash
       let usSum = 0, usCount = 0;
       for (const h of (cost.us?.open || [])) {
         const px = p[h.tk]?.ltp ?? h.avg ?? 0;
         usSum += (h.qty || 0) * px;
         usCount++;
       }
-      S.portfolio.us_stocks_usd = usSum;
+      // Add US cash from trading account
+      const usCash = cost.us?.cash || 0;
+      S.portfolio.us_cash_usd = usCash;
+      S.portfolio.us_stocks_usd = usSum + usCash;
       S.portfolio.us_tickers    = usCount;
 
       // ── GOLD rates ──
@@ -1507,7 +1522,7 @@ const ODIN = (() => {
         row.className = 'form-grid';
         row.innerHTML = `
           <label title="${f.label}">${f.label}</label>
-          <input type="text" inputmode="decimal" data-key="${f.key}" value="${f.current}" placeholder="11+11" onblur="ODIN.evalField(this)" />
+          <input type="text" inputmode="decimal" data-key="${f.key}" value="${f.current}" placeholder="11+11" onfocus="this.value=''" onblur="ODIN.evalField(this)" />
           <span class="ccy">${f.ccy}</span>`;
         host.appendChild(row);
       });
@@ -1639,8 +1654,13 @@ const ODIN = (() => {
     await loadHistoryFromRepo();
     await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
 
-    // Set up real-time listeners if Firebase is ready
+    // Update Firebase status indicator
+    const fbStatusEl = document.getElementById('firebase-status-text');
     if (FirebaseSync.isReady) {
+      fbStatusEl.textContent = '☁️ Synced';
+      fbStatusEl.style.color = 'var(--gain)';
+
+      // Set up real-time listeners if Firebase is ready
       FirebaseSync.onInputsChange((newInputs) => {
         if (JSON.stringify(newInputs) !== JSON.stringify(S.inputs)) {
           console.log('📱 Inputs synced from another device');
@@ -1648,6 +1668,9 @@ const ODIN = (() => {
           render();
         }
       });
+    } else {
+      fbStatusEl.textContent = 'Local only (fill firebase-config.js)';
+      fbStatusEl.style.color = 'var(--loss)';
     }
 
     render();

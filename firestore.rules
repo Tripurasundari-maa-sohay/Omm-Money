@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow each user to read/write their own data
+    // Anonymous users create unique device IDs
+    match /users/{uid}/data/{document=**} {
+      allow read, write: if request.auth.uid == uid || request.auth == null;
+    }
+  }
+}

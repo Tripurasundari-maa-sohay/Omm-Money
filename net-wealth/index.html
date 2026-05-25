@@ -250,6 +250,7 @@
     <button class="snapshot-btn" onclick="ODIN.exportExcel()">📊 Export Excel</button>
     <button class="snapshot-btn" onclick="document.getElementById('excel-import').click()">📥 Import Excel</button>
     <input type="file" id="excel-import" accept=".xlsx,.xls,.csv" style="display:none" onchange="ODIN.importExcel(event)" />
+    <button class="snapshot-btn" onclick="ODIN.exportToGitHub()">💾 Export to GitHub</button>
   </div>
   <p style="font-size:11px;color:var(--text-dim);margin:8px 0 0">
     History saved to browser localStorage. Click "Export" → commit the JSON file to <code>net-wealth/data/history.json</code> for cross-device persistence.
@@ -506,11 +507,24 @@ const ODIN = (() => {
     catch (e) { console.error('seed load failed', e); S.seed = {}; }
   }
   async function loadInputs() {
-    if (FirebaseSync.isReady) {
-      S.inputs = await FirebaseSync.loadInputs();
-    } else {
-      try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); }
-      catch { S.inputs = {}; }
+    const GITHUB_URL = 'https://raw.githubusercontent.com/Tripurasundari-maa-sohay/Omm-Money/main/net-wealth/data/inputs.json';
+
+    // Try: GitHub → Firebase → localStorage → empty
+    try {
+      const r = await fetch(GITHUB_URL + '?_=' + Date.now());
+      if (r.ok) {
+        S.inputs = await r.json();
+        console.log('✅ Inputs loaded from GitHub');
+      } else throw new Error('GitHub fetch failed');
+    } catch (e) {
+      console.warn('GitHub load failed, trying Firebase/localStorage');
+      if (FirebaseSync.isReady) {
+        S.inputs = await FirebaseSync.loadInputs();
+        console.log('✅ Inputs loaded from Firebase');
+      } else {
+        try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); console.log('✅ Inputs loaded from localStorage'); }
+        catch { S.inputs = {}; }
+      }
     }
     // Also restore portfolio values from localStorage if cached
     const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));
@@ -1744,6 +1758,25 @@ const ODIN = (() => {
     render();
   }
 
+  // Export inputs to GitHub (download JSON)
+  function exportToGitHub() {
+    const exportData = {
+      comment: 'Manual data overrides. Auto-updated on save. Fetch from GitHub for cross-device sync.',
+      exported_at: new Date().toISOString(),
+      ...S.inputs
+    };
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'inputs.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    flash('📥 Downloaded inputs.json — commit to GitHub');
+    console.log('Exported inputs:', exportData);
+  }
+
   // ── Milestones list ─────────────────────────────────────────────
   function renderMilestones(nw) {
     const host = document.getElementById('milestone-host');
@@ -1946,7 +1979,7 @@ const ODIN = (() => {
     saveInputs();
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

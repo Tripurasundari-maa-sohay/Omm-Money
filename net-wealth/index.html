@@ -354,12 +354,7 @@
       Saved to browser localStorage. Quarterly fields starred (★). Type expressions like <code>11+11</code> — auto-evaluates on blur.
     </p>
     <!-- Code Gate for Firebase Sync -->
-    <div style="margin-bottom:16px;padding:8px;background:var(--bg-card2);border:2px dotted var(--gold);border-radius:4px;">
-      <label style="font-size:11px;color:var(--gold);font-weight:600;">CODE TO SYNC FIREBASE</label>
-      <input type="password" id="sync-code" placeholder="Enter code (e.g., 84)" style="width:100%;padding:6px;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:12px;">
-      <div style="font-size:10px;color:var(--text-dim);margin-top:4px;">Without code: saves locally only. With code: syncs to Firebase.</div>
-    </div>
-    <div id="form-assets-host" style="border-left:2px dotted var(--gold);padding-left:8px;"></div>
+    <div id="form-assets-host"></div>
 
     <!-- Gold Rate Override Boxes -->
     <div id="gold-rate-boxes" style="display:none;margin-bottom:12px;">
@@ -415,7 +410,7 @@
       <label style="font-size:11px;color:var(--gold);font-weight:600;">CODE TO SYNC FIREBASE</label>
       <input type="password" id="sync-code" placeholder="Enter code (e.g., 84)" style="width:100%;padding:6px;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:12px;">
     </div>
-    <div id="form-liab-host" style="border-left:2px dotted var(--gold);padding-left:8px;"></div>
+    <div id="form-liab-host"></div>
     <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
   </div>
 </div><!-- /tab-liab -->
@@ -450,7 +445,7 @@
       <label style="font-size:11px;color:var(--gold);font-weight:600;">CODE TO SYNC FIREBASE</label>
       <input type="password" id="sync-code" placeholder="Enter code (e.g., 84)" style="width:100%;padding:6px;margin-top:4px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:12px;">
     </div>
-    <div id="form-fire-host" style="border-left:2px dotted var(--gold);padding-left:8px;"></div>
+    <div id="form-fire-host"></div>
     <button class="save-btn" onclick="ODIN.saveInputs()">💾 SAVE</button>
   </div>
 </div><!-- /tab-fire -->
@@ -509,7 +504,7 @@ const ODIN = (() => {
   async function loadInputs() {
     const GITHUB_URL = 'https://raw.githubusercontent.com/Tripurasundari-maa-sohay/Omm-Money/main/net-wealth/data/inputs.json';
 
-    // Try: GitHub → Firebase → localStorage → empty
+    // Load from GitHub (primary) → localStorage (fallback)
     try {
       const r = await fetch(GITHUB_URL + '?_=' + Date.now());
       if (r.ok) {
@@ -517,14 +512,9 @@ const ODIN = (() => {
         console.log('✅ Inputs loaded from GitHub');
       } else throw new Error('GitHub fetch failed');
     } catch (e) {
-      console.warn('GitHub load failed, trying Firebase/localStorage');
-      if (FirebaseSync.isReady) {
-        S.inputs = await FirebaseSync.loadInputs();
-        console.log('✅ Inputs loaded from Firebase');
-      } else {
-        try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); console.log('✅ Inputs loaded from localStorage'); }
-        catch { S.inputs = {}; }
-      }
+      console.warn('GitHub load failed, falling back to localStorage');
+      try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); console.log('✅ Inputs loaded from localStorage'); }
+      catch { S.inputs = {}; }
     }
     // Also restore portfolio values from localStorage if cached
     const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));
@@ -537,12 +527,8 @@ const ODIN = (() => {
     if (Number.isFinite(cachedGoldRate)) S.portfolio.india_gold_rate = cachedGoldRate;
   }
   async function loadHistory() {
-    if (FirebaseSync.isReady) {
-      S.history = await FirebaseSync.loadHistory();
-    } else {
-      try { S.history = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]'); }
-      catch { S.history = []; }
-    }
+    try { S.history = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]'); }
+    catch { S.history = []; }
   }
   // Load committed history.json from repo and merge (repo wins for older entries, local wins for today)
   async function loadHistoryFromRepo() {
@@ -1721,39 +1707,10 @@ const ODIN = (() => {
       }
     });
 
-    // Always save to localStorage first
+    // Save to localStorage
     localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
     S.inputs = { ...S.inputs, ...inputs };
-
-    // Check code for Firebase sync
-    const codeInput = document.getElementById('sync-code');
-    const enteredCode = codeInput ? codeInput.value.trim() : '';
-    const SYNC_CODE = '84';
-    const codeValid = enteredCode === SYNC_CODE;
-
-    // Then sync to Firebase if ready AND code is correct
-    if (FirebaseSync.isReady && codeValid) {
-      // Add portfolio values to sync payload
-      const portfolioData = {
-        portfolio_india_stocks_inr: S.portfolio.india_stocks_inr || 0,
-        portfolio_us_stocks_usd: S.portfolio.us_stocks_usd || 0,
-        portfolio_us_cash_usd: S.portfolio.us_cash_usd || 0,
-        portfolio_india_gold_rate: S.portfolio.india_gold_rate || 0,
-        portfolio_fetched_at: localStorage.getItem('portfolio_fetched_at') || new Date().toISOString()
-      };
-      // Include manual gold rate overrides
-      const goldRates = {
-        jewel_22k_rate_inr_per_g: S.inputs.jewel_22k_rate_inr_per_g || 0,
-        malabar_rate_inr_per_g: S.inputs.malabar_rate_inr_per_g || 0
-      };
-      const syncPayload = { ...inputs, ...portfolioData, ...goldRates };
-      const success = await FirebaseSync.saveInputs(syncPayload);
-      flash(success ? '☁️ Synced to Firebase' : '💾 Saved to localStorage');
-    } else if (!codeValid && FirebaseSync.isReady) {
-      flash('❌ Wrong code — saved locally only');
-    } else {
-      flash('💾 Saved to localStorage');
-    }
+    flash('💾 Saved to localStorage');
 
     render();
   }
@@ -1870,7 +1827,7 @@ const ODIN = (() => {
     ]);
     console.log('Firebase initialization:', firebaseReady ? 'ready' : 'timed out, using localStorage');
 
-    // Load data (Firebase or localStorage)
+    // Load data from GitHub + localStorage
     await loadInputs();
     await loadHistory();
     await loadSeed();
@@ -1878,24 +1835,10 @@ const ODIN = (() => {
     await loadHistoryFromRepo();
     await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate(), loadIBJARates()]);
 
-    // Update Firebase status indicator
+    // Update sync status (GitHub-based)
     const fbStatusEl = document.getElementById('firebase-status-text');
-    if (FirebaseSync.isReady) {
-      fbStatusEl.textContent = '☁️ Synced';
-      fbStatusEl.style.color = 'var(--gain)';
-
-      // Set up real-time listeners if Firebase is ready
-      FirebaseSync.onInputsChange((newInputs) => {
-        if (JSON.stringify(newInputs) !== JSON.stringify(S.inputs)) {
-          console.log('📱 Inputs synced from another device');
-          S.inputs = { ...S.inputs, ...newInputs };  // Merge, don't replace
-          render();
-        }
-      });
-    } else {
-      fbStatusEl.textContent = 'Local only (fill firebase-config.js)';
-      fbStatusEl.style.color = 'var(--loss)';
-    }
+    fbStatusEl.textContent = '🔗 GitHub sync';
+    fbStatusEl.style.color = 'var(--accent-g)';
 
     render();
     setInterval(refreshAll, 24 * 60 * 60 * 1000);

@@ -1731,7 +1731,7 @@ const ODIN = (() => {
       FirebaseSync.onInputsChange((newInputs) => {
         if (JSON.stringify(newInputs) !== JSON.stringify(S.inputs)) {
           console.log('📱 Inputs synced from another device');
-          S.inputs = newInputs;
+          S.inputs = { ...S.inputs, ...newInputs };  // Merge, don't replace
           render();
         }
       });

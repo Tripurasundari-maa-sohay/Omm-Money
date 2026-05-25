@@ -485,6 +485,11 @@ const ODIN = (() => {
     return '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
   const fmtINRfull = v => Number.isFinite(v) ? '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
+  const fmtCrOnly = v => {
+    if (!Number.isFinite(v)) return '—';
+    const crVal = (v / 1e7).toFixed(2);
+    return `₹${crVal} Cr`;
+  };
   const fmtINRwithCr = v => {
     if (!Number.isFinite(v)) return '—';
     const fullNum = v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -979,7 +984,7 @@ const ODIN = (() => {
       : new Date().toLocaleString();
 
     // Hero — multi-currency display
-    document.getElementById('hero-net').textContent = fmtINRwithCr(v.netWorth);
+    document.getElementById('hero-net').textContent = fmtCrOnly(v.netWorth);
     document.getElementById('hero-multi-ccy').innerHTML =
       `<span><b>$</b>${Math.round(v.netWorth_usd).toLocaleString('en-US')}</span>` +
       `<span><b>QAR</b> ${Math.round(v.netWorth_qar).toLocaleString('en-US')}</span>` +

@@ -1,7 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow all authenticated (including anonymous) users to read/write their own data
+    // Allow all devices to read/write shared data
+    match /users/shared-all-devices/data/{document=**} {
+      allow read, write: if true;
+    }
+
+    // Allow authenticated users to read/write their own data
     match /users/{uid}/data/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }

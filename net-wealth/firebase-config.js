@@ -30,29 +30,11 @@ const FirebaseSync = {
         this.db = firebase.firestore();
         this.auth = firebase.auth();
 
-        this.auth.onAuthStateChanged(user => {
-          if (user) {
-            this.uid = user.uid;
-            this.isReady = true;
-            console.log('🔥 Firebase ready:', this.uid);
-            resolve(true);
-          } else {
-            // Not authenticated, try anonymous auth
-            this.auth.signInAnonymously()
-              .then(result => {
-                this.uid = result.user.uid;
-                this.isReady = true;
-                console.log('🔥 Firebase ready (anonymous):', this.uid);
-                resolve(true);
-              })
-              .catch(err => {
-                this.uid = 'anon_' + Math.random().toString(36).slice(2, 9);
-                this.isReady = true;
-                console.warn('Anon auth failed, using device ID:', this.uid, '—', err.message);
-                resolve(true);
-              });
-          }
-        });
+        // Use hardcoded shared UID for all devices
+        this.uid = 'shared-all-devices';
+        this.isReady = true;
+        console.log('🔥 Firebase ready (shared UID):', this.uid);
+        resolve(true);
       } catch (err) {
         console.error('Firebase init failed:', err);
         resolve(false);

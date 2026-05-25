@@ -1717,7 +1717,7 @@ const ODIN = (() => {
     localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
     S.inputs = { ...S.inputs, ...inputs };
 
-    // Then sync to Firebase if ready (include portfolio values)
+    // Then sync to Firebase if ready (include portfolio + gold rate overrides)
     if (FirebaseSync.isReady) {
       // Add portfolio values to sync payload
       const portfolioData = {
@@ -1727,7 +1727,12 @@ const ODIN = (() => {
         portfolio_india_gold_rate: S.portfolio.india_gold_rate || 0,
         portfolio_fetched_at: localStorage.getItem('portfolio_fetched_at') || new Date().toISOString()
       };
-      const syncPayload = { ...inputs, ...portfolioData };
+      // Include manual gold rate overrides
+      const goldRates = {
+        jewel_22k_rate_inr_per_g: S.inputs.jewel_22k_rate_inr_per_g || 0,
+        malabar_rate_inr_per_g: S.inputs.malabar_rate_inr_per_g || 0
+      };
+      const syncPayload = { ...inputs, ...portfolioData, ...goldRates };
       const success = await FirebaseSync.saveInputs(syncPayload);
       flash(success ? '☁️ Synced to Firebase' : '💾 Saved to localStorage');
     } else {
@@ -1933,7 +1938,7 @@ const ODIN = (() => {
     if (isNaN(val) || val <= 0) {
       S.inputs['malabar_rate_inr_per_g'] = 0;
     } else {
-      S.inputs['malabar_rate_inr_per_g'] = val * S.fx.inr_to_qar; // convert from QAR/g to INR/g
+      S.inputs['malabar_rate_inr_per_g'] = val * S.fx.qar_to_inr; // convert from QAR/g to INR/g
     }
     render();
     saveInputs();

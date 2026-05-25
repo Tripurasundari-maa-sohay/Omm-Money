@@ -647,18 +647,21 @@ const ODIN = (() => {
     reader.readAsArrayBuffer(file);
   }
   async function loadFX() {
-    // Frankfurter is free + no key required; falls back to seed values on fail
+    const QAR_PER_USD = 3.6413; // fixed peg
     try {
-      const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=INR,QAR');
+      // Load from portfolio's market_indices.json (updated daily)
+      const r = await fetch('../portfolio/data/processed/market_indices.json?_=' + Date.now());
       const j = await r.json();
-      const usdInr = j.rates?.INR;
-      const usdQar = j.rates?.QAR;
-      if (usdInr && usdQar) {
+      const usdInr = j.fx_rate;
+      if (usdInr && usdInr > 50) {
         S.fx.usd_to_inr = usdInr;
-        S.fx.qar_to_inr = usdInr / usdQar;
-        S.fx.source = 'frankfurter.app';
+        S.fx.qar_to_inr = usdInr / QAR_PER_USD;
+        S.fx.source = 'portfolio/market_indices.json';
+        console.log(`💱 FX rates: USD/INR=${usdInr.toFixed(2)}, QAR/INR=${S.fx.qar_to_inr.toFixed(2)}`);
       }
-    } catch (e) { console.warn('FX fetch failed, using seed', e); }
+    } catch (e) {
+      console.warn('Portfolio FX load failed, using seed', e);
+    }
   }
 
   // Fetch India 22K selling rate from gjc.org.in via CORS proxy

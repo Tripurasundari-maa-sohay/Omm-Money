@@ -1222,6 +1222,9 @@ const ODIN = (() => {
 
   // ── Asset / Liability reconciliation tiles ─────────────────────
   function renderAssetReconciliation(v) {
+    // Skip if elements don't exist yet
+    if (!document.getElementById('a-recon-total')) return;
+
     const total = v.assetsTot;
     const hist = S.history;
     const lastMo = lastMonthSnapshot(hist);
@@ -1266,6 +1269,9 @@ const ODIN = (() => {
   }
 
   function renderLiabReconciliation(v) {
+    // Skip if elements don't exist yet
+    if (!document.getElementById('l-recon-total')) return;
+
     const total = v.liabTot;
     const hist = S.history;
     const lastMo = lastMonthSnapshot(hist);

@@ -70,7 +70,8 @@
   "todos": [
     { "id": "emergency_fund",  "title": "Build Emergency Fund (6 months expenses)", "status": "pending", "note": "Target: 6 × monthly expenses · liquid savings (Qatar + India)", "due": "" },
     { "id": "term_insurance",  "title": "Term Insurance Coverage ₹1 Cr",            "status": "pending", "note": "Pure term plan, no ULIP. Premium ~₹15-20k/yr at age 35-40.", "due": "" },
-    { "id": "health_insurance","title": "Health Insurance",                          "status": "done",    "note": "Active — fill insurer + renewal date when shared",       "due": "" }
+    { "id": "health_insurance","title": "Health Insurance (Base + Top-up)",          "status": "done",    "note": "Active base + top-up plans",                               "due": "2026-08-27" },
+    { "id": "policy_renewal",  "title": "Renew Health Insurance (Base & Top-up)",   "status": "pending", "note": "Expiry: 27/08/2026 23:59 · Renew before expiry",           "due": "2026-08-27" }
   ],
   "fire": {
     "current_age": 36,

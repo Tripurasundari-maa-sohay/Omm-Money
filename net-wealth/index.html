@@ -700,6 +700,7 @@ const ODIN = (() => {
     const us_stocks_usd    = S.portfolio.us_stocks_usd    || a.us_stocks_usd || 0;
     const us_stocks_inr    = us_stocks_usd * fx.usd_to_inr;
     const fo_inr           = num('fo_corpus_cash', a.fo_corpus_cash || 0) + num('fo_margin_used', a.fo_margin_used || 0);
+    const india_mutual_fund_inr = num('india_mutual_fund_inr', a.india_mutual_fund_inr || 0);
     const jewel_g          = num('gold_jewellery_grams', a.gold_jewellery_grams || 500);
     const malabar_g        = num('malabar_grams', a.malabar_grams || 0);
 
@@ -788,7 +789,7 @@ const ODIN = (() => {
     }, { USD: 0, INR: 0, QAR: 0 });
     const exposureAssets = {
       USD: us_stocks_usd * fx.usd_to_inr + (customByCcy.USD || 0),
-      INR: india_stocks_inr + fo_inr + jewel_inr + malabar_inr + apt_mkt + cash_in_inr + (customByCcy.INR || 0),
+      INR: india_stocks_inr + fo_inr + india_mutual_fund_inr + jewel_inr + malabar_inr + apt_mkt + cash_in_inr + (customByCcy.INR || 0),
       QAR: (banksQA.reduce((s,b)=>s+b.balance_qar,0) + lc_qar + grat_qar) * fx.qar_to_inr + (customByCcy.QAR || 0)
     };
     // Liabilities (negative)
@@ -820,7 +821,7 @@ const ODIN = (() => {
     const netWorth_qar = netWorth / fx.qar_to_inr;
 
     return {
-      india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr,
+      india_stocks_inr, us_stocks_usd, us_stocks_inr, fo_inr, india_mutual_fund_inr,
       jewel_g, jewel_inr, malabar_g, malabar_inr,
       indiaGoldRate, intlGoldRate, jewel22kRate, malabarRate,
       apt_mkt, apt_loan: aptLoan, apt_equity,
@@ -901,7 +902,9 @@ const ODIN = (() => {
     document.getElementById('a-india-stocks').textContent = fmtINR(v.india_stocks_inr);
     document.getElementById('a-us-stocks').textContent    = fmtINR(v.us_stocks_inr);
     document.getElementById('a-fo').textContent           = fmtINR(v.fo_inr);
-    document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
+    // Insert India Mutual Fund display if the element exists (else add it to HTML separately)
+    const eqTotalVal = v.india_stocks_inr + v.us_stocks_inr + v.fo_inr + v.india_mutual_fund_inr;
+    document.getElementById('a-eq-tot').textContent       = fmtINR(eqTotalVal);
 
     const jSrc = num('jewel_22k_rate_inr_per_g', 0) > 0 ? 'manual'
                : S.portfolio.ibja_22k_per_g         ? 'IBJA live'
@@ -1133,7 +1136,7 @@ const ODIN = (() => {
 
     // Per-category breakdown
     const cats = [
-      { label: '📊 Equities',     val: v.india_stocks_inr + v.us_stocks_inr + v.fo_inr },
+      { label: '📊 Equities',     val: v.india_stocks_inr + v.us_stocks_inr + v.fo_inr + v.india_mutual_fund_inr },
       { label: '🏆 Gold',         val: v.jewel_inr + v.malabar_inr },
       { label: '🏠 Real Estate',  val: v.apt_mkt + (v.customAssetsByCategory['Real Estate'] || []).reduce((s,a)=>s+a.value_inr,0) },
       { label: '🚗 Vehicles',     val: v.lc_qar_inr },
@@ -1490,6 +1493,7 @@ const ODIN = (() => {
   const ASSET_FIELDS = [
     { key: 'fo_corpus_cash',           label: 'F&O Corpus (cash)',             ccy: 'INR', section: 'Equities' },
     { key: 'fo_margin_used',           label: 'F&O Margin Used',               ccy: 'INR', section: 'Equities' },
+    { key: 'india_mutual_fund_inr',    label: 'India Mutual Fund',             ccy: 'INR', section: 'Equities' },
     { key: 'gold_jewellery_grams',     label: 'Gold Jewellery Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'malabar_grams',            label: 'Malabar Scheme Grams',          ccy: 'g',   section: 'Gold' },
     { key: 'apartment_market_value',   label: 'Apartment Market Value (★)',    ccy: 'INR', section: 'Real Estate' },

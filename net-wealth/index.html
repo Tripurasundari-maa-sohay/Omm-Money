@@ -582,6 +582,32 @@ const ODIN = (() => {
     }
     console.warn('GJC gold rate fetch failed, falling back to estimate');
   }
+
+  async function loadIBJARates() {
+    const target = encodeURIComponent('https://ibjarates.com/');
+    const proxies = [
+      `https://api.allorigins.win/raw?url=${target}`,
+      `https://corsproxy.io/?${target}`
+    ];
+    for (const url of proxies) {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) continue;
+        const html = await r.text();
+        // Extract 916 purity gold rate: look for GoldRatesCompare916 span
+        const m = html.match(/GoldRatesCompare916">(\d+)<\/span>/);
+        if (!m) continue;
+        const per10g = parseInt(m[1], 10);     // 916 purity per 10g
+        if (per10g > 10000 && per10g < 200000) {       // sanity check
+          S.portfolio.ibja_22k_per_g = per10g / 10;
+          S.portfolio.ibja_source    = url.includes('allorigins') ? 'ibjarates.com (allorigins)' : 'ibjarates.com (corsproxy)';
+          return;
+        }
+      } catch (e) { /* try next proxy */ }
+    }
+    console.warn('IBJA gold rate fetch failed, falling back to estimate');
+  }
+
   async function loadPortfolio() {
     try {
       const [costR, pricesR, screenerR] = await Promise.all([
@@ -661,14 +687,15 @@ const ODIN = (() => {
     const intlGoldRate = S.portfolio.intl_gold_usd_oz
       ? (S.portfolio.intl_gold_usd_oz * fx.usd_to_inr) / 31.1035
       : indiaGoldRate;
-    // Jewellery 22K rate priority:
+    // Jewellery 22K (916 purity) rate priority:
     //   1. User manual override
-    //   2. Live GJC 22K Selling rate (scraped from gjc.org.in)
-    //   3. Estimate: 24K spot × 0.9167 × 1.05 (purity × India retail premium)
+    //   2. Live IBJA 916 purity rate (scraped from ibjarates.com)
+    //   3. Live GJC 22K Selling rate (scraped from gjc.org.in)
+    //   4. Estimate: 24K spot × 0.9167 × 1.05 (purity × India retail premium)
     const jewelManualRate = num('jewel_22k_rate_inr_per_g', 0);
     const jewel22kRate = jewelManualRate > 0
       ? jewelManualRate
-      : (S.portfolio.gjc_22k_per_g || indiaGoldRate * 0.9167 * 1.05);
+      : (S.portfolio.ibja_22k_per_g || S.portfolio.gjc_22k_per_g || indiaGoldRate * 0.9167 * 1.05);
     // Malabar 22K rate priority (same as jewel, but separate override):
     //   1. User manual override (from Malabar app)
     //   2. Live GJC 22K Selling rate (scraped from gjc.org.in)
@@ -854,6 +881,7 @@ const ODIN = (() => {
     document.getElementById('a-eq-tot').textContent       = fmtINR(v.india_stocks_inr + v.us_stocks_inr + v.fo_inr);
 
     const jSrc = num('jewel_22k_rate_inr_per_g', 0) > 0 ? 'manual'
+               : S.portfolio.ibja_22k_per_g         ? 'IBJA live'
                : S.portfolio.gjc_22k_per_g          ? 'GJC live'
                : 'est';
     document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 22K ₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g · ${jSrc})`;
@@ -1664,7 +1692,7 @@ const ODIN = (() => {
     await loadSeed();
     loadTodos();
     await loadHistoryFromRepo();
-    await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
+    await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate(), loadIBJARates()]);
 
     // Update Firebase status indicator
     const fbStatusEl = document.getElementById('firebase-status-text');
@@ -1691,7 +1719,7 @@ const ODIN = (() => {
 
   async function refreshAll() {
     flash('🔄 Refreshing…');
-    await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate()]);
+    await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate(), loadIBJARates()]);
     render();
     flash('✓ Refreshed');
   }

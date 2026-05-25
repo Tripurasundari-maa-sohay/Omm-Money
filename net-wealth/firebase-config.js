@@ -33,17 +33,25 @@ const FirebaseSync = {
         this.auth.onAuthStateChanged(user => {
           if (user) {
             this.uid = user.uid;
+            this.isReady = true;
+            console.log('🔥 Firebase ready:', this.uid);
+            resolve(true);
           } else {
-            // Anonymous auth
-            this.auth.signInAnonymously().catch(err => {
-              this.uid = 'anon_' + Math.random().toString(36).slice(2, 9);
-              console.warn('Anon auth failed, using device ID:', this.uid);
-            });
-            this.uid = this.uid || ('anon_' + Math.random().toString(36).slice(2, 9));
+            // Not authenticated, try anonymous auth
+            this.auth.signInAnonymously()
+              .then(result => {
+                this.uid = result.user.uid;
+                this.isReady = true;
+                console.log('🔥 Firebase ready (anonymous):', this.uid);
+                resolve(true);
+              })
+              .catch(err => {
+                this.uid = 'anon_' + Math.random().toString(36).slice(2, 9);
+                this.isReady = true;
+                console.warn('Anon auth failed, using device ID:', this.uid, '—', err.message);
+                resolve(true);
+              });
           }
-          this.isReady = true;
-          console.log('🔥 Firebase ready:', this.uid);
-          resolve(true);
         });
       } catch (err) {
         console.error('Firebase init failed:', err);

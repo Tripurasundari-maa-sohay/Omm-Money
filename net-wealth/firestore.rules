@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow all authenticated (including anonymous) users to read/write their own data
+    match /users/{uid}/data/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Fallback: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

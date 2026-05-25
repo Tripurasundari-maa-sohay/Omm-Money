@@ -618,8 +618,8 @@
       <div class="banner-controls">
         <!-- FX Rates Display -->
         <div style="display:flex;gap:12px;align-items:center;font-size:11px;color:var(--text-sec);border-right:1px solid var(--border);padding-right:12px;">
-          <span>USD <span id="fx-usd-inr" style="color:var(--gold);font-weight:600;">—</span> ₹</span>
-          <span>QAR <span id="fx-qar-inr" style="color:var(--gold);font-weight:600;">—</span> ₹</span>
+          <span>USD <span id="fx-usd-inr" style="color:var(--accent-y);font-weight:600;">—</span> ₹</span>
+          <span>QAR <span id="fx-qar-inr" style="color:var(--accent-y);font-weight:600;">—</span> ₹</span>
         </div>
         <!-- Edit Mode Code -->
         <input type="password" id="edit-code" placeholder="enter code" style="width:80px;padding:4px 6px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:3px;font-size:11px;" title="Enter code for edit mode">
@@ -4155,18 +4155,31 @@ const DASH = (() => {
   /* ── INIT ── */
   async function loadFXRates() {
     const QAR_PER_USD = 3.6413;
-    try {
-      const r = await fetch('./data/processed/market_indices.json?_=' + Date.now());
-      const j = await r.json();
-      const usdInr = j.fx_rate;
-      if (usdInr && usdInr > 50) {
-        const qarInr = usdInr / QAR_PER_USD;
-        document.getElementById('fx-usd-inr').textContent = usdInr.toFixed(2);
-        document.getElementById('fx-qar-inr').textContent = qarInr.toFixed(2);
+    const paths = [
+      './data/processed/market_indices.json',
+      '../portfolio/data/processed/market_indices.json',
+      '/Omm-Money/portfolio/data/processed/market_indices.json',
+      '../../portfolio/data/processed/market_indices.json'
+    ];
+
+    for (const path of paths) {
+      try {
+        const r = await fetch(path + '?_=' + Date.now());
+        if (!r.ok) continue;
+        const j = await r.json();
+        const usdInr = j.fx_rate;
+        if (usdInr && usdInr > 50) {
+          const qarInr = usdInr / QAR_PER_USD;
+          document.getElementById('fx-usd-inr').textContent = usdInr.toFixed(2);
+          document.getElementById('fx-qar-inr').textContent = qarInr.toFixed(2);
+          console.log('✅ FX rates loaded from', path, '· USD/INR:', usdInr.toFixed(2), '· QAR/INR:', qarInr.toFixed(2));
+          return;
+        }
+      } catch(e) {
+        // try next path
       }
-    } catch(e) {
-      console.warn('FX load failed', e);
     }
+    console.warn('⚠️ FX load failed · all paths exhausted');
   }
 
   function checkEditCode() {

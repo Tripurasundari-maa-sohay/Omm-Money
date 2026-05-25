@@ -318,6 +318,10 @@
 
     <div class="card">
       <h2>🏆 GOLD</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px;">
+        <span style="color:var(--text-dim)">Jewellery 22K Rate</span>
+        <span style="font-weight:600;color:var(--gold);" id="jewel-22k-rate-box">₹—/g</span>
+      </div>
       <div class="row-line"><span class="name">Jewellery <span class="sub" id="jewel-rate">—</span></span><span class="val" id="a-jewel">—</span></div>
       <div class="row-line"><span class="name">Malabar Scheme <span class="sub" id="malabar-rate">—</span></span><span class="val" id="a-malabar">—</span></div>
       <div class="total-line"><span class="name">Subtotal</span><span class="val" id="a-gold-tot">—</span></div>
@@ -884,6 +888,7 @@ const ODIN = (() => {
                : S.portfolio.ibja_22k_per_g         ? 'IBJA live'
                : S.portfolio.gjc_22k_per_g          ? 'GJC live'
                : 'est';
+    document.getElementById('jewel-22k-rate-box').textContent = `₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g (${jSrc})`;
     document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 22K ₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g · ${jSrc})`;
     const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual'
                : S.portfolio.gjc_22k_per_g          ? 'GJC live'

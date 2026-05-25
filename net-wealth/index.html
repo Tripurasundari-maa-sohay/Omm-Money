@@ -14,6 +14,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -246,6 +247,9 @@
     <button class="snapshot-btn" onclick="ODIN.exportHistory()">⬇️ Export history.json</button>
     <button class="snapshot-btn" onclick="document.getElementById('hist-import').click()">⬆️ Import history.json</button>
     <input type="file" id="hist-import" accept="application/json" style="display:none" onchange="ODIN.importHistory(event)" />
+    <button class="snapshot-btn" onclick="ODIN.exportExcel()">📊 Export Excel</button>
+    <button class="snapshot-btn" onclick="document.getElementById('excel-import').click()">📥 Import Excel</button>
+    <input type="file" id="excel-import" accept=".xlsx,.xls,.csv" style="display:none" onchange="ODIN.importExcel(event)" />
   </div>
   <p style="font-size:11px;color:var(--text-dim);margin:8px 0 0">
     History saved to browser localStorage. Click "Export" → commit the JSON file to <code>net-wealth/data/history.json</code> for cross-device persistence.
@@ -575,6 +579,72 @@ const ODIN = (() => {
       } catch (err) { flash('❌ Import failed: ' + err.message); }
     };
     reader.readAsText(file);
+  }
+  function exportExcel() {
+    const wb = XLSX.utils.book_new();
+    const wsData = [['Field Name', 'Amount', 'Unit']];
+
+    ASSET_FIELDS.forEach(f => {
+      const val = S.inputs[f.key] || '';
+      wsData.push([f.label, val, f.unit || '']);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
+
+    // Header styling (blue background)
+    ['A1', 'B1', 'C1'].forEach(cell => {
+      ws[cell].s = { fill: { fgColor: { rgb: '366092' } }, font: { bold: true, color: { rgb: 'FFFFFF' } } };
+    });
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Import Data');
+    XLSX.writeFile(wb, 'ODIN-Data.xlsx');
+    flash('📊 Data exported to ODIN-Data.xlsx');
+  }
+  async function importExcel(ev) {
+    const file = ev.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+        let imported = 0;
+        for (let i = 1; i < data.length; i++) {
+          const row = data[i];
+          if (!row[0] || !row[1]) continue;
+
+          const fieldName = row[0];
+          const value = row[1];
+
+          // Find matching field by label
+          const field = ASSET_FIELDS.find(f => f.label === fieldName);
+          if (field) {
+            S.inputs[field.key] = value;
+            imported++;
+          }
+        }
+
+        // Save to localStorage
+        localStorage.setItem(LS_INPUTS, JSON.stringify(S.inputs));
+
+        // Sync to Firebase
+        if (FirebaseSync.isReady) {
+          await FirebaseSync.saveInputs(S.inputs);
+          flash(`📥 Imported ${imported} fields → Firebase synced`);
+        } else {
+          flash(`📥 Imported ${imported} fields (Firebase not ready)`);
+        }
+
+        render();
+      } catch (err) {
+        flash('❌ Excel import failed: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
   }
   async function loadFX() {
     // Frankfurter is free + no key required; falls back to seed values on fail
@@ -1866,7 +1936,7 @@ const ODIN = (() => {
     saveInputs();
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

@@ -499,17 +499,26 @@ const ODIN = (() => {
   async function loadInputs() {
     const GITHUB_URL = 'https://raw.githubusercontent.com/Tripurasundari-maa-sohay/Omm-Money/main/net-wealth/data/inputs.json';
 
-    // Load from GitHub (primary) → localStorage (fallback)
+    // Load localStorage first (most recent local data)
+    try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); }
+    catch { S.inputs = {}; }
+    console.log('✅ Inputs base from localStorage');
+
+    // Merge GitHub data (GitHub values override only if non-null)
     try {
       const r = await fetch(GITHUB_URL + '?_=' + Date.now());
       if (r.ok) {
-        S.inputs = await r.json();
-        console.log('✅ Inputs loaded from GitHub');
-      } else throw new Error('GitHub fetch failed');
+        const gitData = await r.json();
+        // Merge: GitHub overwrites only for non-null, non-comment keys
+        Object.entries(gitData).forEach(([k, v]) => {
+          if (k !== 'comment' && k !== 'exported_at' && v !== null && v !== undefined) {
+            S.inputs[k] = v;
+          }
+        });
+        console.log('✅ Inputs merged from GitHub');
+      }
     } catch (e) {
-      console.warn('GitHub load failed, falling back to localStorage');
-      try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); console.log('✅ Inputs loaded from localStorage'); }
-      catch { S.inputs = {}; }
+      console.warn('GitHub merge failed, using localStorage only', e);
     }
     // Also restore portfolio values from localStorage if cached
     const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));

@@ -31,6 +31,7 @@
     { "name": "Axis (NRE)",          "balance_inr": 0 },
     { "name": "IDFC FB (NRE)",       "balance_inr": 0 },
     { "name": "IDFC FB (BABA)",      "balance_inr": 0 },
+    { "name": "HDFC (Bou)",          "balance_inr": 450000 },
     { "name": "IndusInd PIS NRE",    "balance_inr": 0 },
     { "name": "IndusInd PIS NRO",    "balance_inr": 0 },
     { "name": "IndusInd NRE",        "balance_inr": 0 },
@@ -43,7 +44,7 @@
     { "id": "india_car",  "label": "India Car Loan",      "provider": "(future)",            "ccy": "INR", "outstanding": 0,       "tenure_months_remaining": 0 },
     { "id": "cc_qa",      "label": "QA Credit Card",      "provider": "Qatar Airways CC",    "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 },
     { "id": "cc_lulu",    "label": "Lulu Credit Card",    "provider": "Lulu CC",             "ccy": "QAR", "outstanding": 0,       "tenure_months_remaining": 0 },
-    { "id": "sulagna",    "label": "Sulagna Loan",        "provider": "Personal",            "ccy": "INR", "outstanding": 854000,  "tenure_months_remaining": 0 }
+    { "id": "bou_loan",   "label": "Bou Loan",            "provider": "Personal",            "ccy": "INR", "outstanding": 854000,  "tenure_months_remaining": 0 }
   ],
   "monthly_cash_flow": {
     "salary_qar": 0,
@@ -59,5 +60,18 @@
     "top_1_pct_india": 15200000,
     "target_1": 25000000,
     "target_2": 50000000
+  },
+  "todos": [
+    { "id": "emergency_fund",  "title": "Build Emergency Fund (6 months expenses)", "status": "pending", "note": "Target: 6 × monthly expenses · liquid savings (Qatar + India)", "due": "" },
+    { "id": "term_insurance",  "title": "Term Insurance Coverage ₹1 Cr",            "status": "pending", "note": "Pure term plan, no ULIP. Premium ~₹15-20k/yr at age 35-40.", "due": "" },
+    { "id": "health_insurance","title": "Health Insurance",                          "status": "done",    "note": "Active — fill insurer + renewal date when shared",       "due": "" }
+  ],
+  "fire": {
+    "current_age": 36,
+    "retire_age": 50,
+    "annual_expenses_inr": 1800000,
+    "expected_return_pct": 11,
+    "inflation_pct": 6,
+    "swr_pct": 4
   }
 }

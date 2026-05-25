@@ -4202,6 +4202,8 @@ const DASH = (() => {
 
   function init() {
     loadFXRates();
+    // Auto-refresh FX rates every 5 minutes
+    setInterval(loadFXRates, 5 * 60 * 1000);
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.addEventListener('click', e => switchTab(e.currentTarget.getAttribute('data-tab')));
     });

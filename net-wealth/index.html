@@ -1606,15 +1606,17 @@ const ODIN = (() => {
         el.value = v;
       }
     });
-    S.inputs = inputs;
 
-    // Save to Firebase if ready, fallback to localStorage
+    // Always save to localStorage first
+    localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
+    S.inputs = { ...S.inputs, ...inputs };
+
+    // Then sync to Firebase if ready
     if (FirebaseSync.isReady) {
       const success = await FirebaseSync.saveInputs(inputs);
-      flash(success ? '☁️ Synced to Firebase' : '💾 Saved locally');
+      flash(success ? '☁️ Synced to Firebase' : '💾 Saved to localStorage');
     } else {
-      localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
-      flash('💾 Saved locally (Firebase not ready)');
+      flash('💾 Saved to localStorage');
     }
 
     render();

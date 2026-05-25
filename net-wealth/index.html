@@ -481,6 +481,13 @@ const ODIN = (() => {
     return '₹' + Math.round(v).toLocaleString('en-IN');
   };
   const fmtINRfull = v => Number.isFinite(v) ? '₹' + Math.round(v).toLocaleString('en-IN') : '—';
+  const fmtINRwithCr = v => {
+    if (!Number.isFinite(v)) return '—';
+    const rounded = Math.round(v);
+    const fullNum = rounded.toLocaleString('en-IN');
+    const crVal = (v / 1e7).toFixed(2);
+    return `₹${fullNum} (${crVal} Cr)`;
+  };
   const fmtQAR = v => Number.isFinite(v) ? 'QAR ' + Math.round(v).toLocaleString('en-US') : '—';
   const fmtUSD = v => Number.isFinite(v) ? '$' + Math.round(v).toLocaleString('en-US') : '—';
   const pct = (a, b) => b > 0 ? (a/b * 100) : 0;
@@ -900,7 +907,7 @@ const ODIN = (() => {
       : new Date().toLocaleString();
 
     // Hero — multi-currency display
-    document.getElementById('hero-net').textContent = fmtINR(v.netWorth);
+    document.getElementById('hero-net').textContent = fmtINRwithCr(v.netWorth);
     document.getElementById('hero-multi-ccy').innerHTML =
       `<span><b>$</b>${Math.round(v.netWorth_usd).toLocaleString('en-US')}</span>` +
       `<span><b>QAR</b> ${Math.round(v.netWorth_qar).toLocaleString('en-US')}</span>` +

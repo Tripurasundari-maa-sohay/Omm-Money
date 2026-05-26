@@ -262,7 +262,7 @@
     <button class="snapshot-btn" onclick="ODIN.exportExcel()">Export Excel</button>
     <button class="snapshot-btn" onclick="document.getElementById('excel-import').click()">Import Excel</button>
     <input type="file" id="excel-import" accept=".xlsx,.xls,.csv" style="display:none" onchange="ODIN.importExcel(event)" />
-    <button class="snapshot-btn" onclick="ODIN.exportToGitHub()">Export to GitHub</button>
+    <button class="snapshot-btn" onclick="ODIN.exportToGitHub()" title="Push current state to GitHub now">☁ Push to GitHub</button>
   </div>
   <p style="font-size:11px;color:var(--text-dim);margin:8px 0 0">
     History saved to browser localStorage. Click "Export" → commit the JSON file to <code>net-wealth/data/history.json</code> for cross-device persistence.
@@ -1674,6 +1674,36 @@ const ODIN = (() => {
     }
   }
 
+  // Cloudflare Worker proxy that holds the GitHub PAT server-side.
+  // Worker source: tools/cloudflare-worker.js.
+  const SAVE_WORKER_URL = 'https://omm-money-saver.sabarna-chowdhury.workers.dev/';
+
+  async function pushSeedToGitHub() {
+    try {
+      const r = await fetch(SAVE_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: 'net-wealth/data/seed.json',
+          content: JSON.stringify(S.seed, null, 2),
+          message: `seed: dashboard save ${new Date().toISOString()}`
+        })
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.ok) {
+        flash('☁ Pushed to GitHub · ' + (data.sha || '').slice(0, 7));
+        return true;
+      }
+      console.error('worker save failed', r.status, data);
+      flash('⚠ GitHub push failed (HTTP ' + r.status + ') — local save still kept');
+      return false;
+    } catch (e) {
+      console.error('worker save error', e);
+      flash('⚠ Worker offline — local save still kept');
+      return false;
+    }
+  }
+
   async function saveInputs() {
     document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-fire-host input').forEach(el => {
       const k = el.dataset.key;
@@ -1686,26 +1716,15 @@ const ODIN = (() => {
 
     S.seed.as_of = new Date().toISOString().slice(0, 10);
     localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
-    flash('Saved to localStorage');
-
-    if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady && FirebaseSync.saveState) {
-      try { await FirebaseSync.saveState(S.seed); } catch (e) { /* offline ok */ }
-    }
+    flash('💾 Saved locally · pushing to GitHub…');
 
     render();
+    pushSeedToGitHub();   // fire-and-forget, status reported via flash
   }
 
-  // Download the current seed (with user edits) — commit to repo as data/seed.json.
+  // Manual button: push current state to GitHub on demand (same path as auto-save).
   function exportToGitHub() {
-    const json = JSON.stringify(S.seed, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'seed.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    flash('Downloaded seed.json — commit to GitHub');
+    pushSeedToGitHub();
   }
 
   // ── Milestones list ─────────────────────────────────────────────

@@ -279,10 +279,12 @@ def build_holdings_json() -> dict:
         return {"generated": datetime.utcnow().isoformat() + "Z", "prices": {}}
 
     cost = json.loads(COST_BASIS.read_text())
+    open_tickers: set[str] = set()
     tickers: list[tuple[str, str]] = []
     for region in ("us", "india"):
         for p in cost.get(region, {}).get("open", []):
             tickers.append((p["tk"], p["yf"]))
+            open_tickers.add(p["tk"])
 
     # Build manual LTP overrides from holdings_cost.json (used when live fetch fails)
     manual_ltps: dict[str, float] = {}
@@ -370,6 +372,14 @@ def build_holdings_json() -> dict:
     # Tickers that failed this run keep their previous price (with original as_of timestamp).
     # This ensures dayPL never freezes due to partial fetch failures at market open.
     merged = {**existing_prices, **fresh_prices}
+
+    # Prune entries for tickers no longer in any open position (e.g. KEEL after sell).
+    # These linger forever and drag down freshness checks on the dashboard.
+    pruned = [tk for tk in merged if tk not in open_tickers]
+    for tk in pruned:
+        merged.pop(tk, None)
+    if pruned:
+        print(f"  pruned {len(pruned)} closed-position tickers: {pruned}")
 
     # Hard guard: if we got ZERO fresh prices something is badly wrong — skip write entirely.
     if success_count == 0:

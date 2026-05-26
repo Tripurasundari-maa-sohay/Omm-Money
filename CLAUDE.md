@@ -378,3 +378,136 @@ correctness:
 
 Schema-completeness + workflow-success-history + formula-contract checks
 above now close these gaps.
+
+---
+
+# Session log — 2026-05-26/27 · Major architecture overhaul
+
+## ODIN Net-Worth Dashboard (`net-wealth/`)
+
+### Data layer
+- `inputs.json` fully restored from `ODIN-Financials.xlsx` (all bank balances, loans, gold rates, vehicles, gratuity)
+- `history.json` populated with 7 monthly snapshots (Nov-25 → May-26) so reconciliation tiles show data immediately
+- `seed.json` updated: FIRE age=42, monthly expenses=₹2L, added `child_education` block
+- PWA icons replaced with USD/INR coin symbol (192px, 512px, 180px apple-touch)
+
+### FIRE tab — complete rebuild
+| Feature | Detail |
+|---------|--------|
+| Progress bar | % to FIRE number |
+| Coast FIRE | NW needed now to stop SIP and still retire at 42 |
+| Monthly passive income | Current NW × 4% SWR ÷ 12 |
+| Savings rate tracker | Income vs expense → rating (Exceptional/Good/Low) |
+| Runway | Years current NW sustains at current expense rate |
+| What-if slider | Drag ₹0–₹2L/mo → see FIRE age move in real-time |
+| Child education fund | Future cost at 8% edu inflation + monthly SIP needed |
+| Combined FIRE + edu target | Single number |
+| 3 scenarios | Lean (₹1.5L) / Regular (₹2L) / Fat (₹3.5L) |
+| Barista FIRE | Semi-retire with part-time income |
+| Year-by-year table | NW vs target by age, FIRE date highlighted 🎯 |
+
+FIRE inputs extended: `monthly_income_inr`, `barista_parttime_income_inr`, education fields.
+`edu_*` keys routed through new `resolveKey()` branch → `S.seed.child_education`.
+
+### UI fixes
+- Sync symbols (☁️💾📸) removed from all buttons
+- FX display: `$ to ₹XX.XX · QAR to ₹XX.XX`
+- Theme toggle fixed (was returning blank page — now reloads instead of calling render())
+- Firebase status indicator removed
+- Stale data badge threshold: 8 min → 15 min
+
+---
+
+## Portfolio Dashboard (`portfolio/`)
+
+### market_data.py — major refactor
+
+#### Architecture split into two dedicated functions
+```python
+fetch_us_open_positions(holdings, existing_prices, manual_ltps)
+    → Finnhub PRIMARY (real-time) → Yahoo fallback → stale carry-forward
+
+fetch_india_open_positions(holdings, existing_prices, manual_ltps)
+    → Angel One PRIMARY (real-time) → Yahoo fallback → NSE/Screener → stale
+```
+
+Dynamic throttle: `delay = max(1, math.floor(60 / N))` seconds between API calls.
+Shared `_build_price_entry()` handles auto-heal + sanity cap for both functions.
+
+#### Finnhub integration (US PRIMARY)
+- `fetch_quote_finnhub(us_symbol)` → real-time, free tier
+- Key: `FINNHUB_API_KEY` GitHub secret
+- 13 US stocks → 60/13 = 4s gap → well within 60/min limit
+
+#### Angel One SmartAPI (India PRIMARY)
+- `fetch_quote_angelone(nse_symbol)` → real-time NSE prices
+- Session cache (JWT token, 1-hour TTL, auto-refresh via TOTP)
+- Dynamic token lookup via Angel One search API + `_ANGEL_TOKEN_CACHE`
+- Keys: `ANGEL_API_KEY`, `ANGEL_SECRET_KEY`, `ANGEL_CLIENT_ID`, `ANGEL_MPIN`, `ANGEL_TOTP_SECRET`
+- IP whitelist: `145.241.158.254` (Oracle VM)
+- angel_active auto-detects from env vars — no code change needed to activate
+
+#### Auto-heal pc (candle cross-check)
+Every fetched price is validated: if API `pc` differs from Yahoo 5d candle by >1% → candle wins.
+Prevents wrong `chartPreviousClose` values (fixed GLW bug: stored $207 vs actual $194).
+
+#### Cap raised
+- US: 15% → 30% (covers earnings moves like MU +17%)
+- India: 10% → 20% (covers circuit breakers)
+
+#### post_fetch_audit.py — zero network calls
+Rewritten to be JSON-only validator (was making 27 yfinance calls → caused workflow timeout).
+- Validates all positions have ltp + pc
+- Computes and prints day P&L summary
+- Exits 1 only on unrecoverable missing price data
+- Runs in <0.1s vs old ~4 min
+
+### Oracle VM — self-hosted runner
+| Item | Value |
+|------|-------|
+| Provider | Oracle Cloud Always Free |
+| Region | Saudi Arabia (me-riyadh-1) |
+| Shape | VM.Standard.A1.Flex (ARM, 1 OCPU, 6GB RAM) |
+| Public IP | `145.241.158.254` (static, permanent) |
+| OS | Oracle Linux 9 (aarch64) |
+| Service | `github-runner.service` (systemd, auto-restarts) |
+| SSH | `ssh -i ~/Downloads/ssh-key-2026-05-26.key opc@145.241.158.254` |
+| Purpose | Fixed IP for Angel One whitelist + self-hosted GH Actions runner |
+
+Workflow `full_update.yml` now runs on `[self-hosted, oracle-vm]` instead of `ubuntu-latest`.
+Runner registered as `oracle-vm`, service `/etc/systemd/system/github-runner.service`.
+
+### Cron interval
+Changed from `*/15` to `*/5` — fetches every 5 min during market hours.
+Page auto-refresh: 15m10s → 5m30s.
+
+### UI — portfolio/index.html
+- **DAY % column** added to US Holdings table (was only in India)
+- Both tables: null-safe `—` when pc missing instead of NaN display
+- Sort by `dayPct` wired in both `US_SORT_KEY` and `IN_SORT_KEY`
+- Stale data badge fires at >15 min (was 8 min — too tight for 5+7 min pipeline)
+- Badge tooltip updated: "check GitHub Actions if >20 min"
+
+### GitHub Secrets (all active)
+| Secret | Purpose |
+|--------|---------|
+| `FINNHUB_API_KEY` | US real-time prices |
+| `ANGEL_API_KEY` | India real-time prices |
+| `ANGEL_SECRET_KEY` | Angel One auth |
+| `ANGEL_CLIENT_ID` | Angel One login |
+| `ANGEL_MPIN` | Angel One PIN |
+| `ANGEL_TOTP_SECRET` | TOTP for Angel One 2FA |
+
+### Known pending
+- PARAMATRIX + ASHALOG: delisted on Yahoo. Angel One may resolve on next India market open.
+  If still failing → set `manual_ltp` in `holdings_cost.json`
+- Finnhub WebSocket (browser-side real-time for US) — discussed, not yet built
+- Angel One WebSocket → Firebase → browser (real-time India) — discussed, not yet built
+- Oracle VM: 3 more ARM cores + 18GB RAM still unused in Always Free quota
+
+### Recurring pitfalls from this session
+1. **Git conflict on data files** — always `git checkout --ours data/processed/` when rebasing
+2. **post_fetch_audit making network calls** caused workflow timeout — keep it JSON-only
+3. **chartPreviousClose stale** — Yahoo API field unreliable; always cross-check vs candle
+4. **Cap too low** — 15% cap silently excluded MU +17% earnings move; raised to 30%
+5. **Token storage** — never commit PAT/API keys in code; always GitHub Secrets + `os.environ.get()`

@@ -1,5 +1,98 @@
 # Portfolio Dashboard — Claude Code Rules + Architecture
 
+---
+
+# AUDIT CHECKLIST — run before every session ends
+
+## 🔴 CRITICAL (data integrity)
+- [ ] All open positions have `ltp` > 0 in `holdings_prices.json`
+- [ ] All open positions have `pc` ≠ null (or confirmed big-mover with note)
+- [ ] Day P&L = `(ltp - pc) × qty` for every position — verify 2-3 manually
+- [ ] `holdings_prices.json.generated` timestamp < 15 min during market hours
+- [ ] FX rate in `market_indices.json` between 80–110 INR/USD (sanity range)
+- [ ] `full_update.yml` last run: green ✅ (check GitHub Actions)
+- [ ] No GitHub secrets in any committed file (grep: `ghp_`, `apikey`, `password`, `token =`)
+
+## 🟠 LOGIC (calculations)
+- [ ] Currency units consistent per tile (INR tile → INR values, USD tile → USD values)
+- [ ] Breakdown sub-values match parent tile currency
+- [ ] `change_pct` cap not silently excluding legitimate big movers (check WARN logs)
+- [ ] Auto-heal fired correctly when `pc` was wrong (check AUTO-HEAL in logs)
+- [ ] FIRE tab: `fireTarget = annualExpenses / swrPct` (e.g. ₹24L / 0.04 = ₹6 Cr)
+- [ ] Coast FIRE formula: `fireTarget / (1 + realRet)^yrsLeft`
+
+## 🟡 UI/UX (dead code + display)
+- [ ] No orphaned `<input>` or `<button>` elements with no JS wiring
+- [ ] No placeholder text visible in production (e.g. "enter code", "TODO", "—" where value expected)
+- [ ] All emoji/sync symbols removed from buttons (no ☁️💾📸⬆️📥)
+- [ ] All tiles show actual values (not "—" or "loading..." after page loads)
+- [ ] Sortable columns: clicking header sorts + shows ▲/▼ arrow
+- [ ] Mobile: key tiles visible without scroll (hero, today's gain)
+- [ ] Theme toggle works (dark ↔ light) without blank page
+
+## 🟡 DATA DISPLAY
+- [ ] India holdings: DAY P&L and DAY % show ₹/% not USD
+- [ ] US holdings: DAY P&L and DAY % show $/% not INR
+- [ ] `pc` field shown as "PREV CLOSE" in India table
+- [ ] STALE tag on holdings where `p.live === false`
+- [ ] FREE tag on house-money positions (`avg === 0`)
+- [ ] Signal badges (BUY/HOLD/REDUCE) visible and color-coded
+
+## 🟢 PIPELINE (workflow health)
+- [ ] `full_update.yml` runs on `[self-hosted, oracle-vm]`
+- [ ] Oracle VM runner status: `sudo systemctl status github-runner` → `active (running)`
+- [ ] Finnhub active for US: logs show `finnhub  GOOG →`
+- [ ] Angel One active for India (when market open): logs show `angelone  SBIN →`
+- [ ] `post_fetch_audit.py` runs in <1s (zero network calls — JSON only)
+- [ ] Cron schedule: `*/5` not `*/15` in `full_update.yml`
+- [ ] Page auto-refresh: `REFRESH_MS = (5 * 60 + 30) * 1000` (5m30s)
+
+## 🟢 NET-WEALTH (ODIN)
+- [ ] `inputs.json` has all bank balances, loans, gold rates (not empty/zeroed)
+- [ ] `history.json` has at least 3 monthly entries (reconciliation tiles need data)
+- [ ] FIRE tab renders: progress bar, coast FIRE, child education, year-by-year table
+- [ ] FX display: `$ to ₹XX.XX · QAR to ₹XX.XX` (not old format)
+- [ ] No Firebase references in code (was removed, should stay removed)
+- [ ] PWA icon: USD/INR coin symbol (not old ODIN default)
+
+## 🔵 SECURITY
+- [ ] No hardcoded API keys in any `.py`, `.html`, `.yml` file
+- [ ] All secrets via `os.environ.get()` / `${{ secrets.NAME }}`
+- [ ] GitHub PAT rotated (next rotation: Friday)
+- [ ] Oracle VM SSH key stored in Dashlane secure notes
+- [ ] Angel One TOTP secret stored securely (not in code)
+
+## 🔵 ARCHITECTURE INTEGRITY
+- [ ] `data/processed/*.json` conflict → always `git checkout --ours`
+- [ ] Code files (`index.html`, `*.py`, `*.yml`) → NEVER `git reset --hard`
+- [ ] `fetch_us_open_positions()` and `fetch_india_open_positions()` are separate functions
+- [ ] Fallback chain intact: Finnhub → Yahoo (US) | Angel One → Yahoo → NSE (India)
+- [ ] `_build_price_entry()` called for all positions (shared heal + cap logic)
+
+## QUICK GREP COMMANDS
+```bash
+# Dead UI elements
+grep -n "placeholder=\|TODO\|FIXME\|enter code" portfolio/index.html
+
+# Secrets in code
+grep -rn "ghp_\|apikey\s*=\|password\s*=\s*['\"]" portfolio/scripts/ portfolio/index.html
+
+# Currency unit check
+grep -n "usd(\|inr(\|₹\|\$" portfolio/index.html | grep "region-breakdown\|bm-today\|hero-day"
+
+# Workflow runner
+grep -n "runs-on" .github/workflows/full_update.yml
+
+# Cron interval
+grep -n "cron\|REFRESH_MS" .github/workflows/full_update.yml portfolio/index.html
+
+# Firebase leakage
+grep -rn "firebase\|firestore\|FirebaseSync" net-wealth/index.html portfolio/index.html
+```
+
+---
+
+
 ## What this repo is
 
 Single-page portfolio dashboard hosted on **GitHub Pages** as a PWA. Tracks two

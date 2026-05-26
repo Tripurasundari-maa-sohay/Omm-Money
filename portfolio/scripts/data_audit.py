@@ -69,12 +69,16 @@ def _detect_gh_repo() -> str:
 
 GH_REPO            = _detect_gh_repo()
 WORKFLOW_MAX_AGE_DAYS = 8  # most workflows run daily; >8 days = dead
+# Critical: failures here trigger red DATA badge
 WORKFLOW_CHECK_LIST = [
     ".github/workflows/full_update.yml",
-    ".github/workflows/watchdog.yml",
     ".github/workflows/eod_snapshot_us.yml",
     ".github/workflows/eod_snapshot_india.yml",
-    ".github/workflows/screener.yml",
+]
+# Non-critical: warnings only, never trigger red badge
+WORKFLOW_WARN_LIST = [
+    ".github/workflows/watchdog.yml",
+    ".github/workflows/screener.yml",      # runs Tue/Sat only — zero runs normal on new repo
     ".github/workflows/ping_trigger.yml",
 ]
 
@@ -582,11 +586,11 @@ def main() -> None:
             workflows = resp.json().get("workflows", [])
             wf_by_path = {w["path"]: w for w in workflows}
             cutoff = datetime.now(timezone.utc) - timedelta(days=WORKFLOW_MAX_AGE_DAYS)
-            for wf_path in WORKFLOW_CHECK_LIST:
+            def _check_workflow(wf_path, critical=True):
                 wf = wf_by_path.get(wf_path)
                 if not wf:
                     workflow_status[wf_path] = "not_registered"
-                    continue
+                    return
                 runs_resp = requests.get(
                     f"https://api.github.com/repos/{GH_REPO}/actions/workflows/"
                     f"{wf['id']}/runs?status=success&per_page=1",
@@ -594,19 +598,20 @@ def main() -> None:
                 )
                 if not runs_resp.ok:
                     workflow_status[wf_path] = "api_error"
-                    continue
+                    return
                 runs = runs_resp.json().get("workflow_runs", [])
                 if not runs:
                     workflow_status[wf_path] = "no_success_ever"
-                    alerts.append({
-                        "type": "workflow_dead",
-                        "workflow": wf_path,
-                        "message": (
-                            f"{wf_path} has zero successful runs. "
-                            "Check workflow triggers + script for crash."
-                        ),
-                    })
-                    continue
+                    if critical:   # only alert (red badge) for critical workflows
+                        alerts.append({
+                            "type": "workflow_dead",
+                            "workflow": wf_path,
+                            "message": (
+                                f"{wf_path} has zero successful runs. "
+                                "Check workflow triggers + script for crash."
+                            ),
+                        })
+                    return
                 last_success = datetime.fromisoformat(
                     runs[0]["created_at"].replace("Z", "+00:00")
                 )
@@ -615,7 +620,7 @@ def main() -> None:
                     "last_success": runs[0]["created_at"],
                     "age_days": age_days,
                 }
-                if last_success < cutoff:
+                if last_success < cutoff and critical:
                     alerts.append({
                         "type": "workflow_stale",
                         "workflow": wf_path,
@@ -625,6 +630,11 @@ def main() -> None:
                             "Trigger may be broken or script failing."
                         ),
                     })
+
+            for wf_path in WORKFLOW_CHECK_LIST:
+                _check_workflow(wf_path, critical=True)
+            for wf_path in WORKFLOW_WARN_LIST:
+                _check_workflow(wf_path, critical=False)
         else:
             workflow_status["_api"] = f"http_{resp.status_code}"
     except Exception as exc:

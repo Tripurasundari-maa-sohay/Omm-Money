@@ -43,6 +43,14 @@ jobs:
             exit 1
           fi
 
+      - name: Post-fetch audit (validate + auto-heal all pc values)
+        run: |
+          python portfolio/scripts/post_fetch_audit.py
+          if [ $? -ne 0 ]; then
+            echo "::error::post_fetch_audit.py found unrecoverable data issues"
+            exit 1
+          fi
+
       - name: Compute signals
         run: |
           python portfolio/scripts/signals_update.py || echo "::warning::signals_update.py failed — signals stale but prices still updated"

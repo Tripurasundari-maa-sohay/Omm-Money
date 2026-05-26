@@ -426,32 +426,84 @@
 
 <!-- ═══ FIRE TAB ═══ -->
 <div class="tab-content" id="tab-fire">
+
+  <!-- HERO: FIRE target -->
   <div class="card hero" style="text-align:center">
-    <div class="label">FIRE NUMBER (25× annual expenses · 4% SWR)</div>
+    <div class="label">FIRE NUMBER · 4% SWR · ₹2L/mo expenses</div>
     <div class="net-worth" id="fire-target">₹ <span class="loading"></span></div>
-    <div class="multi-ccy" id="fire-progress" style="margin-top:6px"></div>
+    <div style="font-size:12px;color:var(--text-sec);margin:4px 0">Target retire age <b id="fire-retire-age-label" style="color:var(--gold)">—</b> · <span id="fire-years-left-label">—</span> years left</div>
+    <div class="progress" style="max-width:500px;margin:12px auto 0">
+      <div class="row"><span>FIRE Progress</span><span id="fire-progress-pct">—</span></div>
+      <div class="bar"><div class="bar-fill" id="fire-progress-bar" style="width:0"></div></div>
+    </div>
+    <div class="multi-ccy" id="fire-progress" style="margin-top:10px"></div>
   </div>
 
+  <!-- FIRE PROJECTIONS -->
   <div class="card">
     <h2>📊 FIRE PROJECTIONS</h2>
     <div class="kpi-strip">
       <div class="kpi-tile"><div class="lbl">CURRENT NW</div><div class="val" id="fire-current">—</div></div>
       <div class="kpi-tile"><div class="lbl">YEARS TO FIRE</div><div class="val" id="fire-years">—</div><div class="delta" id="fire-age-at-fire">—</div></div>
       <div class="kpi-tile"><div class="lbl">MONTHLY INVEST NEEDED</div><div class="val" id="fire-monthly-need">—</div><div class="delta" id="fire-monthly-cur">—</div></div>
-      <div class="kpi-tile"><div class="lbl">SHORTFALL/SURPLUS</div><div class="val" id="fire-gap">—</div><div class="delta" id="fire-gap-pct">—</div></div>
+      <div class="kpi-tile"><div class="lbl">SHORTFALL / SURPLUS</div><div class="val" id="fire-gap">—</div><div class="delta" id="fire-gap-pct">—</div></div>
+    </div>
+    <div class="grid-2" style="margin-top:12px">
+      <div class="kpi-tile"><div class="lbl">COAST FIRE NUMBER</div><div class="val" id="fire-coast-num">—</div><div class="delta" id="fire-coast-status">—</div></div>
+      <div class="kpi-tile"><div class="lbl">MONTHLY PASSIVE (4% SWR)</div><div class="val" id="fire-monthly-passive">—</div><div class="delta" style="color:var(--text-dim);font-size:10px">at current NW</div></div>
     </div>
     <div class="chart-wrap" style="height:300px;margin-top:14px"><canvas id="fire-chart"></canvas></div>
   </div>
 
+  <!-- CHILD EDUCATION FUND -->
+  <div class="card">
+    <h2>👶 CHILD EDUCATION FUND</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 12px">
+      Projected cost at college age · 8% education inflation · separate from FIRE corpus
+    </p>
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="lbl">COST TODAY (₹)</div><div class="val" id="edu-cost-today">—</div></div>
+      <div class="kpi-tile"><div class="lbl">PROJECTED AT COLLEGE</div><div class="val" id="edu-cost-future">—</div><div class="delta" id="edu-years-label">—</div></div>
+      <div class="kpi-tile"><div class="lbl">MONTHLY SIP NEEDED</div><div class="val" id="edu-sip-need">—</div><div class="delta" style="color:var(--text-dim);font-size:10px">separate fund</div></div>
+      <div class="kpi-tile"><div class="lbl">COMBINED FIRE + EDU</div><div class="val" id="fire-combined-target">—</div><div class="delta" id="fire-combined-gap">—</div></div>
+    </div>
+  </div>
+
+  <!-- 3 SCENARIOS -->
+  <div class="card">
+    <h2>🎯 SCENARIOS</h2>
+    <div class="grid-3">
+      <div class="kpi-tile" style="border-color:#4ade80">
+        <div class="lbl" style="color:#4ade80">LEAN FIRE</div>
+        <div class="lbl" style="font-size:9px;margin-top:2px">₹1.5L/mo</div>
+        <div class="val" id="fire-lean-target">—</div>
+        <div class="delta" id="fire-lean-gap">—</div>
+      </div>
+      <div class="kpi-tile" style="border-color:var(--gold)">
+        <div class="lbl" style="color:var(--gold)">REGULAR FIRE</div>
+        <div class="lbl" style="font-size:9px;margin-top:2px">₹2L/mo (current)</div>
+        <div class="val" id="fire-reg-target">—</div>
+        <div class="delta" id="fire-reg-gap">—</div>
+      </div>
+      <div class="kpi-tile" style="border-color:#a78bfa">
+        <div class="lbl" style="color:#a78bfa">FAT FIRE</div>
+        <div class="lbl" style="font-size:9px;margin-top:2px">₹3.5L/mo</div>
+        <div class="val" id="fire-fat-target">—</div>
+        <div class="delta" id="fire-fat-gap">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUTS -->
   <div class="card">
     <h2>✏️ FIRE INPUTS</h2>
     <p style="font-size:11px;color:var(--text-dim);margin-top:0">
-      4% Safe Withdrawal Rate (SWR) = Trinity Study standard for 30-yr retirement. Lower SWR (3-3.5%) for longer horizons.
+      4% SWR = Trinity Study standard. Use 3–3.5% for 40+ yr retirement horizon. Education inflation typically 8–10%.
     </p>
-    <!-- Code Gate for Firebase Sync -->
     <div id="form-fire-host"></div>
     <button class="save-btn" onclick="ODIN.saveInputs()">SAVE</button>
   </div>
+
 </div><!-- /tab-fire -->
 
 
@@ -508,6 +560,11 @@ const ODIN = (() => {
       const sub = m[1];
       return { get: () => S.seed.fire?.[sub],
                set: v  => { (S.seed.fire ||= {})[sub] = v; } };
+    }
+    if ((m = key.match(/^edu_(.+)$/))) {
+      const sub = m[1];
+      return { get: () => S.seed.child_education?.[sub],
+               set: v  => { (S.seed.child_education ||= {})[sub] = v; } };
     }
     if (['salary_qar','savings_target_inr','monthly_emi_inr','expenses_inr','expenses_qar'].includes(key))
       return { get: () => S.seed.monthly_cash_flow?.[key],
@@ -1485,17 +1542,50 @@ const ODIN = (() => {
       yrsToFireAtCur = 0;
     }
 
+    // ── Coast FIRE: NW needed NOW so it grows to fireTarget by retAge with no SIP ──
+    const coastFire = fireTarget / Math.pow(1 + realRet, yrsLeft);
+    const isCoast   = currentNW >= coastFire;
+
+    // ── Monthly passive income at current NW ──
+    const monthlyPassive = (currentNW * swrPct) / 12;
+
+    // ── Child Education ──
+    const edu = S.seed.child_education || {};
+    const eduYrs    = num('edu_years_to_college', edu.years_to_college || 18);
+    const eduToday  = num('edu_cost_today_inr',   edu.college_cost_today_inr || 5000000);
+    const eduInfl   = num('edu_inflation_pct',    edu.education_inflation_pct || 8) / 100;
+    const eduFuture = eduToday * Math.pow(1 + eduInfl, eduYrs);
+    const eduMoRet  = retPct / 12;
+    const eduMonths = eduYrs * 12;
+    let eduSIP = 0;
+    if (eduMoRet > 0) {
+      eduSIP = (eduFuture * eduMoRet) / (Math.pow(1 + eduMoRet, eduMonths) - 1);
+    } else {
+      eduSIP = eduFuture / eduMonths;
+    }
+
+    // ── 3 Scenarios ──
+    const scenarios = {
+      lean: 1800000,   // ₹1.5L/mo
+      reg:  2400000,   // ₹2L/mo
+      fat:  4200000    // ₹3.5L/mo
+    };
+
     // ── Render tiles + hero ──
     document.getElementById('fire-target').textContent  = fmtINR(fireTarget);
-    document.getElementById('fire-current').textContent = fmtINR(currentNW);
+    document.getElementById('fire-retire-age-label').textContent = retAge;
+    document.getElementById('fire-years-left-label').textContent = yrsLeft;
+    document.getElementById('fire-progress-pct').textContent = gapPct.toFixed(1) + '%';
+    const bar = document.getElementById('fire-progress-bar');
+    if (bar) { bar.style.width = Math.min(100, gapPct).toFixed(1) + '%'; bar.classList.toggle('done', gapPct >= 100); }
     document.getElementById('fire-progress').innerHTML  =
-      `<span><b>Progress</b> ${gapPct.toFixed(1)}%</span>` +
       `<span><b>Real return</b> ${(realRet*100).toFixed(2)}%/yr</span>` +
-      `<span><b>Age at FIRE</b> ${curAge + Math.ceil(yrsToFireAtCur)}</span>`;
+      `<span><b>Monthly withdraw at FIRE</b> ${fmtINR(annExp/12)}</span>`;
+    document.getElementById('fire-current').textContent = fmtINR(currentNW);
     document.getElementById('fire-years').textContent = yrsToFireAtCur >= 0 ? yrsToFireAtCur.toFixed(1) + ' yrs' : '—';
-    document.getElementById('fire-age-at-fire').textContent = `Age ${curAge + Math.ceil(yrsToFireAtCur)} (no further SIP)`;
+    document.getElementById('fire-age-at-fire').textContent = yrsToFireAtCur >= 0 ? `Age ${(curAge + yrsToFireAtCur).toFixed(0)} (no further SIP)` : '—';
     document.getElementById('fire-age-at-fire').className = 'delta';
-    document.getElementById('fire-monthly-need').textContent = fmtINR(monthlyNeed);
+    document.getElementById('fire-monthly-need').textContent = monthlyNeed > 0 ? fmtINR(monthlyNeed) : '₹0';
     document.getElementById('fire-monthly-cur').textContent = `to FIRE at age ${retAge}`;
     document.getElementById('fire-monthly-cur').className = 'delta';
     const gapEl  = document.getElementById('fire-gap');
@@ -1511,6 +1601,52 @@ const ODIN = (() => {
       gapPctEl.textContent = 'FIRE achieved ✓';
       gapPctEl.className = 'delta pos';
     }
+    // Coast FIRE tile
+    const coastEl = document.getElementById('fire-coast-num');
+    const coastStEl = document.getElementById('fire-coast-status');
+    if (coastEl) coastEl.textContent = fmtINR(coastFire);
+    if (coastStEl) {
+      coastStEl.textContent = isCoast ? '✅ Coast FIRE reached — no more SIP needed!' : `Need ${fmtINR(coastFire - currentNW)} more`;
+      coastStEl.className = 'delta ' + (isCoast ? 'pos' : 'neg');
+    }
+    // Monthly passive
+    const passEl = document.getElementById('fire-monthly-passive');
+    if (passEl) passEl.textContent = fmtINR(monthlyPassive);
+
+    // Child education tiles
+    const eduTodayEl = document.getElementById('edu-cost-today');
+    const eduFutureEl = document.getElementById('edu-cost-future');
+    const eduSipEl   = document.getElementById('edu-sip-need');
+    const eduYrsEl   = document.getElementById('edu-years-label');
+    if (eduTodayEl)  eduTodayEl.textContent  = fmtINR(eduToday);
+    if (eduFutureEl) eduFutureEl.textContent = fmtINR(eduFuture);
+    if (eduSipEl)    eduSipEl.textContent    = fmtINR(eduSIP);
+    if (eduYrsEl)    eduYrsEl.textContent    = `in ${eduYrs} yrs · @${(eduInfl*100).toFixed(0)}% inflation`;
+
+    // Combined FIRE + Education target
+    const combinedTarget = fireTarget + eduFuture;
+    const combinedGap    = combinedTarget - currentNW;
+    const combEl  = document.getElementById('fire-combined-target');
+    const combGapEl = document.getElementById('fire-combined-gap');
+    if (combEl) combEl.textContent = fmtINR(combinedTarget);
+    if (combGapEl) {
+      combGapEl.textContent = combinedGap > 0 ? '−' + fmtINR(combinedGap) + ' gap' : '+' + fmtINR(-combinedGap) + ' surplus';
+      combGapEl.className = 'delta ' + (combinedGap > 0 ? 'neg' : 'pos');
+    }
+
+    // Scenarios
+    ['lean','reg','fat'].forEach(k => {
+      const exp = scenarios[k];
+      const tgt = exp / swrPct;
+      const g   = tgt - currentNW;
+      const el  = document.getElementById(`fire-${k}-target`);
+      const gl  = document.getElementById(`fire-${k}-gap`);
+      if (el) el.textContent = fmtINR(tgt);
+      if (gl) {
+        gl.textContent = g > 0 ? '−' + fmtINR(g) : '✅ Achieved';
+        gl.className = 'delta ' + (g > 0 ? 'neg' : 'pos');
+      }
+    });
 
     // ── Projection chart ──
     drawFireChart(curAge, retAge, currentNW, monthlyNeed, realRet, fireTarget, annExp, inflPct, swrPct);
@@ -1637,16 +1773,21 @@ const ODIN = (() => {
     renderFormGroups('form-liab-host',   liabGroups);
 
     const FIRE_FIELDS = [
-      { key: 'fire_current_age',          label: 'Current Age',             ccy: 'yrs' },
-      { key: 'fire_retire_age',           label: 'Target Retire Age',       ccy: 'yrs' },
-      { key: 'fire_annual_expenses_inr',  label: 'Annual Expenses (today)', ccy: 'INR' },
-      { key: 'fire_expected_return_pct',  label: 'Expected Return %',       ccy: '%'   },
-      { key: 'fire_inflation_pct',        label: 'Inflation %',             ccy: '%'   },
-      { key: 'fire_swr_pct',              label: 'Safe Withdrawal Rate %',  ccy: '%'   }
+      { key: 'fire_current_age',          label: 'Current Age',             ccy: 'yrs', section: 'FIRE' },
+      { key: 'fire_retire_age',           label: 'Target Retire Age',       ccy: 'yrs', section: 'FIRE' },
+      { key: 'fire_annual_expenses_inr',  label: 'Monthly Expenses × 12',  ccy: 'INR', section: 'FIRE' },
+      { key: 'fire_expected_return_pct',  label: 'Expected Return %',       ccy: '%',   section: 'FIRE' },
+      { key: 'fire_inflation_pct',        label: 'Inflation %',             ccy: '%',   section: 'FIRE' },
+      { key: 'fire_swr_pct',              label: 'Safe Withdrawal Rate %',  ccy: '%',   section: 'FIRE' },
+      { key: 'edu_years_to_college',      label: 'Years to Child College',  ccy: 'yrs', section: 'CHILD EDUCATION' },
+      { key: 'edu_cost_today_inr',        label: 'College Cost (today ₹)',  ccy: 'INR', section: 'CHILD EDUCATION' },
+      { key: 'edu_inflation_pct',         label: 'Education Inflation %',   ccy: '%',   section: 'CHILD EDUCATION' }
     ];
-    renderFormGroups('form-fire-host', { '': FIRE_FIELDS.map(ff => ({
-      key: ff.key, label: ff.label, ccy: ff.ccy, current: cur(ff.key)
-    }))});
+    const fireGroups = {};
+    FIRE_FIELDS.forEach(ff => {
+      (fireGroups[ff.section] ||= []).push({ key: ff.key, label: ff.label, ccy: ff.ccy, current: cur(ff.key) });
+    });
+    renderFormGroups('form-fire-host', fireGroups);
 
     setupGoldRateBoxes();
   }

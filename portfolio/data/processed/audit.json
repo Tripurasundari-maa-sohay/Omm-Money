@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T14:21:25Z",
+  "generated": "2026-05-26T14:53:49Z",
   "status": "alert",
   "alerts": [
     {
@@ -13,10 +13,10 @@
   "tickers_ok": 27,
   "tickers_failed": 0,
   "fx_rate": 95.67,
-  "data_age_min": 0.46,
+  "data_age_min": 0.47,
   "crosscheck": {
-    "live_vs_statement_pct": 2.7,
-    "live_total_usd": 20022.8,
+    "live_vs_statement_pct": 2.49,
+    "live_total_usd": 19981.29,
     "statement_total_usd": 19496.03,
     "pdf_age_days": 4,
     "fees_xlsx_total": -361.2,
@@ -41,7 +41,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-26T14:14:58Z",
+        "last_success": "2026-05-26T14:19:58Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {

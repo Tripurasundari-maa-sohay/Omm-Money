@@ -469,28 +469,101 @@
     </div>
   </div>
 
-  <!-- 3 SCENARIOS -->
+  <!-- SAVINGS RATE -->
+  <div class="card">
+    <h2>💰 SAVINGS RATE</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+      Savings rate = single most powerful FIRE accelerant. 50%+ rate = retire in ~17 yrs from zero.
+    </p>
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="lbl">MONTHLY INCOME</div><div class="val" id="fire-income-val">—</div></div>
+      <div class="kpi-tile"><div class="lbl">MONTHLY EXPENSES</div><div class="val" id="fire-expense-val">—</div></div>
+      <div class="kpi-tile"><div class="lbl">SAVINGS RATE</div><div class="val" id="fire-savings-rate">—</div><div class="delta" id="fire-savings-rating">—</div></div>
+      <div class="kpi-tile"><div class="lbl">RUNWAY (CURRENT NW)</div><div class="val" id="fire-runway">—</div><div class="delta" style="color:var(--text-dim);font-size:10px">yrs if you stop today</div></div>
+    </div>
+  </div>
+
+  <!-- WHAT IF SLIDER -->
+  <div class="card">
+    <h2>⚡ WHAT IF I INVEST MORE?</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+      Drag to see how extra monthly investment changes your FIRE date.
+    </p>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--text-sec);white-space:nowrap">Extra ₹/month:</span>
+      <input type="range" id="fire-extra-slider" min="0" max="200000" step="5000" value="0"
+        style="flex:1;min-width:160px;accent-color:var(--gold)"
+        oninput="ODIN.updateFireSlider(this.value)">
+      <span id="fire-extra-label" style="font-size:14px;color:var(--gold);font-weight:700;min-width:80px">₹0</span>
+    </div>
+    <div class="kpi-strip">
+      <div class="kpi-tile"><div class="lbl">BASE FIRE AGE</div><div class="val" id="fire-base-age">—</div></div>
+      <div class="kpi-tile"><div class="lbl">WITH EXTRA SIP</div><div class="val" id="fire-extra-age">—</div><div class="delta" id="fire-extra-saving">—</div></div>
+      <div class="kpi-tile"><div class="lbl">TOTAL MONTHLY SIP</div><div class="val" id="fire-total-sip">—</div></div>
+      <div class="kpi-tile"><div class="lbl">YEARS SAVED</div><div class="val" id="fire-yrs-saved" style="color:var(--gain)">—</div></div>
+    </div>
+  </div>
+
+  <!-- 3 SCENARIOS + BARISTA -->
   <div class="card">
     <h2>🎯 SCENARIOS</h2>
-    <div class="grid-3">
-      <div class="kpi-tile" style="border-color:#4ade80">
-        <div class="lbl" style="color:#4ade80">LEAN FIRE</div>
-        <div class="lbl" style="font-size:9px;margin-top:2px">₹1.5L/mo</div>
-        <div class="val" id="fire-lean-target">—</div>
-        <div class="delta" id="fire-lean-gap">—</div>
+    <div class="grid-2" style="margin-bottom:12px">
+      <div style="">
+        <h3 style="color:var(--text-sec);font-size:10px;letter-spacing:1.5px;margin-bottom:8px">EXPENSE-BASED FIRE</h3>
+        <div class="grid-3">
+          <div class="kpi-tile" style="border-color:#4ade80">
+            <div class="lbl" style="color:#4ade80">LEAN</div>
+            <div class="lbl" style="font-size:9px;margin-top:2px">₹1.5L/mo</div>
+            <div class="val" id="fire-lean-target">—</div>
+            <div class="delta" id="fire-lean-gap">—</div>
+          </div>
+          <div class="kpi-tile" style="border-color:var(--gold)">
+            <div class="lbl" style="color:var(--gold)">REGULAR</div>
+            <div class="lbl" style="font-size:9px;margin-top:2px">₹2L/mo</div>
+            <div class="val" id="fire-reg-target">—</div>
+            <div class="delta" id="fire-reg-gap">—</div>
+          </div>
+          <div class="kpi-tile" style="border-color:#a78bfa">
+            <div class="lbl" style="color:#a78bfa">FAT</div>
+            <div class="lbl" style="font-size:9px;margin-top:2px">₹3.5L/mo</div>
+            <div class="val" id="fire-fat-target">—</div>
+            <div class="delta" id="fire-fat-gap">—</div>
+          </div>
+        </div>
       </div>
-      <div class="kpi-tile" style="border-color:var(--gold)">
-        <div class="lbl" style="color:var(--gold)">REGULAR FIRE</div>
-        <div class="lbl" style="font-size:9px;margin-top:2px">₹2L/mo (current)</div>
-        <div class="val" id="fire-reg-target">—</div>
-        <div class="delta" id="fire-reg-gap">—</div>
+      <div>
+        <h3 style="color:var(--text-sec);font-size:10px;letter-spacing:1.5px;margin-bottom:8px">BARISTA FIRE (SEMI-RETIRE)</h3>
+        <div class="kpi-tile" style="border-color:#fb923c">
+          <div class="lbl" style="color:#fb923c">BARISTA FIRE</div>
+          <div class="lbl" style="font-size:9px;margin-top:2px">part-time covers ₹<span id="barista-income-label">—</span>/mo · rest from corpus</div>
+          <div class="val" id="fire-barista-target">—</div>
+          <div class="delta" id="fire-barista-gap">—</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:4px">Retire earlier, earn part-time, let corpus compound</div>
+        </div>
       </div>
-      <div class="kpi-tile" style="border-color:#a78bfa">
-        <div class="lbl" style="color:#a78bfa">FAT FIRE</div>
-        <div class="lbl" style="font-size:9px;margin-top:2px">₹3.5L/mo</div>
-        <div class="val" id="fire-fat-target">—</div>
-        <div class="delta" id="fire-fat-gap">—</div>
-      </div>
+    </div>
+  </div>
+
+  <!-- YEAR-BY-YEAR PROJECTION TABLE -->
+  <div class="card">
+    <h2>📅 YEAR-BY-YEAR PROJECTION</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+      Projected NW growth vs FIRE target · based on required monthly SIP
+    </p>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:12px" id="fire-projection-table">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:6px 8px;text-align:left;color:var(--text-sec)">Age</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-sec)">Year</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-sec)">Projected NW</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-sec)">FIRE Target</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-sec)">Gap</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-sec)">Progress</th>
+          </tr>
+        </thead>
+        <tbody id="fire-table-body"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1634,6 +1707,55 @@ const ODIN = (() => {
       combGapEl.className = 'delta ' + (combinedGap > 0 ? 'neg' : 'pos');
     }
 
+    // ── Savings Rate ──
+    const monthlyIncome  = num('fire_monthly_income_inr', f.monthly_income_inr || 600000);
+    const monthlyExpense = annExp / 12;
+    const monthlySavings = monthlyIncome - monthlyExpense;
+    const savingsRate    = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
+    const runway         = annExp > 0 ? currentNW / annExp : 0;
+
+    const srEl = document.getElementById('fire-income-val');
+    const seEl = document.getElementById('fire-expense-val');
+    const sRateEl = document.getElementById('fire-savings-rate');
+    const sRatingEl = document.getElementById('fire-savings-rating');
+    const runwayEl  = document.getElementById('fire-runway');
+    if (srEl) srEl.textContent = fmtINR(monthlyIncome);
+    if (seEl) seEl.textContent = fmtINR(monthlyExpense);
+    if (sRateEl) {
+      sRateEl.textContent = savingsRate.toFixed(1) + '%';
+      sRateEl.style.color = savingsRate >= 50 ? 'var(--gain)' : savingsRate >= 30 ? 'var(--gold)' : 'var(--loss)';
+    }
+    if (sRatingEl) {
+      const rating = savingsRate >= 60 ? '🔥 Exceptional (FIRE in <15 yrs)' :
+                     savingsRate >= 50 ? '✅ Excellent (FIRE in ~17 yrs)' :
+                     savingsRate >= 40 ? '👍 Good (FIRE in ~22 yrs)' :
+                     savingsRate >= 30 ? '⚠ Moderate (FIRE in ~28 yrs)' : '❌ Low — increase savings';
+      sRatingEl.textContent = rating;
+      sRatingEl.className = 'delta';
+    }
+    if (runwayEl) runwayEl.textContent = runway.toFixed(1) + ' yrs';
+
+    // ── Barista FIRE ──
+    const baristaIncome = num('fire_barista_parttime_income_inr', f.barista_parttime_income_inr || 75000);
+    const baristaExpGap = Math.max(0, monthlyExpense - baristaIncome) * 12;
+    const baristaTarget = baristaExpGap > 0 ? baristaExpGap / swrPct : 0;
+    const baristaGap    = baristaTarget - currentNW;
+    const baristaTEl  = document.getElementById('fire-barista-target');
+    const baristaGEl  = document.getElementById('fire-barista-gap');
+    const baristaLbl  = document.getElementById('barista-income-label');
+    if (baristaLbl)  baristaLbl.textContent  = (baristaIncome/1000).toFixed(0) + 'K';
+    if (baristaTEl)  baristaTEl.textContent  = baristaTarget > 0 ? fmtINR(baristaTarget) : '₹0';
+    if (baristaGEl) {
+      baristaGEl.textContent = baristaGap > 0 ? '−' + fmtINR(baristaGap) + ' gap' : '✅ Can semi-retire NOW';
+      baristaGEl.className = 'delta ' + (baristaGap > 0 ? 'neg' : 'pos');
+    }
+
+    // ── What-if slider (init) ──
+    S._fireParams = { curAge, retAge, currentNW, realRet, rMo, fireTarget, monthlyNeed };
+    const baseAgeEl = document.getElementById('fire-base-age');
+    if (baseAgeEl) baseAgeEl.textContent = `Age ${(curAge + yrsToFireAtCur).toFixed(0)}`;
+    updateFireSlider(document.getElementById('fire-extra-slider')?.value || 0);
+
     // Scenarios
     ['lean','reg','fat'].forEach(k => {
       const exp = scenarios[k];
@@ -1648,8 +1770,75 @@ const ODIN = (() => {
       }
     });
 
+    // ── Year-by-year projection table ──
+    drawFireTable(curAge, retAge, currentNW, monthlyNeed, rMo, realRet, fireTarget, annExp, inflPct, swrPct);
+
     // ── Projection chart ──
     drawFireChart(curAge, retAge, currentNW, monthlyNeed, realRet, fireTarget, annExp, inflPct, swrPct);
+  }
+
+  function updateFireSlider(extraVal) {
+    const extra = Number(extraVal) || 0;
+    const lbl = document.getElementById('fire-extra-label');
+    const extraAgeEl = document.getElementById('fire-extra-age');
+    const savingEl   = document.getElementById('fire-extra-saving');
+    const totalSipEl = document.getElementById('fire-total-sip');
+    const yrsSavedEl = document.getElementById('fire-yrs-saved');
+    if (lbl) lbl.textContent = extra > 0 ? '₹' + (extra/1000).toFixed(0) + 'K' : '₹0';
+    if (!S._fireParams) return;
+    const { curAge, currentNW, realRet, rMo, fireTarget, monthlyNeed } = S._fireParams;
+    const totalSIP = (monthlyNeed || 0) + extra;
+    if (totalSipEl) totalSipEl.textContent = fmtINR(totalSIP);
+
+    // Compute years to FIRE with totalSIP/mo
+    function yrsWithSIP(sip) {
+      if (currentNW >= fireTarget) return 0;
+      if (rMo <= 0) return sip > 0 ? (fireTarget - currentNW) / (sip * 12) : 999;
+      // FV of annuity + FV of lump sum = fireTarget → solve for n
+      for (let n = 1; n <= 600; n++) {
+        const fv = currentNW * Math.pow(1 + rMo, n) + (sip > 0 ? sip * (Math.pow(1 + rMo, n) - 1) / rMo : 0);
+        if (fv >= fireTarget) return n / 12;
+      }
+      return 999;
+    }
+    const baseYrs   = yrsWithSIP(monthlyNeed || 0);
+    const extraYrs  = yrsWithSIP(totalSIP);
+    const yrsSaved  = Math.max(0, baseYrs - extraYrs);
+    const newAge    = curAge + extraYrs;
+    if (extraAgeEl) extraAgeEl.textContent = extraYrs < 999 ? `Age ${newAge.toFixed(0)}` : '—';
+    if (savingEl)   savingEl.textContent   = yrsSaved > 0.1 ? `${yrsSaved.toFixed(1)} yrs earlier` : 'no change';
+    if (yrsSavedEl) yrsSavedEl.textContent = yrsSaved > 0.1 ? yrsSaved.toFixed(1) + ' yrs' : '—';
+  }
+
+  function drawFireTable(curAge, retAge, currentNW, monthlyNeed, rMo, realRet, fireTarget, annExpToday, inflPct, swrPct) {
+    const tbody = document.getElementById('fire-table-body');
+    if (!tbody) return;
+    const rows = [];
+    let nw = currentNW;
+    const today = new Date().getFullYear();
+    for (let a = curAge; a <= Math.max(retAge + 3, curAge + 20); a++) {
+      const inflYrs = a - curAge;
+      const expAtAge = annExpToday * Math.pow(1 + inflPct, inflYrs);
+      const tgt = expAtAge / swrPct;
+      const g   = tgt - nw;
+      const pct = Math.min(100, (nw / tgt) * 100);
+      const isRetire = a === retAge;
+      const isFire   = g <= 0;
+      const rowColor = isFire ? 'var(--gain)' : isRetire ? 'var(--gold)' : 'var(--text)';
+      rows.push(`<tr style="border-bottom:1px solid var(--border);${isRetire ? 'background:rgba(255,215,0,0.06)' : ''}">
+        <td style="padding:5px 8px;color:${rowColor};font-weight:${isRetire?700:400}">${a}${isRetire?' 🎯':''}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--text-dim)">${today + inflYrs}</td>
+        <td style="padding:5px 8px;text-align:right;color:${rowColor};font-weight:600">${fmtINR(nw)}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--text-sec)">${fmtINR(tgt)}</td>
+        <td style="padding:5px 8px;text-align:right;color:${isFire?'var(--gain)':'var(--loss)'}">${isFire ? '✅' : '−'+fmtINR(g)}</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--gold)">${pct.toFixed(0)}%</td>
+      </tr>`);
+      // Advance NW by 1 year
+      for (let m = 0; m < 12; m++) {
+        nw = nw * (1 + rMo) + (monthlyNeed || 0);
+      }
+    }
+    tbody.innerHTML = rows.join('');
   }
 
   function drawFireChart(curAge, retAge, currentNW, monthlyInvest, realRet, fireTarget, annExpToday, inflPct, swrPct) {
@@ -1773,15 +1962,17 @@ const ODIN = (() => {
     renderFormGroups('form-liab-host',   liabGroups);
 
     const FIRE_FIELDS = [
-      { key: 'fire_current_age',          label: 'Current Age',             ccy: 'yrs', section: 'FIRE' },
-      { key: 'fire_retire_age',           label: 'Target Retire Age',       ccy: 'yrs', section: 'FIRE' },
-      { key: 'fire_annual_expenses_inr',  label: 'Monthly Expenses × 12',  ccy: 'INR', section: 'FIRE' },
-      { key: 'fire_expected_return_pct',  label: 'Expected Return %',       ccy: '%',   section: 'FIRE' },
-      { key: 'fire_inflation_pct',        label: 'Inflation %',             ccy: '%',   section: 'FIRE' },
-      { key: 'fire_swr_pct',              label: 'Safe Withdrawal Rate %',  ccy: '%',   section: 'FIRE' },
-      { key: 'edu_years_to_college',      label: 'Years to Child College',  ccy: 'yrs', section: 'CHILD EDUCATION' },
-      { key: 'edu_cost_today_inr',        label: 'College Cost (today ₹)',  ccy: 'INR', section: 'CHILD EDUCATION' },
-      { key: 'edu_inflation_pct',         label: 'Education Inflation %',   ccy: '%',   section: 'CHILD EDUCATION' }
+      { key: 'fire_current_age',               label: 'Current Age',                  ccy: 'yrs', section: 'FIRE' },
+      { key: 'fire_retire_age',                label: 'Target Retire Age',            ccy: 'yrs', section: 'FIRE' },
+      { key: 'fire_annual_expenses_inr',       label: 'Annual Expenses (₹2L/mo×12)', ccy: 'INR', section: 'FIRE' },
+      { key: 'fire_monthly_income_inr',        label: 'Monthly Income (total)',        ccy: 'INR', section: 'FIRE' },
+      { key: 'fire_expected_return_pct',       label: 'Expected Return %',            ccy: '%',   section: 'FIRE' },
+      { key: 'fire_inflation_pct',             label: 'Inflation %',                  ccy: '%',   section: 'FIRE' },
+      { key: 'fire_swr_pct',                   label: 'Safe Withdrawal Rate %',       ccy: '%',   section: 'FIRE' },
+      { key: 'fire_barista_parttime_income_inr', label: 'Barista Part-time Income/mo', ccy: 'INR', section: 'FIRE' },
+      { key: 'edu_years_to_college',           label: 'Years to Child College',       ccy: 'yrs', section: 'CHILD EDUCATION' },
+      { key: 'edu_cost_today_inr',             label: 'College Cost (today ₹)',       ccy: 'INR', section: 'CHILD EDUCATION' },
+      { key: 'edu_inflation_pct',              label: 'Education Inflation %',        ccy: '%',   section: 'CHILD EDUCATION' }
     ];
     const fireGroups = {};
     FIRE_FIELDS.forEach(ff => {
@@ -2054,7 +2245,7 @@ const ODIN = (() => {
     render();
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

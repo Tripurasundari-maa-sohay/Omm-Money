@@ -341,6 +341,214 @@ def build_indices_json() -> dict:
     return out
 
 
+# ── SHARED PRICE RESULT BUILDER ──────────────────────────────────────────
+def _build_price_entry(tk: str, yf_sym: str, q: dict,
+                       existing_prices: dict) -> dict | None:
+    """
+    Given a raw quote dict {ltp, pc}, apply auto-heal, sanity cap,
+    and return the final price entry for holdings_prices.json.
+    Returns None if quote is unusable.
+    """
+    if q is None:
+        return None
+
+    pc      = q.get("pc")
+    ltp_val = q.get("ltp")
+    is_india = yf_sym.endswith((".NS", ".BO"))
+
+    if not ltp_val or float(ltp_val) <= 0:
+        return None
+
+    # Auto-heal: cross-check pc against Yahoo candle (source of truth)
+    # Finnhub pc is usually correct; candle validates it cheaply.
+    try:
+        hist = yf.Ticker(yf_sym).history(period="5d", interval="1d", auto_adjust=False)
+        today_utc = datetime.utcnow().date()
+        if not hist.empty:
+            last_date = (hist.index[-1].date() if hasattr(hist.index[-1], "date")
+                         else hist.index[-1].to_pydatetime().date())
+            if last_date == today_utc and len(hist) >= 2:
+                candle_pc  = round(float(hist["Close"].iloc[-2]), 4)
+                candle_ltp = round(float(hist["Close"].iloc[-1]), 4)
+                if not (ltp_val and ltp_val > 0):
+                    ltp_val = candle_ltp
+                if pc is not None and abs(float(pc) - candle_pc) / candle_pc > 0.01:
+                    print(f"  AUTO-HEAL {tk}: api_pc={pc} → candle_pc={candle_pc}", file=sys.stderr)
+                    pc = candle_pc
+                elif pc is None:
+                    pc = candle_pc
+                    print(f"  AUTO-HEAL {tk}: pc=None → candle_pc={candle_pc}", file=sys.stderr)
+    except Exception:
+        pass
+
+    change     = round(float(ltp_val) - float(pc), 4) if pc is not None else None
+    change_pct = round(change / float(pc) * 100, 2)   if (change is not None and pc) else None
+
+    _cap = 20.0 if is_india else 35.0
+    if change_pct is not None and abs(change_pct) > _cap:
+        print(f"  WARN  {tk}: {change_pct:+.1f}% exceeds {_cap}% cap — nulling pc", file=sys.stderr)
+        pc = None; change = None; change_pct = None
+
+    return {
+        "ltp":        ltp_val,
+        "pc":         pc,
+        "change":     change,
+        "change_pct": change_pct,
+        "as_of":      datetime.utcnow().isoformat() + "Z",
+        "manual":     q.get("_manual", False),
+    }
+
+
+# ── US OPEN POSITIONS ─────────────────────────────────────────────────────
+def fetch_us_open_positions(holdings: list[dict],
+                            existing_prices: dict,
+                            manual_ltps: dict) -> dict[str, dict]:
+    """
+    Fetch US open positions.
+    PRIMARY  : Finnhub (real-time, requires FINNHUB_API_KEY)
+    FALLBACK : Yahoo Finance
+    LAST     : carry-forward stale from existing_prices
+    Throttle : floor(60 / N) seconds between Finnhub calls.
+    """
+    if not holdings:
+        return {}
+
+    delay = max(1, math.floor(60.0 / len(holdings)))
+    source = f"Finnhub PRIMARY (throttle={delay}s)" if FINNHUB_KEY else "Yahoo only (FINNHUB_API_KEY not set)"
+    print(f"\n── US open positions ({len(holdings)}) — {source}")
+
+    results: dict[str, dict] = {}
+    for h in holdings:
+        tk, yf_sym = h["tk"], h["yf"]
+        q = None
+        try:
+            # 1st: Finnhub real-time
+            if FINNHUB_KEY:
+                q = fetch_quote_finnhub(tk)
+                time.sleep(delay)
+                if q is None:
+                    print(f"  FALLBACK {tk}: Finnhub failed → Yahoo", file=sys.stderr)
+
+            # 2nd: Yahoo fallback
+            if q is None:
+                q = fetch_quote(yf_sym)
+                if q is None:
+                    q = fetch_quote_direct(yf_sym)
+
+            # 3rd: manual override
+            if q is None and tk in manual_ltps:
+                mltp = manual_ltps[tk]
+                prev = existing_prices.get(tk, {}).get("ltp") or mltp
+                q = {"ltp": mltp, "pc": prev, "_manual": True}
+                print(f"  MANU    {tk}: manual_ltp={mltp}", file=sys.stderr)
+
+            # 4th: carry-forward stale
+            if q is None and tk in existing_prices:
+                stale = existing_prices[tk]
+                print(f"  STALE   {tk}: carrying forward ltp={stale.get('ltp')}", file=sys.stderr)
+                results[tk] = {**stale, "as_of": stale.get("as_of", "stale"), "stale": True}
+                continue
+
+            if q is None:
+                print(f"  FAIL    {tk}: all sources failed", file=sys.stderr)
+                continue
+
+            entry = _build_price_entry(tk, yf_sym, q, existing_prices)
+            if entry:
+                results[tk] = entry
+                pct = f"{entry['change_pct']:+.2f}%" if entry['change_pct'] is not None else "—"
+                print(f"  {tk:12s} → {entry['ltp']:>10,.2f}  {pct}")
+
+        except Exception as exc:
+            print(f"  ERROR   {tk}: {exc}", file=sys.stderr)
+
+    return results
+
+
+# ── INDIA OPEN POSITIONS ──────────────────────────────────────────────────
+def fetch_india_open_positions(holdings: list[dict],
+                               existing_prices: dict,
+                               manual_ltps: dict) -> dict[str, dict]:
+    """
+    Fetch India open positions.
+    PRIMARY  : Angel One SmartAPI (TODO — add ANGEL_* secrets when ready)
+    FALLBACK : Yahoo Finance (.NS / .BO)
+    FALLBACK2: NSE India API / Screener.in
+    LAST     : carry-forward stale from existing_prices
+    Throttle : floor(60 / N) seconds (reserved for Angel One when active)
+    """
+    if not holdings:
+        return {}
+
+    # ── ANGEL ONE: activate when secrets are set ──────────────────────────
+    # ANGEL_KEY    = os.environ.get("ANGEL_API_KEY", "")
+    # ANGEL_CLIENT = os.environ.get("ANGEL_CLIENT_ID", "")
+    # ANGEL_PIN    = os.environ.get("ANGEL_MPIN", "")
+    # ANGEL_TOTP   = os.environ.get("ANGEL_TOTP_SECRET", "")
+    # angel_active = all([ANGEL_KEY, ANGEL_CLIENT, ANGEL_PIN, ANGEL_TOTP])
+    angel_active = False   # ← flip to True once Angel One secrets added
+
+    delay = max(1, math.floor(60.0 / len(holdings)))
+    source = f"Angel One PRIMARY (throttle={delay}s)" if angel_active else "Yahoo PRIMARY (Angel One pending)"
+    print(f"\n── India open positions ({len(holdings)}) — {source}")
+
+    results: dict[str, dict] = {}
+    for h in holdings:
+        tk, yf_sym = h["tk"], h["yf"]
+        q = None
+        try:
+            # 1st: Angel One (real-time) — UNCOMMENT when secrets ready
+            # if angel_active:
+            #     q = fetch_quote_angelone(tk, yf_sym)
+            #     time.sleep(delay)
+            #     if q is None:
+            #         print(f"  FALLBACK {tk}: Angel One failed → Yahoo", file=sys.stderr)
+
+            # 2nd: Yahoo fallback (current primary until Angel One active)
+            if q is None:
+                q = fetch_quote(yf_sym)
+
+            # 3rd: NSE / Screener fallback
+            if q is None:
+                print(f"  INFO  {tk}: Yahoo failed → NSE/Screener fallback", file=sys.stderr)
+                q = fetch_quote_india_sme(yf_sym)
+
+            # pc missing → try SME for pc only
+            if q is not None and q.get("pc") is None:
+                sme = fetch_quote_india_sme(yf_sym)
+                if sme and sme.get("pc") is not None:
+                    q["pc"] = sme["pc"]
+
+            # 4th: manual override
+            if q is None and tk in manual_ltps:
+                mltp = manual_ltps[tk]
+                prev = existing_prices.get(tk, {}).get("ltp") or mltp
+                q = {"ltp": mltp, "pc": prev, "_manual": True}
+                print(f"  MANU    {tk}: manual_ltp={mltp}", file=sys.stderr)
+
+            # 5th: carry-forward stale
+            if q is None and tk in existing_prices:
+                stale = existing_prices[tk]
+                print(f"  STALE   {tk}: carrying forward ltp={stale.get('ltp')}", file=sys.stderr)
+                results[tk] = {**stale, "as_of": stale.get("as_of", "stale"), "stale": True}
+                continue
+
+            if q is None:
+                print(f"  FAIL    {tk}: all sources failed", file=sys.stderr)
+                continue
+
+            entry = _build_price_entry(tk, yf_sym, q, existing_prices)
+            if entry:
+                results[tk] = entry
+                pct = f"{entry['change_pct']:+.2f}%" if entry['change_pct'] is not None else "—"
+                print(f"  {tk:12s} → {entry['ltp']:>10,.2f}  {pct}")
+
+        except Exception as exc:
+            print(f"  ERROR   {tk}: {exc}", file=sys.stderr)
+
+    return results
+
+
 # ── HOLDINGS ─────────────────────────────────────────────────────────────
 def build_holdings_json() -> dict:
     if not COST_BASIS.exists():
@@ -349,22 +557,21 @@ def build_holdings_json() -> dict:
 
     cost = json.loads(COST_BASIS.read_text())
     open_tickers: set[str] = set()
-    tickers: list[tuple[str, str]] = []
-    for region in ("us", "india"):
-        for p in cost.get(region, {}).get("open", []):
-            tickers.append((p["tk"], p["yf"]))
-            open_tickers.add(p["tk"])
+    us_holdings    = cost.get("us",    {}).get("open", [])
+    india_holdings = cost.get("india", {}).get("open", [])
+    all_holdings   = us_holdings + india_holdings
+    for p in all_holdings:
+        open_tickers.add(p["tk"])
 
-    # Build manual LTP overrides from holdings_cost.json (used when live fetch fails)
+    # Manual LTP overrides
     manual_ltps: dict[str, float] = {}
-    for region in ("us", "india"):
-        for p in cost.get(region, {}).get("open", []):
-            if p.get("manual_ltp") and float(p["manual_ltp"]) > 0:
-                manual_ltps[p["tk"]] = float(p["manual_ltp"])
+    for p in all_holdings:
+        if p.get("manual_ltp") and float(p["manual_ltp"]) > 0:
+            manual_ltps[p["tk"]] = float(p["manual_ltp"])
     if manual_ltps:
-        print(f"  manual LTP overrides loaded: {manual_ltps}")
+        print(f"  manual LTP overrides: {manual_ltps}")
 
-    # Load existing prices for merge fallback (keeps stale data for tickers that fail this run)
+    # Load existing prices (carry-forward on partial failures)
     existing_prices: dict[str, dict] = {}
     if OUT_HOLDINGS.exists():
         try:
@@ -372,116 +579,25 @@ def build_holdings_json() -> dict:
         except Exception:
             pass
 
-    # ── Dynamic Finnhub throttle: floor(60 / N) seconds between calls ──────
-    # Ensures we never exceed Finnhub free tier (60 calls/min) regardless of portfolio size.
-    finnhub_delay = max(1, math.floor(60.0 / len(tickers))) if tickers else 1
-    print(f"Fetching {len(tickers)} holding quotes…  "
-          f"[Finnhub throttle: {finnhub_delay}s/call · "
-          f"{'active' if FINNHUB_KEY else 'disabled — FINNHUB_API_KEY not set'}]")
+    print(f"\nFetching open positions — {len(us_holdings)} US  +  {len(india_holdings)} India")
 
-    fresh_prices: dict[str, dict] = {}
-    success_count = 0
+    # ── Fetch US + India via dedicated functions ──────────────────────────
+    us_prices     = fetch_us_open_positions(us_holdings,    existing_prices, manual_ltps)
+    india_prices  = fetch_india_open_positions(india_holdings, existing_prices, manual_ltps)
+    fresh_prices  = {**us_prices, **india_prices}
+    success_count = len(fresh_prices)
+
+    # Legacy tickers variable for downstream chart/signal code that iterates it
+    tickers = [(p["tk"], p["yf"]) for p in all_holdings]
+    _pct_map = {tk: fresh_prices[tk].get("change_pct") for tk in fresh_prices}
+
+    # Print summary line expected by downstream log parsers
     for tk, yf_sym in tickers:
-        try:
-            is_india = yf_sym.endswith((".NS", ".BO"))
-
-            # ── US: Finnhub PRIMARY → Yahoo fallback ─────────────────────
-            if not is_india and FINNHUB_KEY:
-                us_sym = tk  # Finnhub uses plain ticker (GOOG, AMZN etc.)
-                q = fetch_quote_finnhub(us_sym)
-                if q is None:
-                    print(f"  INFO  {tk}: Finnhub failed — falling back to Yahoo", file=sys.stderr)
-                    q = fetch_quote(yf_sym)
-                time.sleep(finnhub_delay)  # throttle after each Finnhub call
-
-            # ── India / no Finnhub key: Yahoo PRIMARY ────────────────────
-            else:
-                q = fetch_quote(yf_sym)
-
-            # India: if fetch failed entirely → SME fallback
-            if q is None and is_india:
-                print(f"  INFO  {tk}: all yfinance attempts empty — trying NSE/Screener fallback…", file=sys.stderr)
-                q = fetch_quote_india_sme(yf_sym)
-
-            # India: if ltp OK but pc missing → use SME fallback just to get pc
-            if q is not None and q.get("pc") is None and is_india:
-                print(f"  INFO  {tk}: ltp={q['ltp']} but pc=None — fetching pc via NSE/Screener…", file=sys.stderr)
-                sme = fetch_quote_india_sme(yf_sym)
-                if sme and sme.get("pc") is not None:
-                    q["pc"] = sme["pc"]
-                    print(f"  INFO  {tk}: pc resolved → {q['pc']}", file=sys.stderr)
-
-            # US: if ltp OK but pc missing → try direct API for pc
-            if q is not None and q.get("pc") is None and not is_india:
-                print(f"  INFO  {tk}: ltp={q['ltp']} but pc=None — retrying direct API for pc…", file=sys.stderr)
-                direct = fetch_quote_direct(yf_sym)
-                if direct and direct.get("pc") is not None:
-                    q["pc"] = direct["pc"]
-                    print(f"  INFO  {tk}: pc resolved → {q['pc']}", file=sys.stderr)
-
-            if q is None:
-                # Last resort: use manual_ltp from holdings_cost.json if set
-                if tk in manual_ltps:
-                    mltp = manual_ltps[tk]
-                    prev_pc = existing_prices.get(tk, {}).get("ltp") or mltp
-                    q = {"ltp": mltp, "pc": prev_pc, "_manual": True}
-                    print(f"  MANU  {tk}: no live price — using manual_ltp = {mltp:,.2f}", file=sys.stderr)
-                else:
-                    print(f"  FAIL  {tk} ({yf_sym}): no price obtained after all fallbacks", file=sys.stderr)
-                    continue
-            pc         = q["pc"]    # may still be None if all sources lack prev-close
-            ltp_val    = q["ltp"]
-
-            # ── Auto-heal: always cross-check pc against candle history ──
-            # If API pc differs from candle history by >1%, candle wins (it's the truth).
-            # This catches: chartPreviousClose stale values, ex-div adj issues, etc.
-            try:
-                hist = yf.Ticker(yf_sym).history(period="5d", interval="1d", auto_adjust=False)
-                today_utc = datetime.utcnow().date()
-                if not hist.empty:
-                    last_date = (hist.index[-1].date() if hasattr(hist.index[-1], "date")
-                                 else hist.index[-1].to_pydatetime().date())
-                    if last_date == today_utc and len(hist) >= 2:
-                        candle_pc  = round(float(hist["Close"].iloc[-2]), 4)
-                        candle_ltp = round(float(hist["Close"].iloc[-1]), 4)
-                        # Use candle ltp if realtime not available
-                        if not (ltp_val and ltp_val > 0):
-                            ltp_val = candle_ltp
-                        # Validate pc: if API pc differs from candle by >1%, override
-                        if pc is not None and abs(float(pc) - candle_pc) / candle_pc > 0.01:
-                            print(f"  AUTO-HEAL {tk}: api_pc={pc} differs from candle_pc={candle_pc} — using candle", file=sys.stderr)
-                            pc = candle_pc
-                        elif pc is None:
-                            pc = candle_pc
-                            print(f"  AUTO-HEAL {tk}: pc was None — resolved from candle → {pc}", file=sys.stderr)
-            except Exception as _heal_exc:
-                pass  # best-effort; original pc used if healing fails
-
-            change     = round(ltp_val - pc, 4) if pc is not None else None
-            change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
-
-            # Sanity check: final stale pc guard after auto-heal.
-            # Only nulls if candle-validated pc still shows impossible move
-            # (split, corporate action, data corruption).
-            is_india = yf_sym.endswith((".NS", ".BO"))
-            _cap = 20.0 if is_india else 35.0
-            if change_pct is not None and abs(change_pct) > _cap:
-                print(f"  WARN  {tk}: |dayChange| {change_pct:+.1f}% exceeds {_cap}% cap after heal — nulling", file=sys.stderr)
-                pc = None; change = None; change_pct = None
-
-            fresh_prices[tk] = {
-                "ltp":        q["ltp"],
-                "pc":         pc,          # None means "unknown" — JS shows "–"
-                "change":     change,
-                "change_pct": change_pct,
-                "as_of":      datetime.utcnow().isoformat() + "Z",
-                "manual":     q.get("_manual", False),  # True = manual_ltp used
-            }
-            success_count += 1
-            _pct_str = f"{change_pct:+.2f}" if change_pct is not None else "—"
-            print(f"  {tk:12s} ({yf_sym:14s}) → {q['ltp']:>12,.2f}  ({_pct_str}%)")
-        except Exception as exc:
-            print(f"  ERROR  {tk} ({yf_sym}): unexpected error: {exc}", file=sys.stderr)
+        if tk in fresh_prices:
+            e = fresh_prices[tk]
+            _pct_str = f"{e['change_pct']:+.2f}" if e.get('change_pct') is not None else "—"
+            if not e.get("stale"):
+                print(f"  {tk:12s} ({yf_sym:14s}) → {e['ltp']:>12,.2f}  ({_pct_str}%)")
 
     # Merge: start from existing prices, overlay fresh results.
     # Tickers that failed this run keep their previous price (with original as_of timestamp).

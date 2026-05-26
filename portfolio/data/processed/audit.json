@@ -1,12 +1,7 @@
 {
-  "generated": "2026-05-26T06:10:47Z",
+  "generated": "2026-05-26T06:15:57Z",
   "status": "alert",
   "alerts": [
-    {
-      "type": "workflow_dead",
-      "workflow": ".github/workflows/eod_snapshot_us.yml",
-      "message": ".github/workflows/eod_snapshot_us.yml has zero successful runs. Check workflow triggers + script for crash."
-    },
     {
       "type": "workflow_dead",
       "workflow": ".github/workflows/screener.yml",
@@ -17,8 +12,8 @@
   "tickers_expected": 27,
   "tickers_ok": 27,
   "tickers_failed": 0,
-  "fx_rate": 95.435,
-  "data_age_min": 0.23,
+  "fx_rate": 95.4375,
+  "data_age_min": 0.26,
   "crosscheck": {
     "live_vs_statement_pct": 0.01,
     "live_total_usd": 19497.52,
@@ -46,14 +41,17 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-26T06:03:36Z",
+        "last_success": "2026-05-26T06:09:46Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {
         "last_success": "2026-05-25T22:17:43Z",
         "age_days": 0
       },
-      ".github/workflows/eod_snapshot_us.yml": "no_success_ever",
+      ".github/workflows/eod_snapshot_us.yml": {
+        "last_success": "2026-05-26T06:01:46Z",
+        "age_days": 0
+      },
       ".github/workflows/eod_snapshot_india.yml": {
         "last_success": "2026-05-25T17:25:53Z",
         "age_days": 0

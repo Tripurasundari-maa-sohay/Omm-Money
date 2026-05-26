@@ -1745,9 +1745,12 @@ const DASH = (() => {
       })()
     };
 
-    // Last update timestamp from prices
+    // Last update timestamp = freshest per-ticker as_of (MAX, not MIN).
+    // Earlier code took MIN, so one delisted/failing ticker (e.g. ASHALOG)
+    // made the whole dashboard report a multi-day-old "DATA OLD" badge
+    // even when every other LTP was current.
     const _ts_vals = Object.values(S.prices).map(p=>p.as_of).filter(Boolean);
-    const ts = _ts_vals.length ? _ts_vals.reduce((a,b) => a < b ? a : b) : null; // true min ISO timestamp
+    const ts = _ts_vals.length ? _ts_vals.reduce((a,b) => a > b ? a : b) : null;
     const anyLive = Object.keys(S.prices).length > 0;
 
     S.view = { fx, us, india, combined, asOf: ts || S.cost.as_of, anyLive };

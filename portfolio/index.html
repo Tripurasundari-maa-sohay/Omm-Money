@@ -1586,10 +1586,18 @@ const DASH = (() => {
       status.textContent = 'Live prices unavailable — showing cost basis';
       status.className = 'stale';
     } else {
-      // Show actual data timestamp (not browser clock) so stale data is visible
+      // Show actual data timestamp + dominant source per region
       const _dataTs = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().pop();
       const _tsStr  = _dataTs ? new Date(_dataTs).toLocaleTimeString() : new Date().toLocaleTimeString();
-      status.textContent = '● Live · data as of ' + _tsStr;
+
+      // Detect dominant source for US and India
+      const _usTickers  = (S.cost?.us?.open    || []).map(h=>h.tk);
+      const _inTickers  = (S.cost?.india?.open || []).map(h=>h.tk);
+      const _srcCount = (tks, preferred) => tks.filter(tk => S.prices[tk]?.source === preferred).length;
+      const _usSrc  = _srcCount(_usTickers,  'finnhub')  > 0 ? 'Finnhub'   : 'Yahoo';
+      const _inSrc  = _srcCount(_inTickers,  'angelone') > 0 ? 'Angel One' : 'Yahoo';
+
+      status.textContent = `● Live · data as of ${_tsStr}  |  🇺🇸 ${_usSrc}  🇮🇳 ${_inSrc}`;
       status.className = 'live';
     }
 

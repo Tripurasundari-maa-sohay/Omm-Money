@@ -70,7 +70,13 @@
   @media (max-width: 760px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
   /* HERO */
-  .hero { background: linear-gradient(135deg, #14141f 0%, #1d1d2c 100%); border: 1.5px solid var(--gold); padding: 22px; text-align: center; box-shadow: 0 0 30px rgba(255,215,0,0.08); }
+  .hero { position: relative; background: linear-gradient(135deg, #14141f 0%, #1d1d2c 100%); border: 1.5px solid var(--gold); padding: 22px; text-align: center; box-shadow: 0 0 30px rgba(255,215,0,0.08); }
+  .fx-tile { position: absolute; top: 12px; right: 12px; background: var(--bg-card2); border: 1px solid var(--gold-dim); border-radius: 6px; padding: 8px 10px; font-size: 11px; text-align: left; min-width: 124px; line-height: 1.5; }
+  .fx-tile .head { color: var(--gold); font-weight: 700; letter-spacing: 1px; font-size: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--border); padding-bottom: 3px; }
+  .fx-tile .row { display: flex; justify-content: space-between; gap: 8px; color: var(--text-sec); font-size: 11px; }
+  .fx-tile .row b { color: var(--gold-dim); font-weight: 600; }
+  .fx-tile .src { font-size: 9px; color: var(--text-dim); margin-top: 4px; }
+  @media (max-width: 760px) { .fx-tile { position: static; margin: 0 auto 12px; display: inline-block; } }
   .hero .label { color: var(--text-sec); font-size: 11px; letter-spacing: 3px; }
   .hero .net-worth { color: var(--gold); font-size: 44px; font-weight: 800; margin: 8px 0; letter-spacing: -1px; }
   .hero .breakdown { display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; margin-top: 10px; }
@@ -190,6 +196,12 @@
 
 <!-- HERO -->
 <div class="card hero">
+  <div class="fx-tile" id="fx-tile">
+    <div class="head">💱 LIVE FX</div>
+    <div class="row"><span>USD/INR</span><b id="fx-usd-inr">—</b></div>
+    <div class="row"><span>QAR/INR</span><b id="fx-qar-inr">—</b></div>
+    <div class="src" id="fx-src">—</div>
+  </div>
   <div class="label">TOTAL NET WORTH</div>
   <div class="net-worth" id="hero-net">₹ <span class="loading"></span></div>
   <div class="multi-ccy" id="hero-multi-ccy"></div>
@@ -456,16 +468,57 @@
 <script>
 const ODIN = (() => {
   const S = {
-    seed: null,
+    seed: null,          // single source of truth — baseline + user edits merged
     fx: { qar_to_inr: 23.5, usd_to_inr: 85.5, source: 'seed' },
     portfolio: { india_stocks_inr: 0, us_stocks_usd: 0, india_tickers: 0, us_tickers: 0, prices_asof: null },
-    inputs: {},          // manual overrides from localStorage
     history: [],         // [{date, net_worth, assets, liab}]
     todos: [],
     charts: {}
   };
-  const LS_INPUTS = 'odin_manual_inputs_v1';
+  const LS_STATE   = 'odin_state_v2';   // whole seed snapshot with user edits
   const LS_HISTORY = 'odin_history_v1';
+
+  // ── Seed-path resolver ─────────────────────────────────────────
+  // Maps form keys (bank_qa_0, loan_apartment, custom_maa_tala_bari, fire_current_age, …)
+  // to a get/set pair over S.seed. Single naming layer — kills inputs.json mismatch class.
+  function resolveKey(key) {
+    let m;
+    if ((m = key.match(/^bank_qa_(\d+)$/)))
+      return { get: () => S.seed.banks_qatar?.[+m[1]]?.balance_qar,
+               set: v  => { (S.seed.banks_qatar ||= [])[+m[1]] ||= {}; S.seed.banks_qatar[+m[1]].balance_qar = v; } };
+    if ((m = key.match(/^bank_in_(\d+)$/)))
+      return { get: () => S.seed.banks_india?.[+m[1]]?.balance_inr,
+               set: v  => { (S.seed.banks_india ||= [])[+m[1]] ||= {}; S.seed.banks_india[+m[1]].balance_inr = v; } };
+    if ((m = key.match(/^loan_tenure_(.+)$/))) {
+      const id = m[1];
+      return { get: () => S.seed.loans?.find(l => l.id === id)?.tenure_months_remaining,
+               set: v  => { const l = S.seed.loans?.find(x => x.id === id); if (l) l.tenure_months_remaining = v; } };
+    }
+    if ((m = key.match(/^loan_(.+)$/))) {
+      const id = m[1];
+      return { get: () => S.seed.loans?.find(l => l.id === id)?.outstanding,
+               set: v  => { const l = S.seed.loans?.find(x => x.id === id); if (l) l.outstanding = v; } };
+    }
+    if ((m = key.match(/^custom_(.+)$/))) {
+      const id = m[1];
+      return { get: () => S.seed.custom_assets?.find(a => a.id === id)?.value,
+               set: v  => { const a = S.seed.custom_assets?.find(x => x.id === id); if (a) a.value = v; } };
+    }
+    if ((m = key.match(/^fire_(.+)$/))) {
+      const sub = m[1];
+      return { get: () => S.seed.fire?.[sub],
+               set: v  => { (S.seed.fire ||= {})[sub] = v; } };
+    }
+    if (['salary_qar','savings_target_inr','monthly_emi_inr','expenses_inr','expenses_qar'].includes(key))
+      return { get: () => S.seed.monthly_cash_flow?.[key],
+               set: v  => { (S.seed.monthly_cash_flow ||= {})[key] = v; } };
+    if (key === 'gold_rate_inr_per_gram')
+      return { get: () => S.seed.gold_rate_inr_per_gram,
+               set: v  => { S.seed.gold_rate_inr_per_gram = v; } };
+    // Default: assets block
+    return { get: () => S.seed.assets?.[key],
+             set: v  => { (S.seed.assets ||= {})[key] = v; } };
+  }
 
   // ── Formatting ──────────────────────────────────────────────────
   const fmtINR = v => {
@@ -492,35 +545,30 @@ const ODIN = (() => {
   const pct = (a, b) => b > 0 ? (a/b * 100) : 0;
 
   // ── Load ────────────────────────────────────────────────────────
+  // Single load: baseline seed.json from repo, then overlay localStorage edits.
+  // localStorage wins on conflict — it's the user's working copy.
   async function loadSeed() {
-    try { const r = await fetch('data/seed.json?_=' + Date.now()); S.seed = await r.json(); }
-    catch (e) { console.error('seed load failed', e); S.seed = {}; }
-  }
-  async function loadInputs() {
-    const GITHUB_URL = 'https://raw.githubusercontent.com/Tripurasundari-maa-sohay/Omm-Money/main/net-wealth/data/inputs.json';
-
-    // Load localStorage first (most recent local data)
-    try { S.inputs = JSON.parse(localStorage.getItem(LS_INPUTS) || '{}'); }
-    catch { S.inputs = {}; }
-    console.log('✅ Inputs base from localStorage');
-
-    // Merge GitHub data (GitHub values override only if non-null)
+    let baseline = {};
     try {
-      const r = await fetch(GITHUB_URL + '?_=' + Date.now());
-      if (r.ok) {
-        const gitData = await r.json();
-        // Merge: GitHub overwrites only for non-null, non-comment keys
-        Object.entries(gitData).forEach(([k, v]) => {
-          if (k !== 'comment' && k !== 'exported_at' && v !== null && v !== undefined) {
-            S.inputs[k] = v;
-          }
-        });
-        console.log('✅ Inputs merged from GitHub');
-      }
-    } catch (e) {
-      console.warn('GitHub merge failed, using localStorage only', e);
+      const r = await fetch('data/seed.json?_=' + Date.now());
+      baseline = await r.json();
+    } catch (e) { console.error('seed.json load failed', e); }
+
+    // One-time migration: drop legacy override blob if present
+    if (localStorage.getItem('odin_manual_inputs_v1')) {
+      localStorage.removeItem('odin_manual_inputs_v1');
+      console.log('🧹 Removed legacy odin_manual_inputs_v1 — now using state-v2');
     }
-    // Also restore portfolio values from localStorage if cached
+
+    let local = null;
+    try { local = JSON.parse(localStorage.getItem(LS_STATE) || 'null'); }
+    catch { local = null; }
+
+    // If local snapshot exists, it IS the state. Otherwise use repo baseline.
+    S.seed = (local && typeof local === 'object') ? local : baseline;
+    console.log(local ? '✅ Loaded local state-v2' : '✅ Loaded baseline seed.json');
+
+    // Restore cached portfolio scalars
     const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));
     if (Number.isFinite(cachedIndiaStocks)) S.portfolio.india_stocks_inr = cachedIndiaStocks;
     const cachedUSStocks = parseFloat(localStorage.getItem('portfolio_us_stocks_usd'));
@@ -593,8 +641,8 @@ const ODIN = (() => {
     const wsData = [['Field Name', 'Amount', 'Unit']];
 
     ASSET_FIELDS.forEach(f => {
-      const val = S.inputs[f.key] || '';
-      wsData.push([f.label, val, f.unit || '']);
+      const val = resolveKey(f.key).get() ?? '';
+      wsData.push([f.label, val, f.ccy || '']);
     });
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -628,24 +676,19 @@ const ODIN = (() => {
           const fieldName = row[0];
           const value = row[1];
 
-          // Find matching field by label
           const field = ASSET_FIELDS.find(f => f.label === fieldName);
           if (field) {
-            S.inputs[field.key] = value;
+            resolveKey(field.key).set(parseFloat(value));
             imported++;
           }
         }
 
-        // Save to localStorage
-        localStorage.setItem(LS_INPUTS, JSON.stringify(S.inputs));
+        localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
 
-        // Sync to Firebase
-        if (FirebaseSync.isReady) {
-          await FirebaseSync.saveInputs(S.inputs);
-          flash(`Imported ${imported} fields`);
-        } else {
-          flash(`Imported ${imported} fields`);
+        if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady && FirebaseSync.saveState) {
+          try { await FirebaseSync.saveState(S.seed); } catch (e) { /* offline ok */ }
         }
+        flash(`Imported ${imported} fields`);
 
         render();
       } catch (err) {
@@ -947,7 +990,7 @@ const ODIN = (() => {
   }
 
   function num(key, fallback) {
-    const v = parseFloat(S.inputs[key]);
+    const v = parseFloat(resolveKey(key).get());
     return Number.isFinite(v) ? v : (Number.isFinite(fallback) ? fallback : 0);
   }
 
@@ -983,6 +1026,13 @@ const ODIN = (() => {
     // FX meta
     document.getElementById('fx-meta').textContent =
       `$ to ₹${S.fx.usd_to_inr.toFixed(2)} · QAR to ₹${S.fx.qar_to_inr.toFixed(2)} (${S.fx.source})`;
+    // FX hero tile
+    const fxUsd = document.getElementById('fx-usd-inr');
+    const fxQar = document.getElementById('fx-qar-inr');
+    const fxSrc = document.getElementById('fx-src');
+    if (fxUsd) fxUsd.textContent = '₹' + S.fx.usd_to_inr.toFixed(2);
+    if (fxQar) fxQar.textContent = '₹' + S.fx.qar_to_inr.toFixed(2);
+    if (fxSrc) fxSrc.textContent = S.fx.source === 'seed' ? 'fallback (seed)' : 'live · portfolio';
     document.getElementById('data-asof').textContent = S.portfolio.prices_asof
       ? new Date(S.portfolio.prices_asof).toLocaleString()
       : new Date().toLocaleString();
@@ -1407,7 +1457,8 @@ const ODIN = (() => {
   function loadTodos() {
     try {
       const stored = JSON.parse(localStorage.getItem(LS_TODOS) || 'null');
-      S.todos = Array.isArray(stored) ? stored : (S.seed.todos || []);
+      // Empty array in storage → fall back to seed (user likely never added any)
+      S.todos = (Array.isArray(stored) && stored.length) ? stored : (S.seed.todos || []);
     } catch { S.todos = S.seed.todos || []; }
   }
   function saveTodos() {
@@ -1618,68 +1669,49 @@ const ODIN = (() => {
   ];
 
   function renderForm() {
-    const seedVal = (key) => (S.seed.assets || {})[key]
-                          ?? (S.seed.liabilities || {})[key]
-                          ?? (S.seed.monthly_cash_flow || {})[key]
-                          ?? S.seed[key];
+    const cur = (key) => resolveKey(key).get() ?? '';
 
     // ── Build ASSETS grouping
     const assetGroups = {};
     ASSET_FIELDS.forEach(f => {
-      (assetGroups[f.section] ||= []).push({
-        key: f.key, label: f.label, ccy: f.ccy,
-        current: S.inputs[f.key] ?? seedVal(f.key) ?? ''
-      });
+      (assetGroups[f.section] ||= []).push({ key: f.key, label: f.label, ccy: f.ccy, current: cur(f.key) });
     });
-    // Custom assets (Maa Tala Bari etc) → assets
     (S.seed.custom_assets || []).forEach(a => {
       (assetGroups['🏛 Other / ' + (a.category || 'Other')] ||= []).push({
-        key: 'custom_' + a.id, label: a.label, ccy: a.ccy || 'INR',
-        current: S.inputs['custom_' + a.id] ?? a.value ?? ''
+        key: 'custom_' + a.id, label: a.label, ccy: a.ccy || 'INR', current: cur('custom_' + a.id)
       });
     });
-
-    // Dynamic banks → assets
     (S.seed.banks_qatar || []).forEach((b, i) => {
-      (assetGroups['🇶🇦 Qatar Banks'] ||= []).push({
-        key: 'bank_qa_' + i, label: b.name, ccy: 'QAR',
-        current: S.inputs['bank_qa_' + i] ?? b.balance_qar ?? ''
-      });
+      (assetGroups['🇶🇦 Qatar Banks'] ||= []).push({ key: 'bank_qa_' + i, label: b.name, ccy: 'QAR', current: cur('bank_qa_' + i) });
     });
     (S.seed.banks_india || []).forEach((b, i) => {
-      (assetGroups['🇮🇳 India Banks'] ||= []).push({
-        key: 'bank_in_' + i, label: b.name, ccy: 'INR',
-        current: S.inputs['bank_in_' + i] ?? b.balance_inr ?? ''
-      });
+      (assetGroups['🇮🇳 India Banks'] ||= []).push({ key: 'bank_in_' + i, label: b.name, ccy: 'INR', current: cur('bank_in_' + i) });
     });
 
     // ── Build LIABILITIES grouping (one section per loan)
     const liabGroups = {};
     (S.seed.loans || []).forEach(ln => {
       liabGroups[`${ln.label} · ${ln.provider}`] = [
-        { key: 'loan_' + ln.id,        label: 'Outstanding',       ccy: ln.ccy, current: S.inputs['loan_' + ln.id]        ?? ln.outstanding              ?? '' },
-        { key: 'loan_tenure_' + ln.id, label: 'Months remaining',  ccy: 'mo',  current: S.inputs['loan_tenure_' + ln.id] ?? ln.tenure_months_remaining ?? '' }
+        { key: 'loan_' + ln.id,        label: 'Outstanding',      ccy: ln.ccy, current: cur('loan_' + ln.id) },
+        { key: 'loan_tenure_' + ln.id, label: 'Months remaining', ccy: 'mo',   current: cur('loan_tenure_' + ln.id) }
       ];
     });
 
     renderFormGroups('form-assets-host', assetGroups);
     renderFormGroups('form-liab-host',   liabGroups);
-    // FIRE form
-    const f = S.seed.fire || {};
+
     const FIRE_FIELDS = [
-      { key: 'fire_current_age',          label: 'Current Age',                ccy: 'yrs', seed: f.current_age },
-      { key: 'fire_retire_age',           label: 'Target Retire Age',          ccy: 'yrs', seed: f.retire_age },
-      { key: 'fire_annual_expenses_inr',  label: 'Annual Expenses (today)',    ccy: 'INR', seed: f.annual_expenses_inr },
-      { key: 'fire_expected_return_pct',  label: 'Expected Return %',          ccy: '%',   seed: f.expected_return_pct },
-      { key: 'fire_inflation_pct',        label: 'Inflation %',                ccy: '%',   seed: f.inflation_pct },
-      { key: 'fire_swr_pct',              label: 'Safe Withdrawal Rate %',     ccy: '%',   seed: f.swr_pct }
+      { key: 'fire_current_age',          label: 'Current Age',             ccy: 'yrs' },
+      { key: 'fire_retire_age',           label: 'Target Retire Age',       ccy: 'yrs' },
+      { key: 'fire_annual_expenses_inr',  label: 'Annual Expenses (today)', ccy: 'INR' },
+      { key: 'fire_expected_return_pct',  label: 'Expected Return %',       ccy: '%'   },
+      { key: 'fire_inflation_pct',        label: 'Inflation %',             ccy: '%'   },
+      { key: 'fire_swr_pct',              label: 'Safe Withdrawal Rate %',  ccy: '%'   }
     ];
     renderFormGroups('form-fire-host', { '': FIRE_FIELDS.map(ff => ({
-      key: ff.key, label: ff.label, ccy: ff.ccy,
-      current: S.inputs[ff.key] ?? ff.seed ?? ''
+      key: ff.key, label: ff.label, ccy: ff.ccy, current: cur(ff.key)
     }))});
 
-    // Setup Gold rate boxes
     setupGoldRateBoxes();
   }
 
@@ -1707,41 +1739,37 @@ const ODIN = (() => {
   }
 
   async function saveInputs() {
-    const inputs = {};
     document.querySelectorAll('#form-assets-host input, #form-liab-host input, #form-fire-host input').forEach(el => {
       const k = el.dataset.key;
       const v = safeEval(el.value);
       if (Number.isFinite(v)) {
-        inputs[k] = v;
+        resolveKey(k).set(v);
         el.value = v;
       }
     });
 
-    // Save to localStorage
-    localStorage.setItem(LS_INPUTS, JSON.stringify(inputs));
-    S.inputs = { ...S.inputs, ...inputs };
+    S.seed.as_of = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
     flash('Saved to localStorage');
+
+    if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady && FirebaseSync.saveState) {
+      try { await FirebaseSync.saveState(S.seed); } catch (e) { /* offline ok */ }
+    }
 
     render();
   }
 
-  // Export inputs to GitHub (download JSON)
+  // Download the current seed (with user edits) — commit to repo as data/seed.json.
   function exportToGitHub() {
-    const exportData = {
-      comment: 'Manual data overrides. Auto-updated on save. Fetch from GitHub for cross-device sync.',
-      exported_at: new Date().toISOString(),
-      ...S.inputs
-    };
-    const json = JSON.stringify(exportData, null, 2);
+    const json = JSON.stringify(S.seed, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'inputs.json';
+    a.download = 'seed.json';
     a.click();
     URL.revokeObjectURL(url);
-    flash('Downloaded inputs.json — commit to GitHub');
-    console.log('Exported inputs:', exportData);
+    flash('Downloaded seed.json — commit to GitHub');
   }
 
   // ── Milestones list ─────────────────────────────────────────────
@@ -1837,10 +1865,9 @@ const ODIN = (() => {
     ]);
     console.log('Firebase initialization:', firebaseReady ? 'ready' : 'timed out, using localStorage');
 
-    // Load data from GitHub + localStorage
-    await loadInputs();
-    await loadHistory();
+    // Load data: baseline seed.json + localStorage overlay → S.seed (single source)
     await loadSeed();
+    await loadHistory();
     loadTodos();
     await loadHistoryFromRepo();
     await Promise.all([loadFX(), loadPortfolio(), loadGJCGoldRate(), loadIBJARates()]);
@@ -1912,24 +1939,18 @@ const ODIN = (() => {
 
   function saveJewelRateOverride() {
     const val = parseFloat(document.getElementById('jewel-rate-override').value);
-    if (isNaN(val) || val <= 0) {
-      S.inputs['jewel_22k_rate_inr_per_g'] = 0;
-    } else {
-      S.inputs['jewel_22k_rate_inr_per_g'] = val / 10; // convert from /10g to /g
-    }
+    const r = resolveKey('jewel_22k_rate_inr_per_g');
+    r.set(isNaN(val) || val <= 0 ? 0 : val / 10); // input is /10g → store /g
+    localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
     render();
-    saveInputs();
   }
 
   function saveMalabarRateOverride() {
     const val = parseFloat(document.getElementById('malabar-rate-override').value);
-    if (isNaN(val) || val <= 0) {
-      S.inputs['malabar_rate_inr_per_g'] = 0;
-    } else {
-      S.inputs['malabar_rate_inr_per_g'] = val * S.fx.qar_to_inr; // convert from QAR/g to INR/g
-    }
+    const r = resolveKey('malabar_rate_inr_per_g');
+    r.set(isNaN(val) || val <= 0 ? 0 : val * S.fx.qar_to_inr); // QAR/g → INR/g
+    localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
     render();
-    saveInputs();
   }
 
   return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride };

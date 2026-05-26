@@ -1,5 +1,5 @@
 // Service Worker — ODIN Net Worth PWA
-const CACHE = 'odin-v14';
+const CACHE = 'odin-v16';
 const BASE = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/'));
 
 const SHELL = [
@@ -33,14 +33,22 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   const path = url.pathname;
-  // Network-first for all data files (portfolio JSON, seed JSON, FX APIs)
+  // Network-first for all data files
   if (path.includes('/data/') || url.host.includes('exchangerate') || url.host.includes('frankfurter')) {
     e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }
-  if (path === BASE + '/' || path === BASE) {
+  // Network-first for shell (index.html + JS) — falls back to cache offline.
+  // Prevents stale-shell trap that hid UI elements after refactors.
+  if (path === BASE + '/' || path === BASE || path.endsWith('/index.html') || path.endsWith('.js')) {
     e.respondWith(
-      caches.match(BASE + '/index.html').then(cached => cached || fetch(e.request))
+      fetch(e.request)
+        .then(r => {
+          const copy = r.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy)).catch(() => {});
+          return r;
+        })
+        .catch(() => caches.match(e.request).then(c => c || caches.match(BASE + '/index.html')))
     );
     return;
   }

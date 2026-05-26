@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T15:09:40Z",
+  "generated": "2026-05-26T19:19:26Z",
   "status": "alert",
   "alerts": [
     {
@@ -13,10 +13,10 @@
   "tickers_ok": 27,
   "tickers_failed": 0,
   "fx_rate": 95.67,
-  "data_age_min": 0.34,
+  "data_age_min": 0.23,
   "crosscheck": {
-    "live_vs_statement_pct": 2.36,
-    "live_total_usd": 19955.73,
+    "live_vs_statement_pct": 2.49,
+    "live_total_usd": 19981.48,
     "statement_total_usd": 19496.03,
     "pdf_age_days": 4,
     "fees_xlsx_total": -361.2,
@@ -41,7 +41,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-26T15:06:53Z",
+        "last_success": "2026-05-26T15:08:18Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {
@@ -54,7 +54,7 @@
       },
       ".github/workflows/eod_snapshot_india.yml": {
         "last_success": "2026-05-25T17:25:53Z",
-        "age_days": 0
+        "age_days": 1
       },
       ".github/workflows/screener.yml": "no_success_ever",
       ".github/workflows/ping_trigger.yml": "not_registered"

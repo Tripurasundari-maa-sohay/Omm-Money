@@ -2423,17 +2423,20 @@ const DASH = (() => {
       const data = ctx.dataset.data || [];
       const tot  = data.reduce((a, b) => a + (b || 0), 0);
       if (!tot) return false;
-      return ((data[ctx.dataIndex] || 0) / tot) * 100 >= 4;
+      return ((data[ctx.dataIndex] || 0) / tot) * 100 >= 5;
     },
     formatter: (v, ctx) => {
       const data = ctx.dataset.data || [];
       const tot  = data.reduce((a, b) => a + (b || 0), 0);
       return tot ? ((v / tot) * 100).toFixed(1) + '%' : '';
     },
-    color: '#fff',
-    font: { size: 11, weight: '700' },
-    textStrokeColor: 'rgba(0,0,0,0.55)',
-    textStrokeWidth: 3,
+    color: '#ffffff',
+    font: { size: 13, weight: '700' },
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderRadius: 4,
+    padding: { top: 3, bottom: 3, left: 6, right: 6 },
+    textStrokeColor: 'rgba(0,0,0,0.8)',
+    textStrokeWidth: 2,
   };
 
   function destroyChart(id){ if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } }
@@ -2721,7 +2724,7 @@ const DASH = (() => {
           borderColor:['#00d4aa','#f0b429','#ff5c5c','#445566'], borderWidth:2 }]
       },
       options:{ responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
+        plugins:{ legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:13, weight:'600'}, padding:10 } },
           tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.dataset.data[ctx.dataIndex]} holdings` } },
           datalabels: _DL_PCT } }
     });

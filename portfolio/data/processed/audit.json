@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-26T07:14:51Z",
+  "generated": "2026-05-26T14:21:25Z",
   "status": "alert",
   "alerts": [
     {
@@ -12,11 +12,11 @@
   "tickers_expected": 27,
   "tickers_ok": 27,
   "tickers_failed": 0,
-  "fx_rate": 95.4425,
-  "data_age_min": 0.23,
+  "fx_rate": 95.67,
+  "data_age_min": 0.46,
   "crosscheck": {
-    "live_vs_statement_pct": 0.01,
-    "live_total_usd": 19497.52,
+    "live_vs_statement_pct": 2.7,
+    "live_total_usd": 20022.8,
     "statement_total_usd": 19496.03,
     "pdf_age_days": 4,
     "fees_xlsx_total": -361.2,
@@ -41,15 +41,15 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-26T07:10:18Z",
+        "last_success": "2026-05-26T14:14:58Z",
         "age_days": 0
       },
       ".github/workflows/watchdog.yml": {
-        "last_success": "2026-05-25T22:17:43Z",
+        "last_success": "2026-05-26T14:15:16Z",
         "age_days": 0
       },
       ".github/workflows/eod_snapshot_us.yml": {
-        "last_success": "2026-05-26T06:01:46Z",
+        "last_success": "2026-05-26T09:00:03Z",
         "age_days": 0
       },
       ".github/workflows/eod_snapshot_india.yml": {

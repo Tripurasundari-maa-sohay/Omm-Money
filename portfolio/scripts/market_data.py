@@ -125,11 +125,17 @@ def fetch_quote_direct(yf_symbol: str) -> dict | None:
             hist_pairs = [(t, c) for t, c in zip(ts_arr, cl_arr) if c is not None]
 
             if rmp and rm_fresh and float(rmp) > 0:
-                pc = (meta.get("chartPreviousClose")
-                      or meta.get("previousClose")
-                      or (hist_pairs[-2][1] if len(hist_pairs) >= 2 else None))
-                print(f"  direct/{host}  {yf_symbol} → {float(rmp):.2f}")
-                return {"ltp": round(float(rmp), 4),
+                # Prefer actual historical candle close over meta fields
+                # chartPreviousClose is unreliable (can be unadjusted/stale)
+                hist_pc = hist_pairs[-2][1] if len(hist_pairs) >= 2 else None
+                meta_pc = meta.get("previousClose") or meta.get("chartPreviousClose")
+                pc = hist_pc or meta_pc
+                # Sanity check: if pc differs from ltp by >20%, discard it
+                ltp_val = float(rmp)
+                if pc and (abs(ltp_val - float(pc)) / ltp_val) > 0.20:
+                    pc = hist_pc  # fall back to candle history only
+                print(f"  direct/{host}  {yf_symbol} → {ltp_val:.2f}")
+                return {"ltp": round(ltp_val, 4),
                         "pc":  round(float(pc), 4) if pc else None}
 
             if len(hist_pairs) >= 2:

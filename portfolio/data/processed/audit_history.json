@@ -1,6 +1,32 @@
 {
   "history": [
     {
+      "date": "2026-05-26",
+      "status": "alert",
+      "alerts": [
+        {
+          "type": "workflow_dead",
+          "workflow": ".github/workflows/eod_snapshot_us.yml",
+          "message": ".github/workflows/eod_snapshot_us.yml has zero successful runs. Check workflow triggers + script for crash."
+        },
+        {
+          "type": "workflow_dead",
+          "workflow": ".github/workflows/screener.yml",
+          "message": ".github/workflows/screener.yml has zero successful runs. Check workflow triggers + script for crash."
+        },
+        {
+          "type": "workflow_dead",
+          "workflow": ".github/workflows/ping_trigger.yml",
+          "message": ".github/workflows/ping_trigger.yml has zero successful runs. Check workflow triggers + script for crash."
+        }
+      ],
+      "healed": [],
+      "runs": 1,
+      "tickers_ok": 27,
+      "tickers_expected": 27,
+      "data_age_min": 0.2
+    },
+    {
       "date": "2026-05-25",
       "status": "alert",
       "alerts": [

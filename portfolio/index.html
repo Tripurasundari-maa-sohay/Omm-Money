@@ -1802,19 +1802,28 @@ const DASH = (() => {
     const marketOpen = usStatus === 'OPEN' || inStatus === 'OPEN' || usMarketOpenNow || indMarketOpenNow;
     const dataStale  = marketOpen && ageMin > 15; // 5min cron + 7min pipeline = 12min worst case; 15min = safe threshold
 
+    const asOfStr = asOf ? asOf.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '—';
     if (dataStale) {
       badge.textContent = `⚠ DATA ${Math.round(ageMin)}m OLD`;
       badge.className   = 'live-badge stale';
-      badge.title       = `Last fetch: ${asOf ? asOf.toLocaleTimeString() : 'unknown'}. Pipeline runs every 5min — if badge persists >20min, check GitHub Actions.`;
-    } else if (staleCount === 0) {
-      badge.textContent = '● LIVE';
-      badge.className   = 'live-badge';
+      badge.title       = `Last fetch: ${asOfStr}. Pipeline runs every 5min — if badge persists >20min, check GitHub Actions.`;
     } else if (staleCount === total) {
       badge.textContent = '○ STALE (cost basis)';
       badge.className   = 'live-badge stale';
+    } else if (!marketOpen) {
+      // Market closed — show last fetch time, not "LIVE" (misleading)
+      const lbl = staleCount === 0 ? `● LAST CLOSE · ${asOfStr}` : `◑ LAST CLOSE · ${staleCount} stale`;
+      badge.textContent = lbl;
+      badge.className   = 'live-badge';
+      badge.style.color = 'var(--text-sec)';
+    } else if (staleCount === 0) {
+      badge.textContent = '● LIVE';
+      badge.className   = 'live-badge';
+      badge.style.color = '';
     } else {
       badge.textContent = `◑ LIVE · ${staleCount} of ${total} stale`;
       badge.className   = 'live-badge stale';
+      badge.style.color = '';
     }
   }
 

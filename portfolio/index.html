@@ -625,7 +625,6 @@
           <span>QAR <span id="fx-qar-inr" style="color:var(--accent-y);font-weight:600;">—</span> ₹</span>
         </div>
         <!-- Edit Mode Code -->
-        <input type="password" id="edit-code" placeholder="enter code" style="width:80px;padding:4px 6px;background:var(--bg-card);border:1px solid var(--border);color:var(--text);border-radius:3px;font-size:11px;" title="Enter code for edit mode">
         <div class="ccy-group">
           <button class="ccy-btn active" data-ccy="USD" onclick="DASH.setCurrency(this)">$ USD</button>
           <button class="ccy-btn"        data-ccy="QAR" onclick="DASH.setCurrency(this)">﷼ QAR</button>
@@ -4199,23 +4198,6 @@ const DASH = (() => {
     console.warn('⚠️ FX load failed · all paths exhausted');
   }
 
-  function checkEditCode() {
-    const codeInput = document.getElementById('edit-code');
-    const enteredCode = codeInput ? codeInput.value.trim() : '';
-    const EDIT_CODE = '84';
-    if (enteredCode === EDIT_CODE) {
-      codeInput.value = '';
-      alert('✅ Edit mode enabled');
-      // Enable editing here (remove read-only attributes, show edit buttons, etc)
-    }
-  }
-
-  // Enter key on code field
-  if (document.getElementById('edit-code')) {
-    document.getElementById('edit-code').addEventListener('keypress', e => {
-      if (e.key === 'Enter') checkEditCode();
-    });
-  }
 
   function init() {
     loadFXRates();

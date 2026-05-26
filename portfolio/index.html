@@ -869,6 +869,7 @@
             <th class="sortable" data-sc="avg">AVG</th>
             <th class="sortable" data-sc="ltp">LTP</th>
             <th class="sortable" data-sc="dayPL">DAY P&amp;L</th>
+            <th class="sortable" data-sc="dayPct">DAY %</th>
             <th class="sortable" data-sc="mv">MKT VALUE</th>
             <th class="sortable" data-sc="fees">FEES</th>
             <th class="sortable" data-sc="upl">UNREAL P&amp;L</th>
@@ -2014,7 +2015,7 @@ const DASH = (() => {
   };
   const US_SORT_KEY = {
     tk: p => p.tk, qty: p => p.qty, avg: p => p.avg, ltp: p => p.ltp,
-    dayPL: p => p.dayPL, mv: p => p.mv, fees: p => p.fees,
+    dayPL: p => p.dayPL ?? -Infinity, dayPct: p => p.dayPct ?? -Infinity, mv: p => p.mv, fees: p => p.fees,
     upl: p => p.uplNet, ret: p => p.ret,
     inrRet: p => p.inrRet ?? -Infinity,
     signal: p => SIG.results[p.tk]?.score ?? -1,
@@ -2054,7 +2055,8 @@ const DASH = (() => {
         <td>${p.qty}</td>
         <td>${usd2(p.avg)}</td>
         <td><strong>${usd2(p.ltp)}</strong></td>
-        <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${usd2(p.dayPL)} (${sign(p.dayPct)}${pct(p.dayPct)})</td>
+        <td class="${pn(p.dayPL)}">${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}</td>
+        <td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>
         <td>${usd2(p.mv)}</td>
         <td>${usd2(p.fees)}</td>
         <td class="${pn(p.uplNet)}">${sign(p.uplNet)}${usd2(p.uplNet)}</td>
@@ -2123,8 +2125,8 @@ const DASH = (() => {
         <td>${p.houseMoney ? FREE_TAG : inr2(p.avg)}</td>
         <td><strong>${inr2(p.ltp)}</strong>${pencil}</td>
         <td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>
-        <td class="${pn(p.dayPL)}">${sign(p.dayPL)}${inr(p.dayPL)}</td>
-        <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
+        <td class="${p.dayPL!==null?pn(p.dayPL):''}">${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}</td>
+        <td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>
         <td class="${pn(p.uplNet)}">${sign(p.uplNet)}${inr(p.uplNet)}</td>
         <td>${inr(p.mv)}</td>
         <td>${pct(p.wt)}</td>

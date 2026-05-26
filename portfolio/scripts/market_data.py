@@ -472,7 +472,7 @@ def build_indices_json() -> dict:
 
 # ── SHARED PRICE RESULT BUILDER ──────────────────────────────────────────
 def _build_price_entry(tk: str, yf_sym: str, q: dict,
-                       existing_prices: dict) -> dict | None:
+                       existing_prices: dict, source: str = "yahoo") -> dict | None:
     """
     Given a raw quote dict {ltp, pc}, apply auto-heal, sanity cap,
     and return the final price entry for holdings_prices.json.
@@ -525,6 +525,7 @@ def _build_price_entry(tk: str, yf_sym: str, q: dict,
         "change_pct": change_pct,
         "as_of":      datetime.utcnow().isoformat() + "Z",
         "manual":     q.get("_manual", False),
+        "source":     source,
     }
 
 
@@ -551,11 +552,14 @@ def fetch_us_open_positions(holdings: list[dict],
         tk, yf_sym = h["tk"], h["yf"]
         q = None
         try:
+            src = "yahoo"
             # 1st: Finnhub real-time
             if FINNHUB_KEY:
                 q = fetch_quote_finnhub(tk)
                 time.sleep(delay)
-                if q is None:
+                if q is not None:
+                    src = "finnhub"
+                else:
                     print(f"  FALLBACK {tk}: Finnhub failed → Yahoo", file=sys.stderr)
 
             # 2nd: Yahoo fallback
@@ -563,12 +567,15 @@ def fetch_us_open_positions(holdings: list[dict],
                 q = fetch_quote(yf_sym)
                 if q is None:
                     q = fetch_quote_direct(yf_sym)
+                if q is not None:
+                    src = "yahoo"
 
             # 3rd: manual override
             if q is None and tk in manual_ltps:
                 mltp = manual_ltps[tk]
                 prev = existing_prices.get(tk, {}).get("ltp") or mltp
                 q = {"ltp": mltp, "pc": prev, "_manual": True}
+                src = "manual"
                 print(f"  MANU    {tk}: manual_ltp={mltp}", file=sys.stderr)
 
             # 4th: carry-forward stale
@@ -582,7 +589,7 @@ def fetch_us_open_positions(holdings: list[dict],
                 print(f"  FAIL    {tk}: all sources failed", file=sys.stderr)
                 continue
 
-            entry = _build_price_entry(tk, yf_sym, q, existing_prices)
+            entry = _build_price_entry(tk, yf_sym, q, existing_prices, source=src)
             if entry:
                 results[tk] = entry
                 pct = f"{entry['change_pct']:+.2f}%" if entry['change_pct'] is not None else "—"
@@ -621,22 +628,29 @@ def fetch_india_open_positions(holdings: list[dict],
         tk, yf_sym = h["tk"], h["yf"]
         q = None
         try:
+            src = "yahoo"
             # 1st: Angel One real-time (active when secrets set)
             if angel_active:
-                nse_sym = tk  # plain NSE symbol e.g. SBIN, RELIANCE
+                nse_sym = tk
                 q = fetch_quote_angelone(nse_sym)
                 time.sleep(delay)
-                if q is None:
+                if q is not None:
+                    src = "angelone"
+                else:
                     print(f"  FALLBACK {tk}: Angel One failed → Yahoo", file=sys.stderr)
 
-            # 2nd: Yahoo fallback (current primary until Angel One active)
+            # 2nd: Yahoo fallback
             if q is None:
                 q = fetch_quote(yf_sym)
+                if q is not None:
+                    src = "yahoo"
 
             # 3rd: NSE / Screener fallback
             if q is None:
                 print(f"  INFO  {tk}: Yahoo failed → NSE/Screener fallback", file=sys.stderr)
                 q = fetch_quote_india_sme(yf_sym)
+                if q is not None:
+                    src = "nse"
 
             # pc missing → try SME for pc only
             if q is not None and q.get("pc") is None:
@@ -649,6 +663,7 @@ def fetch_india_open_positions(holdings: list[dict],
                 mltp = manual_ltps[tk]
                 prev = existing_prices.get(tk, {}).get("ltp") or mltp
                 q = {"ltp": mltp, "pc": prev, "_manual": True}
+                src = "manual"
                 print(f"  MANU    {tk}: manual_ltp={mltp}", file=sys.stderr)
 
             # 5th: carry-forward stale
@@ -662,7 +677,7 @@ def fetch_india_open_positions(holdings: list[dict],
                 print(f"  FAIL    {tk}: all sources failed", file=sys.stderr)
                 continue
 
-            entry = _build_price_entry(tk, yf_sym, q, existing_prices)
+            entry = _build_price_entry(tk, yf_sym, q, existing_prices, source=src)
             if entry:
                 results[tk] = entry
                 pct = f"{entry['change_pct']:+.2f}%" if entry['change_pct'] is not None else "—"

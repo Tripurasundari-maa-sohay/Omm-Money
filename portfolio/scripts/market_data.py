@@ -92,15 +92,19 @@ _YF_HEADERS = {
 
 def fetch_quote_direct(yf_symbol: str) -> dict | None:
     """
-    Attempt 3 fallback: direct HTTP to Yahoo Finance chart API, bypassing the
-    yfinance library entirely.  Tries query1 then query2.  Works for US + India.
-    Returns {'ltp': float, 'pc': float|None} or None on failure.
+    Direct Yahoo chart API. Robust against Yahoo's "regularMarketPrice frozen
+    at a 2-year-old value" bug (observed on IRBINVIT.NS and similar InvITs).
+
+    Logic:
+      1. Pull 10d daily candles.
+      2. If meta.regularMarketTime is within last 2 days → trust regularMarketPrice.
+      3. Otherwise → use the latest historical close as ltp, prior close as pc.
     """
     for host in ("query1", "query2"):
         try:
             url = (
                 f"https://{host}.finance.yahoo.com/v8/finance/chart/{yf_symbol}"
-                f"?interval=1d&range=5d&includePrePost=false"
+                f"?interval=1d&range=10d&includePrePost=false"
             )
             r = requests.get(url, headers=_YF_HEADERS, timeout=10)
             if r.status_code != 200:
@@ -109,14 +113,32 @@ def fetch_quote_direct(yf_symbol: str) -> dict | None:
             if not result:
                 continue
             meta = result.get("meta", {})
-            ltp  = meta.get("regularMarketPrice")
-            pc   = meta.get("chartPreviousClose") or meta.get("previousClose")
-            if ltp and float(ltp) > 0:
-                print(f"  direct/{host}  {yf_symbol} → {float(ltp):.2f}")
-                return {
-                    "ltp": round(float(ltp), 4),
-                    "pc":  round(float(pc), 4) if pc else None,
-                }
+            rmp  = meta.get("regularMarketPrice")
+            rmt  = meta.get("regularMarketTime") or 0
+            rm_fresh = rmt and (time.time() - rmt) < 2 * 86400
+
+            # Historical closes (the truth when realtime field is stale)
+            ts_arr = result.get("timestamp") or []
+            cl_arr = (result.get("indicators", {})
+                            .get("quote", [{}])[0]
+                            .get("close", [])) or []
+            hist_pairs = [(t, c) for t, c in zip(ts_arr, cl_arr) if c is not None]
+
+            if rmp and rm_fresh and float(rmp) > 0:
+                pc = (meta.get("chartPreviousClose")
+                      or meta.get("previousClose")
+                      or (hist_pairs[-2][1] if len(hist_pairs) >= 2 else None))
+                print(f"  direct/{host}  {yf_symbol} → {float(rmp):.2f}")
+                return {"ltp": round(float(rmp), 4),
+                        "pc":  round(float(pc), 4) if pc else None}
+
+            if len(hist_pairs) >= 2:
+                ltp = float(hist_pairs[-1][1])
+                pc  = float(hist_pairs[-2][1])
+                age = (time.time() - rmt) / 86400 if rmt else None
+                age_str = f"rmp stale {age:.1f}d" if age else "rmp absent"
+                print(f"  direct/{host}  {yf_symbol} → {ltp:.2f} ({age_str}, using history)")
+                return {"ltp": round(ltp, 4), "pc": round(pc, 4)}
         except Exception as exc:
             print(f"  WARN  direct/{host} {yf_symbol}: {exc}", file=sys.stderr)
     return None
@@ -125,23 +147,17 @@ def fetch_quote_direct(yf_symbol: str) -> dict | None:
 def fetch_quote(yf_symbol: str) -> dict | None:
     """
     Return {'ltp': float, 'pc': float|None} or None on complete failure.
-    Three-layer fallback:
-      1. yfinance fast_info  (live intraday price + official prev close)
-      2. yfinance history()  (5d daily candles — slower, survives rate limits)
-      3. Direct Yahoo chart API via requests (bypasses yfinance library)
+    Fallback chain (re-ordered 2026-05 after IRBINVIT.NS bug):
+      1. Direct Yahoo chart API — validates regularMarketTime, falls back to
+         latest historical close when realtime field is stale (fixes Yahoo's
+         frozen-regularMarketPrice bug on InvITs and similar).
+      2. yfinance history()  (5d daily candles)
+      3. yfinance fast_info  (last resort — unreliable on quirky symbols)
     """
-    # Attempt 1: fast_info — return even if pc is None (dayPL shows "—" in UI)
-    try:
-        fi  = yf.Ticker(yf_symbol).fast_info
-        ltp = fi.last_price
-        pc  = fi.previous_close
-        if ltp is not None and float(ltp) > 0:
-            return {
-                "ltp": round(float(ltp), 4),
-                "pc":  round(float(pc), 4) if pc is not None else None,
-            }
-    except Exception as exc:
-        print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
+    # Attempt 1: direct API with staleness validation
+    q = fetch_quote_direct(yf_symbol)
+    if q is not None:
+        return q
 
     # Attempt 2: yfinance history — only use iloc[-2] as pc when TODAY's candle exists.
     # Pre-market: no today candle → pc=None so dayPL shows "—" (not stale value).
@@ -163,8 +179,19 @@ def fetch_quote(yf_symbol: str) -> dict | None:
     except Exception as exc:
         print(f"  WARN  history {yf_symbol}: {exc}", file=sys.stderr)
 
-    # Attempt 3: direct Yahoo Finance chart API (independent of yfinance)
-    return fetch_quote_direct(yf_symbol)
+    # Attempt 3 (last resort): yfinance fast_info. Known unreliable on InvITs.
+    try:
+        fi  = yf.Ticker(yf_symbol).fast_info
+        ltp = fi.last_price
+        pc  = fi.previous_close
+        if ltp is not None and float(ltp) > 0:
+            return {
+                "ltp": round(float(ltp), 4),
+                "pc":  round(float(pc), 4) if pc is not None else None,
+            }
+    except Exception as exc:
+        print(f"  WARN  fast_info {yf_symbol}: {exc}", file=sys.stderr)
+    return None
 
 
 def fetch_quote_india_sme(yf_symbol: str) -> dict | None:

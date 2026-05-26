@@ -36,6 +36,8 @@ jobs:
         run: pip install yfinance pytz requests beautifulsoup4
 
       - name: Fetch live prices
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: |
           python portfolio/scripts/market_data.py
           if [ $? -ne 0 ]; then

@@ -13,6 +13,7 @@ holdings_cost.json (you edit this when you trade) — never overwritten here.
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 from datetime import datetime
@@ -23,6 +24,9 @@ import time
 import pytz
 import requests
 import yfinance as yf
+
+# ── EXTERNAL API KEYS (from GitHub Secrets / env) ────────────────────────
+FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY", "")
 
 # ── PATHS ────────────────────────────────────────────────────────────────
 ROOT          = Path(__file__).resolve().parent.parent
@@ -88,6 +92,38 @@ _YF_HEADERS = {
     ),
     "Accept": "application/json",
 }
+
+
+def fetch_quote_finnhub(us_symbol: str) -> dict | None:
+    """
+    Finnhub real-time quote for US open positions.
+    PRIMARY source for US holdings — real-time, clean pc field.
+    Returns {'ltp': float, 'pc': float|None} or None on failure.
+    Requires FINNHUB_API_KEY env var.
+    """
+    if not FINNHUB_KEY:
+        return None
+    try:
+        url = f"https://finnhub.io/api/v1/quote?symbol={us_symbol}&token={FINNHUB_KEY}"
+        r = requests.get(url, headers={"Accept": "application/json"}, timeout=10)
+        if r.status_code != 200:
+            print(f"  WARN  Finnhub {us_symbol}: HTTP {r.status_code}", file=sys.stderr)
+            return None
+        d = r.json()
+        ltp = d.get("c")   # current price
+        pc  = d.get("pc")  # previous close
+        if not ltp or float(ltp) <= 0:
+            print(f"  WARN  Finnhub {us_symbol}: ltp={ltp} invalid", file=sys.stderr)
+            return None
+        result = {
+            "ltp": round(float(ltp), 4),
+            "pc":  round(float(pc), 4) if pc and float(pc) > 0 else None
+        }
+        print(f"  finnhub  {us_symbol} → {result['ltp']:.2f}  pc={result['pc']}")
+        return result
+    except Exception as e:
+        print(f"  WARN  Finnhub {us_symbol}: {e}", file=sys.stderr)
+        return None
 
 
 def fetch_quote_direct(yf_symbol: str) -> dict | None:
@@ -336,13 +372,31 @@ def build_holdings_json() -> dict:
         except Exception:
             pass
 
-    print(f"Fetching {len(tickers)} holding quotes…")
+    # ── Dynamic Finnhub throttle: floor(60 / N) seconds between calls ──────
+    # Ensures we never exceed Finnhub free tier (60 calls/min) regardless of portfolio size.
+    finnhub_delay = max(1, math.floor(60.0 / len(tickers))) if tickers else 1
+    print(f"Fetching {len(tickers)} holding quotes…  "
+          f"[Finnhub throttle: {finnhub_delay}s/call · "
+          f"{'active' if FINNHUB_KEY else 'disabled — FINNHUB_API_KEY not set'}]")
+
     fresh_prices: dict[str, dict] = {}
     success_count = 0
     for tk, yf_sym in tickers:
         try:
-            q = fetch_quote(yf_sym)
             is_india = yf_sym.endswith((".NS", ".BO"))
+
+            # ── US: Finnhub PRIMARY → Yahoo fallback ─────────────────────
+            if not is_india and FINNHUB_KEY:
+                us_sym = tk  # Finnhub uses plain ticker (GOOG, AMZN etc.)
+                q = fetch_quote_finnhub(us_sym)
+                if q is None:
+                    print(f"  INFO  {tk}: Finnhub failed — falling back to Yahoo", file=sys.stderr)
+                    q = fetch_quote(yf_sym)
+                time.sleep(finnhub_delay)  # throttle after each Finnhub call
+
+            # ── India / no Finnhub key: Yahoo PRIMARY ────────────────────
+            else:
+                q = fetch_quote(yf_sym)
 
             # India: if fetch failed entirely → SME fallback
             if q is None and is_india:

@@ -376,17 +376,43 @@ def build_holdings_json() -> dict:
                     print(f"  FAIL  {tk} ({yf_sym}): no price obtained after all fallbacks", file=sys.stderr)
                     continue
             pc         = q["pc"]    # may still be None if all sources lack prev-close
-            change     = round(q["ltp"] - pc, 4) if pc is not None else None
+            ltp_val    = q["ltp"]
+
+            # ── Auto-heal: always cross-check pc against candle history ──
+            # If API pc differs from candle history by >1%, candle wins (it's the truth).
+            # This catches: chartPreviousClose stale values, ex-div adj issues, etc.
+            try:
+                hist = yf.Ticker(yf_sym).history(period="5d", interval="1d", auto_adjust=False)
+                today_utc = datetime.utcnow().date()
+                if not hist.empty:
+                    last_date = (hist.index[-1].date() if hasattr(hist.index[-1], "date")
+                                 else hist.index[-1].to_pydatetime().date())
+                    if last_date == today_utc and len(hist) >= 2:
+                        candle_pc  = round(float(hist["Close"].iloc[-2]), 4)
+                        candle_ltp = round(float(hist["Close"].iloc[-1]), 4)
+                        # Use candle ltp if realtime not available
+                        if not (ltp_val and ltp_val > 0):
+                            ltp_val = candle_ltp
+                        # Validate pc: if API pc differs from candle by >1%, override
+                        if pc is not None and abs(float(pc) - candle_pc) / candle_pc > 0.01:
+                            print(f"  AUTO-HEAL {tk}: api_pc={pc} differs from candle_pc={candle_pc} — using candle", file=sys.stderr)
+                            pc = candle_pc
+                        elif pc is None:
+                            pc = candle_pc
+                            print(f"  AUTO-HEAL {tk}: pc was None — resolved from candle → {pc}", file=sys.stderr)
+            except Exception as _heal_exc:
+                pass  # best-effort; original pc used if healing fails
+
+            change     = round(ltp_val - pc, 4) if pc is not None else None
             change_pct = round(change / pc * 100, 2) if (change is not None and pc) else None
 
-            # Sanity check: stale pc guard.
-            # India: circuit breaker is 20% so cap at 20%.
-            # US: earnings can move 20-30%, raise cap to 30% to catch genuine big movers.
-            # Only null if pc is clearly stale (e.g. ex-div, split, data error).
+            # Sanity check: final stale pc guard after auto-heal.
+            # Only nulls if candle-validated pc still shows impossible move
+            # (split, corporate action, data corruption).
             is_india = yf_sym.endswith((".NS", ".BO"))
-            _cap = 20.0 if is_india else 30.0
+            _cap = 20.0 if is_india else 35.0
             if change_pct is not None and abs(change_pct) > _cap:
-                print(f"  WARN  {tk}: |dayChange| {change_pct:+.1f}% exceeds {_cap}% cap — pc likely stale, nulling", file=sys.stderr)
+                print(f"  WARN  {tk}: |dayChange| {change_pct:+.1f}% exceeds {_cap}% cap after heal — nulling", file=sys.stderr)
                 pc = None; change = None; change_pct = None
 
             fresh_prices[tk] = {

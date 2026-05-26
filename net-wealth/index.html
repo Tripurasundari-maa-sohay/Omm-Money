@@ -1130,17 +1130,25 @@ const ODIN = (() => {
     }).join('');
     document.getElementById('l-tot').textContent  = fmtINR(v.liabTot);
 
-    // Cash flow
-    const cf = S.seed.monthly_cash_flow || {};
-    const salaryQAR = num('salary_qar', cf.salary_qar || 0);
-    const salaryINR = salaryQAR * S.fx.qar_to_inr;
-    const emiINR    = monthlyEMI();
-    const savTarget = num('savings_target_inr', cf.savings_target_inr || 0);
-    const savRate   = salaryINR > 0 ? ((salaryINR - emiINR) / salaryINR * 100) : 0;
-    document.getElementById('cf-salary').textContent = fmtINR(salaryINR);
-    document.getElementById('cf-emi').textContent    = fmtINR(emiINR);
-    document.getElementById('cf-target').textContent = fmtINR(savTarget);
-    document.getElementById('cf-rate').textContent   = savRate.toFixed(1) + '%';
+    // Cash flow — only render if elements present (block was removed from HTML; keep tolerant)
+    const cfEls = {
+      salary: document.getElementById('cf-salary'),
+      emi:    document.getElementById('cf-emi'),
+      target: document.getElementById('cf-target'),
+      rate:   document.getElementById('cf-rate')
+    };
+    if (cfEls.salary || cfEls.emi || cfEls.target || cfEls.rate) {
+      const cf = S.seed.monthly_cash_flow || {};
+      const salaryQAR = num('salary_qar', cf.salary_qar || 0);
+      const salaryINR = salaryQAR * S.fx.qar_to_inr;
+      const emiINR    = monthlyEMI();
+      const savTarget = num('savings_target_inr', cf.savings_target_inr || 0);
+      const savRate   = salaryINR > 0 ? ((salaryINR - emiINR) / salaryINR * 100) : 0;
+      if (cfEls.salary) cfEls.salary.textContent = fmtINR(salaryINR);
+      if (cfEls.emi)    cfEls.emi.textContent    = fmtINR(emiINR);
+      if (cfEls.target) cfEls.target.textContent = fmtINR(savTarget);
+      if (cfEls.rate)   cfEls.rate.textContent   = savRate.toFixed(1) + '%';
+    }
 
     // KPI
     renderKPI(v.netWorth);

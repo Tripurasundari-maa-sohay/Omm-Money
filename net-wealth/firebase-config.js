@@ -42,39 +42,30 @@ const FirebaseSync = {
     });
   },
 
-  async saveInputs(inputs) {
+  // ── Single-doc state sync (post-refactor: whole seed snapshot) ──
+  async saveState(state) {
     if (!this.isReady || !this.uid) return false;
     try {
-      await this.db.collection('users').doc(this.uid).collection('data').doc('inputs').set({
-        ...inputs,
+      await this.db.collection('users').doc(this.uid).collection('data').doc('state').set({
+        snapshot: state,
         synced_at: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      });
       return true;
     } catch (err) {
-      console.error('saveInputs failed:', err);
+      console.error('saveState failed:', err);
       return false;
     }
   },
 
-  async loadInputs() {
-    if (!this.isReady || !this.uid) return {};
+  async loadState() {
+    if (!this.isReady || !this.uid) return null;
     try {
-      const doc = await this.db.collection('users').doc(this.uid).collection('data').doc('inputs').get();
-      return doc.exists ? doc.data() : {};
+      const doc = await this.db.collection('users').doc(this.uid).collection('data').doc('state').get();
+      return doc.exists ? (doc.data().snapshot || null) : null;
     } catch (err) {
-      console.error('loadInputs failed:', err);
-      return {};
+      console.error('loadState failed:', err);
+      return null;
     }
-  },
-
-  onInputsChange(callback) {
-    if (!this.isReady || !this.uid) return () => {};
-    const unsub = this.db.collection('users').doc(this.uid).collection('data').doc('inputs')
-      .onSnapshot(doc => {
-        callback(doc.exists ? doc.data() : {});
-      }, err => console.error('inputs listener error:', err));
-    this.listeners.push(unsub);
-    return unsub;
   },
 
   async addHistoryEntry(entry) {

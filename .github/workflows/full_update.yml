@@ -37,7 +37,12 @@ jobs:
 
       - name: Fetch live prices
         env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FINNHUB_API_KEY:   ${{ secrets.FINNHUB_API_KEY }}
+          ANGEL_API_KEY:     ${{ secrets.ANGEL_API_KEY }}
+          ANGEL_SECRET_KEY:  ${{ secrets.ANGEL_SECRET_KEY }}
+          ANGEL_CLIENT_ID:   ${{ secrets.ANGEL_CLIENT_ID }}
+          ANGEL_MPIN:        ${{ secrets.ANGEL_MPIN }}
+          ANGEL_TOTP_SECRET: ${{ secrets.ANGEL_TOTP_SECRET }}
         run: |
           python portfolio/scripts/market_data.py
           if [ $? -ne 0 ]; then

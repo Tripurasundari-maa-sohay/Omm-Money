@@ -26,7 +26,136 @@ import requests
 import yfinance as yf
 
 # ── EXTERNAL API KEYS (from GitHub Secrets / env) ────────────────────────
-FINNHUB_KEY = os.environ.get("FINNHUB_API_KEY", "")
+FINNHUB_KEY    = os.environ.get("FINNHUB_API_KEY", "")
+ANGEL_API_KEY  = os.environ.get("ANGEL_API_KEY", "")
+ANGEL_SECRET   = os.environ.get("ANGEL_SECRET_KEY", "")
+ANGEL_CLIENT   = os.environ.get("ANGEL_CLIENT_ID", "")
+ANGEL_MPIN     = os.environ.get("ANGEL_MPIN", "")
+ANGEL_TOTP_SEC = os.environ.get("ANGEL_TOTP_SECRET", "")
+
+# ── ANGEL ONE SESSION CACHE ───────────────────────────────────────────────
+_angel_session = {"jwt": None, "refresh": None, "expires": 0}
+
+def _angel_login() -> str | None:
+    """Login to Angel One SmartAPI. Returns JWT token. Cached for 1 hour."""
+    import time as _t
+    if _angel_session["jwt"] and _t.time() < _angel_session["expires"]:
+        return _angel_session["jwt"]
+    if not all([ANGEL_API_KEY, ANGEL_CLIENT, ANGEL_MPIN, ANGEL_TOTP_SEC]):
+        return None
+    try:
+        import pyotp
+        totp = pyotp.TOTP(ANGEL_TOTP_SEC).now()
+        headers = {
+            "Content-Type":        "application/json",
+            "Accept":              "application/json",
+            "X-UserType":          "USER",
+            "X-SourceID":          "WEB",
+            "X-ClientLocalIP":     "127.0.0.1",
+            "X-ClientPublicIP":    "127.0.0.1",
+            "X-MACAddress":        "00:00:00:00:00:00",
+            "X-PrivateKey":        ANGEL_API_KEY,
+        }
+        payload = {"clientcode": ANGEL_CLIENT, "password": ANGEL_MPIN, "totp": totp}
+        r = requests.post(
+            "https://apiconnect.angelbroking.com/rest/auth/angelbroking/user/v1/loginByPassword",
+            json=payload, headers=headers, timeout=15
+        )
+        if r.status_code == 200:
+            data = r.json().get("data", {})
+            jwt = data.get("jwtToken")
+            if jwt:
+                _angel_session["jwt"]     = jwt
+                _angel_session["expires"] = _t.time() + 3600
+                print(f"  Angel One login OK — client={ANGEL_CLIENT}")
+                return jwt
+        print(f"  WARN  Angel One login failed: {r.status_code} {r.text[:100]}", file=sys.stderr)
+    except Exception as e:
+        print(f"  WARN  Angel One login error: {e}", file=sys.stderr)
+    return None
+
+# NSE symbol → Angel One exchange token mapping (for open India positions)
+# Token lookup: https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json
+_ANGEL_TOKEN_CACHE: dict[str, str] = {}
+
+def _angel_get_token(symbol: str) -> str | None:
+    """Get Angel One exchange token for NSE symbol. Cached."""
+    if symbol in _ANGEL_TOKEN_CACHE:
+        return _ANGEL_TOKEN_CACHE[symbol]
+    jwt = _angel_login()
+    if not jwt:
+        return None
+    try:
+        headers = {
+            "Authorization": f"Bearer {jwt}",
+            "Content-Type":  "application/json",
+            "Accept":        "application/json",
+            "X-UserType":    "USER",
+            "X-SourceID":    "WEB",
+            "X-PrivateKey":  ANGEL_API_KEY,
+        }
+        r = requests.get(
+            f"https://apiconnect.angelbroking.com/rest/secure/angelbroking/order/v1/searchScrip"
+            f"?exchange=NSE&searchscrip={symbol}",
+            headers=headers, timeout=10
+        )
+        if r.status_code == 200:
+            results = r.json().get("data", [])
+            for item in results:
+                if item.get("tradingsymbol", "").upper() == symbol.upper() + "-EQ" or \
+                   item.get("tradingsymbol", "").upper() == symbol.upper():
+                    token = str(item.get("symboltoken", ""))
+                    _ANGEL_TOKEN_CACHE[symbol] = token
+                    return token
+    except Exception as e:
+        print(f"  WARN  Angel token lookup {symbol}: {e}", file=sys.stderr)
+    return None
+
+def fetch_quote_angelone(nse_symbol: str) -> dict | None:
+    """
+    Fetch real-time NSE quote via Angel One SmartAPI.
+    PRIMARY source for India open positions.
+    Returns {'ltp': float, 'pc': float|None} or None on failure.
+    Requires ANGEL_* env vars + fixed IP whitelist on Oracle VM.
+    """
+    jwt = _angel_login()
+    if not jwt:
+        return None
+    token = _angel_get_token(nse_symbol)
+    if not token:
+        print(f"  WARN  Angel One: no token for {nse_symbol}", file=sys.stderr)
+        return None
+    try:
+        headers = {
+            "Authorization": f"Bearer {jwt}",
+            "Content-Type":  "application/json",
+            "Accept":        "application/json",
+            "X-UserType":    "USER",
+            "X-SourceID":    "WEB",
+            "X-PrivateKey":  ANGEL_API_KEY,
+        }
+        payload = {"mode": "FULL", "exchangeTokens": {"NSE": [token]}}
+        r = requests.post(
+            "https://apiconnect.angelbroking.com/rest/secure/angelbroking/market/v1/quote/",
+            json=payload, headers=headers, timeout=10
+        )
+        if r.status_code == 200:
+            fetched = r.json().get("data", {}).get("fetched", [])
+            if fetched:
+                d   = fetched[0]
+                ltp = d.get("ltp")
+                pc  = d.get("close")   # previous close in Angel One = "close" field
+                if ltp and float(ltp) > 0:
+                    result = {
+                        "ltp": round(float(ltp), 4),
+                        "pc":  round(float(pc), 4) if pc and float(pc) > 0 else None
+                    }
+                    print(f"  angelone  {nse_symbol} → {result['ltp']:.2f}  pc={result['pc']}")
+                    return result
+        print(f"  WARN  Angel One {nse_symbol}: {r.status_code}", file=sys.stderr)
+    except Exception as e:
+        print(f"  WARN  Angel One {nse_symbol}: {e}", file=sys.stderr)
+    return None
 
 # ── PATHS ────────────────────────────────────────────────────────────────
 ROOT          = Path(__file__).resolve().parent.parent
@@ -480,16 +609,11 @@ def fetch_india_open_positions(holdings: list[dict],
     if not holdings:
         return {}
 
-    # ── ANGEL ONE: activate when secrets are set ──────────────────────────
-    # ANGEL_KEY    = os.environ.get("ANGEL_API_KEY", "")
-    # ANGEL_CLIENT = os.environ.get("ANGEL_CLIENT_ID", "")
-    # ANGEL_PIN    = os.environ.get("ANGEL_MPIN", "")
-    # ANGEL_TOTP   = os.environ.get("ANGEL_TOTP_SECRET", "")
-    # angel_active = all([ANGEL_KEY, ANGEL_CLIENT, ANGEL_PIN, ANGEL_TOTP])
-    angel_active = False   # ← flip to True once Angel One secrets added
+    # Angel One active when all 4 secrets present
+    angel_active = all([ANGEL_API_KEY, ANGEL_CLIENT, ANGEL_MPIN, ANGEL_TOTP_SEC])
 
     delay = max(1, math.floor(60.0 / len(holdings)))
-    source = f"Angel One PRIMARY (throttle={delay}s)" if angel_active else "Yahoo PRIMARY (Angel One pending)"
+    source = f"Angel One PRIMARY (throttle={delay}s)" if angel_active else "Yahoo PRIMARY (Angel One secrets missing)"
     print(f"\n── India open positions ({len(holdings)}) — {source}")
 
     results: dict[str, dict] = {}
@@ -497,12 +621,13 @@ def fetch_india_open_positions(holdings: list[dict],
         tk, yf_sym = h["tk"], h["yf"]
         q = None
         try:
-            # 1st: Angel One (real-time) — UNCOMMENT when secrets ready
-            # if angel_active:
-            #     q = fetch_quote_angelone(tk, yf_sym)
-            #     time.sleep(delay)
-            #     if q is None:
-            #         print(f"  FALLBACK {tk}: Angel One failed → Yahoo", file=sys.stderr)
+            # 1st: Angel One real-time (active when secrets set)
+            if angel_active:
+                nse_sym = tk  # plain NSE symbol e.g. SBIN, RELIANCE
+                q = fetch_quote_angelone(nse_sym)
+                time.sleep(delay)
+                if q is None:
+                    print(f"  FALLBACK {tk}: Angel One failed → Yahoo", file=sys.stderr)
 
             # 2nd: Yahoo fallback (current primary until Angel One active)
             if q is None:

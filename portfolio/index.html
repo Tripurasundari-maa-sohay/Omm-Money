@@ -986,6 +986,7 @@
             <label>TODAY'S P&amp;L</label>
             <div class="mval loading pv" id="in-day-pl">…</div>
             <div class="mchg pv" id="in-day-pl-pct">--</div>
+            <div class="mdesc pv" id="in-day-pl-usd" style="font-size:11px;color:var(--text-dim)">--</div>
           </div>
           <div style="width:1px;background:var(--border);margin:4px 8px;flex-shrink:0"></div>
           <div id="in-day-broker-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:4px;flex-shrink:0;max-width:160px;overflow:hidden"></div>
@@ -1976,6 +1977,14 @@ const DASH = (() => {
     setClass('in-day-pl', 'mval pv ' + pn(ind.dayPL));
     setText('in-day-pl-pct', sign(ind.dayPct) + pct(ind.dayPct));
     setClass('in-day-pl-pct', 'mchg pv ' + pn(ind.dayPct));
+    // USD equivalent (uses live fx; falls back to cost-basis fx)
+    const _fxNow = (S.view && S.view.fx) || (S.cost && S.cost.fx_inr_usd) || 0;
+    if (_fxNow > 0) {
+      const dayPL_USD = ind.dayPL / _fxNow;
+      setText('in-day-pl-usd', '≈ ' + sign(dayPL_USD) + '$' + Math.abs(dayPL_USD).toFixed(2));
+    } else {
+      setText('in-day-pl-usd', '');
+    }
 
     // Broker-wise daily P&L breakdown
     const brkMap = {};

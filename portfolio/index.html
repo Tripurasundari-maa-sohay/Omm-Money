@@ -230,7 +230,9 @@
   .market-status{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700}
   .market-status.OPEN{background:rgba(0,212,170,.15);color:var(--gain);border:1px solid var(--gain)}
   .market-status.CLOSED{background:rgba(255,92,92,.15);color:var(--loss);border:1px solid var(--loss)}
+  .market-status.PRE-OPEN{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);border:1px solid var(--warn)}
   .market-status.PREOPEN{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn);border:1px solid var(--warn)}
+  .market-status.POST-CLOSE{background:rgba(148,138,115,.15);color:var(--text-sec);border:1px solid var(--text-sec)}
   .market-details{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
   .index-item{display:flex;justify-content:space-between;align-items:center;
     padding:8px 10px;background:var(--bg-card2);border-radius:4px}
@@ -906,7 +908,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:340px;max-width:420px;position:relative;overflow:visible;padding:20px;"><canvas id="us-weight-chart"></canvas></div>
+          <div style="height:380px;max-width:460px;position:relative;overflow:visible;padding:40px;"><canvas id="us-weight-chart"></canvas></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
@@ -2819,13 +2821,14 @@ const DASH = (() => {
           datalabels: {
             display: ctx => {
               const v = ctx.dataset.data[ctx.dataIndex] || 0;
-              return (v / _wTot) * 100 >= 3;
+              return (v / _wTot) * 100 >= 6;  // hide labels <6% to avoid overlap
             },
             anchor: 'end',
             align: 'end',
-            offset: 10,
+            clamp: true,
+            offset: 14,
             color: getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim() || '#e8eaf0',
-            backgroundColor: 'rgba(20,20,32,0.85)',
+            backgroundColor: 'rgba(20,20,32,0.90)',
             borderColor: ctx => ctx.dataset.backgroundColor[ctx.dataIndex],
             borderWidth: 1.5,
             borderRadius: 14,
@@ -2962,7 +2965,7 @@ const DASH = (() => {
         setText('nasdaq-value', nq.current.toLocaleString('en-US',{minimumFractionDigits:2}));
         setIndexChange('nasdaq-change', nq.change, nq.change_pct);
       }
-      setText('usa-time', 'Updated: ' + new Date(usa.timestamp).toLocaleTimeString());
+      setText('usa-time', 'Updated: ' + new Date(usa.timestamp).toLocaleTimeString('en-US',{timeZone:'Asia/Qatar',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       setText('snp-time', 'Market: ' + liveMarketStatus('America/New_York', 9, 30, 16, 0));
     }
     if (ind) {
@@ -2979,7 +2982,7 @@ const DASH = (() => {
         setText('sensex-value', sx.current.toLocaleString('en-IN',{minimumFractionDigits:2}));
         setIndexChange('sensex-change', sx.change, sx.change_pct);
       }
-      setText('india-time', 'Updated: ' + new Date(ind.timestamp).toLocaleTimeString());
+      setText('india-time', 'Updated: ' + new Date(ind.timestamp).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       setText('nifty-time', 'Market: ' + liveMarketStatus('Asia/Kolkata', 9, 15, 15, 30));
     }
   }
@@ -3017,7 +3020,11 @@ const DASH = (() => {
     const wd = now.getDay();
     if (wd === 0 || wd === 6) return 'CLOSED';
     const mins = now.getHours()*60 + now.getMinutes();
-    if (mins >= openH*60+openM && mins < closeH*60+closeM) return 'OPEN';
+    const openMins  = openH*60+openM;
+    const closeMins = closeH*60+closeM;
+    if (mins >= openMins && mins < closeMins)       return 'OPEN';
+    if (mins >= closeMins && mins < closeMins+240)  return 'POST-CLOSE';  // 4hr post
+    if (mins >= openMins-90 && mins < openMins)     return 'PRE-OPEN';    // 90min pre
     return 'CLOSED';
   }
   function tickCountdowns(){

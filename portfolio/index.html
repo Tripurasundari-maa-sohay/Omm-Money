@@ -1790,12 +1790,12 @@ const DASH = (() => {
     const usMarketOpenNow  = _etWd >= 1 && _etWd <= 5 && _etMins >= 570 && _etMins < 960;   // 9:30–4:00 ET
     const indMarketOpenNow = _istWd >= 1 && _istWd <= 5 && _istMins >= 555 && _istMins < 930; // 9:15–3:30 IST
     const marketOpen = usStatus === 'OPEN' || inStatus === 'OPEN' || usMarketOpenNow || indMarketOpenNow;
-    const dataStale  = marketOpen && ageMin > 8;  // 4min cron + 3min pipeline = 7min worst case
+    const dataStale  = marketOpen && ageMin > 15; // 5min cron + 7min pipeline = 12min worst case; 15min = safe threshold
 
     if (dataStale) {
       badge.textContent = `⚠ DATA ${Math.round(ageMin)}m OLD`;
       badge.className   = 'live-badge stale';
-      badge.title       = `Last update: ${asOf ? asOf.toLocaleTimeString() : 'unknown'}. GitHub Actions may have failed.`;
+      badge.title       = `Last fetch: ${asOf ? asOf.toLocaleTimeString() : 'unknown'}. Pipeline runs every 5min — if badge persists >20min, check GitHub Actions.`;
     } else if (staleCount === 0) {
       badge.textContent = '● LIVE';
       badge.className   = 'live-badge';

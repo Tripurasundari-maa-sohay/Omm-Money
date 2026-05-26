@@ -61,11 +61,23 @@ jobs:
             git config user.email "github-actions@github.com"
             git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
             for attempt in 1 2 3; do
-              git rebase --abort 2>/dev/null || true   # clean any stuck rebase before retry
-              git pull --rebase origin main && git push && break
+              git rebase --abort 2>/dev/null || true
+              git fetch origin main
+              git rebase origin/main && git push && break
               echo "push attempt $attempt failed — retrying in 5s…"
               sleep 5
             done
+            # Last resort: if rebase keeps failing, reset to remote + re-apply data commit
+            if ! git push 2>/dev/null; then
+              echo "Rebase failed 3x — force-syncing data files only"
+              git rebase --abort 2>/dev/null || true
+              git reset --soft HEAD~1
+              git fetch origin main
+              git reset --hard origin/main
+              git add portfolio/data/processed portfolio/data/holdings_cost.json
+              git diff --cached --quiet || git commit -m "data: refresh $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+              git push
+            fi
           else
             echo "no changes"
           fi

@@ -16,8 +16,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: market-data
-  cancel-in-progress: false   # don't cancel in-progress runs — let them finish
+  group: market-data-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   refresh:

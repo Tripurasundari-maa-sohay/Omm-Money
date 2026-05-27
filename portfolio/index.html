@@ -908,7 +908,8 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:380px;max-width:460px;position:relative;overflow:visible;padding:40px;"><canvas id="us-weight-chart"></canvas></div>
+          <div style="height:320px;max-width:420px;position:relative;overflow:visible;padding:30px;"><canvas id="us-weight-chart"></canvas></div>
+          <div id="us-weight-legend" style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:11px;"></div>
         </div>
         <div>
           <h3 style="margin-bottom:8px;">Return % by Position</h3>
@@ -2437,15 +2438,18 @@ const DASH = (() => {
     formatter: (v, ctx) => {
       const data = ctx.dataset.data || [];
       const tot  = data.reduce((a, b) => a + (b || 0), 0);
-      return tot ? ((v / tot) * 100).toFixed(1) + '%' : '';
+      const pctStr = tot ? ((v / tot) * 100).toFixed(1) + '%' : '';
+      const label  = ctx.chart.data.labels?.[ctx.dataIndex];
+      return label ? `${label}\n${pctStr}` : pctStr;
     },
     color: '#ffffff',
-    font: { size: 13, weight: '700' },
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    borderRadius: 4,
-    padding: { top: 3, bottom: 3, left: 6, right: 6 },
-    textStrokeColor: 'rgba(0,0,0,0.8)',
+    font: { size: 12, weight: '700' },
+    backgroundColor: 'rgba(0,0,0,0.70)',
+    borderRadius: 6,
+    padding: { top: 4, bottom: 4, left: 8, right: 8 },
+    textStrokeColor: 'rgba(0,0,0,0.9)',
     textStrokeWidth: 2,
+    textAlign: 'center',
   };
 
   function destroyChart(id){ if (S.charts[id]) { S.charts[id].destroy(); delete S.charts[id]; } }
@@ -2825,37 +2829,29 @@ const DASH = (() => {
           hoverOffset: 8 }]
       },
       options: { responsive:true, maintainAspectRatio:false,
-        cutout: '72%',
-        layout: { padding: 36 },
+        cutout: '68%',
+        layout: { padding: 20 },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/_wTot*100)})`; } } },
-          datalabels: {
-            display: ctx => {
-              const v = ctx.dataset.data[ctx.dataIndex] || 0;
-              return (v / _wTot) * 100 >= 6;  // hide labels <6% to avoid overlap
-            },
-            anchor: 'end',
-            align: 'end',
-            clamp: true,
-            offset: 14,
-            color: getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim() || '#e8eaf0',
-            backgroundColor: 'rgba(20,20,32,0.90)',
-            borderColor: ctx => ctx.dataset.backgroundColor[ctx.dataIndex],
-            borderWidth: 1.5,
-            borderRadius: 14,
-            padding: { top: 4, bottom: 4, left: 8, right: 8 },
-            font: { size: 11, weight: '600' },
-            formatter: (v, ctx) => {
-              const tk = ctx.chart.data.labels[ctx.dataIndex];
-              const pctV = (v / _wTot) * 100;
-              return `${tk}  ${pctV.toFixed(0)}%`;
-            }
-          }
+          datalabels: { display: false }  // all labels in legend below chart
         }
       },
       plugins: [_centerText]
     });
+    // Render weight legend below chart
+    const _wLegEl = document.getElementById('us-weight-legend');
+    if (_wLegEl) {
+      _wLegEl.innerHTML = _wData.map((p,i) => {
+        const pctV = _wTot ? (p.mv/_wTot*100).toFixed(0) : '0';
+        const col = _wPalette[i] || '#888';
+        return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:${col}22;border:1px solid ${col}66">
+          <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
+          <span style="color:var(--text-pri);font-weight:600">${p.tk}</span>
+          <span style="color:var(--text-sec)">${pctV}%</span>
+        </span>`;
+      }).join('');
+    }
 
     // US asset mix: Stock vs ETF vs Cash
     const _stockMv = usOpen.filter(p => p.cls === 'Stock').reduce((s,p) => s + (p.mv||0), 0);

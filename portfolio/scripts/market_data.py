@@ -602,12 +602,32 @@ def fetch_us_open_positions(holdings: list[dict],
 
 
 # ── INDIA OPEN POSITIONS ──────────────────────────────────────────────────
+def load_india_prices_from_vm() -> dict:
+    """
+    Load India prices committed by Oracle VM's india_prices_vm.py cron.
+    Returns dict of {tk: {ltp, pc, source, as_of}} or empty dict if not available.
+    """
+    india_prices_file = ROOT / "data" / "processed" / "india_prices.json"
+    if not india_prices_file.exists():
+        return {}
+    try:
+        data = json.loads(india_prices_file.read_text())
+        prices = data.get("prices", {})
+        generated = data.get("generated", "?")
+        if prices:
+            print(f"  Loaded {len(prices)} India prices from Oracle VM (generated: {generated})")
+        return prices
+    except Exception as e:
+        print(f"  WARN  India VM prices load error: {e}", file=sys.stderr)
+        return {}
+
+
 def fetch_india_open_positions(holdings: list[dict],
                                existing_prices: dict,
                                manual_ltps: dict) -> dict[str, dict]:
     """
     Fetch India open positions.
-    PRIMARY  : Angel One SmartAPI (TODO — add ANGEL_* secrets when ready)
+    PRIMARY  : Oracle VM india_prices.json (Angel One via cron on VM with fixed IP)
     FALLBACK : Yahoo Finance (.NS / .BO)
     FALLBACK2: NSE India API / Screener.in
     LAST     : carry-forward stale from existing_prices
@@ -616,12 +636,11 @@ def fetch_india_open_positions(holdings: list[dict],
     if not holdings:
         return {}
 
-    # Angel One active when all 4 secrets present
-    angel_active = all([ANGEL_API_KEY, ANGEL_CLIENT, ANGEL_MPIN, ANGEL_TOTP_SEC])
+    # Load Oracle VM prices (committed by india_prices_vm.py cron on Oracle VM)
+    vm_prices = load_india_prices_from_vm()
+    vm_active = bool(vm_prices)
 
-    delay = max(1, math.floor(60.0 / len(holdings)))
-    source = f"Angel One PRIMARY (throttle={delay}s)" if angel_active else "Yahoo PRIMARY (Angel One secrets missing)"
-    print(f"\n── India open positions ({len(holdings)}) — {source}")
+    print(f"\n── India open positions ({len(holdings)}) — {'Oracle VM / Angel One PRIMARY' if vm_active else 'Yahoo PRIMARY (Oracle VM prices not available)'}")
 
     results: dict[str, dict] = {}
     for h in holdings:
@@ -629,15 +648,13 @@ def fetch_india_open_positions(holdings: list[dict],
         q = None
         try:
             src = "yahoo"
-            # 1st: Angel One real-time (active when secrets set)
-            if angel_active:
-                nse_sym = tk
-                q = fetch_quote_angelone(nse_sym)
-                time.sleep(delay)
-                if q is not None:
+            # 1st: Oracle VM prices (Angel One via fixed-IP cron)
+            if vm_active and tk in vm_prices:
+                vmp = vm_prices[tk]
+                if vmp.get("ltp") and float(vmp["ltp"]) > 0:
+                    q = {"ltp": vmp["ltp"], "pc": vmp.get("pc"), "_source": "angelone"}
                     src = "angelone"
-                else:
-                    print(f"  FALLBACK {tk}: Angel One failed → Yahoo", file=sys.stderr)
+                    print(f"  vm/angelone  {tk} → {q['ltp']:.2f}  pc={q['pc']}")
 
             # 2nd: Yahoo fallback
             if q is None:

@@ -15,8 +15,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: market-data          # shared with full_update — won't double-run
-  cancel-in-progress: false
+  group: market-data
+  cancel-in-progress: true
 
 jobs:
   watchdog:

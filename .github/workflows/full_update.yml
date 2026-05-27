@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   refresh:
-    runs-on: [self-hosted, oracle-vm]
+    runs-on: [self-hosted, Linux, ARM64]
     timeout-minutes: 10
 
     steps:

@@ -1,0 +1,102 @@
+name: Emergency watchdog — fetch prices if Oracle VM silent
+
+# Fires every 10 min during market hours.
+# Checks holdings_prices.json age — if >20 min stale during market hours
+# → runs full market_data.py as emergency fallback (Oracle VM may be down).
+
+on:
+  schedule:
+    - cron: "*/10 3-10 * * 1-5"    # India market hours
+    - cron: "*/10 13-20 * * 1-5"   # US market hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data
+  cancel-in-progress: true
+
+jobs:
+  emergency-fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check data freshness
+        id: check
+        run: |
+          GENERATED=$(python3 -c "
+          import json, sys
+          try:
+              d = json.load(open('portfolio/data/processed/holdings_prices.json'))
+              print(d.get('generated',''))
+          except:
+              print('')
+          ")
+          echo "generated=$GENERATED" >> $GITHUB_OUTPUT
+
+          STALE=$(python3 -c "
+          from datetime import datetime, timezone
+          gen = '$GENERATED'
+          if not gen:
+              print('true'); exit()
+          try:
+              from datetime import datetime as dt
+              g = dt.fromisoformat(gen.replace('Z','+00:00'))
+              age_min = (datetime.now(timezone.utc) - g).total_seconds() / 60
+              print('true' if age_min > 20 else 'false')
+          except:
+              print('true')
+          ")
+          echo "stale=$STALE" >> $GITHUB_OUTPUT
+          echo "Data age check: generated=$GENERATED stale=$STALE"
+
+      - name: Skip if fresh
+        if: steps.check.outputs.stale == 'false'
+        run: echo "Data is fresh — Oracle VM running normally. No emergency fetch needed."
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.stale == 'true'
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps (emergency)
+        if: steps.check.outputs.stale == 'true'
+        run: pip install yfinance pytz requests beautifulsoup4 pyotp
+
+      - name: Emergency price fetch
+        if: steps.check.outputs.stale == 'true'
+        env:
+          FINNHUB_API_KEY:   ${{ secrets.FINNHUB_API_KEY }}
+          ANGEL_API_KEY:     ${{ secrets.ANGEL_API_KEY }}
+          ANGEL_SECRET_KEY:  ${{ secrets.ANGEL_SECRET_KEY }}
+          ANGEL_CLIENT_ID:   ${{ secrets.ANGEL_CLIENT_ID }}
+          ANGEL_MPIN:        ${{ secrets.ANGEL_MPIN }}
+          ANGEL_TOTP_SECRET: ${{ secrets.ANGEL_TOTP_SECRET }}
+        run: |
+          echo "⚠️  Oracle VM silent >20min — running emergency fetch via GitHub Actions"
+          python portfolio/scripts/market_data.py
+          if [ $? -ne 0 ]; then
+            echo "::error::Emergency market_data.py failed"
+            exit 1
+          fi
+
+      - name: Commit emergency fetch
+        if: steps.check.outputs.stale == 'true'
+        run: |
+          git add portfolio/data/processed portfolio/data/holdings_cost.json
+          if [[ -n "$(git diff --cached --name-only)" ]]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git commit -m "data: EMERGENCY fetch $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main && git push && break
+              echo "Push attempt $attempt failed"
+              sleep 5
+            done
+          fi

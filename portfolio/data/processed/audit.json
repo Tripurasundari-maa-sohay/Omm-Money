@@ -1,13 +1,13 @@
 {
-  "generated": "2026-05-27T07:26:54Z",
+  "generated": "2026-05-27T08:56:39Z",
   "status": "ok",
   "alerts": [],
   "healed": [],
   "tickers_expected": 27,
   "tickers_ok": 27,
   "tickers_failed": 0,
-  "fx_rate": 95.74,
-  "data_age_min": 0.21,
+  "fx_rate": 95.75,
+  "data_age_min": 0.24,
   "crosscheck": {
     "live_vs_statement_pct": 2.45,
     "live_total_usd": 19974.06,
@@ -35,7 +35,7 @@
     },
     "workflow_status": {
       ".github/workflows/full_update.yml": {
-        "last_success": "2026-05-26T21:01:53Z",
+        "last_success": "2026-05-27T07:24:57Z",
         "age_days": 0
       },
       ".github/workflows/eod_snapshot_us.yml": {

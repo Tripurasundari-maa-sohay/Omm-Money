@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "22-May-2026",
+  "as_of": "27-May-2026",
   "fx_inr_usd": 95.68,
   "us": {
     "broker": "US Broker",
-    "cash": 2461.96,
+    "cash": 681.22,
     "cash_infusion_itd": 16875.07,
-    "account_value_statement": 19496.03,
-    "total_pl_statement": 2620.96,
+    "account_value_statement": 19915.95,
+    "total_pl_statement": 3040.88,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -25,7 +25,7 @@
         "2026-02-28",
         "2026-03-31",
         "2026-04-30",
-        "2026-05-22"
+        "2026-05-27"
       ],
       "cash_balance": [
         0.0,
@@ -34,7 +34,7 @@
         1568.12,
         2016.07,
         268.16,
-        2461.96
+        681.22
       ],
       "account_value": [
         0.0,
@@ -43,7 +43,7 @@
         14248.11,
         13692.49,
         16432.87,
-        19496.03
+        19915.95
       ],
       "monthly_pct_return": [
         0.0,
@@ -52,7 +52,7 @@
         -5.1,
         -6.8,
         20.0,
-        6.5
+        8.8
       ],
       "monthly_bench_return": [
         0.0,
@@ -61,7 +61,7 @@
         -1.0,
         -5.0,
         10.6,
-        3.5
+        4.5
       ],
       "monthly_pl": [
         0.0,
@@ -70,7 +70,7 @@
         -766.0,
         -966.58,
         2740.38,
-        1063.16
+        1483.08
       ],
       "monthly_cost": [
         0.0,
@@ -79,7 +79,7 @@
         -51.7,
         -54.91,
         -72.54,
-        -61.56
+        -71.68
       ],
       "port_return_cum_pct": [
         0.0,
@@ -88,7 +88,7 @@
         -0.24,
         -7.02,
         11.57,
-        18.83
+        21.39
       ],
       "snp_return_cum_pct": [
         0.0,
@@ -97,7 +97,7 @@
         0.59,
         -4.44,
         5.69,
-        9.39
+        10.44
       ],
       "cash_deployed": [
         0.0,
@@ -129,7 +129,7 @@
         "cls": "Stock",
         "qty": 10,
         "avg": 249.726,
-        "fees": -15.0,
+        "fees": -20.0,
         "income": 0.0,
         "buy_date": "2026-04-14",
         "fx_buy": 94.9468
@@ -177,7 +177,7 @@
         "cls": "Stock",
         "qty": 1,
         "avg": 492.0,
-        "fees": -15.0,
+        "fees": -25.03,
         "income": 0.3,
         "buy_date": "2026-04-28",
         "fx_buy": 94.2585
@@ -213,7 +213,7 @@
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": -25.0,
+        "fees": 0.0,
         "income": 0.0,
         "buy_date": "2026-05-11",
         "fx_buy": 94.4253
@@ -225,7 +225,7 @@
         "cls": "Stock",
         "qty": 8,
         "avg": 82.84,
-        "fees": -5.0,
+        "fees": -7.65,
         "income": 8.01,
         "buy_date": "2026-03-13",
         "fx_buy": 92.3899
@@ -237,7 +237,7 @@
         "cls": "ETF",
         "qty": 9,
         "avg": 187.51,
-        "fees": -15.0,
+        "fees": -22.33,
         "income": 0.0,
         "buy_date": "2026-05-13",
         "fx_buy": 95.633
@@ -275,8 +275,7 @@
         "income": 0.0,
         "costs": -22.2,
         "realised": -42.29,
-        "ret_pct": -11.18,
-        "_costs_paid": -22.2
+        "ret_pct": -11.18
       },
       {
         "tk": "AMZN",
@@ -284,9 +283,9 @@
         "cls": "Stock",
         "income": 0.0,
         "costs": 0.0,
-        "_costs_paid": -5.0,
-        "realised": 21.94,
-        "ret_pct": -2.73,
+        "_costs_paid": -20.0,
+        "realised": 77.24,
+        "ret_pct": -0.72,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -296,8 +295,8 @@
         "income": 4.55,
         "costs": 0.0,
         "_costs_paid": -10.0,
-        "realised": 282.96,
-        "ret_pct": 20.4,
+        "realised": 313.84,
+        "ret_pct": 22.64,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -307,8 +306,7 @@
         "income": 1.3,
         "costs": -10.0,
         "realised": 139.91,
-        "ret_pct": 16.38,
-        "_costs_paid": -10.0
+        "ret_pct": 16.38
       },
       {
         "tk": "DOCN",
@@ -317,18 +315,16 @@
         "income": 0.0,
         "costs": -35.02,
         "realised": 203.79,
-        "ret_pct": 40.14,
-        "_costs_paid": -35.0
+        "ret_pct": 40.14
       },
       {
         "tk": "INOD",
-        "name": "2025to22-May-2026 InnodataInc.",
+        "name": "2025to27-May-2026 InnodataInc.",
         "cls": "Stock",
         "income": 0.0,
         "costs": -20.0,
         "realised": -81.71,
-        "ret_pct": -10.87,
-        "_costs_paid": -20.0
+        "ret_pct": -10.87
       },
       {
         "tk": "IRS",
@@ -337,8 +333,7 @@
         "income": 0.0,
         "costs": -10.02,
         "realised": -25.29,
-        "ret_pct": -3.35,
-        "_costs_paid": -10.0
+        "ret_pct": -3.35
       },
       {
         "tk": "KEEL",
@@ -347,8 +342,7 @@
         "income": 0.0,
         "costs": -24.02,
         "realised": 107.98,
-        "ret_pct": 13.24,
-        "_costs_paid": -24.0
+        "ret_pct": 13.24
       },
       {
         "tk": "META",
@@ -357,8 +351,7 @@
         "income": 0.0,
         "costs": -15.0,
         "realised": -178.54,
-        "ret_pct": -7.07,
-        "_costs_paid": -15.0
+        "ret_pct": -7.07
       },
       {
         "tk": "MU",
@@ -366,9 +359,9 @@
         "cls": "Stock",
         "income": 0.3,
         "costs": 0.0,
-        "_costs_paid": -10.0,
-        "realised": 595.75,
-        "ret_pct": 92.93,
+        "_costs_paid": -25.03,
+        "realised": 773.16,
+        "ret_pct": 138.5,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -378,8 +371,25 @@
         "income": 0.0,
         "costs": -10.0,
         "realised": -4.54,
-        "ret_pct": -0.81,
-        "_costs_paid": -10.0
+        "ret_pct": -0.81
+      },
+      {
+        "tk": "UNKNOWN_servicenow",
+        "name": "ServiceNowInc.",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": -5.0,
+        "realised": -11.6,
+        "ret_pct": -1.13
+      },
+      {
+        "tk": "TOL",
+        "name": "TollBrothersInc.",
+        "cls": "Stock",
+        "income": 2.04,
+        "costs": -10.02,
+        "realised": 21.53,
+        "ret_pct": 3.85
       },
       {
         "tk": "TTE",
@@ -388,8 +398,8 @@
         "income": 8.01,
         "costs": 0.0,
         "_costs_paid": -7.65,
-        "realised": 68.44,
-        "ret_pct": 10.23,
+        "realised": 28.92,
+        "ret_pct": 4.29,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -399,8 +409,7 @@
         "income": 0.0,
         "costs": -20.02,
         "realised": 133.11,
-        "ret_pct": 4.27,
-        "_costs_paid": -20.0
+        "ret_pct": 4.27
       },
       {
         "tk": "MUU",
@@ -409,28 +418,26 @@
         "income": 2.03,
         "costs": -15.03,
         "realised": 94.6,
-        "ret_pct": -8.31,
-        "_costs_paid": -15.0
+        "ret_pct": -8.31
       },
       {
         "tk": "DAX",
-        "name": "2025to22-May-2026 GlobalXDAXGermanyETF",
+        "name": "GlobalXDAXGermanyETF",
         "cls": "ETF",
         "income": 0.0,
         "costs": -10.02,
         "realised": -23.41,
-        "ret_pct": -3.89,
-        "_costs_paid": -10.0
+        "ret_pct": -3.89
       },
       {
         "tk": "EWY",
-        "name": "iSharesMSCISouthKoreaETF",
+        "name": "atdonotdirectlyaffectyourcashbalanceare iSharesMSCISouthKoreaETF",
         "cls": "ETF",
         "income": 0.0,
         "costs": 0.0,
-        "_costs_paid": -5.0,
-        "realised": 375.01,
-        "ret_pct": 22.32,
+        "_costs_paid": -22.33,
+        "realised": 521.35,
+        "ret_pct": 33.25,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -440,8 +447,8 @@
         "income": 3.49,
         "costs": 0.0,
         "_costs_paid": -5.0,
-        "realised": 151.05,
-        "ret_pct": 11.38,
+        "realised": 169.41,
+        "ret_pct": 12.76,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -454,16 +461,6 @@
         "realised": 458.66,
         "ret_pct": 123.07,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
-      },
-      {
-        "tk": "TOL",
-        "name": "TollBrothersInc.",
-        "cls": "Stock",
-        "income": 2.04,
-        "costs": -10.02,
-        "realised": 21.53,
-        "ret_pct": 3.85,
-        "_costs_paid": -10.0
       },
       {
         "tk": "GOOG",
@@ -519,7 +516,7 @@
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -2.16
+        "amt": -2.28
       },
       {
         "type": "Custody Fee (ongoing)",
@@ -531,7 +528,7 @@
       },
       {
         "type": "Commission",
-        "amt": -361.2
+        "amt": -371.2
       },
       {
         "type": "French FTT",

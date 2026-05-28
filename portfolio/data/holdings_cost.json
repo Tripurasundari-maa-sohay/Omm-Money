@@ -219,6 +219,26 @@
         "fx_buy": 94.4253
       },
       {
+        "tk": "SHIP",
+        "yf": "SHIP",
+        "name": "SeanergyMaritimeHoldings",
+        "cls": "Stock",
+        "qty": 50,
+        "avg": 14.8589,
+        "fees": 0.0,
+        "income": 0.0
+      },
+      {
+        "tk": "NOW",
+        "yf": "NOW",
+        "name": "Corp. ServiceNowInc.",
+        "cls": "Stock",
+        "qty": 10,
+        "avg": 102.78,
+        "fees": -5.0,
+        "income": 0.0
+      },
+      {
         "tk": "TTE",
         "yf": "TTE",
         "name": "TotalEnergiesSE",
@@ -374,15 +394,6 @@
         "ret_pct": -0.81
       },
       {
-        "tk": "UNKNOWN_servicenow",
-        "name": "ServiceNowInc.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -5.0,
-        "realised": -11.6,
-        "ret_pct": -1.13
-      },
-      {
         "tk": "TOL",
         "name": "TollBrothersInc.",
         "cls": "Stock",
@@ -450,6 +461,15 @@
         "realised": 169.41,
         "ret_pct": 12.76,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+      },
+      {
+        "tk": "UNKNOWN_servicenow",
+        "name": "ServiceNowInc.",
+        "cls": "Stock",
+        "income": 0.0,
+        "costs": -5.0,
+        "realised": -11.6,
+        "ret_pct": -1.13
       },
       {
         "tk": "RKLB",

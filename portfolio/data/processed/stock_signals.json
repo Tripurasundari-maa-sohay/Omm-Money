@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-28T09:16:25.010203Z",
+  "generated": "2026-05-28T09:28:50.469493Z",
   "regime": "BULL",
   "spy": {
     "px": 750.46,
@@ -231,6 +231,56 @@
         "val": 0
       },
       "sector": "Industrials"
+    },
+    "SHIP": {
+      "score": 48,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 36.6,
+      "v200": 39.1,
+      "rs": -7.3,
+      "hi52": 16.68,
+      "lo52": 5.95,
+      "rng": 83,
+      "vsMean": 51.4,
+      "px": 14.86,
+      "sc": {
+        "vs200": 12,
+        "cross": 8,
+        "wk": 10,
+        "rsi": 10,
+        "macd": 0,
+        "vol": 0,
+        "rs": 0,
+        "w52": 8,
+        "val": 0
+      },
+      "sector": "Industrials"
+    },
+    "NOW": {
+      "score": 46,
+      "action": "HOLD",
+      "regime": "BULL",
+      "rsi": 61.6,
+      "v200": -28.1,
+      "rs": -20.4,
+      "hi52": 208.94,
+      "lo52": 83.0,
+      "rng": 15,
+      "vsMean": -33.4,
+      "px": 102.12,
+      "sc": {
+        "vs200": 0,
+        "cross": 0,
+        "wk": 10,
+        "rsi": 8,
+        "macd": 10,
+        "vol": 8,
+        "rs": 0,
+        "w52": 0,
+        "val": 10
+      },
+      "sector": "Technology"
     },
     "TTE": {
       "score": 54,

@@ -129,7 +129,7 @@
         "cls": "Stock",
         "qty": 10,
         "avg": 249.726,
-        "fees": -10.0,
+        "fees": -15.0,
         "income": 0.0,
         "buy_date": "2026-04-14",
         "fx_buy": 94.9468
@@ -177,7 +177,7 @@
         "cls": "Stock",
         "qty": 1,
         "avg": 492.0,
-        "fees": -5.0,
+        "fees": -15.0,
         "income": 0.3,
         "buy_date": "2026-04-28",
         "fx_buy": 94.2585
@@ -213,7 +213,7 @@
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": -5.0,
+        "fees": -25.0,
         "income": 0.0,
         "buy_date": "2026-05-11",
         "fx_buy": 94.4253
@@ -257,7 +257,7 @@
         "cls": "ETF",
         "qty": 9,
         "avg": 187.51,
-        "fees": -5.0,
+        "fees": -15.0,
         "income": 0.0,
         "buy_date": "2026-05-13",
         "fx_buy": 95.633
@@ -303,21 +303,10 @@
         "name": "Amazon.comInc.",
         "cls": "Stock",
         "income": 0.0,
-        "costs": -5.0,
+        "costs": 0.0,
         "_costs_paid": -5.0,
         "realised": 77.24,
         "ret_pct": -0.72,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
-      },
-      {
-        "tk": "AVGO",
-        "name": "BroadcomInc.",
-        "cls": "Stock",
-        "income": 4.55,
-        "costs": 0.0,
-        "_costs_paid": -10.0,
-        "realised": 313.84,
-        "ret_pct": 22.64,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -385,7 +374,7 @@
         "name": "MicronTechnologyInc.",
         "cls": "Stock",
         "income": 0.3,
-        "costs": -10.0,
+        "costs": 0.0,
         "_costs_paid": -10.0,
         "realised": 773.16,
         "ret_pct": 138.5,
@@ -410,17 +399,6 @@
         "realised": 21.53,
         "ret_pct": 3.85,
         "_costs_paid": -10.0
-      },
-      {
-        "tk": "TTE",
-        "name": "TotalEnergiesSE",
-        "cls": "Stock",
-        "income": 8.01,
-        "costs": 0.0,
-        "_costs_paid": -7.65,
-        "realised": 28.92,
-        "ret_pct": 4.29,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
         "tk": "SIVR",
@@ -457,7 +435,7 @@
         "name": "atdonotdirectlyaffectyourcashbalanceare iSharesMSCISouthKoreaETF",
         "cls": "ETF",
         "income": 0.0,
-        "costs": -10.0,
+        "costs": 0.0,
         "_costs_paid": -5.0,
         "realised": 521.35,
         "ret_pct": 33.25,
@@ -475,15 +453,6 @@
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
-        "tk": "NOW",
-        "name": "ServiceNow Inc.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": -5.0,
-        "realised": -11.6,
-        "ret_pct": -1.13
-      },
-      {
         "tk": "RKLB",
         "name": "RocketLabCorporation",
         "cls": "Stock",
@@ -493,56 +462,6 @@
         "realised": 458.66,
         "ret_pct": 123.07,
         "_note": "realised is net of all period costs"
-      },
-      {
-        "tk": "GOOG",
-        "name": "AlphabetInc.ClassC",
-        "cls": "Stock",
-        "income": 0.63,
-        "costs": 0.0,
-        "realised": 256.38,
-        "ret_pct": 27.37,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "GLW",
-        "name": "CorningInc.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 151.66,
-        "ret_pct": 13.81,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "GEV",
-        "name": "GEVernovaInc",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": -11.61,
-        "ret_pct": -1.03,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "MSFT",
-        "name": "MicrosoftCorp.",
-        "cls": "Stock",
-        "income": 2.73,
-        "costs": 0.0,
-        "realised": -52.9,
-        "ret_pct": -14.12,
-        "_note": "costs counted in open position (same ticker, re-opened)"
-      },
-      {
-        "tk": "MP",
-        "name": "MPMaterialsCorp.",
-        "cls": "Stock",
-        "income": 0.0,
-        "costs": 0.0,
-        "realised": 68.1,
-        "ret_pct": 12.7,
-        "_note": "costs counted in open position (same ticker, re-opened)"
       }
     ],
     "charges_breakdown": [

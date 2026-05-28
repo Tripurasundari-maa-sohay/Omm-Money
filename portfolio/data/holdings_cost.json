@@ -488,11 +488,11 @@
         "name": "RocketLabCorporation",
         "cls": "Stock",
         "income": 0.0,
-        "costs": 0.0,
+        "costs": -40.0,
         "_costs_paid": -10.0,
         "realised": 458.66,
         "ret_pct": 123.07,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+        "_note": "realised is net of all period costs"
       },
       {
         "tk": "GOOG",

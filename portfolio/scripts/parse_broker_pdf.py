@@ -61,6 +61,10 @@ TICKER_MAP = {
     "globalxdaxgermanyetf":                ("DAX",   "DAX",   "ETF"),
     "keelinfrastructurecorp":              ("KEEL",  "KEEL",  "Stock"),
     "roundhillhumanoidroboticsetf":        ("HUMN",  "HUMN",  "ETF"),
+    # Added 2026-05-28
+    "seanergymaritimeholdings":            ("SHIP",  "SHIP",  "Stock"),
+    "servicenowinc.":                      ("NOW",   "NOW",   "Stock"),
+    "corp.servicenowinc.":                 ("NOW",   "NOW",   "Stock"),
 }
 
 

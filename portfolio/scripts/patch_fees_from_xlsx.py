@@ -97,12 +97,31 @@ def split_commissions(xl_path: Path) -> tuple[dict[str, float], dict[str, float]
     return dict(open_comm), dict(close_comm)
 
 
+def get_close_tickers(xl_path: Path) -> set[str]:
+    """
+    Returns set of ticker symbols that have at least one 'To Close' trade in xlsx.
+    Used to identify phantom closed records created by the PDF parser for open-only positions.
+    """
+    wb = openpyxl.load_workbook(xl_path, read_only=True, data_only=True)
+    ws_t = wb["Trades"]
+    hdr_t = next(ws_t.iter_rows(min_row=1, max_row=1, values_only=True))
+    ti = {(h or "").strip(): i for i, h in enumerate(hdr_t)}
+    close_tickers: set[str] = set()
+    for row in ws_t.iter_rows(min_row=2, values_only=True):
+        oc = (row[ti["Open/Close"]] or "").strip()
+        sym_full = row[ti["Instrument Symbol"]] or ""
+        if oc == "To Close":
+            close_tickers.add(sym_full.split(":")[0])
+    return close_tickers
+
+
 def patch_holdings(
-    cost: dict, open_comm: dict[str, float], close_comm: dict[str, float]
+    cost: dict, open_comm: dict[str, float], close_comm: dict[str, float],
+    close_tickers: set[str] | None = None,
 ) -> tuple[dict, dict]:
-    """Apply commission overlay. Returns (new_cost, diff_summary)."""
+    """Apply commission overlay + remove phantom closed records. Returns (new_cost, diff_summary)."""
     us = cost.setdefault("us", {})
-    diff: dict = {"open": {}, "closed": {}}
+    diff: dict = {"open": {}, "closed": {}, "phantom_removed": []}
 
     # ── us.open[] fees overlay ──
     for p in us.get("open", []):
@@ -113,6 +132,28 @@ def patch_holdings(
             if abs(new - old) > 0.005:
                 diff["open"][tk] = {"old": old, "new": new}
             p["fees"] = new
+
+    # ── Remove phantom closed records ──
+    # PDF parser creates phantom closed records for open positions when P/L parsing
+    # yields a non-zero realised_est. Rule: if ticker is currently OPEN and has
+    # NO "To Close" trade in xlsx → never actually sold → remove phantom.
+    if close_tickers is not None:
+        open_tks = {h.get("tk") for h in us.get("open", []) if h.get("tk")}
+        keep, phantoms = [], []
+        for p in us.get("closed", []):
+            tk = p.get("tk", "")
+            is_phantom = (
+                tk in open_tks                  # currently open
+                and tk not in close_tickers     # never sold in xlsx window
+                and not tk.startswith("UNKNOWN")
+            )
+            if is_phantom:
+                phantoms.append(tk)
+                print(f"  PHANTOM REMOVED {tk}: open position, no sell in xlsx")
+            else:
+                keep.append(p)
+        us["closed"] = keep
+        diff["phantom_removed"] = phantoms
 
     # ── us.closed[] _costs_paid overlay ──
     # Only patch entries whose ticker has trades in the xlsx window.
@@ -170,6 +211,7 @@ def main() -> int:
 
     print(f"Reading commissions from {xl.name}…")
     open_comm, close_comm = split_commissions(xl)
+    close_tickers = get_close_tickers(xl)
     print(
         f"  {len(open_comm)} tickers with open-side commission, "
         f"{len(close_comm)} with close-side"
@@ -177,9 +219,10 @@ def main() -> int:
     print(f"  sum Open:   ${sum(open_comm.values()):,.2f}")
     print(f"  sum Close:  ${sum(close_comm.values()):,.2f}")
     print(f"  grand tot:  ${sum(open_comm.values()) + sum(close_comm.values()):,.2f}")
+    print(f"  tickers with sell trades: {sorted(close_tickers)}")
 
     cost = json.loads(cost_path.read_text())
-    patched, diff = patch_holdings(cost, open_comm, close_comm)
+    patched, diff = patch_holdings(cost, open_comm, close_comm, close_tickers=close_tickers)
 
     if diff["open"] or diff["closed"]:
         print("\n── Changes ──")

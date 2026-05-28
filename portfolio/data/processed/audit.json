@@ -1,26 +1,21 @@
 {
-  "generated": "2026-05-28T09:28:55Z",
-  "status": "alert",
-  "alerts": [
-    {
-      "type": "fee_attribution_drift",
-      "message": "xlsx commission total $-361.20 vs holdings open fees + closed _costs_paid $-235.02 (diff $-126.18, > $50.0 tolerance). Run scripts/patch_fees_from_xlsx.py."
-    }
-  ],
+  "generated": "2026-05-28T10:15:36Z",
+  "status": "ok",
+  "alerts": [],
   "healed": [],
   "tickers_expected": 29,
   "tickers_ok": 29,
   "tickers_failed": 0,
   "fx_rate": 95.68,
-  "data_age_min": 1.58,
+  "data_age_min": 1.59,
   "crosscheck": {
     "live_vs_statement_pct": 0.0,
     "live_total_usd": 19916.49,
     "statement_total_usd": 19915.95,
     "pdf_age_days": 1,
-    "fees_xlsx_total": -361.2,
-    "fees_attributed_sum": -235.02,
-    "fees_diff_usd": -126.18,
+    "fees_xlsx_total": -371.2,
+    "fees_attributed_sum": -393.85,
+    "fees_diff_usd": 22.65,
     "schema_status": {
       "screener.json": "ok",
       "holdings_prices.json": "ok",

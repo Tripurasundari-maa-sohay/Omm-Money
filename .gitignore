@@ -2,6 +2,9 @@
 # Broker statements contain account numbers, addresses, names.
 # They stay on your machine; only the sanitised JSON is pushed.
 *.pdf
+*.xlsx
+*.xls
+portfolio/inbox/
 data/statements/
 private/
 

@@ -1,135 +1,83 @@
 {
-  "generated": "2026-05-28T11:44:51.461265Z",
+  "generated": "2026-05-28T13:01:03.326788+00:00Z",
   "prices": {
     "HUMN": {
       "ltp": 38.06,
       "pc": 38.74,
-      "change": -0.68,
-      "change_pct": -1.76,
-      "as_of": "2026-05-28T11:44:33.315640Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 95.6958
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:54.929457+00:00Z"
     },
     "GOOG": {
       "ltp": 384.83,
       "pc": 384.84,
-      "change": -0.01,
-      "change_pct": -0.0,
-      "as_of": "2026-05-28T11:44:22.827100Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 90.7769
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:05.384774+00:00Z"
     },
     "AMZN": {
       "ltp": 271.85,
       "pc": 265.29,
-      "change": 6.56,
-      "change_pct": 2.47,
-      "as_of": "2026-05-28T11:44:23.690128Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 94.9468
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:09.826027+00:00Z"
     },
     "AVGO": {
       "ltp": 421.86,
       "pc": 422.01,
-      "change": -0.15,
-      "change_pct": -0.04,
-      "as_of": "2026-05-28T11:44:24.592652Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 90.7769
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:14.474183+00:00Z"
     },
     "GLW": {
       "ltp": 190.89,
       "pc": 196.17,
-      "change": -5.28,
-      "change_pct": -2.69,
-      "as_of": "2026-05-28T11:44:25.460239Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 95.183
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:19.017715+00:00Z"
     },
     "GEV": {
       "ltp": 1031.89,
       "pc": 1070.47,
-      "change": -38.58,
-      "change_pct": -3.6,
-      "as_of": "2026-05-28T11:44:26.303210Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 94.2503
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:23.468946+00:00Z"
     },
     "MU": {
       "ltp": 928.41,
       "pc": 895.88,
-      "change": 32.53,
-      "change_pct": 3.63,
-      "as_of": "2026-05-28T11:44:27.033424Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 94.2585
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:27.866305+00:00Z"
     },
     "MSFT": {
       "ltp": 412.67,
       "pc": 416.03,
-      "change": -3.36,
-      "change_pct": -0.81,
-      "as_of": "2026-05-28T11:44:28.150107Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 90.1059
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:32.402201+00:00Z"
     },
     "MP": {
       "ltp": 65.21,
       "pc": 66.99,
-      "change": -1.78,
-      "change_pct": -2.66,
-      "as_of": "2026-05-28T11:44:28.814266Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 90.9489
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:36.945139+00:00Z"
     },
     "RKLB": {
       "ltp": 150.23,
       "pc": 143.2,
-      "change": 7.03,
-      "change_pct": 4.91,
-      "as_of": "2026-05-28T11:44:29.582376Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 94.4253
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:41.339821+00:00Z"
     },
     "TTE": {
       "ltp": 86.66,
       "pc": 90.04,
-      "change": -3.38,
-      "change_pct": -3.75,
-      "as_of": "2026-05-28T11:44:31.798597Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 92.3899
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:46.028964+00:00Z"
     },
     "EWY": {
       "ltp": 198.29,
       "pc": 200.65,
-      "change": -2.36,
-      "change_pct": -1.18,
-      "as_of": "2026-05-28T11:44:32.589038Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 95.633
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:50.440529+00:00Z"
     },
     "VOOG": {
       "ltp": 83.13,
       "pc": 83.14,
-      "change": -0.01,
-      "change_pct": -0.01,
-      "as_of": "2026-05-28T11:44:34.058822Z",
-      "manual": false,
-      "source": "yahoo",
-      "fx_buy": 90.577
+      "source": "finnhub",
+      "as_of": "2026-05-28T13:00:59.322608+00:00Z"
     },
     "SBIN": {
       "ltp": 967.8,

@@ -738,9 +738,40 @@ def build_holdings_json() -> dict:
 
     print(f"\nFetching open positions — {len(us_holdings)} US  +  {len(india_holdings)} India")
 
-    # ── Fetch US + India via dedicated functions ──────────────────────────
-    us_prices     = fetch_us_open_positions(us_holdings,    existing_prices, manual_ltps)
-    india_prices  = fetch_india_open_positions(india_holdings, existing_prices, manual_ltps)
+    # ── Check if Oracle VM already committed fresh prices (skip redundant fetch) ──
+    # If existing prices from Finnhub/Angel One are <5 min old, carry them forward
+    # instead of overwriting with slower Yahoo data from GitHub Actions.
+    def _vm_prices_fresh(tickers_list, source_name, max_age_min=5):
+        """Returns dict of existing prices if they're fresh from Oracle VM, else {}."""
+        kept = {}
+        for tk in [h["tk"] for h in tickers_list]:
+            p = existing_prices.get(tk, {})
+            if p.get("source") == source_name and p.get("as_of"):
+                try:
+                    age = (datetime.utcnow() - datetime.fromisoformat(
+                        p["as_of"].replace("Z","").replace("+00:00",""))).total_seconds() / 60
+                    if age < max_age_min:
+                        kept[tk] = p
+                except Exception:
+                    pass
+        return kept
+
+    us_vm_fresh    = _vm_prices_fresh(us_holdings,    "finnhub",   max_age_min=5)
+    india_vm_fresh = _vm_prices_fresh(india_holdings, "angelone",  max_age_min=5)
+
+    if us_vm_fresh:
+        print(f"  Oracle VM Finnhub data fresh ({len(us_vm_fresh)} US) — skipping Yahoo fetch")
+        us_prices = us_vm_fresh
+    else:
+        us_prices = fetch_us_open_positions(us_holdings, existing_prices, manual_ltps)
+
+    if india_vm_fresh:
+        print(f"  Oracle VM Angel One data fresh ({len(india_vm_fresh)} India) — skipping Yahoo fetch")
+        india_prices = {**fetch_india_open_positions(india_holdings, existing_prices, manual_ltps),
+                        **india_vm_fresh}  # Angel One wins over Yahoo for same ticker
+    else:
+        india_prices = fetch_india_open_positions(india_holdings, existing_prices, manual_ltps)
+
     fresh_prices  = {**us_prices, **india_prices}
     success_count = len(fresh_prices)
 

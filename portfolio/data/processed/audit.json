@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-28T10:37:02Z",
+  "generated": "2026-05-28T11:06:11Z",
   "status": "ok",
   "alerts": [],
   "healed": [],
@@ -7,15 +7,15 @@
   "tickers_ok": 29,
   "tickers_failed": 0,
   "fx_rate": 95.68,
-  "data_age_min": 1.65,
+  "data_age_min": 1.63,
   "crosscheck": {
     "live_vs_statement_pct": 0.0,
     "live_total_usd": 19916.49,
     "statement_total_usd": 19915.95,
     "pdf_age_days": 1,
     "fees_xlsx_total": -371.2,
-    "fees_attributed_sum": -393.85,
-    "fees_diff_usd": 22.65,
+    "fees_attributed_sum": -376.2,
+    "fees_diff_usd": 5.0,
     "schema_status": {
       "screener.json": "ok",
       "holdings_prices.json": "ok",
@@ -23,7 +23,7 @@
       "market_indices.json": "ok"
     },
     "formula_status": {
-      "closed_realised_plus_income_usd": 3112.83,
+      "closed_realised_plus_income_usd": 2354.12,
       "synthetic_check": {
         "row": {
           "realised": 100.0,

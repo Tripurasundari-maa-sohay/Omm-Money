@@ -1,155 +1,207 @@
 {
-  "generated": "2026-05-28T08:59:26.383796+00:00Z",
+  "generated": "2026-05-28T09:00:08.818389+00:00Z",
   "prices": {
     "HUMN": {
       "ltp": 38.06,
       "pc": 38.74,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:59:17.606114+00:00Z"
+      "change": -0.68,
+      "change_pct": -1.76,
+      "as_of": "2026-05-28T00:17:01.265271Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 95.6958
     },
     "GOOG": {
       "ltp": 384.83,
       "pc": 384.84,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:27.335172+00:00Z"
+      "change": -0.01,
+      "change_pct": -0.0,
+      "as_of": "2026-05-28T00:16:58.960258Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 90.7769
     },
     "AMZN": {
       "ltp": 271.85,
       "pc": 265.29,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:31.811352+00:00Z"
+      "change": 6.56,
+      "change_pct": 2.47,
+      "as_of": "2026-05-28T00:16:59.101983Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 94.9468
     },
     "AVGO": {
       "ltp": 421.86,
       "pc": 422.01,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:36.189037+00:00Z"
+      "change": -0.15,
+      "change_pct": -0.04,
+      "as_of": "2026-05-28T00:16:59.318222Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 90.7769
     },
     "GLW": {
       "ltp": 190.89,
       "pc": 196.17,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:40.592110+00:00Z"
+      "change": -5.28,
+      "change_pct": -2.69,
+      "as_of": "2026-05-28T00:16:59.638258Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 95.183
     },
     "GEV": {
       "ltp": 1031.89,
       "pc": 1070.47,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:45.040391+00:00Z"
+      "change": -38.58,
+      "change_pct": -3.6,
+      "as_of": "2026-05-28T00:16:59.794047Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 94.2503
     },
     "MU": {
       "ltp": 928.41,
       "pc": 895.88,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:49.430764+00:00Z"
+      "change": 32.53,
+      "change_pct": 3.63,
+      "as_of": "2026-05-28T00:17:00.086125Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 94.2585
     },
     "MSFT": {
       "ltp": 412.67,
       "pc": 416.03,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:53.919149+00:00Z"
+      "change": -3.36,
+      "change_pct": -0.81,
+      "as_of": "2026-05-28T00:17:00.315685Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 90.1059
     },
     "MP": {
       "ltp": 65.21,
       "pc": 66.99,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:58:58.470924+00:00Z"
+      "change": -1.78,
+      "change_pct": -2.66,
+      "as_of": "2026-05-28T00:17:00.441449Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 90.9489
     },
     "RKLB": {
       "ltp": 150.23,
       "pc": 143.2,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:59:03.108827+00:00Z"
+      "change": 7.03,
+      "change_pct": 4.91,
+      "as_of": "2026-05-28T00:17:00.560747Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 94.4253
     },
     "TTE": {
       "ltp": 86.66,
       "pc": 90.04,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:59:07.535295+00:00Z"
+      "change": -3.38,
+      "change_pct": -3.75,
+      "as_of": "2026-05-28T00:17:00.877244Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 92.3899
     },
     "EWY": {
       "ltp": 198.29,
       "pc": 200.65,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:59:13.176897+00:00Z"
+      "change": -2.36,
+      "change_pct": -1.18,
+      "as_of": "2026-05-28T00:17:01.122147Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 95.633
     },
     "VOOG": {
       "ltp": 83.13,
       "pc": 83.14,
-      "source": "finnhub",
-      "as_of": "2026-05-28T08:59:22.379607+00:00Z"
+      "change": -0.01,
+      "change_pct": -0.01,
+      "as_of": "2026-05-28T00:17:01.463120Z",
+      "manual": false,
+      "source": "yahoo",
+      "fx_buy": 90.577
     },
     "SBIN": {
       "ltp": 967.8,
       "pc": 968.5,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860850+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181977+00:00Z"
     },
     "AVADHSUGAR": {
       "ltp": 445.1,
       "pc": null,
       "source": "yahoo",
-      "as_of": "2026-05-28T08:56:07.857960+00:00Z"
+      "as_of": "2026-05-28T09:00:04.822010+00:00Z"
     },
     "IRBINVIT": {
       "ltp": 60.03,
       "pc": null,
       "source": "yahoo",
-      "as_of": "2026-05-28T08:56:08.143014+00:00Z"
+      "as_of": "2026-05-28T09:00:05.028952+00:00Z"
     },
     "JYOTISTRUC": {
       "ltp": 13.14,
       "pc": 12.48,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860864+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181991+00:00Z"
     },
     "GMBREW": {
       "ltp": 946.25,
       "pc": 949.25,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860844+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181971+00:00Z"
     },
     "GOLDBEES_M": {
       "ltp": 129.04,
       "pc": 129.58,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860856+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181983+00:00Z"
     },
     "GOLDBEES_U": {
       "ltp": 129.04,
       "pc": 129.58,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860856+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181983+00:00Z"
     },
     "RELIANCE": {
       "ltp": 1350.5,
       "pc": 1356.3,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860830+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181957+00:00Z"
     },
     "WAAREEENER": {
       "ltp": 3129.1,
       "pc": 3088.1,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860838+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181965+00:00Z"
     },
     "DIACABS": {
       "ltp": 198.2,
       "pc": 206.65,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860801+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181924+00:00Z"
     },
     "FILATFASH": {
       "ltp": 0.23,
       "pc": null,
       "source": "yahoo",
-      "as_of": "2026-05-28T08:56:08.417492+00:00Z"
+      "as_of": "2026-05-28T09:00:05.229209+00:00Z"
     },
     "NBCC": {
       "ltp": 99.1,
       "pc": 95.55,
       "source": "angelone",
-      "as_of": "2026-05-28T08:56:05.860870+00:00Z"
+      "as_of": "2026-05-28T09:00:03.181997+00:00Z"
     },
     "ASHALOG": {
       "ltp": 63.35,

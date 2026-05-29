@@ -703,9 +703,26 @@ price). Auto-corrects any future no-trade SME, no manual upkeep. PARAMATRIX
 now pc=ltp=68 (day 0); after this, Motilal reconciled −18,252 vs broker
 −18,257. Commit `cc21c48de`.
 
+## FIXED: pipeline failure alerting (ntfy)
+VM script now POSTs a push alert to `https://ntfy.sh/<NTFY_TOPIC>` when a cycle
+fails (commit 401/expired token, no prices fetched, indices commit fail). 30-min
+cooldown (`/tmp/ommoney_last_alert`) so the every-minute cron can't spam.
+**Activation:** set `NTFY_TOPIC` in `/home/opc/angel_env.sh` AND subscribe to
+that exact topic in the ntfy app (https://ntfy.sh) on phone. Empty topic =
+alerts disabled (only logs `ALERT:` to stderr/prices.log). Verified end-to-end
+with a forced bad-token run. Commit `db18c9a3d`.
+
+## FIXED: full_update.yml retired
+Auto-triggers (push + schedule) commented out; `workflow_dispatch` kept as a
+manual backup. VM cron is the sole live pipeline. Stops redundant/racing
+commits + wasted Actions minutes + the stale-market_indices class of bug.
+Commit `7d5b29454`.
+
 ## KNOWN PENDING (not fixed)
-- Token-expiry audit/alert (see #3) — still no monitoring.
-- `full_update.yml` still scheduled on ubuntu-latest but dead — clean up/disable.
+- **Rotate `GITHUB_TOKEN`** — was shared in plaintext chat. User to generate
+  fresh + `sed`-replace in `angel_env.sh` directly (never via chat).
+- `NTFY_TOPIC` not yet set in `angel_env.sh` — alerts dormant until user sets it
+  + subscribes in the ntfy app.
 - WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,
   treated as live-timing noise.
 

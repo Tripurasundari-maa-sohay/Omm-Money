@@ -2618,6 +2618,9 @@ const ODIN = (() => {
       extra > 0
         ? `→ Payoff in ~${yrs} yrs (${payoff_yr}) · saves ${(8.4 - parseFloat(yrs)).toFixed(1)} yrs vs current pace`
         : `→ At current pace (~₹${(BASE_PMT/1000).toFixed(0)}k/mo), payoff ~2034 (8.4 yrs)`;
+    // Sync slider → schedule table so dates update live
+    document.getElementById('apt-sched-extra').value = extra;
+    buildAptSched();
   }
 
   // ── LC LOAN ANALYTICS MODAL ──────────────────────────────────────────────
@@ -2751,6 +2754,9 @@ const ODIN = (() => {
     document.getElementById('lc-sim-result').textContent = extra > 0
       ? `→ Payoff ${mn[pmx]} ${pyx} · saves ${m0 - mx} months · QAR ${(int0 - intx).toLocaleString()} interest`
       : `→ Without extra: payoff ${mn[pm0]} ${py0} · total interest QAR ${int0.toLocaleString()}`;
+    // Sync slider → schedule table so dates update live
+    document.getElementById('lc-sched-extra').value = extra;
+    buildLCSched();
   }
 
   return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, openLCModal, closeLCModal, updateLCSim, buildLCSched };

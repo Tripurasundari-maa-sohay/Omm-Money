@@ -718,11 +718,15 @@ manual backup. VM cron is the sole live pipeline. Stops redundant/racing
 commits + wasted Actions minutes + the stale-market_indices class of bug.
 Commit `7d5b29454`.
 
+## FIXED: GITHUB_TOKEN rotated (2026-05-29)
+Old `ghp_68JA…` (shared in plaintext chat) revoked. New token `ghp_Rky…`
+set in `/home/opc/angel_env.sh` directly via SSH (never through chat).
+Verified: 200 OK + full commit cycle working.
+
 ## KNOWN PENDING (not fixed)
-- **Rotate `GITHUB_TOKEN`** — was shared in plaintext chat. User to generate
-  fresh + `sed`-replace in `angel_env.sh` directly (never via chat).
-- `NTFY_TOPIC` not yet set in `angel_env.sh` — alerts dormant until user sets it
-  + subscribes in the ntfy app.
+- `NTFY_TOPIC` not yet set in `angel_env.sh` — pipeline failure alerts dormant
+  until user sets it + subscribes in ntfy app (iOS/Android, https://ntfy.sh).
+  Add: `export NTFY_TOPIC=your-private-topic` to `/home/opc/angel_env.sh`.
 - WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,
   treated as live-timing noise.
 

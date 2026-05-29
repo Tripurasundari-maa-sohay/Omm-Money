@@ -41,7 +41,6 @@ ANGEL_TOKEN_MAP = {
     "SBIN":       "3045",
     "RELIANCE":   "2885",
     "DIACABS":    "18543",
-    "GMBREW":     "1168",
     "NBCC":       "31415",
     "JYOTISTRUC": "1802",
     "GOLDBEES_M": "14428",
@@ -49,13 +48,18 @@ ANGEL_TOKEN_MAP = {
     "WAAREEENER": "25907",
     "ASHALOG":    "24711",   # ASHALOG-SM (NSE SME) — delisted on Yahoo, Angel One only
     "PARAMATRIX": "25069",   # PARAMATRIX-SM (NSE SME) — delisted on Yahoo, Angel One only
+    "IRBINVIT":   "20817",   # IRBINVIT-IV (NSE InvIT) — was flaky on Yahoo fallback
+    "FILATFASH":  "23651",   # FILATFASH-BE (NSE) — was flaky on Yahoo fallback
 }
 
-YAHOO_INDIA_FALLBACK = {
-    "AVADHSUGAR": "AVADHSUGAR.NS",
-    "IRBINVIT":   "IRBINVIT.NS",
-    "FILATFASH":  "FILATFASH.NS",
+# Held on BSE in broker — fetch BSE price (NSE/BSE diverge for illiquid names,
+# e.g. AVADHSUGAR NSE 447 vs BSE 437). Token from BSE segment of scrip master.
+ANGEL_BSE_TOKEN_MAP = {
+    "AVADHSUGAR": "540649",   # broker holds on BSE (438) — NSE diverges (447)
+    "GMBREW":     "507488",   # broker holds on BSE (928) — NSE (932)
 }
+
+YAHOO_INDIA_FALLBACK = {}
 
 US_HOLDINGS = [
     "GOOG","AMZN","AVGO","GLW","GEV","MU","MSFT","MP","RKLB","TTE","EWY","HUMN","VOOG",
@@ -97,25 +101,33 @@ def fetch_india_angel():
     jwt = angel_login()
     if not jwt:
         return {}
-    token_to_tickers = {}
+    # Map (exchange, token) -> [tickers]; query NSE + BSE in one call.
+    # Tokens can collide across exchanges, so key by (exch, token).
+    key_to_tickers = {}
+    exch_tokens = {"NSE": [], "BSE": []}
     for tk, token in ANGEL_TOKEN_MAP.items():
-        token_to_tickers.setdefault(token, []).append(tk)
+        key_to_tickers.setdefault(("NSE", token), []).append(tk)
+        exch_tokens["NSE"].append(token)
+    for tk, token in ANGEL_BSE_TOKEN_MAP.items():
+        key_to_tickers.setdefault(("BSE", token), []).append(tk)
+        exch_tokens["BSE"].append(token)
+    exch_tokens = {e: t for e, t in exch_tokens.items() if t}
     headers = {
         "Authorization": f"Bearer {jwt}", "Content-Type": "application/json",
         "Accept": "application/json", "X-UserType": "USER",
         "X-SourceID": "WEB", "X-PrivateKey": ANGEL_API_KEY,
     }
     results = {}
-    batch = list(token_to_tickers.keys())
     try:
         r = requests.post(
             "https://apiconnect.angelbroking.com/rest/secure/angelbroking/market/v1/quote/",
-            json={"mode": "FULL", "exchangeTokens": {"NSE": batch}},
+            json={"mode": "FULL", "exchangeTokens": exch_tokens},
             headers=headers, timeout=15
         )
         if r.status_code == 200:
             for d in r.json().get("data", {}).get("fetched", []):
                 token = str(d.get("symbolToken", ""))
+                exch  = d.get("exchange", "NSE")
                 ltp, pc = d.get("ltp"), d.get("close")
                 if ltp and float(ltp) > 0:
                     entry = {
@@ -124,9 +136,9 @@ def fetch_india_angel():
                         "source": "angelone",
                         "as_of":  datetime.now(timezone.utc).isoformat() + "Z"
                     }
-                    for tk in token_to_tickers.get(token, []):
+                    for tk in key_to_tickers.get((exch, token), []):
                         results[tk] = entry
-                        print(f"  {tk:15s} → {ltp:.2f}  pc={pc}  [Angel One]")
+                        print(f"  {tk:15s} → {ltp:.2f}  pc={pc}  [{exch} Angel One]")
     except Exception as e:
         print(f"  Angel One batch error: {e}", file=sys.stderr)
     return results

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="90" fill="#06060e"/>
+  <rect x="40" y="40" width="432" height="432" rx="70" fill="#0d0d1a"/>
+  <text x="256" y="200" font-size="90" text-anchor="middle" fill="#d4a84c"
+    font-family="Courier New, monospace" font-weight="bold" letter-spacing="4">EXPENSE</text>
+  <text x="256" y="310" font-size="90" text-anchor="middle" fill="#d4a84c"
+    font-family="Courier New, monospace" font-weight="bold" letter-spacing="4">PLANNER</text>
+  <line x1="80" y1="240" x2="432" y2="240" stroke="#d4a84c" stroke-width="3" opacity="0.4"/>
+  <text x="256" y="430" font-size="50" text-anchor="middle" fill="#4ecf82"
+    font-family="Courier New, monospace">▲ Drive Sync</text>
+</svg>

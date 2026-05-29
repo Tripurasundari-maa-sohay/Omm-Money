@@ -47,14 +47,14 @@ ANGEL_TOKEN_MAP = {
     "GOLDBEES_M": "14428",
     "GOLDBEES_U": "14428",
     "WAAREEENER": "25907",
+    "ASHALOG":    "24711",   # ASHALOG-SM (NSE SME) — delisted on Yahoo, Angel One only
+    "PARAMATRIX": "25069",   # PARAMATRIX-SM (NSE SME) — delisted on Yahoo, Angel One only
 }
 
 YAHOO_INDIA_FALLBACK = {
     "AVADHSUGAR": "AVADHSUGAR.NS",
     "IRBINVIT":   "IRBINVIT.NS",
     "FILATFASH":  "FILATFASH.NS",
-    "ASHALOG":    "ASHALOG.NS",
-    "PARAMATRIX": "PARAMATRIX.NS",
 }
 
 US_HOLDINGS = [

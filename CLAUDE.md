@@ -604,3 +604,120 @@ Page auto-refresh: 15m10s → 5m30s.
 3. **chartPreviousClose stale** — Yahoo API field unreliable; always cross-check vs candle
 4. **Cap too low** — 15% cap silently excluded MU +17% earnings move; raised to 30%
 5. **Token storage** — never commit PAT/API keys in code; always GitHub Secrets + `os.environ.get()`
+
+---
+
+# Session log — 2026-05-29 (Fri) · VM is now the price pipeline (GH Actions retired)
+
+## ARCHITECTURE NOW (read this first)
+Live prices are **NOT** fetched by GitHub Actions anymore. The Oracle VM
+(`145.241.158.254`, user `opc`) runs `scripts/fetch_all_prices_vm.py` via
+**crontab every minute** and commits JSON to the repo via the GitHub Contents
+API (`requests.put`, SHA-based, 3× retry). `full_update.yml` still exists on
+`runs-on: ubuntu-latest` but is **effectively dead** — VM replaced it.
+
+- VM SSH: `ssh -i ~/Downloads/ssh-key-2026-05-26.key opc@145.241.158.254`
+- VM script path: `/home/opc/fetch_all_prices_vm.py` (its **own copy** — editing
+  the repo file is NOT enough; must `scp` to VM to go live)
+- VM secrets: `/home/opc/angel_env.sh` (`source` it before running) — holds
+  `ANGEL_*`, `FINNHUB_API_KEY`, `GITHUB_TOKEN`
+- Crontab: `* 3-10 * * 1-5` india (flock /tmp/fetch_india.lock) ·
+  `* 13-20 * * 1-5` us (flock /tmp/fetch_us.lock) — UTC, every minute
+- **Deploy = edit repo file → `scp` to VM → `python3 -m py_compile` on VM →
+  run once to verify.** Also push repo copy (use Contents API PUT to dodge the
+  every-minute commit race; `git push` keeps losing the rebase).
+
+## What broke + what was fixed
+
+### 1. US DAY P&L tile stuck on "--"
+- `market_indices.json` was orphaned at the last `full_update.yml` run — status
+  frozen at `RESET`. index.html:1959 blanks the US DAY P&L tile to `--` whenever
+  `usa_market.status === 'RESET'`.
+- **Fix:** VM script now ALSO writes `market_indices.json` every cycle —
+  S&P/Nasdaq (`^GSPC`/`^IXIC`), Nifty/Sensex (`^NSEI`/`^BSESN`), `fx_rate`
+  (`INR=X`) via the Yahoo **chart-endpoint meta** (`fetch_yahoo_meta`), plus a
+  ported `market_status()` (zoneinfo `America/New_York` / `Asia/Kolkata`, with a
+  fixed-offset fallback if tzdata missing). Status now tracks the real clock →
+  tile shows live P&L during market hours, blanks only in the true 7:30–9:30 ET
+  RESET window.
+
+### 2. CDN-cache clobber (read-modify-write race)
+- `market_indices.json` holds both `usa_market` + `india_market`. Each cron run
+  rewrites only its market and preserves the other from the existing file. The
+  existing file was read from `raw.githubusercontent.com` which is **CDN-cached
+  ~5min** → the india run read a stale copy and clobbered the fresh usa block
+  (and vice versa).
+- **Fix:** `get_current_indices_from_github()` reads via the **authenticated
+  Contents API** (uncached), falls back to raw CDN only on error.
+
+### 3. GITHUB_TOKEN expired → entire pipeline silently froze
+- VM `GITHUB_TOKEN` (old `ghp_0hl…`) expired ~09:30 UTC → ALL commits 401 Bad
+  Credentials → prices AND indices stopped updating, **no alert**. Earlier
+  symptoms (stale data) traced back to this.
+- **Fix:** replaced token in `angel_env.sh`. ⚠️ **Token expiry is a silent
+  single point of failure.** TODO: add an audit check that flags VM commit
+  failures / `holdings_prices.generated` age during market hours.
+
+### 4. India prices not matching broker (Daily P&L)
+Per-share LTP from Angel One was already accurate. The mismatches were:
+- **3 stocks dropped from Day P&L** (AVADHSUGAR/IRBINVIT/FILATFASH had `pc=None`)
+  because the old `fetch_india_yahoo_fallback()` used `yfinance .history(period=2d)`
+  — flaky intraday (no pc, and IRBINVIT silently froze hours-old).
+  **Fix:** rewrote fallback to use `fetch_yahoo_meta` (reliable ltp +
+  `chartPreviousClose`). Later retired Yahoo entirely (see below).
+- **ASHALOG + PARAMATRIX** delisted on Yahoo, frozen 7 days. They ARE on NSE as
+  **SME** stocks (`-SM` suffix). Added to `ANGEL_TOKEN_MAP`: ASHALOG=`24711`,
+  PARAMATRIX=`25069`. Now fetch live.
+- **Exchange mismatch:** broker holds AVADHSUGAR + GMBREW on **BSE**; dashboard
+  was reading NSE (AVADHSUGAR NSE 447 vs BSE 437 — illiquid divergence). Added
+  `ANGEL_BSE_TOKEN_MAP` (AVADHSUGAR=`540649`, GMBREW=`507488`) and made
+  `fetch_india_angel()` query NSE+BSE in one call, keying results by
+  `(exchange, token)`. Removed GMBREW from the NSE map.
+- **Yahoo fallback now fully retired** (`YAHOO_INDIA_FALLBACK = {}`) — all 14
+  India positions come from Angel One (NSE + BSE).
+
+## Broker → ticker mapping (holdings_cost.json `india.open[].broker`)
+- `Motilal Oswal` → SBIN, AVADHSUGAR(BSE), IRBINVIT, GMBREW(BSE), GOLDBEES_M,
+  RELIANCE, NBCC, PARAMATRIX
+- `Upstox` → GOLDBEES_U, WAAREEENER, FILATFASH
+- `m.Stock` → JYOTISTRUC, DIACABS, ASHALOG  **( m.Stock = Mirae Asset )**
+
+GOLDBEES is split `_M` (Motilal) + `_U` (Upstox), both Angel token `14428`.
+
+## Angel One useful bits
+- Scrip-master (public, no auth) for token lookup:
+  `https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json`
+  — grep by `name`/`symbol`, fields `symbol`,`token`,`exch_seg`. SME = `-SM`,
+  BE-series = `-BE`, InvIT = `-IV`.
+- Quote API takes `exchangeTokens: {"NSE":[...],"BSE":[...]}`, response
+  `data.fetched[]` has `symbolToken`,`exchange`,`ltp`,`close` (=prev close).
+- `searchScrip` order-API endpoint returned 400 in testing — use the scrip
+  master file instead.
+
+## KNOWN PENDING (not fixed)
+- **PARAMATRIX day P&L wrong (~+₹4,800 phantom on Motilal).** Illiquid SME, no
+  trade today → broker prev-close = 68 (0.00% day), but Angel One `close` field
+  = 66 (stale older session). LTP (value) is correct; only the day-delta
+  baseline is off. **Proposed fix (user to confirm): if Angel reports 0 trade
+  volume today, set `pc = ltp` (day=0).** Options were: (1) volume-based heal
+  [recommended], (2) manual pin pc=68 [goes stale], (3) leave it.
+- Token-expiry audit/alert (see #3) — still no monitoring.
+- `full_update.yml` still scheduled on ubuntu-latest but dead — clean up/disable.
+- WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,
+  treated as live-timing noise.
+
+## SECURITY
+- New `GITHUB_TOKEN` (classic, repo+workflow) was shared in plaintext chat on
+  2026-05-29 → **rotate it.** Lives in `/home/opc/angel_env.sh`.
+
+## Reconciliation snapshot (same-moment broker screenshots, 2026-05-29 ~12:43 IST)
+After fixes (PARAMATRIX phantom aside, everything within live-timing noise):
+- Mirae: dash −1,067 vs broker −1,257
+- Upstox: dash +73 vs broker −105
+- Motilal: dash −13,298 vs −17,265 (≈ −18,098 without PARAMATRIX phantom → ~₹830 timing)
+
+## Commits this session
+- `market_data.py`-independent VM script gained: market_indices write, Contents
+  API read, chart-endpoint India fallback, Angel SME tokens, Angel BSE map.
+- Pushed via Contents API PUT (git push loses race to every-minute VM commits):
+  `cacf2adec`, `8110787d6`, `31b03a13a`, `6a5280791`, `d9ccc5916`.

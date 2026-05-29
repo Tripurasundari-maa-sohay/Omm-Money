@@ -300,7 +300,7 @@
         <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;letter-spacing:1px">EXTRA PREPAYMENT ₹/mo</div>
         <input type="number" id="apt-sched-extra" value="0" min="0" max="500000" step="1000"
           style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 8px;font-size:13px;font-family:inherit"
-          oninput="ODIN.buildAptSched()">
+          oninput="ODIN.syncAptExtra()">
       </div>
     </div>
     <div id="apt-sched-summary" style="font-size:12px;color:var(--gold);margin-bottom:8px"></div>
@@ -405,7 +405,7 @@
         <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;letter-spacing:1px">EXTRA PREPAYMENT QAR/mo</div>
         <input type="number" id="lc-sched-extra" value="0" min="0" max="50000" step="100"
           style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 8px;font-size:13px;font-family:inherit"
-          oninput="ODIN.buildLCSched()">
+          oninput="ODIN.syncLCExtra()">
       </div>
     </div>
     <div id="lc-sched-summary" style="font-size:12px;color:var(--gold);margin-bottom:8px"></div>
@@ -2599,6 +2599,14 @@ const ODIN = (() => {
     }
   }
 
+  function syncAptExtra() {
+    // When number input changes → sync slider + rebuild sim summary + table
+    const extra = parseInt(document.getElementById('apt-sched-extra').value) || 0;
+    const sliderMax = parseInt(document.getElementById('lm-sim-slider').max) || 200000;
+    document.getElementById('lm-sim-slider').value = Math.min(extra, sliderMax);
+    updateLoanSim();  // updates sim summary + also calls buildAptSched()
+  }
+
   function closeLoanModal() {
     document.getElementById('loan-modal-backdrop').classList.remove('open');
     document.body.style.overflow = '';
@@ -2734,6 +2742,14 @@ const ODIN = (() => {
     document.body.style.overflow = 'hidden';
   }
 
+  function syncLCExtra() {
+    // When number input changes → sync slider + rebuild sim summary + table
+    const extra = parseInt(document.getElementById('lc-sched-extra').value) || 0;
+    const sliderMax = parseInt(document.getElementById('lc-sim-slider').max) || 5000;
+    document.getElementById('lc-sim-slider').value = Math.min(extra, sliderMax);
+    updateLCSim();  // updates sim summary + also calls buildLCSched()
+  }
+
   function closeLCModal() {
     document.getElementById('lc-modal-backdrop').classList.remove('open');
     document.body.style.overflow = '';
@@ -2759,7 +2775,7 @@ const ODIN = (() => {
     buildLCSched();
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, openLCModal, closeLCModal, updateLCSim, buildLCSched };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, syncAptExtra, openLCModal, closeLCModal, updateLCSim, buildLCSched, syncLCExtra };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

@@ -286,6 +286,39 @@
       <span class="lm-sim-val" id="lm-sim-extra">₹0</span>
     </div>
     <div class="lm-sim-result" id="lm-sim-result">→ At current pace, payoff ~2034</div>
+
+    <!-- Amortization schedule — apartment loan -->
+    <div class="lm-section" style="margin-top:16px">Amortization schedule</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;letter-spacing:1px">INTEREST RATE % p.a.</div>
+        <input type="number" id="apt-sched-rate" value="7.99" min="1" max="20" step="0.1"
+          style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 8px;font-size:13px;font-family:inherit"
+          oninput="ODIN.buildAptSched()">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:3px;letter-spacing:1px">EXTRA PREPAYMENT ₹/mo</div>
+        <input type="number" id="apt-sched-extra" value="0" min="0" max="500000" step="1000"
+          style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 8px;font-size:13px;font-family:inherit"
+          oninput="ODIN.buildAptSched()">
+      </div>
+    </div>
+    <div id="apt-sched-summary" style="font-size:12px;color:var(--gold);margin-bottom:8px"></div>
+    <div style="overflow-x:auto;max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:6px">
+      <table id="apt-sched-table" style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead style="position:sticky;top:0;background:var(--bg2)">
+          <tr>
+            <th style="padding:6px 8px;text-align:left;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">#</th>
+            <th style="padding:6px 8px;text-align:left;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Date</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Payment</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Interest</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Principal</th>
+            <th style="padding:6px 8px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Balance</th>
+          </tr>
+        </thead>
+        <tbody id="apt-sched-body"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -2498,12 +2531,72 @@ const ODIN = (() => {
     document.getElementById('lm-equity').textContent          = '₹' + (equity/1e5).toFixed(2) + 'L';
     document.getElementById('lm-ltv').textContent             = 'LTV ' + ltv + '%';
 
-    // Reset simulator
+    // Reset simulator + build schedule
     document.getElementById('lm-sim-slider').value = 0;
     updateLoanSim();
+    document.getElementById('apt-sched-rate').value  = 7.99;
+    document.getElementById('apt-sched-extra').value = 0;
+    buildAptSched();
 
     document.getElementById('loan-modal-backdrop').classList.add('open');
     document.body.style.overflow = 'hidden';
+  }
+
+  function buildAptSched() {
+    const v           = view();
+    const aptLoan     = v.loans.find(l => l.id === 'apartment') || {};
+    const principal   = aptLoan.outstanding || 3880624;
+    const rateAnnual  = parseFloat(document.getElementById('apt-sched-rate').value)  || 7.99;
+    const extraPmt    = parseFloat(document.getElementById('apt-sched-extra').value) || 0;
+    const r           = rateAnnual / 100 / 12;
+    const BASE_PMT    = 38125;   // avg actual monthly payment last 13m
+    const pmt         = BASE_PMT + extraPmt;
+    const mn          = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    let bal = principal, rows = [], totalInt = 0, crossoverRow = null;
+    let yr = 2026, mo = 6; // Jun 2026 (next payment after May)
+    let rowNum = 0;
+    while (bal > 0.01 && rowNum < 600) {
+      rowNum++;
+      const interest   = bal * r;
+      const principalP = Math.min(pmt - interest, bal);
+      const actualPmt  = interest + principalP;
+      totalInt += interest;
+      bal -= principalP;
+      const isCrossover = crossoverRow === null && principalP >= interest;
+      if (isCrossover) crossoverRow = rowNum;
+      rows.push({ rowNum, yr, mo, pmt: actualPmt, interest, principal: principalP, balance: bal, crossover: isCrossover });
+      mo++; if (mo > 12) { mo = 1; yr++; }
+    }
+
+    const last = rows[rows.length - 1];
+    const payoffLabel = last ? `${mn[last.mo === 1 ? 12 : last.mo - 1]} ${last.mo === 1 ? last.yr - 1 : last.yr}` : '—';
+    document.getElementById('apt-sched-summary').textContent =
+      `${rows.length} payments · payoff ${payoffLabel} · total interest ₹${Math.round(totalInt/1000)}k` +
+      (crossoverRow ? ` · ✦ principal>interest from payment ${crossoverRow} (${mn[rows[crossoverRow-1].mo]} ${rows[crossoverRow-1].yr})` : '');
+
+    const tbody = document.getElementById('apt-sched-body');
+    const fmt = n => Math.round(n).toLocaleString('en-IN');
+    tbody.innerHTML = rows.map(rw => {
+      const rowStyle  = rw.crossover ? 'background:rgba(212,168,76,0.15);' : (rw.rowNum % 2 === 0 ? 'background:var(--bg3);' : '');
+      const crossTag  = rw.crossover ? ' <span style="color:var(--gold);font-size:9px">✦ MILESTONE</span>' : '';
+      const intColor  = rw.principal >= rw.interest ? 'color:var(--gain,#4ecf82)' : 'color:var(--loss,#f87171)';
+      return `<tr style="${rowStyle}">
+        <td style="padding:5px 8px;color:var(--text-dim)">${rw.rowNum}${crossTag}</td>
+        <td style="padding:5px 8px">${mn[rw.mo]} ${rw.yr}</td>
+        <td style="padding:5px 8px;text-align:right">${fmt(rw.pmt)}</td>
+        <td style="padding:5px 8px;text-align:right;${intColor}">${fmt(rw.interest)}</td>
+        <td style="padding:5px 8px;text-align:right;${intColor}">${fmt(rw.principal)}</td>
+        <td style="padding:5px 8px;text-align:right">${fmt(Math.max(0,rw.balance))}</td>
+      </tr>`;
+    }).join('');
+
+    if (crossoverRow) {
+      setTimeout(() => {
+        const trs = tbody.querySelectorAll('tr');
+        if (trs[crossoverRow - 1]) trs[crossoverRow - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
   }
 
   function closeLoanModal() {
@@ -2660,7 +2753,7 @@ const ODIN = (() => {
       : `→ Without extra: payoff ${mn[pm0]} ${py0} · total interest QAR ${int0.toLocaleString()}`;
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, openLCModal, closeLCModal, updateLCSim, buildLCSched };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, openLCModal, closeLCModal, updateLCSim, buildLCSched };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

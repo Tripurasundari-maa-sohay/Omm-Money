@@ -335,7 +335,23 @@ def commit_json_to_github(path: str, payload: dict, label: str) -> bool:
     return False
 
 def get_current_indices_from_github() -> dict:
-    """Load existing market_indices.json to preserve the non-refreshed market."""
+    """Load existing market_indices.json to preserve the non-refreshed market.
+    Uses the authenticated Contents API (NOT raw.githubusercontent, which is
+    CDN-cached ~5min and would serve a stale block — clobbering the other
+    market's fresh data on read-modify-write)."""
+    if GITHUB_TOKEN:
+        try:
+            r = requests.get(
+                f"https://api.github.com/repos/{GITHUB_REPO}/contents/{INDICES_PATH}",
+                headers={"Authorization": f"token {GITHUB_TOKEN}",
+                         "Accept": "application/vnd.github.v3+json"},
+                params={"ref": "main"}, timeout=10
+            )
+            if r.status_code == 200:
+                return json.loads(base64.b64decode(r.json()["content"]).decode())
+        except Exception as e:
+            print(f"  indices read (API) error: {e}", file=sys.stderr)
+    # Fallback: raw CDN (may be stale)
     try:
         r = requests.get(
             f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/{INDICES_PATH}",

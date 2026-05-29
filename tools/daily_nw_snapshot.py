@@ -1,17 +1,25 @@
 """
 daily_nw_snapshot.py
 ====================
-Runs on Oracle VM via cron at 23:30 UTC daily (Monday-Friday).
+Runs on Oracle VM via cron at 22:00 UTC daily (Monday-Friday).
 Reads live data from GitHub, computes net worth, appends one entry to
 net-wealth/data/history.json, commits back.
+
+Cron time 22:00 UTC is DST-safe year-round:
+  Summer EDT (Mar-Nov): US close = 20:00 UTC → 22:00 = 2hrs after close
+  Winter EST (Nov-Mar): US close = 21:00 UTC → 22:00 = 1hr after close
+
+Script also checks US market status from market_indices.json. If market
+is still OPEN or POSTMARKET (prices not yet settled), it aborts and logs —
+preventing a stale-price snapshot on early re-runs or DST edge days.
 
 Mirrors the NW formula in net-wealth/index.html exactly:
   assetsTot = USD_assets + INR_assets + QAR_assets  (all in INR)
   liabTot   = sum of all loan outstandings (in INR)
   netWorth  = assetsTot - liabTot
 
-Crontab (add via: crontab -e on Oracle VM):
-  30 23 * * 1-5 source /home/opc/angel_env.sh && python3 /home/opc/daily_nw_snapshot.py >> /home/opc/nw_snapshot.log 2>&1
+Crontab (on Oracle VM):
+  0 22 * * 1-5 source /home/opc/angel_env.sh && python3 /home/opc/daily_nw_snapshot.py >> /home/opc/nw_snapshot.log 2>&1
 """
 
 import json, os, sys, base64, time, requests
@@ -182,6 +190,17 @@ def main():
 
     fx_live = indices.get("fx_rate")
     print(f"  FX live: {fx_live}")
+
+    # DST-safe market status guard:
+    # market_indices.json usa_market.status is computed by the VM price script
+    # using zoneinfo America/New_York (handles EDT/EST automatically).
+    # Only snapshot when US is CLOSED or POSTMARKET (prices settled).
+    # This guards against edge cases: early re-runs, DST day shifts, holidays.
+    usa_status = indices.get("usa_market", {}).get("status", "UNKNOWN")
+    print(f"  US market status: {usa_status}")
+    if usa_status in ("OPEN", "PREMARKET", "RESET"):
+        print(f"  US market not closed yet (status={usa_status}). Aborting — will retry at next cron tick.")
+        sys.exit(0)
 
     # Skip if today already snapshotted
     if isinstance(history, list) and history:

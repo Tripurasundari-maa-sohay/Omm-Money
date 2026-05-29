@@ -2632,28 +2632,46 @@ const ODIN = (() => {
   }
 
   function updateLoanSim() {
-    const outstanding = (view().apt_loan) || 3880624;
-    const extra       = parseInt(document.getElementById('lm-sim-slider').value) || 0;
-    const BASE_PMT    = 38125;   // avg monthly repayment last 12m (from statement)
-    const total_pmt   = BASE_PMT + extra;
-    const months      = total_pmt > 0 ? Math.ceil(outstanding / total_pmt) : 9999;
-    const yrs         = (months / 12).toFixed(1);
-    const payoff_yr   = new Date().getFullYear() + Math.ceil(months / 12);
-    const fmt         = n => '₹' + (n/1000).toFixed(0) + 'k';
+    const outstanding  = (view().apt_loan) || 3880624;
+    const extra        = parseInt(document.getElementById('lm-sim-slider').value) || 0;
+    const BASE_PMT     = 38125;
+    const APT_RATE     = parseFloat(document.getElementById('apt-sched-rate')?.value) || 7.99;
+    const r            = APT_RATE / 100 / 12;
+    const fmt          = n => '₹' + (n/1000).toFixed(0) + 'k';
+    const mn           = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    // Proper amortizing formula for both baseline and with-extra
+    function amortMonths(pmt) {
+      if (pmt <= outstanding * r) return 9999;
+      return Math.ceil(-Math.log(1 - r * outstanding / pmt) / Math.log(1 + r));
+    }
+    function payoffDate(months) {
+      const yr  = 2026 + Math.floor((4 + months) / 12);
+      const mth = ((4 + months) % 12) + 1;
+      return { yr, mth, label: `${mn[mth]} ${yr}` };
+    }
+
+    const m0  = amortMonths(BASE_PMT);
+    const mx  = amortMonths(BASE_PMT + extra);
+    const pd0 = payoffDate(m0);
+    const pdx = payoffDate(mx);
+    const savedYrs = ((m0 - mx) / 12).toFixed(1);
+
     document.getElementById('lm-sim-extra').textContent  = extra > 0 ? fmt(extra) + '/mo extra' : '₹0 extra';
     document.getElementById('lm-sim-result').textContent =
       extra > 0
-        ? `→ Payoff in ~${yrs} yrs (${payoff_yr}) · saves ${(8.4 - parseFloat(yrs)).toFixed(1)} yrs vs current pace`
-        : `→ At current pace (~₹${(BASE_PMT/1000).toFixed(0)}k/mo), payoff ~2034 (8.4 yrs)`;
+        ? `→ Payoff ${pdx.label} · saves ${savedYrs} yrs vs forecast`
+        : `→ At current pace (~₹${(BASE_PMT/1000).toFixed(0)}k/mo), payoff ${pd0.label} (${(m0/12).toFixed(1)} yrs)`;
+
     // Sync slider → schedule table + dynamic detail rows
     document.getElementById('apt-sched-extra').value = extra;
-    buildAptSched();   // table + crossover tile updated inside buildAptSched
+    buildAptSched();
     // Dynamic "With extra prepayment" row
     const prepayRow = document.getElementById('apt-prepay-row');
     if (extra > 0) {
       prepayRow.style.display = '';
       document.getElementById('apt-prepay-date').textContent =
-        `${payoff_yr} · saves ${(8.4 - parseFloat(yrs)).toFixed(1)} yrs vs forecast`;
+        `${pdx.label} · saves ${savedYrs} yrs vs forecast`;
     } else {
       prepayRow.style.display = 'none';
     }

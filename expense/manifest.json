@@ -1,0 +1,27 @@
+{
+  "name": "Expense Planner",
+  "short_name": "Expenses",
+  "description": "Personal monthly expense planner with Google Drive sync",
+  "start_url": "/Omm-Money/expense/",
+  "scope": "/Omm-Money/expense/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06060e",
+  "theme_color": "#d4a84c",
+  "lang": "en",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

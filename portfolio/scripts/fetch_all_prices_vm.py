@@ -129,16 +129,29 @@ def fetch_india_angel():
                 token = str(d.get("symbolToken", ""))
                 exch  = d.get("exchange", "NSE")
                 ltp, pc = d.get("ltp"), d.get("close")
+                vol = d.get("tradeVolume")
                 if ltp and float(ltp) > 0:
+                    pc_val = round(float(pc), 4) if pc and float(pc) > 0 else None
+                    # Volume heal: illiquid SME with 0 trades today has a stale
+                    # `close` (older session) → broker treats prev-close = last
+                    # price (0% day). Force pc = ltp so Day P&L = 0, matching broker.
+                    healed = False
+                    try:
+                        if vol is not None and int(vol) == 0:
+                            pc_val = round(float(ltp), 4)
+                            healed = True
+                    except (TypeError, ValueError):
+                        pass
                     entry = {
                         "ltp": round(float(ltp), 4),
-                        "pc":  round(float(pc), 4) if pc and float(pc) > 0 else None,
+                        "pc":  pc_val,
                         "source": "angelone",
                         "as_of":  datetime.now(timezone.utc).isoformat() + "Z"
                     }
                     for tk in key_to_tickers.get((exch, token), []):
                         results[tk] = entry
-                        print(f"  {tk:15s} → {ltp:.2f}  pc={pc}  [{exch} Angel One]")
+                        tag = "  [vol=0 heal: pc=ltp]" if healed else ""
+                        print(f"  {tk:15s} → {ltp:.2f}  pc={pc_val}  [{exch} Angel One]{tag}")
     except Exception as e:
         print(f"  Angel One batch error: {e}", file=sys.stderr)
     return results

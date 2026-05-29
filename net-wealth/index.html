@@ -2526,13 +2526,24 @@ const ODIN = (() => {
     // Scheduled balance at Sr 62 (May 2026) from amortization PDF
     const SCHED_NOW   = 4664383;
     const ahead       = SCHED_NOW - outstanding;
-    const yrsAhead    = (ahead / (outstanding / 8.4 / 12)).toFixed(1); // approx
+    // Yrs ahead: from schedule Sr 62 (May 2026). Outstanding maps to ~Sr 172 (Jul 2035).
+    // Each Sr = 1 month. (172 - 62) / 12 = 9.17 yrs.
+    // Derive dynamically: find where outstanding sits on schedule by monthly reduction.
+    const APT_MONTHLY_RATE = 7.989 / 100 / 12;
+    // Equivalent schedule position: how many months of scheduled payments would reduce
+    // balance from SCHED_62 to outstanding, at scheduled EMI 36387
+    const APT_SCHED_EMI = 36387;
+    const schedMonthsAhead = Math.round(
+      Math.log(1 - APT_MONTHLY_RATE * (SCHED_NOW - outstanding) / APT_SCHED_EMI) /
+      Math.log(1 + APT_MONTHLY_RATE) * -1
+    );
+    const yrsAhead = (schedMonthsAhead / 12).toFixed(1);
 
     document.getElementById('lm-pct-label').textContent       = pct + '% paid off';
     document.getElementById('lm-bar-fill').style.width        = pct + '%';
     document.getElementById('lm-remaining-label').textContent = 'Remaining: ₹' + (outstanding/1e5).toFixed(2) + 'L';
     document.getElementById('lm-ahead').textContent           = '₹' + (ahead/1e5).toFixed(2) + 'L';
-    document.getElementById('lm-ahead-sub').textContent       = '~9.4 yrs ahead of schedule';
+    document.getElementById('lm-ahead-sub').textContent       = '~' + yrsAhead + ' yrs ahead of schedule';
     document.getElementById('lm-equity').textContent          = '₹' + (equity/1e5).toFixed(2) + 'L';
     document.getElementById('lm-ltv').textContent             = 'LTV ' + ltv + '%';
 
@@ -2771,7 +2782,10 @@ const ODIN = (() => {
     const v = view();
     const lcLoan   = v.loans.find(l => l.id === 'lc') || {};
     const outstanding = lcLoan.outstanding || 273157.13;
-    const repaid   = LC_ORIG - outstanding + 2037; // pause added 2037 to outstanding
+    // Principal repaid = 5 EMIs × 6,851 − interest paid ITD = 34,255 − 5,374.92 = 28,880
+    // Do not add accrued interest to repaid — interest accrual ≠ principal repayment
+    const LC_PRINCIPAL_REPAID = 28880;
+    const repaid   = LC_PRINCIPAL_REPAID;
     const pct      = Math.max(0, (LC_ORIG - outstanding) / LC_ORIG * 100).toFixed(1);
 
     const { months: m0, totalInt: int0 } = _lcAmortize(outstanding, 0);
@@ -2784,7 +2798,7 @@ const ODIN = (() => {
     document.getElementById('lc-bar-fill').style.width       = pct + '%';
     document.getElementById('lc-remaining-label').textContent= 'Remaining: QAR ' + outstanding.toLocaleString('en-QA', {maximumFractionDigits:0});
     document.getElementById('lc-outstanding').textContent    = 'QAR ' + outstanding.toLocaleString('en-QA', {maximumFractionDigits:0});
-    document.getElementById('lc-repaid').textContent         = 'QAR ' + Math.round(LC_ORIG - outstanding + 2037).toLocaleString();
+    document.getElementById('lc-repaid').textContent         = 'QAR ' + LC_PRINCIPAL_REPAID.toLocaleString();
     document.getElementById('lc-repaid-pct').textContent     = pct + '% of loan';
     document.getElementById('lc-fut-int').textContent        = 'QAR ' + int0.toLocaleString();
     document.getElementById('lc-sim-result').textContent     = `→ Without extra: payoff ${mn[pm0]} ${py0}`;

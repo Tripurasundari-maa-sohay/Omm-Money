@@ -287,6 +287,78 @@
   </div>
 </div>
 
+<!-- ── LC (LAND CRUISER) LOAN ANALYTICS MODAL ─────────────────────────── -->
+<div class="loan-modal-backdrop" id="lc-modal-backdrop" onclick="if(event.target===this)ODIN.closeLCModal()">
+  <div class="loan-modal">
+    <button class="lm-close" onclick="ODIN.closeLCModal()">✕</button>
+    <h2>🚗 LAND CRUISER LOAN ANALYTICS</h2>
+
+    <!-- Progress bar -->
+    <div class="lm-bar-wrap">
+      <div class="lm-bar-label">
+        <span>Principal repaid</span>
+        <span id="lc-pct-label">—</span>
+      </div>
+      <div class="lm-bar-bg"><div class="lm-bar-fill" id="lc-bar-fill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:3px">
+        <span>Started QAR 300,000 (Dec 2025)</span><span id="lc-remaining-label">—</span>
+      </div>
+    </div>
+
+    <!-- EID pause banner -->
+    <div style="background:rgba(212,168,76,0.1);border:1px solid var(--gold-dim);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:var(--gold)">
+      ⏸ EID PROMOTION: May + Jun 2026 EMI paused (no penalty). Interest accrued: <b>QAR 2,037</b>. Resumes Jul 2026.
+    </div>
+
+    <!-- Stat grid -->
+    <div class="lm-stat-grid">
+      <div class="lm-stat highlight">
+        <div class="lm-label">Outstanding (post-pause)</div>
+        <div class="lm-val" id="lc-outstanding">QAR 2,73,157</div>
+        <div class="lm-sub">incl. 2-mo interest</div>
+      </div>
+      <div class="lm-stat good">
+        <div class="lm-label">Original payoff</div>
+        <div class="lm-val">Jan 2030</div>
+        <div class="lm-sub">Now Mar 2030 (pause +2mo)</div>
+      </div>
+      <div class="lm-stat">
+        <div class="lm-label">EMIs paid</div>
+        <div class="lm-val">5</div>
+        <div class="lm-sub">Dec 25 – Apr 26</div>
+      </div>
+      <div class="lm-stat">
+        <div class="lm-label">Principal repaid</div>
+        <div class="lm-val" id="lc-repaid">QAR 26,843</div>
+        <div class="lm-sub" id="lc-repaid-pct">9.0% of loan</div>
+      </div>
+    </div>
+
+    <!-- Key facts -->
+    <div class="lm-section">Loan details</div>
+    <div class="lm-row"><span class="lm-rk">Bank</span><span class="lm-rv">Doha Bank</span></div>
+    <div class="lm-row"><span class="lm-rk">Rate</span><span class="lm-rv">4.5% p.a. (flat reducing)</span></div>
+    <div class="lm-row"><span class="lm-rk">EMI</span><span class="lm-rv">QAR 6,851/mo</span></div>
+    <div class="lm-row"><span class="lm-rk">Maturity (original)</span><span class="lm-rv">Jan 2030</span></div>
+    <div class="lm-row"><span class="lm-rk">Maturity (after pause)</span><span class="lm-rv">Mar 2030</span></div>
+    <div class="lm-row"><span class="lm-rk">Total future interest</span><span class="lm-rv" id="lc-fut-int">QAR 23,273</span></div>
+
+    <!-- Prepayment simulator -->
+    <div class="lm-section">Prepayment simulator (from Jul 2026)</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">Extra payment per month beyond EMI of QAR 6,851:</div>
+    <div class="lm-sim-row">
+      <span style="font-size:12px;color:var(--text-dim)">QAR 0</span>
+      <input type="range" id="lc-sim-slider" min="0" max="5000" step="100" value="0" oninput="ODIN.updateLCSim()">
+      <span style="font-size:12px;color:var(--text-dim)">QAR 5k</span>
+      <span class="lm-sim-val" id="lc-sim-extra">QAR 0</span>
+    </div>
+    <div class="lm-sim-result" id="lc-sim-result">→ Without extra: payoff Mar 2030</div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:8px">
+      💡 Low-rate loan (4.5%). Prepaying apartment loan (7.99%) saves more interest per rupee.
+    </div>
+  </div>
+</div>
+
 <h1>⚔️ ODIN ⚔️</h1>
 <div class="subtitle">NET WORTH SENTINEL</div>
 
@@ -1290,8 +1362,11 @@ const ODIN = (() => {
         ? ` · ${ln.tenure_months_remaining} mo left`
         : '';
       const isApt = ln.id === 'apartment';
-      const hint  = isApt ? '<span class="detail-hint">↗ details</span>' : '';
-      const click = isApt ? ' loan-row-clickable" onclick="ODIN.openLoanModal()' : '';
+      const isLC  = ln.id === 'lc';
+      const hint  = (isApt || isLC) ? '<span class="detail-hint">↗ details</span>' : '';
+      const click = isApt ? ' loan-row-clickable" onclick="ODIN.openLoanModal()'
+                  : isLC  ? ' loan-row-clickable" onclick="ODIN.openLCModal()'
+                  : '';
       return `<div class="row-line${click}">
         <span class="name">${ln.label}${hint} <span class="sub">${ln.provider}${tenureStr}</span></span>
         <span class="val" style="color:${isZero ? 'var(--text-dim)' : 'var(--loss)'}">${isZero ? '—' : '(' + valStr + ')'}</span>
@@ -2408,7 +2483,75 @@ const ODIN = (() => {
         : `→ At current pace (~₹${(BASE_PMT/1000).toFixed(0)}k/mo), payoff ~2034 (8.4 yrs)`;
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim };
+  // ── LC LOAN ANALYTICS MODAL ──────────────────────────────────────────────
+  const LC_MONTHLY_RATE = 4.5 / 100 / 12;
+  const LC_EMI          = 6851;
+  const LC_ORIG         = 300000;
+
+  function _lcAmortize(principal, extra) {
+    let bal = principal, totalInt = 0, months = 0;
+    const pmt = LC_EMI + extra;
+    while (bal > 0.01 && months < 600) {
+      const int = bal * LC_MONTHLY_RATE;
+      totalInt += int;
+      bal -= Math.min(pmt - int, bal);
+      months++;
+    }
+    return { months, totalInt: Math.round(totalInt) };
+  }
+
+  function openLCModal() {
+    const v = view();
+    const lcLoan   = v.loans.find(l => l.id === 'lc') || {};
+    const outstanding = lcLoan.outstanding || 273157.13;
+    const repaid   = LC_ORIG - outstanding + 2037; // pause added 2037 to outstanding
+    const pct      = Math.max(0, (LC_ORIG - outstanding) / LC_ORIG * 100).toFixed(1);
+
+    const { months: m0, totalInt: int0 } = _lcAmortize(outstanding, 0);
+    // Payoff date from Jul 2026
+    const py0 = 2026 + Math.floor((6 + m0) / 12);
+    const pm0 = ((6 + m0) % 12) + 1;
+    const mn  = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    document.getElementById('lc-pct-label').textContent      = pct + '% paid off';
+    document.getElementById('lc-bar-fill').style.width       = pct + '%';
+    document.getElementById('lc-remaining-label').textContent= 'Remaining: QAR ' + outstanding.toLocaleString('en-QA', {maximumFractionDigits:0});
+    document.getElementById('lc-outstanding').textContent    = 'QAR ' + outstanding.toLocaleString('en-QA', {maximumFractionDigits:0});
+    document.getElementById('lc-repaid').textContent         = 'QAR ' + Math.round(LC_ORIG - outstanding + 2037).toLocaleString();
+    document.getElementById('lc-repaid-pct').textContent     = pct + '% of loan';
+    document.getElementById('lc-fut-int').textContent        = 'QAR ' + int0.toLocaleString();
+    document.getElementById('lc-sim-result').textContent     = `→ Without extra: payoff ${mn[pm0]} ${py0}`;
+
+    document.getElementById('lc-sim-slider').value = 0;
+    updateLCSim();
+
+    document.getElementById('lc-modal-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLCModal() {
+    document.getElementById('lc-modal-backdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function updateLCSim() {
+    const v = view();
+    const lcLoan = v.loans.find(l => l.id === 'lc') || {};
+    const outstanding = lcLoan.outstanding || 273157.13;
+    const extra  = parseInt(document.getElementById('lc-sim-slider').value) || 0;
+    const { months: m0, totalInt: int0 } = _lcAmortize(outstanding, 0);
+    const { months: mx, totalInt: intx } = _lcAmortize(outstanding, extra);
+    const mn = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const py0 = 2026 + Math.floor((6 + m0) / 12), pm0 = ((6 + m0) % 12) + 1;
+    const pyx = 2026 + Math.floor((6 + mx) / 12), pmx = ((6 + mx) % 12) + 1;
+
+    document.getElementById('lc-sim-extra').textContent = extra > 0 ? 'QAR ' + extra.toLocaleString() + '/mo' : 'QAR 0';
+    document.getElementById('lc-sim-result').textContent = extra > 0
+      ? `→ Payoff ${mn[pmx]} ${pyx} · saves ${m0 - mx} months · QAR ${(int0 - intx).toLocaleString()} interest`
+      : `→ Without extra: payoff ${mn[pm0]} ${py0} · total interest QAR ${int0.toLocaleString()}`;
+  }
+
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, openLCModal, closeLCModal, updateLCSim };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

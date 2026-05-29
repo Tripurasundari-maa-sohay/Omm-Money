@@ -259,10 +259,12 @@
         <div class="lm-val" id="lm-int-saved">~₹32.5L</div>
         <div class="lm-sub">from prepayments</div>
       </div>
-      <div class="lm-stat">
+      <div class="lm-stat" id="apt-crossover-tile">
         <div class="lm-label">Interest crossover</div>
-        <div class="lm-val">~2033</div>
-        <div class="lm-sub">principal &gt; interest/mo</div>
+        <div class="lm-val" id="apt-crossover-actual">~2033</div>
+        <div class="lm-sub" id="apt-crossover-sub">principal &gt; interest/mo</div>
+        <div style="margin-top:4px;font-size:10px;color:var(--text-dim)" id="apt-crossover-contract">contract: ~2045</div>
+        <div style="font-size:10px;color:var(--gold);display:none" id="apt-crossover-slider"></div>
       </div>
     </div>
 
@@ -273,6 +275,7 @@
     <div class="lm-row"><span class="lm-rk">Contract end</span><span class="lm-rv">Mar 2051 · Sr 360</span></div>
     <div class="lm-row"><span class="lm-rk">Forecasted payoff</span><span class="lm-rv" style="color:var(--gain,#4ecf82)">Aug 2040 · 171 mo left</span></div>
     <div class="lm-row"><span class="lm-rk">Saved vs contract</span><span class="lm-rv" style="color:var(--gold)">~10.6 yrs ahead</span></div>
+    <div class="lm-row" id="apt-prepay-row" style="display:none"><span class="lm-rk">With extra prepayment</span><span class="lm-rv" id="apt-prepay-date" style="color:var(--gold)">—</span></div>
     <div class="lm-row"><span class="lm-rk">Current EMI</span><span class="lm-rv">₹36,387/mo (avg paid ₹38,125)</span></div>
     <div class="lm-row"><span class="lm-rk">Interest paid (ITD)</span><span class="lm-rv">₹19.27L</span></div>
 
@@ -376,6 +379,8 @@
     <div class="lm-row"><span class="lm-rk">EMI</span><span class="lm-rv">QAR 6,851/mo</span></div>
     <div class="lm-row"><span class="lm-rk">Maturity (original)</span><span class="lm-rv">Jan 2030</span></div>
     <div class="lm-row"><span class="lm-rk">Maturity (after pause)</span><span class="lm-rv">Mar 2030</span></div>
+    <div class="lm-row" id="lc-prepay-row" style="display:none"><span class="lm-rk">With extra prepayment</span><span class="lm-rv" id="lc-prepay-date" style="color:var(--gold)">—</span></div>
+    <div class="lm-row"><span class="lm-rk">Interest crossover</span><span class="lm-rv"><span id="lc-crossover-actual">—</span> <span style="color:var(--text-dim);font-size:10px">(contract ~Feb 2029)</span> <span id="lc-crossover-slider" style="color:var(--gold);font-size:11px"></span></span></div>
     <div class="lm-row"><span class="lm-rk">Total future interest</span><span class="lm-rv" id="lc-fut-int">QAR 23,273</span></div>
 
     <!-- Prepayment simulator -->
@@ -2575,6 +2580,20 @@ const ODIN = (() => {
       `${rows.length} payments · payoff ${payoffLabel} · total interest ₹${Math.round(totalInt/1000)}k` +
       (crossoverRow ? ` · ✦ principal>interest from payment ${crossoverRow} (${mn[rows[crossoverRow-1].mo]} ${rows[crossoverRow-1].yr})` : '');
 
+    // Update crossover tile: actual (current scenario) + slider label
+    if (crossoverRow) {
+      const cr = rows[crossoverRow - 1];
+      document.getElementById('apt-crossover-actual').textContent = `${mn[cr.mo]} ${cr.yr}`;
+      document.getElementById('apt-crossover-sub').textContent    = `principal > interest (pmt #${crossoverRow})`;
+      const sliderEl = document.getElementById('apt-crossover-slider');
+      if (extraPmt > 0) {
+        sliderEl.style.display = '';
+        sliderEl.textContent   = `with +₹${(extraPmt/1000).toFixed(0)}k: ${mn[cr.mo]} ${cr.yr}`;
+      } else {
+        sliderEl.style.display = 'none';
+      }
+    }
+
     const tbody = document.getElementById('apt-sched-body');
     const fmt = n => Math.round(n).toLocaleString('en-IN');
     tbody.innerHTML = rows.map(rw => {
@@ -2626,9 +2645,18 @@ const ODIN = (() => {
       extra > 0
         ? `→ Payoff in ~${yrs} yrs (${payoff_yr}) · saves ${(8.4 - parseFloat(yrs)).toFixed(1)} yrs vs current pace`
         : `→ At current pace (~₹${(BASE_PMT/1000).toFixed(0)}k/mo), payoff ~2034 (8.4 yrs)`;
-    // Sync slider → schedule table so dates update live
+    // Sync slider → schedule table + dynamic detail rows
     document.getElementById('apt-sched-extra').value = extra;
-    buildAptSched();
+    buildAptSched();   // table + crossover tile updated inside buildAptSched
+    // Dynamic "With extra prepayment" row
+    const prepayRow = document.getElementById('apt-prepay-row');
+    if (extra > 0) {
+      prepayRow.style.display = '';
+      document.getElementById('apt-prepay-date').textContent =
+        `${payoff_yr} · saves ${(8.4 - parseFloat(yrs)).toFixed(1)} yrs vs forecast`;
+    } else {
+      prepayRow.style.display = 'none';
+    }
   }
 
   // ── LC LOAN ANALYTICS MODAL ──────────────────────────────────────────────
@@ -2681,6 +2709,18 @@ const ODIN = (() => {
     document.getElementById('lc-sched-summary').textContent =
       `${rows.length} instalments · payoff ${payoffLabel} · total interest QAR ${Math.round(totalInt).toLocaleString()}` +
       (crossoverRow ? ` · ✦ principal>interest from row ${crossoverRow} (${mn[rows[crossoverRow-1].mo]} ${rows[crossoverRow-1].yr})` : '');
+
+    // Update crossover detail row
+    const lcCrossActual = document.getElementById('lc-crossover-actual');
+    const lcCrossSlider = document.getElementById('lc-crossover-slider');
+    if (crossoverRow && lcCrossActual) {
+      const cr = rows[crossoverRow - 1];
+      lcCrossActual.textContent = `${mn[cr.mo]} ${cr.yr}`;
+      if (lcCrossSlider) {
+        if (extraPmt > 0) { lcCrossSlider.textContent = ` → +QAR ${extraPmt}: ${mn[cr.mo]} ${cr.yr}`; }
+        else               { lcCrossSlider.textContent = ''; }
+      }
+    }
 
     // Render table
     const tbody = document.getElementById('lc-sched-body');
@@ -2770,9 +2810,19 @@ const ODIN = (() => {
     document.getElementById('lc-sim-result').textContent = extra > 0
       ? `→ Payoff ${mn[pmx]} ${pyx} · saves ${m0 - mx} months · QAR ${(int0 - intx).toLocaleString()} interest`
       : `→ Without extra: payoff ${mn[pm0]} ${py0} · total interest QAR ${int0.toLocaleString()}`;
-    // Sync slider → schedule table so dates update live
+    // Sync slider → schedule table + dynamic detail rows
     document.getElementById('lc-sched-extra').value = extra;
-    buildLCSched();
+    buildLCSched();  // updates table + crossover row inside
+    // Dynamic "With extra prepayment" row
+    const lcPrepayRow = document.getElementById('lc-prepay-row');
+    if (extra > 0) {
+      lcPrepayRow.style.display = '';
+      const mn2 = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      document.getElementById('lc-prepay-date').textContent =
+        `${mn2[pmx]} ${pyx} · saves ${m0 - mx} months`;
+    } else {
+      lcPrepayRow.style.display = 'none';
+    }
   }
 
   return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, syncAptExtra, openLCModal, closeLCModal, updateLCSim, buildLCSched, syncLCExtra };

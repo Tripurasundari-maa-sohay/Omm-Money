@@ -132,22 +132,23 @@ def fetch_india_angel():
     return results
 
 def fetch_india_yahoo_fallback():
+    """Yahoo fallback for India tickers Angel One can't serve.
+    Uses the chart-endpoint meta (regularMarketPrice + chartPreviousClose) —
+    reliable intraday ltp AND pc every run. The old yfinance .history(period=2d)
+    path was flaky intraday: it left pc=None (so the dashboard dropped the stock
+    from Day P&L) and silently failed for some tickers (IRBINVIT froze hours-old)."""
     results = {}
-    try:
-        import yfinance as yf
-        for tk, yf_sym in YAHOO_INDIA_FALLBACK.items():
-            try:
-                hist = yf.Ticker(yf_sym).history(period="2d", interval="1d", auto_adjust=False)
-                if not hist.empty:
-                    ltp = round(float(hist["Close"].iloc[-1]), 4)
-                    pc  = round(float(hist["Close"].iloc[-2]), 4) if len(hist) >= 2 else None
-                    results[tk] = {"ltp": ltp, "pc": pc, "source": "yahoo",
-                                   "as_of": datetime.now(timezone.utc).isoformat() + "Z"}
-                    print(f"  {tk:15s} → {ltp:.2f}  [Yahoo fallback]")
-            except Exception as e:
-                print(f"  Yahoo {tk}: {e}", file=sys.stderr)
-    except ImportError:
-        pass
+    for tk, yf_sym in YAHOO_INDIA_FALLBACK.items():
+        q = fetch_yahoo_meta(yf_sym)
+        if q is None or not q.get("ltp"):
+            continue
+        results[tk] = {
+            "ltp": round(float(q["ltp"]), 4),
+            "pc":  round(float(q["pc"]), 4) if q.get("pc") else None,
+            "source": "yahoo",
+            "as_of":  datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        print(f"  {tk:15s} → {q['ltp']:.2f}  pc={q.get('pc')}  [Yahoo fallback]")
     return results
 
 def fetch_us_finnhub():

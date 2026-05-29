@@ -175,9 +175,117 @@
   .tab-btn.active { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border-color: var(--gold); box-shadow: 0 2px 12px rgba(255,215,0,0.25); }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
+
+  /* ── LOAN ANALYTICS MODAL ─────────────────────────────────────────────── */
+  .loan-modal-backdrop {
+    display:none;position:fixed;inset:0;z-index:1000;
+    background:rgba(0,0,0,0.72);backdrop-filter:blur(3px);
+    align-items:center;justify-content:center;
+  }
+  .loan-modal-backdrop.open { display:flex; }
+  .loan-modal {
+    background:var(--bg2);border:1px solid var(--border2);border-radius:12px;
+    padding:24px;width:min(520px,95vw);max-height:90vh;overflow-y:auto;
+    position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6);
+  }
+  .loan-modal h2 { color:var(--gold);font-size:14px;letter-spacing:3px;margin:0 0 16px; }
+  .lm-close {
+    position:absolute;top:14px;right:16px;background:none;border:none;
+    color:var(--text-dim);font-size:20px;cursor:pointer;line-height:1;
+  }
+  .lm-close:hover { color:var(--text); }
+  .lm-stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px; }
+  .lm-stat { background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px; }
+  .lm-stat .lm-label { font-size:10px;color:var(--text-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px; }
+  .lm-stat .lm-val { font-size:16px;font-weight:700;color:var(--text); }
+  .lm-stat .lm-sub { font-size:11px;color:var(--text-dim);margin-top:2px; }
+  .lm-stat.highlight .lm-val { color:var(--gold); }
+  .lm-stat.good .lm-val { color:var(--gain,#4ecf82); }
+  .lm-bar-wrap { margin-bottom:16px; }
+  .lm-bar-label { display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-bottom:4px; }
+  .lm-bar-bg { background:var(--bg3);border-radius:6px;height:10px;overflow:hidden; }
+  .lm-bar-fill { height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));border-radius:6px;transition:width .6s ease; }
+  .lm-section { font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin:16px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px; }
+  .lm-sim-row { display:flex;align-items:center;gap:10px;margin:8px 0; }
+  .lm-sim-row input[type=range] { flex:1;accent-color:var(--gold); }
+  .lm-sim-val { min-width:80px;text-align:right;font-size:13px;font-weight:600;color:var(--gold); }
+  .lm-sim-result { font-size:12px;color:var(--text-dim);margin-top:4px; }
+  .lm-row { display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px; }
+  .lm-row:last-child { border-bottom:none; }
+  .lm-row .lm-rk { color:var(--text-dim); }
+  .lm-row .lm-rv { font-weight:600; }
+  .loan-row-clickable { cursor:pointer; }
+  .loan-row-clickable:hover .name { color:var(--gold); }
+  .loan-row-clickable .detail-hint {
+    font-size:10px;color:var(--gold-dim);margin-left:6px;opacity:0.7;
+    font-style:italic;letter-spacing:0;text-transform:none;
+  }
 </style>
 </head>
 <body>
+
+<!-- ── LOAN ANALYTICS MODAL ────────────────────────────────────────────── -->
+<div class="loan-modal-backdrop" id="loan-modal-backdrop" onclick="if(event.target===this)ODIN.closeLoanModal()">
+  <div class="loan-modal">
+    <button class="lm-close" onclick="ODIN.closeLoanModal()">✕</button>
+    <h2>🏠 APARTMENT LOAN ANALYTICS</h2>
+
+    <!-- Progress bar -->
+    <div class="lm-bar-wrap">
+      <div class="lm-bar-label">
+        <span>Principal repaid</span>
+        <span id="lm-pct-label">—</span>
+      </div>
+      <div class="lm-bar-bg"><div class="lm-bar-fill" id="lm-bar-fill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-top:3px">
+        <span>Started ₹49.98L (Apr 2021)</span><span id="lm-remaining-label">—</span>
+      </div>
+    </div>
+
+    <!-- Stat grid -->
+    <div class="lm-stat-grid">
+      <div class="lm-stat highlight">
+        <div class="lm-label">Ahead of schedule</div>
+        <div class="lm-val" id="lm-ahead">—</div>
+        <div class="lm-sub" id="lm-ahead-sub">—</div>
+      </div>
+      <div class="lm-stat good">
+        <div class="lm-label">Equity built</div>
+        <div class="lm-val" id="lm-equity">—</div>
+        <div class="lm-sub" id="lm-ltv">LTV —%</div>
+      </div>
+      <div class="lm-stat">
+        <div class="lm-label">Interest saved</div>
+        <div class="lm-val" id="lm-int-saved">~₹32.5L</div>
+        <div class="lm-sub">from prepayments</div>
+      </div>
+      <div class="lm-stat">
+        <div class="lm-label">Interest crossover</div>
+        <div class="lm-val">~2033</div>
+        <div class="lm-sub">principal &gt; interest/mo</div>
+      </div>
+    </div>
+
+    <!-- Key facts -->
+    <div class="lm-section">Loan details</div>
+    <div class="lm-row"><span class="lm-rk">Bank</span><span class="lm-rv">Canara Bank</span></div>
+    <div class="lm-row"><span class="lm-rk">Rate (implied)</span><span class="lm-rv">7.99% p.a.</span></div>
+    <div class="lm-row"><span class="lm-rk">Scheduled payoff</span><span class="lm-rv">Mar 2051</span></div>
+    <div class="lm-row"><span class="lm-rk">Current EMI</span><span class="lm-rv">₹36,387/mo</span></div>
+    <div class="lm-row"><span class="lm-rk">Interest paid (ITD)</span><span class="lm-rv">₹19.27L</span></div>
+
+    <!-- Prepayment simulator -->
+    <div class="lm-section">Prepayment simulator</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">Extra payment per month beyond EMI:</div>
+    <div class="lm-sim-row">
+      <span style="font-size:12px;color:var(--text-dim)">₹0</span>
+      <input type="range" id="lm-sim-slider" min="0" max="200000" step="5000" value="0" oninput="ODIN.updateLoanSim()">
+      <span style="font-size:12px;color:var(--text-dim)">₹2L</span>
+      <span class="lm-sim-val" id="lm-sim-extra">₹0</span>
+    </div>
+    <div class="lm-sim-result" id="lm-sim-result">→ At current pace, payoff ~2034</div>
+  </div>
+</div>
 
 <h1>⚔️ ODIN ⚔️</h1>
 <div class="subtitle">NET WORTH SENTINEL</div>
@@ -1181,8 +1289,11 @@ const ODIN = (() => {
       const tenureStr = ln.tenure_months_remaining
         ? ` · ${ln.tenure_months_remaining} mo left`
         : '';
-      return `<div class="row-line">
-        <span class="name">${ln.label} <span class="sub">${ln.provider}${tenureStr}</span></span>
+      const isApt = ln.id === 'apartment';
+      const hint  = isApt ? '<span class="detail-hint">↗ details</span>' : '';
+      const click = isApt ? ' loan-row-clickable" onclick="ODIN.openLoanModal()' : '';
+      return `<div class="row-line${click}">
+        <span class="name">${ln.label}${hint} <span class="sub">${ln.provider}${tenureStr}</span></span>
         <span class="val" style="color:${isZero ? 'var(--text-dim)' : 'var(--loss)'}">${isZero ? '—' : '(' + valStr + ')'}</span>
       </div>`;
     }).join('');
@@ -2245,7 +2356,59 @@ const ODIN = (() => {
     render();
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider };
+  // ── LOAN ANALYTICS MODAL ─────────────────────────────────────────────────
+  function openLoanModal() {
+    const v = view();
+    const ORIG_LOAN   = 4998000;
+    const APT_VALUE   = v.apt_mkt || 6500000;
+    const outstanding = v.apt_loan || 3880624;
+    const repaid      = ORIG_LOAN - outstanding;
+    const pct         = (repaid / ORIG_LOAN * 100).toFixed(1);
+    const equity      = APT_VALUE - outstanding;
+    const ltv         = (outstanding / APT_VALUE * 100).toFixed(1);
+    // Scheduled balance at Sr 62 (May 2026) from amortization PDF
+    const SCHED_NOW   = 4664383;
+    const ahead       = SCHED_NOW - outstanding;
+    const yrsAhead    = (ahead / (outstanding / 8.4 / 12)).toFixed(1); // approx
+
+    document.getElementById('lm-pct-label').textContent       = pct + '% paid off';
+    document.getElementById('lm-bar-fill').style.width        = pct + '%';
+    document.getElementById('lm-remaining-label').textContent = 'Remaining: ₹' + (outstanding/1e5).toFixed(2) + 'L';
+    document.getElementById('lm-ahead').textContent           = '₹' + (ahead/1e5).toFixed(2) + 'L';
+    document.getElementById('lm-ahead-sub').textContent       = '~9.4 yrs ahead of schedule';
+    document.getElementById('lm-equity').textContent          = '₹' + (equity/1e5).toFixed(2) + 'L';
+    document.getElementById('lm-ltv').textContent             = 'LTV ' + ltv + '%';
+
+    // Reset simulator
+    document.getElementById('lm-sim-slider').value = 0;
+    updateLoanSim();
+
+    document.getElementById('loan-modal-backdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLoanModal() {
+    document.getElementById('loan-modal-backdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function updateLoanSim() {
+    const outstanding = (view().apt_loan) || 3880624;
+    const extra       = parseInt(document.getElementById('lm-sim-slider').value) || 0;
+    const BASE_PMT    = 38125;   // avg monthly repayment last 12m (from statement)
+    const total_pmt   = BASE_PMT + extra;
+    const months      = total_pmt > 0 ? Math.ceil(outstanding / total_pmt) : 9999;
+    const yrs         = (months / 12).toFixed(1);
+    const payoff_yr   = new Date().getFullYear() + Math.ceil(months / 12);
+    const fmt         = n => '₹' + (n/1000).toFixed(0) + 'k';
+    document.getElementById('lm-sim-extra').textContent  = extra > 0 ? fmt(extra) + '/mo extra' : '₹0 extra';
+    document.getElementById('lm-sim-result').textContent =
+      extra > 0
+        ? `→ Payoff in ~${yrs} yrs (${payoff_yr}) · saves ${(8.4 - parseFloat(yrs)).toFixed(1)} yrs vs current pace`
+        : `→ At current pace (~₹${(BASE_PMT/1000).toFixed(0)}k/mo), payoff ~2034 (8.4 yrs)`;
+  }
+
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

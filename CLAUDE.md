@@ -723,10 +723,41 @@ Old `ghp_68JA…` (shared in plaintext chat) revoked. New token `ghp_Rky…`
 set in `/home/opc/angel_env.sh` directly via SSH (never through chat).
 Verified: 200 OK + full commit cycle working.
 
+## FIXED: RETURN IN INR tile (2026-05-29)
+VM script now reads `holdings_cost.json` via Contents API and stamps `fx_buy` +
+`buy_date` into each US price entry before committing. Previously VM wrote only
+`{ltp, pc, source, as_of}` — `fx_buy=None` → tile showed "— / Run parser to
+activate". Commit `c3efd1796`.
+
+## FIXED: Expense Planner deployed (2026-05-29)
+Added `expense/` subfolder to repo. Standalone PWA, no integration with
+portfolio or net-worth. Google Drive sync built in. Paths fixed for
+`/Omm-Money/expense/` subfolder (manifest, sw.js, icon refs).
+URL: `https://tripurasundari-maa-sohay.github.io/Omm-Money/expense/`
+
 ## KNOWN PENDING (not fixed)
-- `NTFY_TOPIC` not yet set in `angel_env.sh` — pipeline failure alerts dormant
-  until user sets it + subscribes in ntfy app (iOS/Android, https://ntfy.sh).
-  Add: `export NTFY_TOPIC=your-private-topic` to `/home/opc/angel_env.sh`.
+
+### 🔴 Immediate
+- **Expense planner Google OAuth** — Error 400 `origin_mismatch`. Fix:
+  Google Cloud Console → OAuth Client `1000939411703-…` → add authorized origin:
+  `https://tripurasundari-maa-sohay.github.io` → wait 5 min → retry.
+
+### 🟠 Sunday list (priority order)
+1. Replace Cloudflare Worker with VM API — removes `sabarna-chowdhury` name
+   from `net-wealth/index.html` + `CHANGELOG.md` (public repo exposure)
+2. Scrub CHANGELOG.md of Worker URL
+3. Zero `monthly_income_inr: 600000` in `net-wealth/data/seed.json`
+4. VM backend API (Flask ~20 lines) — unifies net-worth save + expense planner storage
+5. Set `NTFY_TOPIC` in `angel_env.sh` → pipeline failure push alerts active
+6. **OpenBB** — evaluate on VM (`pip install openbb`), test screener + technicals
+7. **FinanceDatabase** — sector/country filtering + symbol lookup for screener
+8. Integrate OpenBB + FinanceDatabase into `screener.py` + `signals_update.py`
+9. Audit `screener.yml` — `no_success_ever` in audit, signals may be stale
+10. Signal quality upgrade — RSI + MACD + fundamentals + regime filter →
+    back-tested BUY/HOLD/REDUCE with win-rate tracking (target 55-60% accuracy)
+11. Rewrite AUDIT CHECKLIST in CLAUDE.md (stale, references dead GH Actions pipeline)
+
+### 🟡 Low priority / noise
 - WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,
   treated as live-timing noise.
 

@@ -33,6 +33,7 @@ GITHUB_TOKEN   = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO    = "Tripurasundari-maa-sohay/Omm-Money"
 PRICES_PATH    = "portfolio/data/processed/holdings_prices.json"
 INDICES_PATH   = "portfolio/data/processed/market_indices.json"
+COST_PATH      = "portfolio/data/holdings_cost.json"
 # Push alerts on pipeline failure (commit 401/expired token, login fail, etc).
 # Set NTFY_TOPIC in angel_env.sh and subscribe to that topic in the ntfy app
 # (https://ntfy.sh) on your phone. Empty => alerts disabled.
@@ -395,6 +396,31 @@ def get_current_indices_from_github() -> dict:
         pass
     return {}
 
+def get_fx_buy_map() -> dict:
+    """Read holdings_cost.json and return {tk: {fx_buy, buy_date}} for all US open
+    positions. Used to stamp fx_buy into price entries so the INR-return tile works."""
+    if not GITHUB_TOKEN:
+        return {}
+    try:
+        r = requests.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/contents/{COST_PATH}?ref=main",
+            headers={"Authorization": f"token {GITHUB_TOKEN}",
+                     "Accept": "application/vnd.github.v3+json"},
+            timeout=10
+        )
+        if r.status_code == 200:
+            cost = json.loads(base64.b64decode(r.json()["content"]).decode())
+            result = {}
+            for h in cost.get("us", {}).get("open", []):
+                tk = h.get("tk")
+                if tk and (h.get("fx_buy") or h.get("buy_date")):
+                    result[tk] = {"fx_buy": h.get("fx_buy"), "buy_date": h.get("buy_date")}
+            print(f"  fx_buy map loaded: {len(result)} tickers")
+            return result
+    except Exception as e:
+        print(f"  fx_buy map load error: {e}", file=sys.stderr)
+    return {}
+
 def get_current_prices_from_github():
     """Load existing holdings_prices.json from GitHub to preserve non-price fields."""
     try:
@@ -485,8 +511,16 @@ def main():
     if MODE in ("us", "all"):
         print("\n── US (Finnhub)")
         us_p = fetch_us_finnhub()
+        # Stamp fx_buy + buy_date from holdings_cost.json into each US price entry.
+        # market_data.py does this in full runs; VM must replicate or INR-return tile
+        # shows "—" / "Run parser to activate" (fx_buy=None in holdings_prices.json).
+        fx_buy_map = get_fx_buy_map()
+        for tk, entry in us_p.items():
+            if tk in fx_buy_map:
+                entry["fx_buy"]   = fx_buy_map[tk].get("fx_buy")
+                entry["buy_date"] = fx_buy_map[tk].get("buy_date")
         new_prices.update(us_p)
-        print(f"  US: {len(us_p)} Finnhub")
+        print(f"  US: {len(us_p)} Finnhub  (fx_buy stamped: {sum(1 for t in us_p if t in fx_buy_map)})")
 
     prices_ok = True
     if new_prices:

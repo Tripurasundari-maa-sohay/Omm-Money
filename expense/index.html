@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Expense Planner</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/Omm-Money/expense/manifest.json">
+<meta name="theme-color" content="#d4a84c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Expenses">
+<link rel="apple-touch-icon" href="/Omm-Money/expense/icon.svg">
+<script>
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',()=>{
+      navigator.serviceWorker.register('/Omm-Money/expense/sw.js')
+        .catch(e=>console.warn('SW:',e));
+    });
+  }
+</script>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+[data-theme="dark"]{
+  --bg:#06060e;--bg2:#0c0c1a;--bg3:#121228;
+  --border:#28284a;--border2:#3a3a60;
+  --gold:#d4a84c;--green:#4ecf82;--red:#f06868;
+  --text:#f2f2ff;--muted:#b8b8d8;--locked:#a0a0cc;
+  --input-bg:#0e0e20;--hdr-bg:#06060e;
+  --panel-hdr:#0c0c1a;--panel-hdr-hover:#121230;
+  --badge-draft-bg:#181838;--badge-ok-bg:#0a2818;--badge-ok-bd:#204830;
+}
+[data-theme="light"]{
+  --bg:#ffffff;--bg2:#f2f2fa;--bg3:#ffffff;
+  --border:#b0b0cc;--border2:#8888b0;
+  --gold:#5a4000;--green:#0f5530;--red:#980000;
+  --text:#08081a;--muted:#282848;--locked:#404070;
+  --input-bg:#f8f8ff;--hdr-bg:#ffffff;
+  --panel-hdr:#f2f2fa;--panel-hdr-hover:#e8e8f4;
+  --badge-draft-bg:#e4e4f4;--badge-ok-bg:#d8f0e4;--badge-ok-bd:#60a878;
+}
+
+html,body{background:var(--bg);color:var(--text);font-family:'Courier New',Courier,monospace;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;transition:background .2s,color .2s}
+#root{max-width:900px;margin:0 auto;padding-bottom:100px}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:100;background:var(--hdr-bg);border-bottom:1px solid var(--border);padding:10px 16px 0;transition:background .2s}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.hdr-title{color:var(--gold);font-size:14px;font-weight:bold;letter-spacing:3px;flex:1}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hdr-date{font-size:10px;color:var(--muted);white-space:nowrap}
+.theme-btn{background:none;border:1px solid var(--border2);border-radius:4px;cursor:pointer;font-size:14px;line-height:1;padding:3px 8px;transition:all .15s}
+.theme-btn:hover{border-color:var(--gold)}
+.tabs{display:flex}
+.tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:2px;padding:9px 0;text-transform:uppercase;transition:color .15s,border-color .15s}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── TODAY LAYOUT ──
+   Desktop ≥600px: two columns side by side
+   Mobile  <600px: single column stacked
+── */
+.today-panels{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:start;
+  border-bottom:1px solid var(--border);
+}
+@media(max-width:599px){
+  .today-panels{grid-template-columns:1fr}
+  #root{max-width:100%}
+}
+
+/* ── PANEL (each accordion column) ── */
+.panel{border:none;overflow:hidden}
+.panel+.panel{border-left:1px solid var(--border)}
+@media(max-width:599px){
+  .panel+.panel{border-left:none;border-top:1px solid var(--border)}
+}
+
+.panel-hdr{
+  align-items:center;background:var(--panel-hdr);cursor:pointer;
+  display:flex;justify-content:space-between;padding:13px 16px;
+  transition:background .15s;user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.panel-hdr:hover{background:var(--panel-hdr-hover)}
+.panel-hdr-left{align-items:center;display:flex;gap:10px}
+.chevron{color:var(--muted);display:inline-block;font-size:10px;transition:transform .2s;width:10px}
+.chevron.open{transform:rotate(0deg)}
+.chevron.closed{transform:rotate(-90deg)}
+.panel-label{color:var(--text);font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.panel-total{font-size:16px;font-weight:bold}
+.panel-body{padding:14px 16px 18px}
+.panel-body.hidden{display:none}
+
+/* ── ROWS ── */
+.row{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+.rl{color:var(--text);flex:0 0 106px;font-size:13px;font-weight:600;padding-top:9px;line-height:1.3;word-break:break-word}
+.rl.lock{color:var(--locked)}
+.rv{flex:1;min-width:0}
+.rv-locked{color:var(--text);flex:1;font-size:14px;font-weight:600;padding:9px 4px}
+
+/* smaller labels on desktop panels (less horizontal space) */
+@media(min-width:600px){
+  .rl{flex:0 0 88px;font-size:12px}
+}
+
+/* ── INPUTS ── */
+input[type=text]{background:var(--input-bg);border:2px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Courier New',monospace;font-size:15px;font-weight:600;min-height:40px;outline:none;padding:8px 11px;transition:border-color .15s,background .2s;width:100%;-webkit-appearance:none}
+input[type=text]:focus{border-color:var(--gold)}
+input[type=text]::placeholder{color:var(--muted);opacity:.7;font-weight:400}
+input[type=text]:disabled{background:transparent;border-color:transparent;color:var(--locked);opacity:1;font-weight:500}
+.expr{color:var(--gold);font-size:12px;font-weight:700;margin-top:3px;padding-left:2px}
+
+/* ── DYN ROWS ── */
+.dyn-lbl{background:var(--input-bg);border:2px solid var(--border);border-radius:5px;color:var(--text);font-family:'Courier New',monospace;font-size:13px;font-weight:500;margin-bottom:5px;min-height:34px;outline:none;padding:6px 11px;transition:border-color .15s,background .2s;width:100%;-webkit-appearance:none}
+.dyn-lbl:focus{border-color:var(--gold);color:var(--text)}
+.dyn-lbl::placeholder{color:var(--muted);opacity:.8}
+.dyn-lbl:disabled{background:transparent;border-color:transparent;opacity:.8}
+.del-btn{align-items:center;background:none;border:2px solid var(--red);border-radius:4px;color:var(--red);cursor:pointer;display:flex;flex:0 0 34px;font-size:20px;height:40px;justify-content:center;transition:background .15s;width:34px}
+.del-btn:hover{background:rgba(240,104,104,.15)}
+.add-btn{background:none;border:2px dashed var(--border2);border-radius:5px;color:var(--muted);cursor:pointer;display:flex;font-family:inherit;font-size:12px;font-weight:600;justify-content:center;letter-spacing:2px;margin-top:8px;min-height:36px;padding:8px;transition:all .15s;width:100%}
+.add-btn:hover{border-color:var(--gold);color:var(--gold)}
+.sublbl{color:var(--muted);font-size:12px;font-style:italic;font-weight:500;margin-bottom:6px}
+
+/* ── CARD ── */
+.card-out{font-size:11px;margin-top:3px;padding-left:2px;line-height:1.4}
+.card-lim{color:var(--muted);font-size:10px;margin-top:2px;padding-left:2px}
+.card-cycle{background:var(--bg2);border:1px solid var(--border);border-radius:5px;margin-top:8px;padding:8px 10px}
+.card-cycle-row{align-items:center;display:flex;justify-content:space-between;margin-bottom:4px}
+.card-cycle-row:last-child{margin-bottom:0}
+.cc-lbl{font-size:11px;font-weight:600;color:var(--text)}
+.cc-val{font-size:12px;font-weight:700}
+.cc-divider{border:none;border-top:1px solid var(--border);margin:6px 0}
+.cycle-input-wrap{margin-top:6px}
+.cycle-input-lbl{color:var(--muted);font-size:11px;font-weight:600;margin-bottom:3px}
+
+/* ── NET ── */
+.net-section{border-bottom:1px solid var(--border);padding:12px 16px}
+.net-dual{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:399px){.net-dual{grid-template-columns:1fr}}
+.net-card{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:12px 14px}
+.net-card-lbl{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.net-card-out{color:var(--muted);font-size:11px;margin-bottom:4px}
+.net-card-amt{font-size:20px;font-weight:bold;margin-bottom:4px}
+.net-card-sav{font-size:12px;font-weight:700}
+
+/* ── TOGGLE SWITCH ── */
+.tog-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tog-group{display:flex;background:var(--bg);border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.tog-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:6px 12px;transition:all .15s;text-transform:uppercase}
+.tog-btn.on{background:var(--gold);color:#060610}
+.tog-sep{width:1px;background:var(--border2)}
+.tog-lbl{color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+
+/* ── NEXT MONTH PROJECTION ── */
+.proj-box{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;margin:14px 16px;padding:14px}
+.proj-hdr{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.proj-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.proj-row:last-child{border-bottom:none}
+.proj-lbl{color:var(--muted);font-size:12px}
+.proj-val{font-size:13px;font-weight:600}
+
+/* ── SAVE ── */
+.draft-ind{color:var(--muted);font-size:10px;letter-spacing:2px;margin:10px 0 4px;text-align:center}
+.save-btn{background:var(--gold);border:none;border-radius:6px;color:#060610;cursor:pointer;display:block;font-family:inherit;font-size:14px;font-weight:bold;letter-spacing:3px;margin:0 16px;min-height:48px;transition:opacity .15s;width:calc(100% - 32px)}
+.save-btn:hover{opacity:.88}
+.save-btn.ok{background:var(--green)}
+
+/* ── HISTORY ── */
+.hist-list{padding:12px 16px}
+.hist-item{align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;gap:10px;margin-bottom:8px;padding:12px;transition:border-color .15s}
+.hist-item:hover{border-color:var(--gold)}
+.hist-date{color:var(--muted);flex:0 0 auto;font-size:11px;width:84px}
+.hist-mid{flex:1;min-width:0}
+.hist-net{font-size:14px;font-weight:bold}
+.hist-sub{color:var(--muted);font-size:10px;margin-top:2px}
+.badge{border-radius:3px;flex:0 0 auto;font-size:10px;letter-spacing:1px;padding:3px 6px}
+.badge.draft{background:var(--badge-draft-bg);border:1px solid var(--border2);color:var(--muted)}
+.badge.ok{background:var(--badge-ok-bg);border:1px solid var(--badge-ok-bd);color:var(--green)}
+.empty{color:var(--muted);font-size:12px;letter-spacing:2px;padding:60px 0;text-align:center}
+
+/* ── DETAIL ── */
+.det{padding:0 16px;max-width:600px}
+.back-btn{align-items:center;background:none;border:none;color:var(--gold);cursor:pointer;display:flex;font-family:inherit;font-size:12px;gap:6px;letter-spacing:1px;opacity:.9;padding:14px 0;transition:opacity .15s}
+.back-btn:hover{opacity:1}
+.det-title{color:var(--gold);font-size:15px;font-weight:bold;margin-bottom:2px}
+.det-status{color:var(--muted);font-size:10px;letter-spacing:2px;margin-bottom:14px}
+.ro-row{align-items:center;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;padding:8px 2px}
+.ro-lbl{color:var(--muted);font-size:12px}
+.ro-val{font-size:13px}
+.ro-section{color:var(--muted);font-size:10px;letter-spacing:3px;margin:14px 0 6px;text-transform:uppercase}
+
+/* ── LOCK SCREEN ── */
+.lock-screen{align-items:center;display:flex;flex-direction:column;gap:20px;justify-content:center;min-height:100vh;padding:32px;background:var(--bg)}
+.lock-icon{font-size:56px;margin-bottom:4px}
+.lock-title{color:var(--gold);font-size:18px;font-weight:bold;letter-spacing:3px;text-align:center}
+.lock-sub{color:var(--muted);font-size:11px;text-align:center;line-height:1.8}
+.lock-btn{align-items:center;background:var(--gold);border:none;border-radius:6px;color:#060610;cursor:pointer;display:flex;font-family:inherit;font-size:13px;font-weight:bold;gap:8px;justify-content:center;letter-spacing:2px;min-height:48px;min-width:200px;padding:12px 24px;transition:opacity .15s}
+.lock-btn:hover{opacity:.88}
+.lock-btn:disabled{opacity:.5;cursor:default}
+.lock-err{color:var(--red);font-size:11px;text-align:center;max-width:240px}
+.lock-bypass{background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:11px;margin-top:8px;text-decoration:underline}
+.lock-bypass:hover{color:var(--text)}
+
+/* ── AUTH ── */
+.auth-screen{align-items:center;display:flex;flex-direction:column;gap:24px;justify-content:center;min-height:100vh;padding:32px}
+.auth-logo{color:var(--gold);font-size:20px;font-weight:bold;letter-spacing:4px;text-align:center}
+.auth-sub{color:var(--muted);font-size:12px;line-height:1.9;max-width:280px;text-align:center}
+.auth-btn{background:var(--gold);border:none;border-radius:6px;color:#060610;cursor:pointer;font-family:inherit;font-size:13px;font-weight:bold;letter-spacing:2px;min-width:200px;padding:14px 28px;transition:opacity .15s}
+.auth-btn:hover{opacity:.88}
+.auth-btn:disabled{cursor:default;opacity:.5}
+.auth-lock{align-items:center;color:var(--muted);display:flex;font-size:11px;gap:6px}
+.sync{font-size:10px;letter-spacing:1px}
+.sync.saving{color:var(--muted)}
+.sync.saved{color:var(--green)}
+.sync.err{color:var(--red)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+'use strict';
+const {useState,useEffect,useRef,useMemo,useCallback}=React;
+
+const CLIENT_ID='1000939411703-1otcqistn1cfeuu46rr3i8era80cqffa.apps.googleusercontent.com';
+const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
+const FILE_NAME='expense-planner-data.json';
+const SALARY=25623,HOUSE_RENT=4300,DOMESTIC_HELP=1250,LULU_LIMIT=14000,QA_LIMIT=20000;
+
+// ── Token cache (localStorage, 50-min TTL) ───────────────────
+const TokenCache={
+  KEY:'ep_tok',
+  save(token){
+    try{localStorage.setItem(this.KEY,JSON.stringify({t:token,exp:Date.now()+50*60*1000}));}catch{}
+  },
+  load(){
+    try{
+      const d=JSON.parse(localStorage.getItem(this.KEY)||'null');
+      if(d&&d.t&&d.exp>Date.now())return d.t;
+    }catch{}
+    this.clear();return null;
+  },
+  clear(){try{localStorage.removeItem(this.KEY);}catch{}}
+};
+
+const Drive={
+  token:null,fileId:null,
+  async findFile(){
+    const q=encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
+    const r=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&fields=files(id)`,
+      {headers:{Authorization:`Bearer ${this.token}`}});
+    return(await r.json()).files?.[0]?.id||null;
+  },
+  async createFile(){
+    const body=new FormData();
+    body.append('metadata',new Blob([JSON.stringify({name:FILE_NAME,mimeType:'application/json'})],{type:'application/json'}));
+    body.append('file',new Blob(['{}'],{type:'application/json'}));
+    const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      {method:'POST',headers:{Authorization:`Bearer ${this.token}`},body});
+    return(await r.json()).id;
+  },
+  async init(){let id=await this.findFile();if(!id)id=await this.createFile();this.fileId=id;},
+  async load(){
+    if(!this.token||!this.fileId)return{};
+    try{const r=await fetch(`https://www.googleapis.com/drive/v3/files/${this.fileId}?alt=media`,
+      {headers:{Authorization:`Bearer ${this.token}`}});return r.ok?await r.json():{};}catch{return{};}
+  },
+  async save(data){
+    if(!this.token||!this.fileId)return false;
+    try{const r=await fetch(`https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`,
+      {method:'PATCH',headers:{Authorization:`Bearer ${this.token}`,'Content-Type':'application/json'},body:JSON.stringify(data)});
+    return r.ok;}catch{return false;}
+  }
+};
+
+function evalExpr(str){
+  const s=String(str??'').trim();if(!s)return 0;
+  if(!/^[\d+\-*/.() \t]+$/.test(s))return 0;
+  try{const r=Function('"use strict";return('+s+')')();return typeof r==='number'&&isFinite(r)?+r.toFixed(2):0;}
+  catch{return 0;}
+}
+function hasOp(s){return/[+\-*/]/.test(String(s||''))}
+function fmt(n,dec=2){return Math.abs(n).toLocaleString('en',{minimumFractionDigits:dec,maximumFractionDigits:dec})}
+function qar(n,dec=2){return`QAR ${fmt(n,dec)}`}
+function todayKey(){
+  const d=new Date();
+  return[String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0'),d.getFullYear()].join('-');
+}
+function displayDate(key){
+  if(!key||typeof key!=='string')return'—';
+  const parts=key.split('-');
+  if(parts.length<3||isNaN(parseInt(parts[0])))return'—';
+  const[mm,dd,yyyy]=parts;
+  const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const month=M[parseInt(mm)-1];
+  return month?`${parseInt(dd)} ${month} ${yyyy}`:'—';
+}
+// Estimate timestamp from MM-DD-YYYY key (for backward compat sorting)
+function keyToTs(key){
+  if(!key||typeof key!=='string')return 0;
+  const[mm,dd,yy]=key.split('-').map(Number);
+  return isNaN(mm)?0:new Date(yy,mm-1,dd).getTime();
+}
+let _n=0;
+function uid(){return`r${++_n}_${Math.random().toString(36).slice(2,6)}`}
+
+function initEntry(){
+  return{
+    _eid:uid(),              // unique entry id
+    _date:todayKey(),        // MM-DD-YYYY
+    _createdAt:Date.now(),
+    remarks:'',              // optional short remark
+    existingBalance:[{id:uid(),label:'Doha Bank existing balance',value:''}],
+    outstandingInflow:[{id:uid(),label:'',value:''}],
+    carEMI:'',carEMI_x:false,
+    homeLoanEMI:'',homeLoanEMI_x:false,
+    malabar:'4200',malabar_x:false,
+    luluAvailable:'',luluAvailOn7:'',luluPaid:'',lulu_x:false,
+    qaAvailable:'',qaAvailOn7:'',qaPaid:'',qa_x:false,
+    otherExpenses:[{id:uid(),label:'',value:''}],
+    _confirmed:false
+  };
+}
+// keep initDay as alias for compat
+const initDay=initEntry;
+function mergeEntry(saved){
+  const b=initEntry();if(!saved)return b;
+  return{
+    ...b,...saved,
+    _eid:saved._eid||b._eid,
+    _date:saved._date||todayKey(),
+    _createdAt:saved._createdAt||Date.now(),
+    remarks:saved.remarks||'',
+    malabar:saved.malabar!==undefined?saved.malabar:'4200',
+    // excl flags — default false if not in saved data (old entries)
+    carEMI_x:!!saved.carEMI_x,
+    homeLoanEMI_x:!!saved.homeLoanEMI_x,
+    malabar_x:!!saved.malabar_x,
+    lulu_x:!!saved.lulu_x,
+    qa_x:!!saved.qa_x,
+    existingBalance:saved.existingBalance?.length?saved.existingBalance:b.existingBalance,
+    outstandingInflow:saved.outstandingInflow?.length?saved.outstandingInflow:b.outstandingInflow,
+    otherExpenses:saved.otherExpenses?.length?saved.otherExpenses:b.otherExpenses,
+  };
+}
+const mergeDay=mergeEntry;
+function calcCard(available,availOn7,paid,limit){
+  if(available===''||available==null)return{total:null,thisMonth:null,nextMonth:null,stillDue:null,paidAmt:0,hassplit:false};
+  const at=evalExpr(available);
+  const total=Math.max(0,limit-at);
+  const paidAmt=paid!==''&&paid!=null?evalExpr(paid):0;
+  if(availOn7===''||availOn7==null){
+    const stillDue=Math.max(0,total-paidAmt);
+    return{total,thisMonth:total,nextMonth:0,stillDue,paidAmt,hassplit:false};
+  }
+  const a7=evalExpr(availOn7);
+  const thisMonth=Math.max(0,limit-a7);   // spent before 7th
+  const nextMonth=Math.max(0,a7-at);      // spent after 7th
+  const stillDue=Math.max(0,thisMonth-paidAmt); // what's left to pay from salary
+  return{total,thisMonth,nextMonth,stillDue,paidAmt,hassplit:true};
+}
+function calcTotals(d){
+  const carEMI=d.carEMI_x?0:evalExpr(d.carEMI);
+  const homeLoanEMI=d.homeLoanEMI_x?0:evalExpr(d.homeLoanEMI);
+  const malabar=d.malabar_x?0:evalExpr(d.malabar);
+  const lulu=calcCard(d.luluAvailable,d.luluAvailOn7,d.luluPaid,LULU_LIMIT);
+  const qa=calcCard(d.qaAvailable,d.qaAvailOn7,d.qaPaid,QA_LIMIT);
+  const luluAmt=d.lulu_x?0:(lulu.stillDue||0);
+  const qaAmt=d.qa_x?0:(qa.stillDue||0);
+  const luluAmtFull=d.lulu_x?0:(lulu.total||0);
+  const qaAmtFull=d.qa_x?0:(qa.total||0);
+  const otherExp=(d.otherExpenses||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0);
+  const eb=(d.existingBalance||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0);
+  const oi=(d.outstandingInflow||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0);
+  const totalInflow=SALARY+eb+oi;
+  // Scenario A: pay only 7th-cycle due (minimum this salary)
+  const totalOutflow=carEMI+homeLoanEMI+HOUSE_RENT+DOMESTIC_HELP+malabar+luluAmt+qaAmt+otherExp;
+  const net=totalInflow-totalOutflow;
+  const savingsPct=totalInflow>0?net/totalInflow*100:0;
+  // Scenario B: clear ALL outstanding today
+  const totalOutflowFull=carEMI+homeLoanEMI+HOUSE_RENT+DOMESTIC_HELP+malabar+luluAmtFull+qaAmtFull+otherExp;
+  const netFull=totalInflow-totalOutflowFull;
+  const savingsPctFull=totalInflow>0?netFull/totalInflow*100:0;
+  return{totalInflow,eb,oi,totalOutflow,totalOutflowFull,carEMI,homeLoanEMI,malabar,lulu,qa,otherExp,net,netFull,savingsPct,savingsPctFull};
+}
+
+// ── Exclude toggle button ─────────────────────────────────────
+function ExclBtn({excluded,onToggle}){
+  return(
+    <button onClick={onToggle} title={excluded?'Include in calculation':'Exclude from calculation'}
+      style={{
+        alignItems:'center',background:excluded?'rgba(240,104,104,.12)':'none',
+        border:`1px solid ${excluded?'var(--red)':'var(--border2)'}`,
+        borderRadius:4,color:excluded?'var(--red)':'var(--muted)',cursor:'pointer',
+        display:'flex',flexShrink:0,fontSize:15,height:36,justifyContent:'center',
+        lineHeight:1,transition:'all .15s',width:32,
+      }}>⊘</button>
+  );
+}
+
+function ExprField({value,onChange,placeholder,disabled,excluded}){
+  const show=hasOp(value)&&!disabled&&!excluded;
+  return(
+    <div style={{flex:1,minWidth:0,opacity:excluded?.45:1}}>
+      <input type="text" value={value||''} onChange={e=>onChange&&onChange(e.target.value)}
+        placeholder={placeholder||'0'} disabled={disabled}
+        style={{textDecoration:excluded?'line-through':'none'}}/>
+      {show&&<div className="expr">= {qar(evalExpr(value))}</div>}
+    </div>
+  );
+}
+function DynRows({rows,onChange,onAdd,onRemove,sublabel,disabled}){
+  return(
+    <div>
+      {sublabel&&<div className="sublbl">{sublabel}</div>}
+      {rows.map(row=>(
+        <div key={row.id} style={{marginBottom:10,opacity:row.excl?.5:1}}>
+          <input type="text" className="dyn-lbl" value={row.label} disabled={disabled}
+            onChange={e=>onChange(row.id,'label',e.target.value)} placeholder="Description..."
+            style={{textDecoration:row.excl?'line-through':'none'}}/>
+          <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+            <ExprField value={row.value} onChange={v=>onChange(row.id,'value',v)} disabled={disabled} excluded={row.excl}/>
+            {!disabled&&<ExclBtn excluded={!!row.excl} onToggle={()=>onChange(row.id,'excl',!row.excl)}/>}
+            {!disabled&&<button className="del-btn" onClick={()=>onRemove(row.id)}>×</button>}
+          </div>
+        </div>
+      ))}
+      {!disabled&&<button className="add-btn" onClick={onAdd}>+ ADD</button>}
+    </div>
+  );
+}
+
+// ── Collapsible Panel ─────────────────────────────────────────
+function Panel({label,total,totalColor,children,defaultOpen=true}){
+  const[open,setOpen]=useState(defaultOpen);
+  return(
+    <div className="panel">
+      <div className="panel-hdr" onClick={()=>setOpen(o=>!o)}>
+        <div className="panel-hdr-left">
+          <span className={`chevron ${open?'open':'closed'}`}>▼</span>
+          <span className="panel-label">{label}</span>
+        </div>
+        <span className="panel-total" style={{color:totalColor}}>{total}</span>
+      </div>
+      <div className={`panel-body${open?'':' hidden'}`}>{children}</div>
+    </div>
+  );
+}
+
+// ── Today View ────────────────────────────────────────────────
+// ── CardSection — TOP-LEVEL (never nest inside TodayView — causes remount on each keystroke) ──
+function CardSection({label,limit,avail,avail7,paid,onAvail,onAvail7,onPaid,cardData,excluded,onExcl}){
+  const c=cardData;
+  return(
+    <div className="row" style={{opacity:excluded?.45:1}}>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'flex-start',flex:'0 0 88px',gap:4}}>
+        <div className="rl" style={{flex:'none',paddingTop:9}}>{label}</div>
+        <ExclBtn excluded={!!excluded} onToggle={onExcl}/>
+      </div>
+      <div className="rv">
+        {/* All 3 inputs always visible — no conditional hiding */}
+        <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,marginBottom:3}}>Available today</div>
+        <ExprField value={avail} onChange={onAvail} placeholder="Current available balance"/>
+
+        <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,margin:'8px 0 3px'}}>Available on 7th <span style={{fontWeight:400,opacity:.7}}>(from statement)</span></div>
+        <ExprField value={avail7} onChange={onAvail7} placeholder="Balance as of 7th — optional"/>
+
+        <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,margin:'8px 0 3px'}}>Paid between 7th → today <span style={{fontWeight:400,opacity:.7}}>(optional)</span></div>
+        <ExprField value={paid} onChange={onPaid} placeholder="0 — any payment already made"/>
+
+        {/* Summary box — only when available balance entered */}
+        {c.total!=null&&(
+          <div className="card-cycle">
+            <div className="card-cycle-row">
+              <span className="cc-lbl">Total outstanding</span>
+              <span className="cc-val" style={{color:'var(--text)'}}>{qar(c.total)}</span>
+            </div>
+            {c.hassplit&&(
+              <>
+                <hr className="cc-divider"/>
+                <div className="card-cycle-row">
+                  <span className="cc-lbl">Billed this month <span style={{fontWeight:400,fontSize:10}}>(before 7th)</span></span>
+                  <span className="cc-val" style={{color:'var(--muted)'}}>{qar(c.thisMonth)}</span>
+                </div>
+                <div className="card-cycle-row">
+                  <span className="cc-lbl">🟡 Next month <span style={{fontWeight:400,fontSize:10}}>(after 7th)</span></span>
+                  <span className="cc-val" style={{color:'var(--gold)'}}>{qar(c.nextMonth)}</span>
+                </div>
+              </>
+            )}
+            {!c.hassplit&&c.total>0&&<div style={{fontSize:10,color:'var(--muted)',marginTop:4}}>Enter available on 7th to split billing cycle</div>}
+            {c.paidAmt>0&&(
+              <>
+                <hr className="cc-divider"/>
+                <div className="card-cycle-row">
+                  <span className="cc-lbl">✅ Already paid (7th→today)</span>
+                  <span className="cc-val" style={{color:'var(--green)'}}>− {qar(c.paidAmt)}</span>
+                </div>
+              </>
+            )}
+            {c.stillDue!=null&&(
+              <>
+                <hr className="cc-divider"/>
+                <div className="card-cycle-row">
+                  <span className="cc-lbl" style={{fontWeight:700}}>🔴 Still due from salary</span>
+                  <span className="cc-val" style={{color:'var(--red)',fontSize:14}}>{qar(c.stillDue)}</span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        <div className="card-lim">Limit: {qar(limit,0)}</div>
+      </div>
+    </div>
+  );
+}
+
+function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
+  const[monthView,setMonthView]=useState('current');
+  const totals=useMemo(()=>calcTotals(day),[day]);
+  function updRow(f,id,k,v){setDay(p=>({...p,[f]:p[f].map(r=>r.id===id?{...r,[k]:v}:r)}))}
+  function addRow(f){setDay(p=>({...p,[f]:[...p[f],{id:uid(),label:'',value:''}]}))}
+  function delRow(f,id){setDay(p=>({...p,[f]:p[f].filter(r=>r.id!==id)}))}
+  // card helpers for display
+  return(
+    <div>
+      {/* ── MONTH TOGGLE ── */}
+      <div className="tog-bar">
+        <span className="tog-lbl">VIEW</span>
+        <div className="tog-group">
+          <button className={`tog-btn${monthView==='current'?' on':''}`} onClick={()=>setMonthView('current')}>This Month</button>
+          <div className="tog-sep"/>
+          <button className={`tog-btn${monthView==='next'?' on':''}`} onClick={()=>setMonthView('next')}>Next Month →</button>
+        </div>
+      </div>
+
+      {monthView==='next'?(
+        <NextMonthProjection entry={day} dateKey={todayDateKey}/>
+      ):(
+      <>
+      {/* ── TWO PANELS: responsive grid ── */}
+      <div className="today-panels">
+
+        {/* INFLOW PANEL */}
+        <Panel label="INFLOW" total={qar(totals.totalInflow,0)} totalColor="var(--gold)">
+          <div className="row">
+            <div className="rl lock">Salary 🔒</div>
+            <div className="rv-locked">{qar(SALARY)}</div>
+          </div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Existing Balance</div>
+            <DynRows rows={day.existingBalance}
+              onChange={(id,k,v)=>updRow('existingBalance',id,k,v)}
+              onAdd={()=>addRow('existingBalance')}
+              onRemove={id=>delRow('existingBalance',id)}
+              sublabel="Doha Bank existing balance"/>
+          </div>
+          <div>
+            <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Outstanding Inflow</div>
+            <DynRows rows={day.outstandingInflow}
+              onChange={(id,k,v)=>updRow('outstandingInflow',id,k,v)}
+              onAdd={()=>addRow('outstandingInflow')}
+              onRemove={id=>delRow('outstandingInflow',id)}
+              sublabel="bonus / arrears / refund"/>
+          </div>
+        </Panel>
+
+        {/* OUTFLOW PANEL */}
+        <Panel label="OUTFLOW" total={qar(totals.totalOutflow,0)} totalColor="var(--red)">
+          <div className="row">
+            <div className="rl" style={{opacity:day.carEMI_x?.45:1}}>Car EMI</div>
+            <ExprField value={day.carEMI} onChange={v=>setDay(p=>({...p,carEMI:v}))} placeholder="0" excluded={day.carEMI_x}/>
+            <ExclBtn excluded={!!day.carEMI_x} onToggle={()=>setDay(p=>({...p,carEMI_x:!p.carEMI_x}))}/>
+          </div>
+          <div className="row">
+            <div className="rl" style={{opacity:day.homeLoanEMI_x?.45:1}}>Home EMI</div>
+            <ExprField value={day.homeLoanEMI} onChange={v=>setDay(p=>({...p,homeLoanEMI:v}))} placeholder="0" excluded={day.homeLoanEMI_x}/>
+            <ExclBtn excluded={!!day.homeLoanEMI_x} onToggle={()=>setDay(p=>({...p,homeLoanEMI_x:!p.homeLoanEMI_x}))}/>
+          </div>
+          <div className="row">
+            <div className="rl lock">Rent 🔒</div>
+            <div className="rv-locked">{qar(HOUSE_RENT)}</div>
+          </div>
+          <div className="row">
+            <div className="rl lock">Help 🔒</div>
+            <div className="rv-locked">{qar(DOMESTIC_HELP)}</div>
+          </div>
+          <div className="row">
+            <div className="rl" style={{opacity:day.malabar_x?.45:1}}>Malabar</div>
+            <ExprField value={day.malabar} onChange={v=>setDay(p=>({...p,malabar:v}))} placeholder="4200" excluded={day.malabar_x}/>
+            <ExclBtn excluded={!!day.malabar_x} onToggle={()=>setDay(p=>({...p,malabar_x:!p.malabar_x}))}/>
+          </div>
+          <CardSection label="Lulu Card" limit={LULU_LIMIT}
+            avail={day.luluAvailable} avail7={day.luluAvailOn7} paid={day.luluPaid}
+            excluded={!!day.lulu_x} onExcl={()=>setDay(p=>({...p,lulu_x:!p.lulu_x}))}
+            onAvail={v=>setDay(p=>({...p,luluAvailable:v}))}
+            onAvail7={v=>setDay(p=>({...p,luluAvailOn7:v}))}
+            onPaid={v=>setDay(p=>({...p,luluPaid:v}))}
+            cardData={totals.lulu}/>
+          <CardSection label="QA Card" limit={QA_LIMIT}
+            avail={day.qaAvailable} avail7={day.qaAvailOn7} paid={day.qaPaid}
+            excluded={!!day.qa_x} onExcl={()=>setDay(p=>({...p,qa_x:!p.qa_x}))}
+            onAvail={v=>setDay(p=>({...p,qaAvailable:v}))}
+            onAvail7={v=>setDay(p=>({...p,qaAvailOn7:v}))}
+            onPaid={v=>setDay(p=>({...p,qaPaid:v}))}
+            cardData={totals.qa}/>
+          <div>
+            <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Other Expenses</div>
+            <DynRows rows={day.otherExpenses}
+              onChange={(id,k,v)=>updRow('otherExpenses',id,k,v)}
+              onAdd={()=>addRow('otherExpenses')}
+              onRemove={id=>delRow('otherExpenses',id)}/>
+          </div>
+        </Panel>
+      </div>
+
+      {/* ── NET — two scenarios side by side ── */}
+      <div className="net-section">
+        <div className="net-dual">
+
+          {/* Scenario A: 7th cycle only */}
+          <div className="net-card" style={{borderColor:totals.net>=0?'var(--green)':'var(--red)'}}>
+            <div className="net-card-lbl">MANDATORY</div>
+            <div className="net-card-out">OUT {qar(totals.totalOutflow,0)}</div>
+            <div className="net-card-amt" style={{color:totals.net>=0?'var(--green)':'var(--red)'}}>
+              {totals.net<0?'−':''}{qar(Math.abs(totals.net))}
+            </div>
+            <div className="net-card-sav" style={{color:totals.savingsPct>=20?'var(--green)':totals.savingsPct>=0?'var(--gold)':'var(--red)'}}>
+              {totals.savingsPct.toFixed(1)}% saved
+            </div>
+            <div style={{fontSize:10,color:'var(--muted)',marginTop:4}}>Pay minimum this salary</div>
+          </div>
+
+          {/* Scenario B: clear all outstanding */}
+          <div className="net-card" style={{borderColor:totals.netFull>=0?'var(--border2)':'var(--red)'}}>
+            <div className="net-card-lbl">TOTAL CC CLEARED</div>
+            <div className="net-card-out">OUT {qar(totals.totalOutflowFull,0)}</div>
+            <div className="net-card-amt" style={{color:totals.netFull>=0?'var(--gold)':'var(--red)'}}>
+              {totals.netFull<0?'−':''}{qar(Math.abs(totals.netFull))}
+            </div>
+            <div className="net-card-sav" style={{color:totals.savingsPctFull>=20?'var(--green)':totals.savingsPctFull>=0?'var(--gold)':'var(--red)'}}>
+              {totals.savingsPctFull.toFixed(1)}% saved
+            </div>
+            <div style={{fontSize:10,color:'var(--muted)',marginTop:4}}>Clear full card balance today</div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* REMARKS + SAVE */}
+      <div style={{padding:'12px 16px 0'}}>
+        <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,marginBottom:4}}>Remarks <span style={{fontWeight:400,opacity:.7}}>(optional — shows in history)</span></div>
+        <input type="text" value={day.remarks||''} maxLength={30}
+          onChange={e=>setDay(p=>({...p,remarks:e.target.value}))}
+          placeholder="Short note e.g. May salary, Bonus month…"
+          style={{marginBottom:0}}/>
+        <div style={{fontSize:10,color:'var(--muted)',textAlign:'right',marginTop:2}}>{(day.remarks||'').length}/30</div>
+      </div>
+      <div className="draft-ind">
+        {syncStatus==='saving'&&'⏳ SYNCING TO DRIVE...'}
+        {syncStatus==='saved'&&'✓ DRIVE SYNCED'}
+        {syncStatus==='error'&&'⚠ SYNC FAILED — CHECK CONNECTION'}
+        {syncStatus==='idle'&&'● AUTO-SAVED AS DRAFT'}
+      </div>
+      <button className="save-btn" onClick={onSave}>SAVE ENTRY</button>
+      </>
+      )}
+    </div>
+  );
+}
+
+// ── History ───────────────────────────────────────────────────
+// ── Next-month name from MM-DD-YYYY key ──────────────────────
+function nextMonthLabel(key){
+  const[mm,,yyyy]=key.split('-').map(Number);
+  const d=new Date(yyyy,mm,1); // month is 0-indexed, so mm = next month
+  return d.toLocaleString('en',{month:'long',year:'numeric'});
+}
+
+// ── Next Month Projection ─────────────────────────────────────
+function NextMonthProjection({entry,dateKey}){
+  const totals=useMemo(()=>calcTotals(entry),[entry]);
+  const carryLulu=totals.lulu.nextMonth||0;
+  const carryQA=totals.qa.nextMonth||0;
+  const fixedOut=HOUSE_RENT+DOMESTIC_HELP+evalExpr(entry.malabar)+evalExpr(entry.carEMI)+evalExpr(entry.homeLoanEMI);
+  const totalOut=fixedOut+carryLulu+carryQA;
+  const net=SALARY-totalOut;
+  const savPct=SALARY>0?net/SALARY*100:0;
+  const label=nextMonthLabel(dateKey);
+
+  function PRow({lbl,val,color,bold}){
+    return(
+      <div className="proj-row">
+        <span className="proj-lbl">{lbl}</span>
+        <span className="proj-val" style={{color:color||'var(--text)',fontWeight:bold?700:600}}>{qar(val)}</span>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{padding:'0 0 20px'}}>
+      <div className="proj-box">
+        <div className="proj-hdr">📅 {label} Projection</div>
+        <div style={{fontSize:10,color:'var(--muted)',marginBottom:10}}>Based on carry-forwards from {displayDate(dateKey)}</div>
+
+        <div style={{fontSize:10,color:'var(--muted)',letterSpacing:2,textTransform:'uppercase',marginBottom:6}}>INFLOW</div>
+        <PRow lbl="Salary 🔒" val={SALARY}/>
+
+        <div style={{fontSize:10,color:'var(--muted)',letterSpacing:2,textTransform:'uppercase',margin:'10px 0 6px'}}>OUTFLOW (Known)</div>
+        {evalExpr(entry.carEMI)>0&&<PRow lbl="Car EMI" val={evalExpr(entry.carEMI)}/>}
+        {evalExpr(entry.homeLoanEMI)>0&&<PRow lbl="Home Loan EMI" val={evalExpr(entry.homeLoanEMI)}/>}
+        <PRow lbl="House Rent 🔒" val={HOUSE_RENT}/>
+        <PRow lbl="Domestic Help 🔒" val={DOMESTIC_HELP}/>
+        {evalExpr(entry.malabar)>0&&<PRow lbl="Malabar" val={evalExpr(entry.malabar)}/>}
+        {carryLulu>0&&<PRow lbl="🟡 Lulu carry-forward" val={carryLulu} color="var(--gold)"/>}
+        {carryQA>0&&<PRow lbl="🟡 QA carry-forward" val={carryQA} color="var(--gold)"/>}
+        {carryLulu===0&&carryQA===0&&(
+          <div style={{fontSize:11,color:'var(--green)',padding:'6px 0'}}>✅ No card carry-forwards</div>
+        )}
+
+        <div style={{borderTop:'2px solid var(--border)',marginTop:8,paddingTop:8}}>
+          <PRow lbl="TOTAL OUTFLOW" val={totalOut} color="var(--red)" bold/>
+          <PRow lbl="NET" val={Math.abs(net)} color={net>=0?'var(--green)':'var(--red)'} bold/>
+          <div className="proj-row">
+            <span className="proj-lbl">SAVINGS RATE</span>
+            <span className="proj-val" style={{color:savPct>=20?'var(--green)':savPct>=0?'var(--gold)':'var(--red)',fontWeight:700}}>
+              {savPct.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      </div>
+      {(carryLulu>0||carryQA>0)&&(
+        <div style={{padding:'0 16px',fontSize:11,color:'var(--muted)'}}>
+          ⚠️ Other expenses not projected — add them when entering next month's data.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── History Compact (read-only summary) ───────────────────────
+function HistoryDetailCompact({entry,dateKey}){
+  const totals=useMemo(()=>calcTotals(entry),[entry]);
+  function RowIf({label,value,color}){
+    if(!value&&value!==0)return null;
+    return(<div className="ro-row"><span className="ro-lbl">{label}</span><span className="ro-val" style={color?{color}:undefined}>{qar(value)}</span></div>);
+  }
+  function DynRORows({rows}){
+    if(!rows)return null;
+    return rows.filter(r=>evalExpr(r.value)>0).map(r=>(
+      <div className="ro-row" key={r.id}><span className="ro-lbl">{r.label||'Item'}</span><span className="ro-val">{qar(evalExpr(r.value))}</span></div>
+    ));
+  }
+  return(
+    <div className="det">
+      <div className="det-status">{entry._confirmed?'✓ CONFIRMED':'● DRAFT'}</div>
+      {entry.remarks&&<div style={{background:'var(--bg2)',borderRadius:4,color:'var(--gold)',fontSize:12,fontStyle:'italic',margin:'6px 0 10px',padding:'6px 10px'}}>"{entry.remarks}"</div>}
+      <div className="ro-section">INFLOW</div>
+      <div className="ro-row"><span className="ro-lbl">Salary 🔒</span><span className="ro-val">{qar(SALARY)}</span></div>
+      <DynRORows rows={entry.existingBalance}/>
+      <DynRORows rows={entry.outstandingInflow}/>
+      <div className="ro-row"><span className="ro-lbl" style={{color:'var(--gold)'}}>TOTAL INFLOW</span><span className="ro-val" style={{color:'var(--gold)',fontWeight:'bold'}}>{qar(totals.totalInflow)}</span></div>
+      <div className="ro-section" style={{marginTop:14}}>OUTFLOW</div>
+      <RowIf label="Car EMI" value={totals.carEMI||null}/>
+      <RowIf label="Home Loan EMI" value={totals.homeLoanEMI||null}/>
+      <div className="ro-row"><span className="ro-lbl">House Rent 🔒</span><span className="ro-val">{qar(HOUSE_RENT)}</span></div>
+      <div className="ro-row"><span className="ro-lbl">Domestic Help 🔒</span><span className="ro-val">{qar(DOMESTIC_HELP)}</span></div>
+      <RowIf label="Malabar" value={totals.malabar||null}/>
+      {totals.lulu.total!=null&&totals.lulu.total>0&&(
+        <>{totals.lulu.paidAmt>0&&<RowIf label="Lulu paid (7th→)" value={totals.lulu.paidAmt} color="var(--green)"/>}
+          <RowIf label="Lulu — due salary" value={totals.lulu.stillDue} color="var(--red)"/>
+          {totals.lulu.nextMonth>0&&<RowIf label="Lulu → next month" value={totals.lulu.nextMonth} color="var(--gold)"/>}</>
+      )}
+      {totals.qa.total!=null&&totals.qa.total>0&&(
+        <>{totals.qa.paidAmt>0&&<RowIf label="QA paid (7th→)" value={totals.qa.paidAmt} color="var(--green)"/>}
+          <RowIf label="QA — due salary" value={totals.qa.stillDue} color="var(--red)"/>
+          {totals.qa.nextMonth>0&&<RowIf label="QA → next month" value={totals.qa.nextMonth} color="var(--gold)"/>}</>
+      )}
+      <DynRORows rows={entry.otherExpenses}/>
+      <div className="ro-row"><span className="ro-lbl" style={{color:'var(--red)'}}>TOTAL OUTFLOW</span><span className="ro-val" style={{color:'var(--red)',fontWeight:'bold'}}>{qar(totals.totalOutflow)}</span></div>
+      <div style={{marginTop:12,color:totals.net>=0?'var(--green)':'var(--red)',fontSize:20,fontWeight:'bold',marginBottom:4}}>{totals.net<0?'−':''}{qar(Math.abs(totals.net))}</div>
+      <div style={{fontSize:11,color:totals.savingsPct>=20?'var(--green)':totals.savingsPct>=0?'var(--gold)':'var(--red)',marginBottom:16}}>Savings: {totals.savingsPct.toFixed(1)}%</div>
+    </div>
+  );
+}
+
+// ── History Full (TODAY format read-only) ─────────────────────
+function HistoryDetailFull({entry}){
+  // Render TodayView panels in read-only mode (all inputs disabled)
+  const totals=useMemo(()=>calcTotals(entry),[entry]);
+  const noop=()=>{};
+  // Reuse Panel + row layout from TodayView but disabled
+  return(
+    <div>
+      <div className="today-panels">
+        <Panel label="INFLOW" total={qar(totals.totalInflow,0)} totalColor="var(--gold)">
+          <div className="row"><div className="rl lock">Salary 🔒</div><div className="rv-locked">{qar(SALARY)}</div></div>
+          <div style={{marginBottom:14}}>
+            <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Existing Balance</div>
+            <DynRows rows={entry.existingBalance||[]} onChange={noop} onAdd={noop} onRemove={noop} sublabel="Doha Bank existing balance" disabled/>
+          </div>
+          <div>
+            <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Outstanding Inflow</div>
+            <DynRows rows={entry.outstandingInflow||[]} onChange={noop} onAdd={noop} onRemove={noop} sublabel="bonus / arrears / refund" disabled/>
+          </div>
+        </Panel>
+        <Panel label="OUTFLOW" total={qar(totals.totalOutflow,0)} totalColor="var(--red)">
+          <div className="row"><div className="rl">Car EMI</div><ExprField value={entry.carEMI} disabled/></div>
+          <div className="row"><div className="rl">Home EMI</div><ExprField value={entry.homeLoanEMI} disabled/></div>
+          <div className="row"><div className="rl lock">Rent 🔒</div><div className="rv-locked">{qar(HOUSE_RENT)}</div></div>
+          <div className="row"><div className="rl lock">Help 🔒</div><div className="rv-locked">{qar(DOMESTIC_HELP)}</div></div>
+          <div className="row"><div className="rl">Malabar</div><ExprField value={entry.malabar} disabled/></div>
+          {totals.lulu.total!=null&&(
+            <div className="row"><div className="rl">Lulu Card</div>
+              <div className="rv">
+                <ExprField value={entry.luluAvailable} disabled placeholder="Available balance"/>
+                {entry.luluAvailOn7&&<ExprField value={entry.luluAvailOn7} disabled placeholder="Available on 7th"/>}
+                {entry.luluPaid&&<ExprField value={entry.luluPaid} disabled placeholder="Paid 7th→today"/>}
+                <div className="card-cycle" style={{marginTop:8}}>
+                  <div className="card-cycle-row"><span className="cc-lbl">🔴 Due salary</span><span className="cc-val" style={{color:'var(--red)'}}>{qar(totals.lulu.stillDue||0)}</span></div>
+                  {totals.lulu.nextMonth>0&&<div className="card-cycle-row"><span className="cc-lbl">🟡 Next month</span><span className="cc-val" style={{color:'var(--gold)'}}>{qar(totals.lulu.nextMonth)}</span></div>}
+                </div>
+              </div>
+            </div>
+          )}
+          {totals.qa.total!=null&&(
+            <div className="row"><div className="rl">QA Card</div>
+              <div className="rv">
+                <ExprField value={entry.qaAvailable} disabled placeholder="Available balance"/>
+                {entry.qaAvailOn7&&<ExprField value={entry.qaAvailOn7} disabled placeholder="Available on 7th"/>}
+                {entry.qaPaid&&<ExprField value={entry.qaPaid} disabled placeholder="Paid 7th→today"/>}
+                <div className="card-cycle" style={{marginTop:8}}>
+                  <div className="card-cycle-row"><span className="cc-lbl">🔴 Due salary</span><span className="cc-val" style={{color:'var(--red)'}}>{qar(totals.qa.stillDue||0)}</span></div>
+                  {totals.qa.nextMonth>0&&<div className="card-cycle-row"><span className="cc-lbl">🟡 Next month</span><span className="cc-val" style={{color:'var(--gold)'}}>{qar(totals.qa.nextMonth)}</span></div>}
+                </div>
+              </div>
+            </div>
+          )}
+          <div>
+            <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Other Expenses</div>
+            <DynRows rows={entry.otherExpenses||[]} onChange={noop} onAdd={noop} onRemove={noop} disabled/>
+          </div>
+        </Panel>
+      </div>
+      <div className="net-section">
+        <div className="net-dual">
+          <div className="net-card" style={{borderColor:totals.net>=0?'var(--green)':'var(--red)'}}>
+            <div className="net-card-lbl">MANDATORY</div>
+            <div className="net-card-out">OUT {qar(totals.totalOutflow,0)}</div>
+            <div className="net-card-amt" style={{color:totals.net>=0?'var(--green)':'var(--red)'}}>{totals.net<0?'−':''}{qar(Math.abs(totals.net))}</div>
+            <div className="net-card-sav" style={{color:totals.savingsPct>=20?'var(--green)':totals.savingsPct>=0?'var(--gold)':'var(--red)'}}>{totals.savingsPct.toFixed(1)}% saved</div>
+          </div>
+          <div className="net-card">
+            <div className="net-card-lbl">TOTAL CC CLEARED</div>
+            <div className="net-card-out">OUT {qar(totals.totalOutflowFull,0)}</div>
+            <div className="net-card-amt" style={{color:totals.netFull>=0?'var(--gold)':'var(--red)'}}>{totals.netFull<0?'−':''}{qar(Math.abs(totals.netFull))}</div>
+            <div className="net-card-sav" style={{color:totals.savingsPctFull>=20?'var(--green)':totals.savingsPctFull>=0?'var(--gold)':'var(--red)'}}>{totals.savingsPctFull.toFixed(1)}% saved</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── History Detail wrapper (with toggles) ─────────────────────
+function HistoryDetail({entry,dateKey,onBack}){
+  const[viewFmt,setViewFmt]=useState('compact');   // compact | full
+  const[monthView,setMonthView]=useState('current'); // current | next
+  return(
+    <div>
+      {/* back + toggles */}
+      <div style={{padding:'0 16px'}}>
+        <button className="back-btn" onClick={onBack}>← HISTORY</button>
+        <div style={{fontSize:15,color:'var(--gold)',fontWeight:'bold',marginBottom:2}}>{displayDate(dateKey)}</div>
+      </div>
+
+      {/* Toggle bar */}
+      <div className="tog-bar" style={{flexWrap:'wrap',gap:10}}>
+        <div style={{display:'flex',flexDirection:'column',gap:3}}>
+          <span className="tog-lbl">VIEW FORMAT</span>
+          <div className="tog-group">
+            <button className={`tog-btn${viewFmt==='compact'?' on':''}`} onClick={()=>setViewFmt('compact')}>Summary</button>
+            <div className="tog-sep"/>
+            <button className={`tog-btn${viewFmt==='full'?' on':''}`} onClick={()=>setViewFmt('full')}>Full Detail</button>
+          </div>
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:3}}>
+          <span className="tog-lbl">MONTH VIEW</span>
+          <div className="tog-group">
+            <button className={`tog-btn${monthView==='current'?' on':''}`} onClick={()=>setMonthView('current')}>This Month</button>
+            <div className="tog-sep"/>
+            <button className={`tog-btn${monthView==='next'?' on':''}`} onClick={()=>setMonthView('next')}>Next Month →</button>
+          </div>
+        </div>
+      </div>
+
+      {monthView==='current'?(
+        viewFmt==='compact'
+          ?<HistoryDetailCompact entry={entry} dateKey={dateKey}/>
+          :<HistoryDetailFull entry={entry} dateKey={dateKey}/>
+      ):(
+        <NextMonthProjection entry={entry} dateKey={dateKey}/>
+      )}
+    </div>
+  );
+}
+
+function HistoryView({entries,todayKey:todayK,onGoToToday,onDelete}){
+  const[viewEntry,setViewEntry]=useState(null);
+  const[confirmDel,setConfirmDel]=useState(null);
+
+  if(viewEntry){
+    return<HistoryDetail entry={viewEntry} dateKey={viewEntry._date||viewEntry._key} onBack={()=>setViewEntry(null)}/>;
+  }
+  return(
+    <div className="hist-list">
+      {entries.length===0
+        ?<div className="empty">NO HISTORY YET<br/><span style={{fontSize:11,letterSpacing:0}}>Save today's entry first</span></div>
+        :entries.map(e=>{
+          const key=e._key;
+          const t=calcTotals(e);
+          const nc=t.net>=0?'var(--green)':'var(--red)';
+          const dateStr=e._date||e._key||'';
+          const isToday=dateStr===todayK;
+          const remark=e.remarks?e.remarks.slice(0,12)+(e.remarks.length>12?'…':''):'';
+
+          if(confirmDel===key) return(
+            <div key={key} style={{background:'var(--bg2)',border:'1px solid var(--red)',borderRadius:6,padding:12,marginBottom:8,display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+              <span style={{fontSize:12,color:'var(--text)'}}>Delete entry?{remark&&` "${remark}"`}</span>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{onDelete(key);setConfirmDel(null);}} style={{background:'var(--red)',border:'none',borderRadius:4,color:'#fff',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,padding:'6px 14px'}}>DELETE</button>
+                <button onClick={()=>setConfirmDel(null)} style={{background:'none',border:'1px solid var(--border2)',borderRadius:4,color:'var(--muted)',cursor:'pointer',fontFamily:'inherit',fontSize:12,padding:'6px 14px'}}>Cancel</button>
+              </div>
+            </div>
+          );
+          return(
+            <div className="hist-item" key={key} onClick={()=>setViewEntry(e)}>
+              <div style={{flex:'0 0 auto',minWidth:80}}>
+                <div className="hist-date">{displayDate(dateStr)}</div>
+                {isToday&&<span style={{fontSize:9,color:'var(--gold)',letterSpacing:1,fontWeight:700}}>TODAY</span>}
+                {remark&&<div style={{fontSize:10,color:'var(--gold)',marginTop:2,fontStyle:'italic'}}>{remark}</div>}
+              </div>
+              <div className="hist-mid">
+                <div className="hist-net" style={{color:nc}}>{t.net<0?'−':''}{qar(Math.abs(t.net))}</div>
+                <div className="hist-sub">↑ {fmt(t.totalInflow,0)} · ↓ {fmt(t.totalOutflow,0)}</div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+                <div className="badge ok">✓</div>
+                <button onClick={ev=>{ev.stopPropagation();setConfirmDel(key);}}
+                  style={{background:'none',border:'1px solid var(--red)',borderRadius:4,color:'var(--red)',cursor:'pointer',fontSize:13,padding:'2px 7px',lineHeight:1}}>🗑</button>
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  );
+}
+
+// ── Biometric (WebAuthn) helpers ─────────────────────────────
+const BIO_KEY='ep_bio';
+const BIO_CRED='ep_bio_cred';
+
+function bioSupported(){return!!(window.PublicKeyCredential);}
+
+function rnd(){return crypto.getRandomValues(new Uint8Array(32));}
+
+function saveCred(rawId){
+  const arr=new Uint8Array(rawId);
+  localStorage.setItem(BIO_CRED,btoa(String.fromCharCode(...arr)));
+}
+function loadCred(){
+  const s=localStorage.getItem(BIO_CRED);
+  if(!s)return null;
+  const bin=atob(s);
+  return new Uint8Array([...bin].map(c=>c.charCodeAt(0))).buffer;
+}
+function bioEnabled(){return localStorage.getItem(BIO_KEY)==='1'&&!!loadCred();}
+
+async function registerBio(){
+  const cred=await navigator.credentials.create({publicKey:{
+    challenge:rnd(),
+    rp:{name:'Expense Planner',id:location.hostname},
+    user:{id:rnd(),name:'user',displayName:'Expense Planner'},
+    pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+    authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+    timeout:60000
+  }});
+  saveCred(cred.rawId);
+  localStorage.setItem(BIO_KEY,'1');
+}
+
+async function verifyBio(){
+  const credId=loadCred();
+  if(!credId)throw new Error('No credential');
+  await navigator.credentials.get({publicKey:{
+    challenge:rnd(),
+    allowCredentials:[{type:'public-key',id:credId}],
+    userVerification:'required',
+    timeout:60000
+  }});
+}
+
+function disableBio(){
+  localStorage.removeItem(BIO_KEY);
+  localStorage.removeItem(BIO_CRED);
+}
+
+// ── Lock Screen ───────────────────────────────────────────────
+function LockScreen({onUnlock}){
+  const[busy,setBusy]=useState(false);
+  const[err,setErr]=useState('');
+
+  const unlock=async()=>{
+    setBusy(true);setErr('');
+    try{await verifyBio();onUnlock();}
+    catch(e){setErr('Biometric failed or cancelled. Try again.');}
+    setBusy(false);
+  };
+
+  // Auto-trigger biometric on mount
+  useEffect(()=>{unlock();},[]);
+
+  return(
+    <div className="lock-screen">
+      <div className="lock-icon">🔐</div>
+      <div className="lock-title">EXPENSE PLANNER</div>
+      <div className="lock-sub">Locked for your privacy.<br/>Authenticate to continue.</div>
+      {err&&<div className="lock-err">{err}</div>}
+      <button className="lock-btn" onClick={unlock} disabled={busy}>
+        {busy?'Verifying…':'👆 Unlock with Biometric'}
+      </button>
+      <button className="lock-bypass" onClick={()=>{disableBio();onUnlock();}}>
+        Disable biometric &amp; unlock
+      </button>
+    </div>
+  );
+}
+
+function AuthScreen({onSignIn,onSignInConsent,error}){
+  return(
+    <div className="auth-screen">
+      <div className="auth-logo">EXPENSE<br/>PLANNER</div>
+      <div className="auth-sub">Connect your Google Drive to sync data across all devices.</div>
+      {error&&<div style={{color:'var(--red)',fontSize:11,textAlign:'center',maxWidth:280}}>{error}</div>}
+      <button className="auth-btn" onClick={onSignIn}>SIGN IN WITH GOOGLE</button>
+      {onSignInConsent&&(
+        <button onClick={onSignInConsent}
+          style={{background:'none',border:'none',color:'var(--muted)',cursor:'pointer',fontFamily:'inherit',fontSize:11,marginTop:-12,textDecoration:'underline'}}>
+          First time? Click here instead
+        </button>
+      )}
+      <div className="auth-lock">🔒 Private · Your account only</div>
+    </div>
+  );
+}
+
+// ── App ───────────────────────────────────────────────────────
+function App(){
+  const TDK=useMemo(()=>todayKey(),[]);
+  const[screen,setScreen]=useState('init');
+  const[errMsg,setErrMsg]=useState('');
+  const[tab,setTab]=useState('today');
+  const[day,setDay]=useState(()=>initEntry());
+  const[allData,setAllData]=useState({});
+  const[syncStatus,setSyncStatus]=useState('idle');
+  const[theme,setTheme]=useState('dark');
+  const[savedToast,setSavedToast]=useState(false);
+  const[locked,setLocked]=useState(()=>bioEnabled());
+  const[bioOn,setBioOn]=useState(()=>bioEnabled());
+  const[bioMsg,setBioMsg]=useState('');
+  const tokenClientRef=useRef(null);
+  const debRef=useRef(null);
+  const allDataRef=useRef({});
+  const gisReadyRef=useRef(false); // true once GIS library + tokenClient ready
+
+  useEffect(()=>{allDataRef.current=allData;},[allData]);
+  useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);},[theme]);
+
+  // Load Drive with a known token
+  const loadWithToken=useCallback(async(token)=>{
+    Drive.token=token;
+    setScreen('loading');
+    try{
+      await Drive.init();
+      const data=await Drive.load();
+      setAllData(data);
+      setDay(data._draft?mergeEntry(data._draft):initEntry());
+      setScreen('ready');
+    }catch{
+      TokenCache.clear(); // token may be bad, clear it
+      setErrMsg('');setScreen('auth');
+    }
+  },[]);
+
+  // Kick off Drive auth — called AFTER bio lock is resolved
+  const startAuth=useCallback((forceConsent=false)=>{
+    // Check token cache first — skip GIS entirely if valid
+    if(!forceConsent){
+      const cached=TokenCache.load();
+      if(cached){loadWithToken(cached);return;}
+    }
+    setErrMsg('');setScreen('loading');
+    tokenClientRef.current?.requestAccessToken({prompt:forceConsent?'consent':''});
+  },[loadWithToken]);
+
+  // Init GIS — only fires requestAccessToken when bio is already unlocked
+  useEffect(()=>{
+    let attempts=0;
+    const check=setInterval(()=>{
+      attempts++;
+      if(window.google?.accounts?.oauth2){
+        clearInterval(check);
+        tokenClientRef.current=window.google.accounts.oauth2.initTokenClient({
+          client_id:CLIENT_ID,scope:DRIVE_SCOPE,
+          callback:async(resp)=>{
+            if(resp.error){setErrMsg('');setScreen('auth');return;}
+            TokenCache.save(resp.access_token); // cache for next 50 min
+            loadWithToken(resp.access_token);
+          }
+        });
+        gisReadyRef.current=true;
+        // Only auto-auth if NOT bio-locked
+        if(!bioEnabled()){startAuth();}
+        // If bio locked: unlock effect below fires startAuth
+      }
+      if(attempts>30){clearInterval(check);setErrMsg('Google library failed to load. Check internet connection.');setScreen('auth');}
+    },200);
+    return()=>clearInterval(check);
+  },[]);
+
+  // When biometric unlocks → immediately attempt Drive auth (user gesture context = silent works)
+  useEffect(()=>{
+    if(!locked&&gisReadyRef.current&&screen==='init'){
+      startAuth();
+    }
+  },[locked]);
+
+  // Manual sign-in button — fallback for first-ever use or expired session
+  const handleSignIn=()=>startAuth(false);
+  const handleSignInConsent=()=>startAuth(true);
+
+  // Auto-save draft (600ms debounce)
+  useEffect(()=>{
+    if(screen!=='ready')return;
+    if(debRef.current)clearTimeout(debRef.current);
+    debRef.current=setTimeout(async()=>{
+      const updated={...allDataRef.current,_draft:day};
+      setAllData(updated);setSyncStatus('saving');
+      const ok=await Drive.save(updated);
+      setSyncStatus(ok?'saved':'error');
+      if(ok)setTimeout(()=>setSyncStatus('idle'),2000);
+    },600);
+    return()=>clearTimeout(debRef.current);
+  },[day,screen]);
+
+  // SAVE = create confirmed entry with UUID, clear draft, reset form
+  const handleSave=async()=>{
+    const entry={...day,_confirmed:true,_createdAt:day._createdAt||Date.now()};
+    const key=`e_${entry._eid}`;
+    const updated={...allData,[key]:entry};
+    delete updated._draft;
+    setAllData(updated);
+    setSyncStatus('saving');
+    const ok=await Drive.save(updated);
+    setSyncStatus(ok?'saved':'error');
+    if(ok){
+      setTimeout(()=>setSyncStatus('idle'),2000);
+      // Reset form to fresh entry
+      setDay(initEntry());
+      setSavedToast(true);
+      setTimeout(()=>setSavedToast(false),3000);
+    }
+  };
+
+  // Get sorted entries for history (exclude _draft, old date-keyed entries still work)
+  const historyEntries=useMemo(()=>{
+    return Object.entries(allData)
+      .filter(([k,v])=>k!=='_draft'&&v&&v._confirmed)
+      .map(([k,v])=>({...v,_key:k,_date:v._date||k,_createdAt:v._createdAt||keyToTs(v._date||k)}))
+      .sort((a,b)=>b._createdAt-a._createdAt);
+  },[allData]);
+
+  // Bio lock gate — shown before anything else
+  if(locked) return<LockScreen onUnlock={()=>setLocked(false)}/>;
+
+  if(screen==='init'||screen==='loading'){
+    return(<div style={{alignItems:'center',display:'flex',justifyContent:'center',minHeight:'100vh'}}>
+      <div style={{color:'var(--gold)',fontSize:12,letterSpacing:3}}>{screen==='loading'?'CONNECTING TO DRIVE...':'LOADING...'}</div>
+    </div>);
+  }
+  if(screen==='auth'){
+    return<AuthScreen onSignIn={handleSignIn} onSignInConsent={handleSignInConsent} error={errMsg}/>;
+  }
+
+  return(
+    <div>
+      <div className="hdr">
+        <div className="hdr-top">
+          <div className="hdr-title">EXPENSE PLANNER</div>
+          <div className="hdr-right">
+            {syncStatus==='saving'&&<span className="sync saving">⏳</span>}
+            {syncStatus==='saved'&&<span className="sync saved">✓ SYNCED</span>}
+            {syncStatus==='error'&&<span className="sync err">⚠ ERR</span>}
+            <div className="hdr-date">{displayDate(TDK)}</div>
+            {bioSupported()&&(
+              <button className="theme-btn" title={bioOn?'Biometric ON — click to disable':'Biometric OFF — click to enable'}
+                onClick={async()=>{
+                  setBioMsg('');
+                  if(bioOn){disableBio();setBioOn(false);setBioMsg('Biometric disabled');}
+                  else{
+                    try{await registerBio();setBioOn(true);setBioMsg('Biometric enabled ✓');}
+                    catch(e){setBioMsg('Setup failed — try again');}
+                  }
+                  setTimeout(()=>setBioMsg(''),3000);
+                }}
+                style={{borderColor:bioOn?'var(--green)':undefined,color:bioOn?'var(--green)':undefined}}
+              >{bioOn?'🔐':'🔓'}</button>
+            )}
+            <button className="theme-btn" onClick={()=>setTheme(t=>t==='dark'?'light':'dark')}>
+              {theme==='dark'?'☀️':'🌙'}
+            </button>
+          </div>
+        </div>
+        <div className="tabs">
+          <button className={`tab${tab==='today'?' on':''}`} onClick={()=>setTab('today')}>TODAY</button>
+          <button className={`tab${tab==='history'?' on':''}`} onClick={()=>setTab('history')}>HISTORY ({historyEntries.length})</button>
+        </div>
+      </div>
+
+      {savedToast&&(
+        <div style={{background:'var(--green)',color:'#fff',textAlign:'center',padding:'10px',fontSize:12,fontWeight:700,letterSpacing:2}}>
+          ✓ ENTRY SAVED — Form reset for new entry
+        </div>
+      )}
+      {bioMsg&&(
+        <div style={{background:'var(--bg2)',borderBottom:'1px solid var(--border)',color:'var(--gold)',textAlign:'center',padding:'8px',fontSize:11,letterSpacing:1}}>
+          {bioMsg}
+        </div>
+      )}
+
+      {tab==='today'
+        ?<TodayView day={day} setDay={setDay} onSave={handleSave} syncStatus={syncStatus} todayDateKey={TDK}/>
+        :<HistoryView entries={historyEntries} todayKey={TDK} onGoToToday={()=>setTab('today')}
+            onDelete={async(key)=>{
+              const updated={...allData};delete updated[key];
+              setAllData(updated);
+              await Drive.save(updated);
+            }}/>
+      }
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

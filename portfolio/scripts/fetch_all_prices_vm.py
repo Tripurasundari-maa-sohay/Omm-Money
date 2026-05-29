@@ -33,6 +33,12 @@ GITHUB_TOKEN   = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO    = "Tripurasundari-maa-sohay/Omm-Money"
 PRICES_PATH    = "portfolio/data/processed/holdings_prices.json"
 INDICES_PATH   = "portfolio/data/processed/market_indices.json"
+# Push alerts on pipeline failure (commit 401/expired token, login fail, etc).
+# Set NTFY_TOPIC in angel_env.sh and subscribe to that topic in the ntfy app
+# (https://ntfy.sh) on your phone. Empty => alerts disabled.
+NTFY_TOPIC     = os.environ.get("NTFY_TOPIC", "")
+_ALERT_COOLDOWN_FILE = "/tmp/ommoney_last_alert"
+_ALERT_COOLDOWN_SEC  = 1800   # max one alert per 30 min (cron runs every minute)
 
 MODE = sys.argv[1] if len(sys.argv) > 1 else "all"
 
@@ -482,8 +488,9 @@ def main():
         new_prices.update(us_p)
         print(f"  US: {len(us_p)} Finnhub")
 
+    prices_ok = True
     if new_prices:
-        commit_prices_to_github(new_prices, existing)
+        prices_ok = commit_prices_to_github(new_prices, existing)
     else:
         print("  No prices fetched", file=sys.stderr)
 
@@ -491,7 +498,38 @@ def main():
     print("\n── Market indices + FX")
     existing_idx = get_current_indices_from_github()
     idx_payload  = build_indices_payload(existing_idx)
-    commit_json_to_github(INDICES_PATH, idx_payload, "indices")
+    idx_ok = commit_json_to_github(INDICES_PATH, idx_payload, "indices")
+
+    # ── Failure alert (catches silent freezes e.g. expired GITHUB_TOKEN) ─────
+    fails = []
+    if not GITHUB_TOKEN:
+        fails.append("GITHUB_TOKEN missing")
+    if not new_prices:
+        fails.append(f"no prices fetched ({MODE}) — Angel/Finnhub down?")
+    elif not prices_ok:
+        fails.append(f"prices commit FAILED ({MODE}) — token expired / GitHub down?")
+    if not idx_ok:
+        fails.append(f"indices commit FAILED ({MODE})")
+    if fails:
+        alert("Omm-Money pipeline: " + "; ".join(fails))
+
+def alert(msg: str):
+    """Push a failure alert to ntfy.sh, with a 30-min cooldown to avoid the
+    every-minute cron spamming. No-op if NTFY_TOPIC unset."""
+    print(f"  ALERT: {msg}", file=sys.stderr)
+    if not NTFY_TOPIC:
+        return
+    try:
+        if os.path.exists(_ALERT_COOLDOWN_FILE):
+            if time.time() - os.path.getmtime(_ALERT_COOLDOWN_FILE) < _ALERT_COOLDOWN_SEC:
+                return
+        requests.post(f"https://ntfy.sh/{NTFY_TOPIC}",
+                      data=msg.encode("utf-8"),
+                      headers={"Title": "Omm-Money pipeline FAIL", "Priority": "high",
+                               "Tags": "warning"}, timeout=10)
+        open(_ALERT_COOLDOWN_FILE, "w").write(str(time.time()))
+    except Exception as e:
+        print(f"  alert post error: {e}", file=sys.stderr)
 
 if __name__ == "__main__":
     main()

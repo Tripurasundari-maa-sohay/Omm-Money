@@ -270,8 +270,10 @@
     <div class="lm-section">Loan details</div>
     <div class="lm-row"><span class="lm-rk">Bank</span><span class="lm-rv">Canara Bank</span></div>
     <div class="lm-row"><span class="lm-rk">Rate (implied)</span><span class="lm-rv">7.99% p.a.</span></div>
-    <div class="lm-row"><span class="lm-rk">Scheduled payoff</span><span class="lm-rv">Mar 2051</span></div>
-    <div class="lm-row"><span class="lm-rk">Current EMI</span><span class="lm-rv">₹36,387/mo</span></div>
+    <div class="lm-row"><span class="lm-rk">Contract end</span><span class="lm-rv">Mar 2051 · Sr 360</span></div>
+    <div class="lm-row"><span class="lm-rk">Forecasted payoff</span><span class="lm-rv" style="color:var(--gain,#4ecf82)">Aug 2040 · 171 mo left</span></div>
+    <div class="lm-row"><span class="lm-rk">Saved vs contract</span><span class="lm-rv" style="color:var(--gold)">~10.6 yrs ahead</span></div>
+    <div class="lm-row"><span class="lm-rk">Current EMI</span><span class="lm-rv">₹36,387/mo (avg paid ₹38,125)</span></div>
     <div class="lm-row"><span class="lm-rk">Interest paid (ITD)</span><span class="lm-rv">₹19.27L</span></div>
 
     <!-- Prepayment simulator -->
@@ -1391,9 +1393,18 @@ const ODIN = (() => {
       const valStr = ln.ccy === 'QAR'
         ? fmtQAR(ln.outstanding) + ' · ' + fmtINR(ln.outstanding_inr)
         : fmtINR(ln.outstanding_inr);
-      const tenureStr = ln.tenure_months_remaining
-        ? ` · ${ln.tenure_months_remaining} mo left`
-        : '';
+      let tenureStr = '';
+      if (ln.tenure_months_remaining) {
+        if (ln.id === 'apartment' && ln.forecast_end && ln.contract_end) {
+          const fy = new Date(ln.forecast_end);
+          const cy = new Date(ln.contract_end);
+          const fLabel = fy.toLocaleString('en',{month:'short',year:'numeric'});
+          const cLabel = cy.toLocaleString('en',{month:'short',year:'numeric'});
+          tenureStr = ` · forecast ${fLabel} · contract ${cLabel}`;
+        } else {
+          tenureStr = ` · ${ln.tenure_months_remaining} mo left`;
+        }
+      }
       const isApt = ln.id === 'apartment';
       const isLC  = ln.id === 'lc';
       const hint  = (isApt || isLC) ? '<span class="detail-hint">↗ details</span>' : '';

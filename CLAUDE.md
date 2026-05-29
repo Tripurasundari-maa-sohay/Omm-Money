@@ -694,13 +694,16 @@ GOLDBEES is split `_M` (Motilal) + `_U` (Upstox), both Angel token `14428`.
 - `searchScrip` order-API endpoint returned 400 in testing — use the scrip
   master file instead.
 
+## FIXED: PARAMATRIX phantom day P&L (volume-based heal)
+Illiquid SME with 0 trades today has a stale Angel `close` (older session) →
+phantom day P&L (was +₹4,800 on Motilal). **Fix shipped:** `fetch_india_angel`
+reads `tradeVolume` from the FULL quote; if `int(tradeVolume) == 0`, set
+`pc = ltp` → Day P&L = 0, matching broker (which treats prev-close = last
+price). Auto-corrects any future no-trade SME, no manual upkeep. PARAMATRIX
+now pc=ltp=68 (day 0); after this, Motilal reconciled −18,252 vs broker
+−18,257. Commit `cc21c48de`.
+
 ## KNOWN PENDING (not fixed)
-- **PARAMATRIX day P&L wrong (~+₹4,800 phantom on Motilal).** Illiquid SME, no
-  trade today → broker prev-close = 68 (0.00% day), but Angel One `close` field
-  = 66 (stale older session). LTP (value) is correct; only the day-delta
-  baseline is off. **Proposed fix (user to confirm): if Angel reports 0 trade
-  volume today, set `pc = ltp` (day=0).** Options were: (1) volume-based heal
-  [recommended], (2) manual pin pc=68 [goes stale], (3) leave it.
 - Token-expiry audit/alert (see #3) — still no monitoring.
 - `full_update.yml` still scheduled on ubuntu-latest but dead — clean up/disable.
 - WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,

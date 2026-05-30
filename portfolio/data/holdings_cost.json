@@ -226,7 +226,9 @@
         "qty": 50,
         "avg": 14.8589,
         "fees": -5.0,
-        "income": 0.0
+        "income": 0.0,
+        "buy_date": "2026-05-27",
+        "fx_buy": 95.69
       },
       {
         "tk": "NOW",
@@ -236,7 +238,9 @@
         "qty": 10,
         "avg": 102.78,
         "fees": -5.0,
-        "income": 0.0
+        "income": 0.0,
+        "buy_date": "2026-05-27",
+        "fx_buy": 95.69
       },
       {
         "tk": "TTE",
@@ -439,17 +443,6 @@
         "_costs_paid": -5.0,
         "realised": 589.21,
         "ret_pct": 38.32,
-        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
-      },
-      {
-        "tk": "VOOG",
-        "name": "VanguardS&P500GrowthETF",
-        "cls": "ETF",
-        "income": 3.49,
-        "costs": 0.0,
-        "_costs_paid": -5.0,
-        "realised": 191.37,
-        "ret_pct": 14.41,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {

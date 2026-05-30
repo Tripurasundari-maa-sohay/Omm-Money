@@ -118,6 +118,20 @@ NAMES = {
 - VOOG: open = 18 shares (post 6:1 split), never in closed rows
 - RKLB note: PDF blends open+closed P&L for same ticker — our closed realised ≠ PDF P&L by design
 
+**13. Deriving missing sell prices from PDF**
+If xlsx has blank sell price (e.g. COST), back-calculate from PDF P&L breakdown:
+  `sell_px = (P&L - income + costs_paid) / qty + avg_buy`
+  e.g. COST: sell_px = (139.91 - 1.30 + 10.00)/1 + 851.00 = $999.61
+Cross-check: (sell_px - avg) × qty + income - costs_paid must == PDF P&L.
+
+**14. Income (dividends) in sheet**
+Positions that received dividends while held show `income` in `holdings_cost.json closed[].income`.
+Add to Remarks column: "Incl. div $X.XX".
+Income IS included in realised P&L in holdings_cost — do not double-count.
+Key dividend earners in May-2026 statement:
+  COST $1.30, AVGO $4.55, GOOG $0.63, MU $0.30, MSFT $2.73, TOL $2.04, TTE $8.01,
+  MUU $2.03, VOOG $3.49 (on open positions too).
+
 **11. Untracked charges (from PDF cost summary — NOT in holdings_cost)**
 - Client Custody Fee: ~$7.14/period
 - Exchange Fee: ~$0.27/period

@@ -2,6 +2,55 @@
 
 ---
 
+# US BROKER ACCOUNT — PERMANENT FACTS (read every PDF parse session)
+
+## Account facts
+- **Account opened: 16-Dec-2025** (no activity before this date)
+- Broker: US broker (PDF + xlsx statements)
+- Statement PDF + Transactions xlsx always arrive together in `portfolio/inbox/`
+
+## PDF parse checklist — run EVERY time a new statement arrives
+
+### 1. Run pipeline
+```bash
+cd ~/Omm-Money/portfolio && bash sync.sh
+```
+
+### 2. Fee reconciliation (MUST match xlsx to $0)
+```python
+# open fees + closed _costs_paid == xlsx grand total
+# xlsx grand total printed during sync: "grand tot: $-XXX.XX"
+# If diff ≠ $0 → find misattributed ticker
+```
+
+### 3. Phantom closed position check
+Cross-check every ticker in `holdings_cost.json us.closed[]` against xlsx sell trades.
+Any closed ticker with NO sell in xlsx = phantom (parser misread corporate action).
+```python
+xlsx_sells = set(t['tk'] for t in txns['trades'] if t['open_close']=='close')
+phantoms   = set(h['tk'] for h in cost['us']['closed']) - xlsx_sells
+# phantoms must be EMPTY
+```
+
+### 4. Missing buy_date / fx_buy
+Any open position with `buy_date=None` or `fx_buy=0` → INR return tile shows "—".
+Fix: look up buy date in `transactions_us.json`, fetch FX from frankfurter.app.
+```
+https://api.frankfurter.app/YYYY-MM-DD?from=USD&to=INR
+```
+
+### 5. VOOG stock split (6:1, happened before account open)
+VOOG was originally 3 shares × ~$441 → split 6:1 → now 18 shares × ~$73.
+Parser may re-create phantom VOOG closed entry on each parse.
+**Always remove phantom VOOG from closed if it appears** — VOOG is NOT closed.
+Split attracted ZERO fees.
+
+### 6. Known tickers with no Yahoo data (use Angel One)
+ASHALOG (token 24711, NSE SME), PARAMATRIX (token 25069, NSE SME).
+Signal scoring will log "no data" for these — expected, not a bug.
+
+---
+
 # AUDIT CHECKLIST — run before every session ends
 
 ## 🔴 CRITICAL (data integrity)

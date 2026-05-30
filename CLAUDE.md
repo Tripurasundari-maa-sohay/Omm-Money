@@ -106,13 +106,25 @@ NAMES = {
 }
 ```
 
-**10. Verify after generating**
-- Sum open qty per ticker == PDF Holdings qty
-- Sum realized P/L == `holdings_cost.json us.closed[].realised` totals
-- Total fees (buy+sell) across all rows == xlsx grand total ($-371.20 for May-2026 statement)
-- VOOG: open shows 18 shares, no VOOG in closed rows
+**10. Verify after generating — MANDATORY, no number should mismatch**
+- All open qty per ticker == PDF Holdings qty (MUST = 0 diff)
+- All open avg prices == PDF "open price" column (must match to 3dp)
+- All open unrealized P&L == PDF unrealized (allow ±$0.02 rounding only)
+- All closed realised P&L == PDF instrument P&L for closed tickers (MUST match)
+- Commission total == xlsx grand total (MUST = $0 diff)
+- Cash == PDF cash (MUST match exactly)
+- Net deposits == PDF net deposits (MUST match exactly)
+- Account value diff ≤ $1.00 (residual = accruals not tracked: custody + dividend accruals)
+- VOOG: open = 18 shares (post 6:1 split), never in closed rows
+- RKLB note: PDF blends open+closed P&L for same ticker — our closed realised ≠ PDF P&L by design
 
-**11. Broker name**: "Doha Bank / DBG" for US broker (Doha Bank Global Markets)
+**11. Untracked charges (from PDF cost summary — NOT in holdings_cost)**
+- Client Custody Fee: ~$7.14/period
+- Exchange Fee: ~$0.27/period
+- French Financial Transaction Tax (TTE trades): ~$2.65/period
+- Expected gap = ~$10. If gap > $15, investigate new charge type.
+
+**12. Broker name**: "Doha Bank / DBG" for US broker (Doha Bank Global Markets)
 
 ---
 

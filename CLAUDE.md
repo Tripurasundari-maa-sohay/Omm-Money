@@ -51,6 +51,71 @@ Signal scoring will log "no data" for these — expected, not a bug.
 
 ---
 
+## Google Sheets export — rules (run every time user asks for sheet)
+
+### Sources
+- `portfolio/data/transactions_us.json` → individual buy/sell trade lots with dates, prices, commissions
+- `portfolio/data/holdings_cost.json` → authoritative fees, realised P&L, open qty/avg
+- `portfolio/data/processed/holdings_prices.json` → current LTP per ticker
+
+### Columns (in order)
+`Sl | Opened | Ticker | Name | Remarks | Holding TF | Broker | Current Px | QTY | Purchase Px | Brokerage-Buy | Brokerage-Sell | Cost Basis | Current MTM | Unrealized P/L | % Profit | Status | Closed Date | Closed Price | Realized P/L`
+
+### Rules
+
+**1. FIFO lot matching (CRITICAL)**
+Tickers may have multiple buys — some lots closed, some open. Always apply FIFO:
+- Sort buy trades by date ascending (oldest first)
+- Match buy lots to close trades chronologically → closed lots → Closed rows
+- Remaining unmatched buy qty → Open rows
+- NEVER put closed buy lots into Open rows (inflates qty and MTM)
+- Verify: sum of Open qty per ticker == PDF Holdings qty. If mismatch → FIFO broken.
+
+**2. Fee split**
+- Buy brokerage = proportional share of total open fees from `holdings_cost.json` per lot (by qty)
+- Sell brokerage = proportional share of `_costs_paid` from closed entry (by qty across all buy lots for that ticker)
+- Use `holdings_cost.json` fees as authoritative (xlsx patch already corrected them)
+
+**3. Brokerage-Sell for open positions = $0** (not sold yet)
+
+**4. Cost Basis** = QTY × Purchase Px + Brokerage-Buy + Brokerage-Sell
+
+**5. Current MTM** = QTY × Current Px (0 for closed)
+
+**6. Realized P/L** = proportional share of `realised` from `holdings_cost.json closed[]` by lot qty
+
+**7. Closed Date / Closed Price** = from last sell trade for that ticker in `transactions_us.json`
+
+**8. VOOG stock split (6:1)** — xlsx shows 3 shares at $441.46 (pre-split).
+Always use holdings_cost values: 18 shares at $73.576 (post-split). Do NOT use xlsx buy for VOOG.
+
+**9. Name map** — PDF/xlsx names are garbled. Always use clean name map:
+```python
+NAMES = {
+    'AMZN':'Amazon.com Inc.','AVGO':'Broadcom Inc.','EWY':'iShares MSCI South Korea ETF',
+    'GEV':'GE Vernova Inc.','GLW':'Corning Inc.','GOOG':'Alphabet Inc. Class C',
+    'HUMN':'Roundhill Humanoid Robotics ETF','MP':'MP Materials Corp.',
+    'MSFT':'Microsoft Corp.','MU':'Micron Technology Inc.','NOW':'ServiceNow Inc.',
+    'RKLB':'Rocket Lab Corp.','SHIP':'Seanergy Maritime Holdings',
+    'TTE':'TotalEnergies SE','VOOG':'Vanguard S&P 500 Growth ETF',
+    'COST':'Costco Wholesale Corp.','DAX':'Global X DAX Germany ETF',
+    'DOCN':'DigitalOcean Holdings Inc.','EGHT':'8x8 Inc.',
+    'INOD':'Innodata Inc.','IRS':'IRSA Inversiones ADR','KEEL':'Keel Infrastructure Corp.',
+    'META':'Meta Platforms Inc.','MUU':'Direxion Daily MU Bull 2X ETF',
+    'NVDA':'NVIDIA Corp.','SIVR':'abrdn Physical Silver ETF','TOL':'Toll Brothers Inc.',
+}
+```
+
+**10. Verify after generating**
+- Sum open qty per ticker == PDF Holdings qty
+- Sum realized P/L == `holdings_cost.json us.closed[].realised` totals
+- Total fees (buy+sell) across all rows == xlsx grand total ($-371.20 for May-2026 statement)
+- VOOG: open shows 18 shares, no VOOG in closed rows
+
+**11. Broker name**: "Doha Bank / DBG" for US broker (Doha Bank Global Markets)
+
+---
+
 # AUDIT CHECKLIST — run before every session ends
 
 ## 🔴 CRITICAL (data integrity)

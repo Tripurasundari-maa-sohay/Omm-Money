@@ -118,6 +118,19 @@ NAMES = {
 - VOOG: open = 18 shares (post 6:1 split), never in closed rows
 - RKLB note: PDF blends open+closed P&L for same ticker — our closed realised ≠ PDF P&L by design
 
+**15. Mixed ticker P&L (CRITICAL)**
+Tickers with BOTH open + closed lots: `holdings_cost.realised` = PDF blended total P&L
+(closed realised + open unrealized) — NOT pure closed P&L.
+For Google Sheet "Realized P&L" on closed rows of mixed tickers, MUST compute from raw trade data:
+  closed_realised = sum[(sell_px - buy_px) × lot_qty] - buy_comms - sell_comms + income
+Mixed tickers as of May-2026 statement: AMZN, EWY, MU, RKLB
+Correct values (raw trade calc):
+  AMZN:  -$134.00  (5 sold @ $207.21, FIFO lot Dec-26 @ $232.01 → loss)
+  EWY:   +$429.37  (11 sold @ $178.62, FIFO 5@150.49 + 6@128.00)
+  MU:    +$341.82  (2@462.10 + 2@502.00)
+  RKLB:  +$330.40  (15@70.15 + 15@102.00)
+Pure closed tickers (no open remaining): use holdings_cost.realised directly ✓
+
 **13. Deriving missing sell prices from PDF**
 If xlsx has blank sell price (e.g. COST), back-calculate from PDF P&L breakdown:
   `sell_px = (P&L - income + costs_paid) / qty + avg_buy`

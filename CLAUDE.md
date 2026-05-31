@@ -980,6 +980,36 @@ VM cron 21:30 UTC
 - Decision deferred: use repo heavily for 6 months → then decide private repo vs Cloudflare Access
 - If going private: raw.githubusercontent.com won't work in browser → need VM data serve
 
+## ✅ FORECAST TAB (added 2026-06-01)
+`net-wealth/index.html` now has 📈 FORECAST tab with component-level wealth projection.
+
+### Locked assumptions (2026-06-01 review)
+| Component | Rate / Rule |
+|-----------|-------------|
+| India equities | Slider % + India SIP slider |
+| US equities | Slider % + **$1K/mo locked** |
+| Gold (jewellery + Malabar) | +11%/yr |
+| Apartment MV | +2%/yr |
+| Apt loan (Canara) | **9% pa** · EMI ₹36,387 + ₹15K prepay/mo |
+| Car (LC) | −15%/yr depreciation |
+| LC loan (Doha) | 4.5% pa · QAR 6,851/mo · May+Jun-26 paused |
+| CCs (QA + Lulu) | Cleared Jun-26 |
+| Bou loan | +12% every March, never settled |
+| Gratuity | +QAR 9,444 every January |
+| F&O corpus | +6.5% (conservative) |
+| FX | $1=₹95 · QAR=₹26.1 (fixed) |
+
+### Tab features
+- Equity return slider (4–25%)
+- India SIP slider (₹0–₹5L/mo) + US $1K/mo locked
+- Years slider (1–30) + Inflation slider
+- Summary: starting NW / projected NW / real NW (inflation-adj) / total invested
+- Milestone badges: ₹1Cr → ₹100Cr + 🔥 FIRE milestone
+- Chart: nominal vs real NW curve
+- Year-by-year table with breakdown (Eq · Gold · Apt(net) · Gratuity · Bou)
+- 3-scenario comparison: Conservative 7% / Expected / Aggressive 18%
+- `_projectComponents()` models each asset/liability separately (not simple compound)
+
 ## SECURITY
 - GITHUB_TOKEN: `ghp_Rky…` (rotated 2026-05-29). In `/home/opc/angel_env.sh` + `/etc/save-api.env`.
 - Next token rotation: check expiry in GitHub Settings → Developer settings → PATs.

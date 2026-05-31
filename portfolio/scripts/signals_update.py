@@ -27,10 +27,11 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import yfinance as yf
+import requests
 
 ROOT        = Path(__file__).resolve().parent.parent
 COST_BASIS  = ROOT / "data" / "holdings_cost.json"
@@ -78,30 +79,55 @@ def weekly_closes(ts: list[int], cl: list[float]) -> list[float]:
     return list(weeks.values())
 
 
-# ── DATA FETCH ───────────────────────────────────────────────────────────────
+# ── DATA FETCH (direct Yahoo chart API — no yfinance dependency) ─────────────
+
+_YF_UA = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
+
+
+def fetch_history(yf_symbol: str) -> "tuple[list[int], list[float], list[float]] | None":
+    """Return (unix_timestamps, closes, volumes) for 2 years of daily data.
+    Uses Yahoo Finance v8 chart API directly — avoids yfinance Python 3.9 breakage."""
+    end   = int(time.time())
+    start = end - 730 * 86400   # 2 years
+    for host in ("query1", "query2"):
+        try:
+            url = (f"https://{host}.finance.yahoo.com/v8/finance/chart/{yf_symbol}"
+                   f"?interval=1d&period1={start}&period2={end}")
+            r   = requests.get(url, headers=_YF_UA, timeout=15)
+            if r.status_code != 200:
+                continue
+            result  = r.json()["chart"]["result"][0]
+            ts      = result["timestamp"]
+            quote   = result["indicators"]["quote"][0]
+            adj     = result["indicators"].get("adjclose", [{}])[0]
+            closes  = adj.get("adjclose") or quote.get("close") or []
+            volumes = quote.get("volume") or []
+            # Zip + filter out None values
+            rows = [(t, c, v) for t, c, v in zip(ts, closes, volumes)
+                    if c is not None and v is not None]
+            if len(rows) < 50:
+                return None
+            ts_out  = [r[0] for r in rows]
+            cl_out  = [float(r[1]) for r in rows]
+            vo_out  = [float(r[2]) for r in rows]
+            return ts_out, cl_out, vo_out
+        except Exception as exc:
+            print(f"  WARN  {yf_symbol} ({host}): {exc}", file=sys.stderr)
+    return None
+
 
 def fetch_sector(yf_symbol: str) -> str:
-    """Return GICS sector string for a ticker, or 'Unknown' on failure."""
+    """Return GICS sector from Yahoo Finance quote summary, or 'Unknown'."""
     try:
-        info = yf.Ticker(yf_symbol).info
-        return info.get("sector") or info.get("quoteType") or "Unknown"
+        url = (f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{yf_symbol}"
+               f"?modules=assetProfile")
+        r   = requests.get(url, headers=_YF_UA, timeout=10)
+        if r.status_code == 200:
+            profile = r.json()["quoteSummary"]["result"][0]["assetProfile"]
+            return profile.get("sector") or "Unknown"
     except Exception:
-        return "Unknown"
-
-
-def fetch_history(yf_symbol: str) -> tuple[list[int], list[float], list[float]] | None:
-    """Return (unix_timestamps, adj_closes, volumes) for 2 years of daily data."""
-    try:
-        hist = yf.Ticker(yf_symbol).history(period="2y", interval="1d", auto_adjust=True)
-        if len(hist) < 50:
-            return None
-        ts = [int(idx.timestamp()) for idx in hist.index]
-        cl = [float(v) for v in hist["Close"]]
-        vo = [float(v) for v in hist["Volume"]]
-        return ts, cl, vo
-    except Exception as exc:
-        print(f"  WARN  {yf_symbol}: {exc}", file=sys.stderr)
-        return None
+        pass
+    return "Unknown"
 
 # Minimum bars needed for meaningful signal computation (RSI-14 + some trend context)
 MIN_BARS_FOR_SIGNALS = 60

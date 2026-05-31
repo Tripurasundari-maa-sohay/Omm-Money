@@ -3009,7 +3009,7 @@ const ODIN = (() => {
   //   Gratuity: +QAR 9,444 every January
   //   FX fixed: $1=₹95 · QAR=₹26.1
 
-  function _projectComponents(equityReturnPct, years, inflation) {
+  function _projectComponents(equityReturnPct, years, inflation, indiaSipMonthly = 0) {
     const FX_USD = 95, FX_QAR = 26.1;
     const seed = S.seed || {};
     const a    = seed.assets || {};
@@ -3052,7 +3052,7 @@ const ODIN = (() => {
         const month = (today.getMonth() + m) % 12; // 0=Jan
 
         // Equities: monthly compound + $1K/mo US SIP
-        assets.india_eq *= (1 + equityReturnPct/100/12);
+        assets.india_eq = assets.india_eq * (1 + equityReturnPct/100/12) + indiaSipMonthly;
         assets.us_eq    = assets.us_eq * (1 + equityReturnPct/100/12) + 1000*FX_USD/12;
         assets.fo_cash  *= (1 + 0.065/12);  // F&O cash at ~6.5% conservative
         assets.mf       *= (1 + equityReturnPct/100/12);
@@ -3147,7 +3147,7 @@ const ODIN = (() => {
     const v    = view();
     const nw0  = v.netWorth || 0;
     // Use component-level model (locked assumptions per 2026-06 review)
-    const rows = _projectComponents(ret, yrs, inf);
+    const rows = _projectComponents(ret, yrs, inf, sip);
     const endNw = rows[rows.length - 1]?.nw || 0;
     const realNw= rows[rows.length - 1]?.realNw || 0;
     const totalSip = 1000 * 95 * yrs; // locked $1K/mo US SIP × FX 95
@@ -3229,7 +3229,7 @@ const ODIN = (() => {
       { name: 'Aggressive',   ret: 18,   color: '#4ecf82' },
     ];
     document.getElementById('fc-scenarios').innerHTML = scenarios.map(sc => {
-      const r2 = _projectWealth(nw0, sc.ret, sip, yrs, inf);
+      const r2 = _projectComponents(sc.ret, yrs, inf, sip);
       const end = r2[r2.length-1]?.nw || 0;
       const fireHit = r2.find(r => r.nw >= fireNum);
       return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">

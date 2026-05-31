@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-31T12:58:17.480377Z",
+  "generated": "2026-05-31T13:08:02.547981Z",
   "regime": "BULL",
   "spy": {
     "px": 756.48,
@@ -30,7 +30,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Communication Services"
+      "sector": "Communication Services",
+      "industry": "Diversified Telecommunication Services"
     },
     "AMZN": {
       "score": 72,
@@ -55,7 +56,8 @@
         "w52": 8,
         "val": 3
       },
-      "sector": "Consumer Cyclical"
+      "sector": "Consumer Discretionary",
+      "industry": "Internet & Direct Marketing Retail"
     },
     "AVGO": {
       "score": 66,
@@ -80,7 +82,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Technology"
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment"
     },
     "GLW": {
       "score": 71,
@@ -105,7 +108,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Technology"
+      "sector": "Information Technology",
+      "industry": "Electronic Equipment, Instruments & Components"
     },
     "GEV": {
       "score": 46,
@@ -130,7 +134,8 @@
         "w52": 6,
         "val": 0
       },
-      "sector": "Industrials"
+      "sector": "Energy",
+      "industry": ""
     },
     "MU": {
       "score": 71,
@@ -155,7 +160,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Technology"
+      "sector": "Information Technology",
+      "industry": "Semiconductors & Semiconductor Equipment"
     },
     "MSFT": {
       "score": 49,
@@ -180,7 +186,8 @@
         "w52": 6,
         "val": 8
       },
-      "sector": "Technology"
+      "sector": "Information Technology",
+      "industry": "Software"
     },
     "MP": {
       "score": 59,
@@ -205,7 +212,8 @@
         "w52": 6,
         "val": 6
       },
-      "sector": "Basic Materials"
+      "sector": "Materials",
+      "industry": "Metals & Mining"
     },
     "RKLB": {
       "score": 76,
@@ -230,7 +238,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Industrials"
+      "sector": "Industrials",
+      "industry": "Aerospace & Defense"
     },
     "SHIP": {
       "score": 49,
@@ -255,7 +264,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Industrials"
+      "sector": "Industrials",
+      "industry": "Marine"
     },
     "NOW": {
       "score": 41,
@@ -280,7 +290,8 @@
         "w52": 3,
         "val": 10
       },
-      "sector": "Technology"
+      "sector": "Information Technology",
+      "industry": "Software"
     },
     "TTE": {
       "score": 50,
@@ -305,7 +316,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Energy"
+      "sector": "Energy",
+      "industry": "Oil, Gas & Consumable Fuels"
     },
     "EWY": {
       "score": 68,
@@ -330,7 +342,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "ETF"
+      "sector": "ETF",
+      "industry": ""
     },
     "HUMN": {
       "score": 56,
@@ -355,7 +368,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "ETF"
+      "sector": "ETF",
+      "industry": ""
     },
     "VOOG": {
       "score": 59,
@@ -380,7 +394,8 @@
         "w52": 8,
         "val": 3
       },
-      "sector": "ETF"
+      "sector": "ETF",
+      "industry": ""
     }
   },
   "india_holdings": {
@@ -407,7 +422,8 @@
         "w52": 3,
         "val": 6
       },
-      "sector": "Financial Services"
+      "sector": "Financial Services",
+      "industry": ""
     },
     "AVADHSUGAR": {
       "score": 67,
@@ -432,7 +448,8 @@
         "w52": 6,
         "val": 6
       },
-      "sector": "Consumer Defensive"
+      "sector": "Consumer Defensive",
+      "industry": ""
     },
     "IRBINVIT": {
       "score": 66,
@@ -457,7 +474,8 @@
         "w52": 8,
         "val": 6
       },
-      "sector": "InvIT"
+      "sector": "InvIT",
+      "industry": ""
     },
     "JYOTISTRUC": {
       "score": 45,
@@ -482,7 +500,8 @@
         "w52": 3,
         "val": 8
       },
-      "sector": "Industrials"
+      "sector": "Industrials",
+      "industry": ""
     },
     "GMBREW": {
       "score": 49,
@@ -507,7 +526,8 @@
         "w52": 3,
         "val": 6
       },
-      "sector": "Consumer Defensive"
+      "sector": "Consumer Defensive",
+      "industry": ""
     },
     "GOLDBEES_M": {
       "score": 54,
@@ -532,7 +552,8 @@
         "w52": 6,
         "val": 0
       },
-      "sector": "Unknown"
+      "sector": "Unknown",
+      "industry": ""
     },
     "GOLDBEES_U": {
       "score": 54,
@@ -557,7 +578,8 @@
         "w52": 6,
         "val": 0
       },
-      "sector": "Unknown"
+      "sector": "Unknown",
+      "industry": ""
     },
     "RELIANCE": {
       "score": 18,
@@ -582,7 +604,8 @@
         "w52": 0,
         "val": 8
       },
-      "sector": "Energy"
+      "sector": "Energy",
+      "industry": ""
     },
     "WAAREEENER": {
       "score": 64,
@@ -607,7 +630,8 @@
         "w52": 6,
         "val": 6
       },
-      "sector": "Industrials"
+      "sector": "Industrials",
+      "industry": ""
     },
     "DIACABS": {
       "score": 69,
@@ -632,7 +656,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Industrials"
+      "sector": "Industrials",
+      "industry": ""
     },
     "FILATFASH": {
       "score": 38,
@@ -657,7 +682,8 @@
         "w52": 0,
         "val": 10
       },
-      "sector": "Consumer Cyclical"
+      "sector": "Consumer Cyclical",
+      "industry": ""
     },
     "NBCC": {
       "score": 54,
@@ -682,7 +708,8 @@
         "w52": 3,
         "val": 8
       },
-      "sector": "Industrials"
+      "sector": "Industrials",
+      "industry": ""
     }
   }
 }

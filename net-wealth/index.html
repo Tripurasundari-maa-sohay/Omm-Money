@@ -855,7 +855,7 @@
       </div>
 
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
-        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">MONTHLY SIP / SAVINGS (₹)</div>
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">INDIA SIP / SAVINGS (₹) <span style="color:var(--gold-dim);font-weight:400">· US $1K/mo locked</span></div>
         <div style="display:flex;align-items:center;gap:10px">
           <input type="range" id="fc-sip" min="0" max="500000" step="5000" value="100000"
             style="flex:1;accent-color:var(--gold)" oninput="ODIN.updateForecast()">
@@ -2996,19 +2996,139 @@ const ODIN = (() => {
     return '₹' + Math.round(v).toLocaleString('en-IN');
   }
 
+  // ── Component-level projection (each asset/liability grows at own rate) ─────
+  // Assumptions locked (user-specified 2026-06):
+  //   Equities: slider% + $1K/mo US SIP
+  //   Gold: +11%/yr
+  //   Apartment MV: +2%/yr
+  //   Apt loan (Canara): 9% pa · EMI ₹36,387 + ₹15K prepay/mo
+  //   Car: −15%/yr depreciation
+  //   LC loan (Doha): 4.5% pa · QAR 6,851/mo · paused May+Jun-26
+  //   CCs: cleared Jun-26
+  //   Bou loan: +12% every March, never settled
+  //   Gratuity: +QAR 9,444 every January
+  //   FX fixed: $1=₹95 · QAR=₹26.1
+
+  function _projectComponents(equityReturnPct, years, inflation) {
+    const FX_USD = 95, FX_QAR = 26.1;
+    const seed = S.seed || {};
+    const a    = seed.assets || {};
+    const v    = view();
+
+    // ── Starting asset values (INR) ───────────────────────────────────────────
+    const goldGrams    = (a.gold_jewellery_grams||0) + (a.malabar_grams||0);
+    const goldRateINR  = seed.gold_rate_inr_per_gram || 8500;
+    let assets = {
+      india_eq:  v.india_stocks_inr  || (a.india_stocks||0),
+      us_eq:    (v.us_stocks_usd||a.us_stocks_usd||0) * FX_USD,
+      gold:      goldGrams * goldRateINR,
+      apt_mkt:   a.apartment_market_value || 6500000,
+      car_inr:  (a.land_cruiser_resale_qar||195000) * FX_QAR,
+      gratuity: (a.gratuity_qar||84000) * FX_QAR,
+      fo_cash:   a.fo_corpus_cash || 0,
+      mf:        a.india_mutual_fund_inr || 0,
+      custom:    (seed.custom_assets||[]).reduce((s,c)=>s+(c.ccy==='QAR'?c.value*FX_QAR:c.ccy==='USD'?c.value*FX_USD:c.value),0),
+    };
+
+    // ── Starting liabilities (INR) ────────────────────────────────────────────
+    const loans = seed.loans || [];
+    const getL  = id => (loans.find(l=>l.id===id)||{});
+    let liab = {
+      apt_loan: getL('apartment').outstanding || 3880624,
+      lc_loan:  (getL('lc').outstanding||272136) * FX_QAR,
+      bou_loan: getL('bou_loan').outstanding || 1097100,
+      cc:      ((getL('cc_qa').outstanding||0)+(getL('cc_lulu').outstanding||0)) * FX_QAR,
+    };
+
+    const currentAge = seed.fire?.current_age || 36;
+    const today = new Date();
+    let rows = [], lc_paused_months = 2; // May + Jun 26 pause remaining
+
+    for (let y = 1; y <= years; y++) {
+      const yr = today.getFullYear() + y;
+
+      // ── Per-month simulation ──────────────────────────────────────────────
+      for (let m = 0; m < 12; m++) {
+        const month = (today.getMonth() + m) % 12; // 0=Jan
+
+        // Equities: monthly compound + $1K/mo US SIP
+        assets.india_eq *= (1 + equityReturnPct/100/12);
+        assets.us_eq    = assets.us_eq * (1 + equityReturnPct/100/12) + 1000*FX_USD/12;
+        assets.fo_cash  *= (1 + 0.065/12);  // F&O cash at ~6.5% conservative
+        assets.mf       *= (1 + equityReturnPct/100/12);
+
+        // Apt loan: 9% pa, EMI 36387 + 15000 prepay
+        if (liab.apt_loan > 0) {
+          const int = liab.apt_loan * 0.09/12;
+          liab.apt_loan = Math.max(0, liab.apt_loan - (36387 + 15000 - int));
+        }
+
+        // LC loan: 4.5% pa, QAR 6851/mo, paused first 2 months
+        if (liab.lc_loan > 0) {
+          const int_qar = (liab.lc_loan/FX_QAR) * 0.045/12;
+          if (lc_paused_months > 0) {
+            liab.lc_loan += int_qar * FX_QAR; // interest accrues during pause
+            lc_paused_months--;
+          } else {
+            liab.lc_loan = Math.max(0, liab.lc_loan - (6851 - int_qar)*FX_QAR);
+          }
+        }
+      }
+
+      // ── Annual events ─────────────────────────────────────────────────────
+      // Gratuity: +QAR 9,444 every January
+      assets.gratuity += 9444 * FX_QAR;
+
+      // Gold: +11%/yr
+      assets.gold    *= 1.11;
+
+      // Apartment MV: +2%/yr
+      assets.apt_mkt *= 1.02;
+
+      // Car: −15%/yr
+      assets.car_inr *= 0.85;
+
+      // Bou loan: +12% every March (compounds, never settled)
+      liab.bou_loan *= 1.12;
+
+      // CCs: cleared after first year
+      if (y === 1) liab.cc = 0;
+
+      // ── Totals ────────────────────────────────────────────────────────────
+      const totalAssets = Object.values(assets).reduce((s,v)=>s+v,0);
+      const totalLiab   = Object.values(liab).reduce((s,v)=>s+v,0);
+      const nw          = Math.round(totalAssets - totalLiab);
+      const realNw      = Math.round(nw / Math.pow(1 + inflation/100, y));
+      const prevNw      = rows.length ? rows[rows.length-1].nw : nw;
+      const growth      = rows.length ? Math.round((nw/prevNw-1)*1000)/10 : 0;
+
+      rows.push({
+        year: yr, age: currentAge + y, nw, realNw, growth,
+        totalAssets: Math.round(totalAssets), totalLiab: Math.round(totalLiab),
+        breakdown: {
+          eq:  Math.round(assets.india_eq + assets.us_eq),
+          gold:Math.round(assets.gold),
+          apt: Math.round(assets.apt_mkt - liab.apt_loan),
+          car: Math.round(assets.car_inr - liab.lc_loan),
+          grat:Math.round(assets.gratuity),
+          bou: Math.round(-liab.bou_loan),
+        }
+      });
+    }
+    return rows;
+  }
+
   function _projectWealth(nw0, annualReturn, monthlySip, years, inflation) {
-    const r    = annualReturn / 100 / 12;
-    const inf  = inflation    / 100 / 12;
+    // Simple fallback (used for scenario comparison)
+    const r = annualReturn / 100 / 12;
     let nw = nw0, rows = [];
     const currentAge = S.seed?.fire?.current_age || 36;
     for (let y = 1; y <= years; y++) {
-      for (let m = 0; m < 12; m++) {
-        nw = nw * (1 + r) + monthlySip;
-      }
+      for (let m = 0; m < 12; m++) nw = nw * (1 + r) + monthlySip;
       const realNw = nw / Math.pow(1 + inflation/100, y);
       rows.push({ year: new Date().getFullYear() + y, age: currentAge + y,
                   nw: Math.round(nw), realNw: Math.round(realNw),
-                  growth: y === 1 ? 0 : Math.round((nw / rows[y-2].nw - 1) * 100 * 10) / 10 });
+                  growth: y===1?0:Math.round((nw/(rows[y-2].nw||1)-1)*1000)/10 });
     }
     return rows;
   }
@@ -3026,10 +3146,11 @@ const ODIN = (() => {
 
     const v    = view();
     const nw0  = v.netWorth || 0;
-    const rows = _projectWealth(nw0, ret, sip, yrs, inf);
+    // Use component-level model (locked assumptions per 2026-06 review)
+    const rows = _projectComponents(ret, yrs, inf);
     const endNw = rows[rows.length - 1]?.nw || 0;
     const realNw= rows[rows.length - 1]?.realNw || 0;
-    const totalSip = sip * 12 * yrs;
+    const totalSip = 1000 * 95 * yrs; // locked $1K/mo US SIP × FX 95
 
     document.getElementById('fc-start-nw').textContent = _fmtCr(nw0);
     document.getElementById('fc-end-nw').textContent   = _fmtCr(endNw);
@@ -3063,13 +3184,15 @@ const ODIN = (() => {
       const rowBg = isFire ? 'background:rgba(255,80,80,0.08)' : isMilestone ? 'background:rgba(212,168,76,0.08)' : (i%2===0?'background:var(--bg3)':'');
       const milTag = isFire ? ' 🔥 FIRE' : isMilestone ? ` 🎯 ${isMilestone.label}` : '';
       const growthColor = r.growth >= ret ? 'color:var(--gain,#4ecf82)' : 'color:var(--text)';
+      const bd = r.breakdown || {};
+      const bdStr = bd.eq ? `Eq ${_fmtCr(bd.eq)} · Gold ${_fmtCr(bd.gold)} · Apt(net) ${_fmtCr(bd.apt)} · Grat ${_fmtCr(bd.grat)} · Bou ${_fmtCr(bd.bou)}` : '';
       return `<tr style="${rowBg}">
         <td style="padding:7px 12px">${r.year}</td>
         <td style="padding:7px 12px;color:var(--text-dim)">Age ${r.age}</td>
         <td style="padding:7px 12px;text-align:right;font-weight:600;color:var(--gold)">${_fmtCr(r.nw)}</td>
         <td style="padding:7px 12px;text-align:right;color:var(--text-sec)">${_fmtCr(r.realNw)}</td>
         <td style="padding:7px 12px;text-align:right;${growthColor}">${i===0?'—':'+'+r.growth+'%'}</td>
-        <td style="padding:7px 12px;text-align:right;font-size:12px">${milTag}</td>
+        <td style="padding:7px 12px;font-size:10px;color:var(--text-dim)">${bdStr}${milTag?'<b style="color:var(--gold)"> '+milTag+'</b>':''}</td>
       </tr>`;
     }).join('');
 

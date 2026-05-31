@@ -37,6 +37,28 @@ ROOT        = Path(__file__).resolve().parent.parent
 COST_BASIS  = ROOT / "data" / "holdings_cost.json"
 OUT_SIGNALS = ROOT / "data" / "processed" / "stock_signals.json"
 
+# ── SECTOR MAP (Yahoo quoteSummary now requires auth → hardcode known holdings) ──
+# Yahoo v10 quoteSummary returns 401; use static map for our fixed universe.
+SECTOR_MAP: dict[str, str] = {
+    # US holdings
+    "GOOG": "Communication Services", "AMZN": "Consumer Cyclical",
+    "AVGO": "Technology",             "GLW":  "Technology",
+    "GEV":  "Industrials",            "MU":   "Technology",
+    "MSFT": "Technology",             "MP":   "Basic Materials",
+    "RKLB": "Industrials",            "SHIP": "Industrials",
+    "NOW":  "Technology",             "TTE":  "Energy",
+    "EWY":  "ETF",                    "HUMN": "ETF",
+    "VOOG": "ETF",
+    # India holdings
+    "SBIN": "Financial Services",     "AVADHSUGAR": "Consumer Defensive",
+    "IRBINVIT": "InvIT",              "JYOTISTRUC": "Industrials",
+    "GMBREW": "Consumer Defensive",   "GOLDBEES_M": "ETF",
+    "GOLDBEES_U": "ETF",              "RELIANCE": "Energy",
+    "WAAREEENER": "Industrials",      "DIACABS": "Industrials",
+    "FILATFASH": "Consumer Cyclical", "NBCC": "Industrials",
+    "ASHALOG": "Industrials",         "PARAMATRIX": "Technology",
+}
+
 
 # ── MATH HELPERS ─────────────────────────────────────────────────────────────
 
@@ -117,17 +139,10 @@ def fetch_history(yf_symbol: str) -> "tuple[list[int], list[float], list[float]]
 
 
 def fetch_sector(yf_symbol: str) -> str:
-    """Return GICS sector from Yahoo Finance quote summary, or 'Unknown'."""
-    try:
-        url = (f"https://query1.finance.yahoo.com/v10/finance/quoteSummary/{yf_symbol}"
-               f"?modules=assetProfile")
-        r   = requests.get(url, headers=_YF_UA, timeout=10)
-        if r.status_code == 200:
-            profile = r.json()["quoteSummary"]["result"][0]["assetProfile"]
-            return profile.get("sector") or "Unknown"
-    except Exception:
-        pass
-    return "Unknown"
+    """Return GICS sector. Uses static SECTOR_MAP (Yahoo quoteSummary now 401).
+    Strips .NS/.BO suffix for India lookup."""
+    base = yf_symbol.replace(".NS", "").replace(".BO", "")
+    return SECTOR_MAP.get(base, SECTOR_MAP.get(yf_symbol, "Unknown"))
 
 # Minimum bars needed for meaningful signal computation (RSI-14 + some trend context)
 MIN_BARS_FOR_SIGNALS = 60

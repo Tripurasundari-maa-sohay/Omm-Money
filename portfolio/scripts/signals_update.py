@@ -228,12 +228,28 @@ def score_ticker(
 
 # ── MAIN ─────────────────────────────────────────────────────────────────────
 
-def main() -> int:
-    if not COST_BASIS.exists():
-        print(f"WARN  {COST_BASIS} not found — skipping signals", file=sys.stderr)
-        return 1
+def _load_cost() -> dict:
+    """Load holdings_cost.json — local file (GitHub Actions/dev) or GitHub API (VM mode)."""
+    if COST_BASIS.exists():
+        return json.loads(COST_BASIS.read_text())
+    if _GITHUB_TOKEN:
+        print("  Loading holdings_cost.json from GitHub (VM mode)…")
+        headers = {"Authorization": f"token {_GITHUB_TOKEN}",
+                   "Accept": "application/vnd.github.v3+json"}
+        import base64 as _b
+        r = requests.get(
+            f"https://api.github.com/repos/{_GITHUB_REPO}/contents/portfolio/data/holdings_cost.json?ref=main",
+            headers=headers, timeout=15)
+        if r.status_code == 200:
+            return json.loads(_b.b64decode(r.json()["content"]).decode())
+    return {}
 
-    cost = json.loads(COST_BASIS.read_text())
+
+def main() -> int:
+    cost = _load_cost()
+    if not cost:
+        print(f"WARN  holdings_cost.json not found locally or via GitHub — skipping signals", file=sys.stderr)
+        return 1
     us_open = cost.get("us", {}).get("open", [])
     if not us_open:
         print("WARN  no US open positions found", file=sys.stderr)
@@ -325,7 +341,6 @@ def main() -> int:
                 print(f"ERROR: {exc}", file=sys.stderr)
 
     # ── Write output ──────────────────────────────────────────────────────────
-    OUT_SIGNALS.parent.mkdir(parents=True, exist_ok=True)
     out = {
         "generated":      datetime.utcnow().isoformat() + "Z",
         "regime":         regime,
@@ -333,9 +348,50 @@ def main() -> int:
         "holdings":       holdings_out,
         "india_holdings": india_out,
     }
-    OUT_SIGNALS.write_text(json.dumps(out, indent=2))
-    print(f"  wrote {OUT_SIGNALS.relative_to(ROOT)}  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
+    out_json = json.dumps(out, indent=2)
+
+    # Write locally if repo structure exists (GitHub Actions / local dev)
+    if OUT_SIGNALS.parent.exists() or not _GITHUB_TOKEN:
+        OUT_SIGNALS.parent.mkdir(parents=True, exist_ok=True)
+        OUT_SIGNALS.write_text(out_json)
+        print(f"  wrote {OUT_SIGNALS.relative_to(ROOT)}  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
+
+    # Commit to GitHub if token available (VM mode — no local repo)
+    if _GITHUB_TOKEN:
+        _commit_to_github("portfolio/data/processed/stock_signals.json", out_json,
+                          f"data: signals {datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')} [skip ci]")
+        print(f"  wrote stock_signals.json → GitHub  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
+
     return 0
+
+
+# ── GitHub commit (VM mode) ───────────────────────────────────────────────────
+import os as _os, base64 as _b64
+
+_GITHUB_TOKEN = _os.environ.get("GITHUB_TOKEN", "")
+_GITHUB_REPO  = "Tripurasundari-maa-sohay/Omm-Money"
+
+
+def _commit_to_github(path: str, content: str, message: str) -> None:
+    import time as _time
+    headers = {"Authorization": f"token {_GITHUB_TOKEN}",
+               "Accept": "application/vnd.github.v3+json"}
+    url  = f"https://api.github.com/repos/{_GITHUB_REPO}/contents/{path}"
+    enc  = _b64.b64encode(content.encode()).decode()
+    r    = requests.get(url, headers=headers, timeout=10)
+    sha  = r.json().get("sha") if r.status_code == 200 else None
+    body = {"message": message, "content": enc, "branch": "main"}
+    if sha: body["sha"] = sha
+    for attempt in range(1, 4):
+        r = requests.put(url, headers=headers, json=body, timeout=20)
+        if r.status_code in (200, 201):
+            print(f"  Committed signals → GitHub OK"); return
+        if r.status_code == 409:
+            body["sha"] = requests.get(url, headers=headers, timeout=10).json().get("sha")
+        else:
+            print(f"  signals commit attempt {attempt}: {r.status_code}", file=sys.stderr)
+        _time.sleep(5 * attempt)
+    print("  All signal commit attempts failed", file=sys.stderr)
 
 
 if __name__ == "__main__":

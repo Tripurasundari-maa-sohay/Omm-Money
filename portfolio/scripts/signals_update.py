@@ -362,6 +362,34 @@ def main() -> int:
                           f"data: signals {datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')} [skip ci]")
         print(f"  wrote stock_signals.json → GitHub  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
 
+    # ── Append to signals history CSV (for ML training) ──────────────────────
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    csv_rows = []
+    CSV_HEADER = "date,ticker,market,score,action,regime,rsi,v200,rs,hi52,lo52,rng,vsMean,px,sector,spy_px,spy_pct_vs200\n"
+    spy_px   = round(spy_summary.get("px", 0), 2)
+    spy_pct  = round(spy_summary.get("pct_vs_200", 0), 2)
+
+    for tk, r in {**{k: {**v, "_mkt": "US"}     for k, v in holdings_out.items()},
+                  **{k: {**v, "_mkt": "India"}   for k, v in india_out.items()}}.items():
+        csv_rows.append(
+            f"{today},{tk},{r['_mkt']},{r['score']},{r['action']},{r['regime']},"
+            f"{r['rsi']},{r['v200']},{r['rs']},{r['hi52']},{r['lo52']},"
+            f"{r['rng']},{r['vsMean']},{r['px']},{r.get('sector','Unknown')},"
+            f"{spy_px},{spy_pct}\n"
+        )
+
+    if csv_rows:
+        if _GITHUB_TOKEN:
+            _append_signals_history(today, CSV_HEADER, csv_rows)
+        else:
+            hist_path = ROOT / "data" / "history" / "signals_history.csv"
+            hist_path.parent.mkdir(parents=True, exist_ok=True)
+            write_header = not hist_path.exists()
+            with open(hist_path, "a") as f:
+                if write_header: f.write(CSV_HEADER)
+                f.writelines(csv_rows)
+            print(f"  appended {len(csv_rows)} rows → signals_history.csv")
+
     return 0
 
 
@@ -372,14 +400,39 @@ _GITHUB_TOKEN = _os.environ.get("GITHUB_TOKEN", "")
 _GITHUB_REPO  = "Tripurasundari-maa-sohay/Omm-Money"
 
 
-def _commit_to_github(path: str, content: str, message: str) -> None:
+def _append_signals_history(today: str, header: str, new_rows: list) -> None:
+    """Read existing signals_history.csv from GitHub, strip today's rows (idempotent),
+    append new rows, commit back."""
+    import base64 as _b
+    path    = "portfolio/data/history/signals_history.csv"
+    headers = {"Authorization": f"token {_GITHUB_TOKEN}",
+               "Accept": "application/vnd.github.v3+json"}
+    url     = f"https://api.github.com/repos/{_GITHUB_REPO}/contents/{path}"
+    r       = requests.get(url, headers=headers, timeout=10)
+    if r.status_code == 200:
+        existing = _b.b64decode(r.json()["content"]).decode()
+        sha = r.json()["sha"]
+        # Strip header + today's rows (idempotent re-run)
+        lines = [l for l in existing.splitlines(keepends=True)
+                 if not l.startswith(today) and not l.startswith("date,")]
+    else:
+        lines = []
+        sha   = None
+    content = header + "".join(lines) + "".join(new_rows)
+    _commit_to_github(path, content,
+        f"data: signals history {today} [skip ci]", sha)
+    print(f"  appended {len(new_rows)} rows → signals_history.csv")
+
+
+def _commit_to_github(path: str, content: str, message: str, sha: str = None) -> None:
     import time as _time
     headers = {"Authorization": f"token {_GITHUB_TOKEN}",
                "Accept": "application/vnd.github.v3+json"}
     url  = f"https://api.github.com/repos/{_GITHUB_REPO}/contents/{path}"
     enc  = _b64.b64encode(content.encode()).decode()
-    r    = requests.get(url, headers=headers, timeout=10)
-    sha  = r.json().get("sha") if r.status_code == 200 else None
+    if sha is None:
+        r   = requests.get(url, headers=headers, timeout=10)
+        sha = r.json().get("sha") if r.status_code == 200 else None
     body = {"message": message, "content": enc, "branch": "main"}
     if sha: body["sha"] = sha
     for attempt in range(1, 4):

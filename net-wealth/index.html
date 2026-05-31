@@ -2274,9 +2274,9 @@ const ODIN = (() => {
     }
   }
 
-  // Cloudflare Worker proxy that holds the GitHub PAT server-side.
-  // Worker source: tools/cloudflare-worker.js.
-  const SAVE_WORKER_URL = 'https://omm-money-saver.sabarna-chowdhury.workers.dev/';
+  // VM save API (Oracle VM, replaces Cloudflare Worker).
+  // Source: /home/opc/save_api.py on VM 145.241.158.254.
+  const SAVE_WORKER_URL = 'https://save.145-241-158-254.nip.io/save';
 
   async function pushSeedToGitHub() {
     try {

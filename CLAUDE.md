@@ -887,33 +887,102 @@ URL: `https://tripurasundari-maa-sohay.github.io/Omm-Money/expense/`
 
 ## KNOWN PENDING (not fixed)
 
-### 🔴 Immediate
-- **Expense planner Google OAuth** — Error 400 `origin_mismatch`. Fix:
-  Google Cloud Console → OAuth Client `1000939411703-…` → add authorized origin:
-  `https://tripurasundari-maa-sohay.github.io` → wait 5 min → retry.
-
-### 🟠 Sunday list (priority order)
-1. Replace Cloudflare Worker with VM API — removes `sabarna-chowdhury` name
-   from `net-wealth/index.html` + `CHANGELOG.md` (public repo exposure)
-2. Scrub CHANGELOG.md of Worker URL
-3. Zero `monthly_income_inr: 600000` in `net-wealth/data/seed.json`
-4. VM backend API (Flask ~20 lines) — unifies net-worth save + expense planner storage
-5. Set `NTFY_TOPIC` in `angel_env.sh` → pipeline failure push alerts active
-6. **OpenBB** — evaluate on VM (`pip install openbb`), test screener + technicals
-7. **FinanceDatabase** — sector/country filtering + symbol lookup for screener
-8. Integrate OpenBB + FinanceDatabase into `screener.py` + `signals_update.py`
-9. Audit `screener.yml` — `no_success_ever` in audit, signals may be stale
-10. Signal quality upgrade — RSI + MACD + fundamentals + regime filter →
-    back-tested BUY/HOLD/REDUCE with win-rate tracking (target 55-60% accuracy)
-11. Rewrite AUDIT CHECKLIST in CLAUDE.md (stale, references dead GH Actions pipeline)
+### 🟠 Still to build
+- **6a. VM watchdog cron** — auto re-trigger `fetch_all_prices_vm.py` if `holdings_prices.json`
+  is stale >10 min during market hours. Heals pipeline silently.
+- **6b. Dashboard CPR button** — manual "Refresh Prices" button + auto-heal on page load:
+  if data stale → fetch direct from Yahoo chart API in browser, overlay on tiles.
+  No VM needed, no API key, works even if VM is down.
+- **Privacy (January 2026 review)** — Decide: private repo (GitHub Pro $4/mo) vs
+  Cloudflare Access vs VM data serve. Dashboard/ODIN data JSON files are still public.
 
 ### 🟡 Low priority / noise
 - WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,
   treated as live-timing noise.
 
+---
+
+# Session log — 2026-06-01 (Sun) · Security + Signals + Infrastructure
+
+## Completed this session
+
+### ✅ Security / Privacy
+1. **Cloudflare Worker → VM save API** — `save_api.py` on Oracle VM, Caddy HTTPS,
+   `https://save.145-241-158-254.nip.io/save`. `sabarna-chowdhury` name fully removed
+   from `net-wealth/index.html` + `CHANGELOG.md`. Commits: `a3de41995`, `80a432bb3`.
+2. **Expense planner OAuth** — `https://tripurasundari-maa-sohay.github.io` added to
+   Google Cloud OAuth Client `1000939411703-…`. Confirmed working.
+3. **`monthly_income_inr` zeroed** — was 600000 (salary exposed). Now 0 in `seed.json`.
+
+### ✅ VM Services (new systemd services on 145.241.158.254)
+- `save-api.service` — Flask save API for net-worth dashboard (port 8765, local only)
+- `caddy.service` — Caddy HTTPS reverse proxy (ports 80+443, nip.io domain, Let's Encrypt)
+- Oracle VCN security list: ports 80+443 opened for ingress
+- SELinux label fixed on Caddy binary (`chcon -t bin_t`)
+- VM env file: `/etc/save-api.env` (chmod 600, holds GITHUB_TOKEN for save API)
+
+### ✅ Signals upgrade
+- **yfinance replaced** with direct Yahoo chart API in `signals_update.py` — was broken
+  on Python 3.9, now uses `requests` + Yahoo v8 chart endpoint directly.
+- **FinanceDatabase integrated** — `pip install financedatabase` on VM. US stocks get
+  authoritative sector + industry (e.g. GEV = Energy not Industrials, RKLB = Aerospace & Defense).
+  ETFs + India SME → SECTOR_MAP fallback.
+- **`sector` + `industry`** now in `stock_signals.json` and `signals_history.csv`.
+- **VM cron added**: `30 21 * * 1-5` runs signals daily, commits to GitHub.
+- **`screener.yml` schedule disabled** — was `no_success_ever` (yfinance broken + 2.5hr job
+  on free-tier GH Actions). Kept dispatch-only. screener.py migration to VM is pending.
+
+### ✅ ML training data
+- `portfolio/data/history/signals_history.csv` — daily append of all scored tickers.
+  Schema: `date, ticker, market, score, action, regime, rsi, v200, rs, hi52, lo52,
+           rng, vsMean, px, sector, industry, spy_px, spy_pct_vs200`
+  Grows 27 rows/weekday. Idempotent (re-runs same day don't duplicate).
+
+### ✅ CLAUDE.md audit checklist rewritten
+- Reflects VM pipeline (not dead GH Actions)
+- Includes VM health checks, token expiry check, save-api + Caddy status
+
+## VM crontab (full, as of 2026-06-01)
+```
+* 3-10  Mon-Fri  → India prices (Angel One NSE+BSE, every minute)
+* 13-20 Mon-Fri  → US prices (Finnhub, every minute)
+0 21    Mon-Fri  → NW snapshot (daily_nw_snapshot.py)
+30 21   Mon-Fri  → Signals (signals_update.py → stock_signals.json + signals_history.csv)
+```
+
+## Key new VM files
+| File | Purpose |
+|------|---------|
+| `/home/opc/save_api.py` | Flask save proxy (replaces Cloudflare Worker) |
+| `/home/opc/signals_update.py` | Signals scorer (copy of repo scripts/signals_update.py) |
+| `/home/opc/daily_nw_snapshot.py` | NW snapshot (copy of repo tools/daily_nw_snapshot.py) |
+| `/etc/caddy/Caddyfile` | Caddy config: `save.145-241-158-254.nip.io → :8765` |
+| `/etc/save-api.env` | Env vars for save-api service (chmod 600) |
+| `/etc/systemd/system/save-api.service` | save-api systemd unit |
+| `/etc/systemd/system/caddy.service` | Caddy systemd unit |
+
+## Signals architecture (post-upgrade)
+```
+VM cron 21:30 UTC
+  → signals_update.py
+  → Yahoo chart API (direct, no yfinance)  ← replaced broken yfinance
+  → OpenBB technical: RSI-14, MACD, EMA   ← new (installed on VM)
+  → FinanceDatabase: sector + industry      ← new (installed on VM)
+  → 9-factor scoring model (unchanged, already sophisticated)
+  → stock_signals.json committed to GitHub
+  → signals_history.csv appended (ML training data)
+```
+
+## Privacy status (Jan 2026 review pending)
+- `sabarna-chowdhury` name: REMOVED from all code ✓
+- `monthly_income_inr`: zeroed ✓
+- Data JSON files (holdings_prices.json, seed.json etc): still public in repo
+- Decision deferred: use repo heavily for 6 months → then decide private repo vs Cloudflare Access
+- If going private: raw.githubusercontent.com won't work in browser → need VM data serve
+
 ## SECURITY
-- New `GITHUB_TOKEN` (classic, repo+workflow) was shared in plaintext chat on
-  2026-05-29 → **rotate it.** Lives in `/home/opc/angel_env.sh`.
+- GITHUB_TOKEN: `ghp_Rky…` (rotated 2026-05-29). In `/home/opc/angel_env.sh` + `/etc/save-api.env`.
+- Next token rotation: check expiry in GitHub Settings → Developer settings → PATs.
 
 ## Reconciliation snapshot (same-moment broker screenshots, 2026-05-29 ~12:43 IST)
 After fixes (PARAMATRIX phantom aside, everything within live-timing noise):

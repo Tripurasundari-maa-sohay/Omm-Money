@@ -81,7 +81,7 @@ Notable changes per session. Newest on top.
   `{path, content}` from the dashboard origin, validates against a path
   whitelist, and commits via the GitHub Contents API using a PAT held
   server-side in the worker env.
-- Deployed to `https://omm-money-saver.sabarna-chowdhury.workers.dev/`.
+- Migrated to VM save API at `https://save.145-241-158-254.nip.io/save` (Cloudflare Worker retired).
   Origin-locked to `https://tripurasundari-maa-sohay.github.io`.
   Whitelisted paths: `net-wealth/data/seed.json`,
   `portfolio/data/holdings_cost.json` (latter not yet wired).

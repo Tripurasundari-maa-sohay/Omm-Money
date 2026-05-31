@@ -62,6 +62,23 @@ SECTOR_MAP: dict[str, str] = {
 
 # ── MATH HELPERS ─────────────────────────────────────────────────────────────
 
+# ── FINANCEDATABASE sector lookup (lazy-loaded once per run) ─────────────────
+_FD_DF = None
+
+def _load_fd():
+    global _FD_DF
+    if _FD_DF is not None:
+        return _FD_DF
+    try:
+        import financedatabase as fd
+        _FD_DF = fd.Equities().select()
+        print(f"  FinanceDatabase loaded: {len(_FD_DF)} equities")
+    except Exception as e:
+        print(f"  FinanceDatabase unavailable: {e}", file=sys.stderr)
+        _FD_DF = {}   # sentinel — skip on failure
+    return _FD_DF
+
+
 def ewm(data: list[float], span: int) -> list[float]:
     """Exponential weighted mean — matches JS sigEwm exactly."""
     k, ema = 2 / (span + 1), data[0]
@@ -138,11 +155,27 @@ def fetch_history(yf_symbol: str) -> "tuple[list[int], list[float], list[float]]
     return None
 
 
-def fetch_sector(yf_symbol: str) -> str:
-    """Return GICS sector. Uses static SECTOR_MAP (Yahoo quoteSummary now 401).
-    Strips .NS/.BO suffix for India lookup."""
+def fetch_sector(yf_symbol: str) -> tuple:
+    """Return (sector, industry).
+    1st: FinanceDatabase (authoritative, auto-covers new tickers)
+    2nd: SECTOR_MAP fallback (ETFs + India SME not in FD)"""
     base = yf_symbol.replace(".NS", "").replace(".BO", "")
-    return SECTOR_MAP.get(base, SECTOR_MAP.get(yf_symbol, "Unknown"))
+    df = _load_fd()
+    if df is not None and hasattr(df, 'loc'):
+        try:
+            rows = df.loc[[base]] if base in df.index else None
+            if rows is not None and len(rows):
+                us  = rows[rows['country'] == 'United States']
+                ind = rows[rows['country'] == 'India']
+                row = us.iloc[0] if len(us) else (ind.iloc[0] if len(ind) else rows.iloc[0])
+                sec = str(row.get('sector', '') or '')
+                ind_str = str(row.get('industry', '') or '')
+                if sec and sec not in ('None', 'nan', ''):
+                    return sec, (ind_str if ind_str not in ('None','nan','') else '')
+        except Exception:
+            pass
+    sec = SECTOR_MAP.get(base, SECTOR_MAP.get(yf_symbol, "Unknown"))
+    return sec, ""
 
 # Minimum bars needed for meaningful signal computation (RSI-14 + some trend context)
 MIN_BARS_FOR_SIGNALS = 60
@@ -316,7 +349,7 @@ def main() -> int:
 
         try:
             res = score_ticker(ts, cl, vol, spy_cl)
-            res["sector"] = fetch_sector(yfs)
+            res["sector"], res["industry"] = fetch_sector(yfs)
             holdings_out[tk] = res
             print(f"score={res['score']} [{res['action']}]  RSI={res['rsi']}  vs200={res['v200']:+.1f}%  sector={res['sector']}")
         except Exception as exc:
@@ -349,7 +382,7 @@ def main() -> int:
 
             try:
                 res = score_ticker(ts, cl, vol, spy_cl)
-                res["sector"] = fetch_sector(yfs)
+                res["sector"], res["industry"] = fetch_sector(yfs)
                 india_out[tk] = res
                 print(f"score={res['score']} [{res['action']}]  RSI={res['rsi']}  vs200={res['v200']:+.1f}%")
             except Exception as exc:
@@ -380,7 +413,7 @@ def main() -> int:
     # ── Append to signals history CSV (for ML training) ──────────────────────
     today = datetime.utcnow().strftime("%Y-%m-%d")
     csv_rows = []
-    CSV_HEADER = "date,ticker,market,score,action,regime,rsi,v200,rs,hi52,lo52,rng,vsMean,px,sector,spy_px,spy_pct_vs200\n"
+    CSV_HEADER = "date,ticker,market,score,action,regime,rsi,v200,rs,hi52,lo52,rng,vsMean,px,sector,industry,spy_px,spy_pct_vs200\n"
     spy_px   = round(spy_summary.get("px", 0), 2)
     spy_pct  = round(spy_summary.get("pct_vs_200", 0), 2)
 
@@ -390,6 +423,7 @@ def main() -> int:
             f"{today},{tk},{r['_mkt']},{r['score']},{r['action']},{r['regime']},"
             f"{r['rsi']},{r['v200']},{r['rs']},{r['hi52']},{r['lo52']},"
             f"{r['rng']},{r['vsMean']},{r['px']},{r.get('sector','Unknown')},"
+            f"{r.get('industry','')},"
             f"{spy_px},{spy_pct}\n"
         )
 

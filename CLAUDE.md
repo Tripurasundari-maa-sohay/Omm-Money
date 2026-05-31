@@ -156,91 +156,88 @@ Key dividend earners in May-2026 statement:
 ---
 
 # AUDIT CHECKLIST — run before every session ends
+# ⚠️ VM IS THE PIPELINE — GH Actions full_update.yml / screener.yml are RETIRED
 
 ## 🔴 CRITICAL (data integrity)
 - [ ] All open positions have `ltp` > 0 in `holdings_prices.json`
 - [ ] All open positions have `pc` ≠ null (or confirmed big-mover with note)
 - [ ] Day P&L = `(ltp - pc) × qty` for every position — verify 2-3 manually
-- [ ] `holdings_prices.json.generated` timestamp < 15 min during market hours
+- [ ] `holdings_prices.json.generated` timestamp < 5 min during market hours
+- [ ] `market_indices.json.generated` timestamp < 5 min during market hours
 - [ ] FX rate in `market_indices.json` between 80–110 INR/USD (sanity range)
-- [ ] `full_update.yml` last run: green ✅ (check GitHub Actions)
 - [ ] No GitHub secrets in any committed file (grep: `ghp_`, `apikey`, `password`, `token =`)
+
+## 🟢 PIPELINE (VM cron — replaces all GH Actions)
+```bash
+ssh -i ~/Downloads/ssh-key-2026-05-26.key opc@145.241.158.254
+crontab -l   # should show 4 entries:
+#   * 3-10  Mon-Fri  → india prices (Angel One)
+#   * 13-20 Mon-Fri  → US prices (Finnhub)
+#   0 21    Mon-Fri  → NW snapshot
+#   30 21   Mon-Fri  → signals update
+tail -20 /home/opc/prices.log    # check last commit was OK (no 401)
+tail -20 /home/opc/signals.log   # check signals committed OK
+sudo systemctl status save-api   # save API for net-worth dashboard
+sudo systemctl status caddy      # HTTPS proxy for save API
+```
+- [ ] VM cron running: `sudo systemctl status cron` or check `crontab -l`
+- [ ] No `401 Bad credentials` in `/home/opc/prices.log` (token expired = silent freeze)
+- [ ] Finnhub active: `tail prices.log | grep finnhub`
+- [ ] Angel One active: `tail prices.log | grep "Angel One"`
+- [ ] Signals committed today: `tail signals.log | grep "Committed signals"`
+- [ ] save-api service active (net-worth save button)
+- [ ] Caddy service active + HTTPS cert valid
 
 ## 🟠 LOGIC (calculations)
 - [ ] Currency units consistent per tile (INR tile → INR values, USD tile → USD values)
-- [ ] Breakdown sub-values match parent tile currency
-- [ ] `change_pct` cap not silently excluding legitimate big movers (check WARN logs)
-- [ ] Auto-heal fired correctly when `pc` was wrong (check AUTO-HEAL in logs)
+- [ ] Day P&L tile NOT "--" during US market hours (status should be OPEN not RESET)
 - [ ] FIRE tab: `fireTarget = annualExpenses / swrPct` (e.g. ₹24L / 0.04 = ₹6 Cr)
 - [ ] Coast FIRE formula: `fireTarget / (1 + realRet)^yrsLeft`
-
-## 🟡 UI/UX (dead code + display)
-- [ ] No orphaned `<input>` or `<button>` elements with no JS wiring
-- [ ] No placeholder text visible in production (e.g. "enter code", "TODO", "—" where value expected)
-- [ ] All emoji/sync symbols removed from buttons (no ☁️💾📸⬆️📥)
-- [ ] All tiles show actual values (not "—" or "loading..." after page loads)
-- [ ] Sortable columns: clicking header sorts + shows ▲/▼ arrow
-- [ ] Mobile: key tiles visible without scroll (hero, today's gain)
-- [ ] Theme toggle works (dark ↔ light) without blank page
 
 ## 🟡 DATA DISPLAY
 - [ ] India holdings: DAY P&L and DAY % show ₹/% not USD
 - [ ] US holdings: DAY P&L and DAY % show $/% not INR
-- [ ] `pc` field shown as "PREV CLOSE" in India table
 - [ ] STALE tag on holdings where `p.live === false`
-- [ ] FREE tag on house-money positions (`avg === 0`)
 - [ ] Signal badges (BUY/HOLD/REDUCE) visible and color-coded
-
-## 🟢 PIPELINE (workflow health)
-- [ ] `full_update.yml` runs on `[self-hosted, oracle-vm]`
-- [ ] Oracle VM runner status: `sudo systemctl status github-runner` → `active (running)`
-- [ ] Finnhub active for US: logs show `finnhub  GOOG →`
-- [ ] Angel One active for India (when market open): logs show `angelone  SBIN →`
-- [ ] `post_fetch_audit.py` runs in <1s (zero network calls — JSON only)
-- [ ] Cron schedule: `*/5` not `*/15` in `full_update.yml`
-- [ ] Page auto-refresh: `REFRESH_MS = (5 * 60 + 30) * 1000` (5m30s)
+- [ ] Sector field in signals not "Unknown" (SECTOR_MAP covers all holdings)
 
 ## 🟢 NET-WEALTH (ODIN)
-- [ ] `inputs.json` has all bank balances, loans, gold rates (not empty/zeroed)
-- [ ] `history.json` has at least 3 monthly entries (reconciliation tiles need data)
+- [ ] `seed.json` has bank balances, loans, gold rates (not zeroed)
+- [ ] `history.json` growing daily (VM cron 22:00 UTC appends one row/day)
 - [ ] FIRE tab renders: progress bar, coast FIRE, child education, year-by-year table
-- [ ] FX display: `$ to ₹XX.XX · QAR to ₹XX.XX` (not old format)
-- [ ] No Firebase references in code (was removed, should stay removed)
-- [ ] PWA icon: USD/INR coin symbol (not old ODIN default)
+- [ ] Net-worth save button works (`https://save.145-241-158-254.nip.io/save`)
+- [ ] No Firebase references in code
 
 ## 🔵 SECURITY
-- [ ] No hardcoded API keys in any `.py`, `.html`, `.yml` file
-- [ ] All secrets via `os.environ.get()` / `${{ secrets.NAME }}`
-- [ ] GitHub PAT rotated (next rotation: Friday)
-- [ ] Oracle VM SSH key stored in Dashlane secure notes
-- [ ] Angel One TOTP secret stored securely (not in code)
+- [ ] No hardcoded API keys in `.py`, `.html`, `.yml`
+- [ ] VM `/home/opc/angel_env.sh` — GITHUB_TOKEN not expired (test: `curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user` → 200)
+- [ ] VM `/etc/save-api.env` — chmod 600
+- [ ] `sabarna-chowdhury` name: only in CLAUDE.md reference note (not in live code)
+- [ ] Oracle VM SSH key: `~/Downloads/ssh-key-2026-05-26.key`
 
-## 🔵 ARCHITECTURE INTEGRITY
-- [ ] `data/processed/*.json` conflict → always `git checkout --ours`
+## 🔵 ARCHITECTURE (VM is source of truth)
+- [ ] `data/processed/*.json` conflict → `git checkout --theirs` (VM owns these)
 - [ ] Code files (`index.html`, `*.py`, `*.yml`) → NEVER `git reset --hard`
-- [ ] `fetch_us_open_positions()` and `fetch_india_open_positions()` are separate functions
-- [ ] Fallback chain intact: Finnhub → Yahoo (US) | Angel One → Yahoo → NSE (India)
-- [ ] `_build_price_entry()` called for all positions (shared heal + cap logic)
+- [ ] Fallback chain: Finnhub → (nothing, stale carry) US | Angel One NSE+BSE → (nothing) India
+- [ ] VOOG: open 18 shares post-split, never in closed. No phantom closed entry.
+- [ ] GH Actions `full_update.yml` + `screener.yml`: schedule DISABLED (dispatch-only)
 
 ## QUICK GREP COMMANDS
 ```bash
-# Dead UI elements
-grep -n "placeholder=\|TODO\|FIXME\|enter code" portfolio/index.html
-
 # Secrets in code
-grep -rn "ghp_\|apikey\s*=\|password\s*=\s*['\"]" portfolio/scripts/ portfolio/index.html
+grep -rn "ghp_\|apikey\s*=\|password\s*=\s*['\"]" portfolio/scripts/ net-wealth/index.html portfolio/index.html
 
-# Currency unit check
-grep -n "usd(\|inr(\|₹\|\$" portfolio/index.html | grep "region-breakdown\|bm-today\|hero-day"
+# name exposure
+grep -rn "sabarna-chowdhury" --include="*.html" --include="*.py" --include="*.yml" .
 
-# Workflow runner
-grep -n "runs-on" .github/workflows/full_update.yml
+# VM token health (run on VM)
+source /home/opc/angel_env.sh && curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
 
-# Cron interval
-grep -n "cron\|REFRESH_MS" .github/workflows/full_update.yml portfolio/index.html
+# Check stale data
+python3 -c "import json,datetime; d=json.load(open('portfolio/data/processed/holdings_prices.json')); print(d['generated'])"
 
 # Firebase leakage
-grep -rn "firebase\|firestore\|FirebaseSync" net-wealth/index.html portfolio/index.html
+grep -rn "firebase\|firestore" net-wealth/index.html portfolio/index.html
 ```
 
 ---

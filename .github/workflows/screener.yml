@@ -1,9 +1,12 @@
 name: Daily screener · S&P 500 + Nasdaq 100
 
 on:
-  schedule:
-    - cron: "0 1 * * 2,6"  # 01:00 UTC every Tuesday + Saturday — after US close
-  workflow_dispatch:        # manual trigger
+  # RETIRED 2026-06-01: screener.py uses yfinance (broken on free-tier GH Actions).
+  # Schedule disabled — was never succeeding (no_success_ever in audit).
+  # screener.py migration to VM pending (item #8 FinanceDatabase).
+  # schedule:
+  #   - cron: "0 1 * * 2,6"
+  workflow_dispatch:        # manual trigger only
 
 permissions:
   contents: write

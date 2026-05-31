@@ -441,6 +441,7 @@
   <button class="tab-btn" data-tab="assets">▲ ASSETS</button>
   <button class="tab-btn" data-tab="liab">▼ LIABILITIES</button>
   <button class="tab-btn" data-tab="fire">🔥 FIRE</button>
+  <button class="tab-btn" data-tab="forecast">📈 FORECAST</button>
   <button class="tab-btn" id="theme-toggle" onclick="ODIN.toggleTheme()" title="Toggle theme" style="padding:8px 12px">🌙</button>
 </div>
 
@@ -831,6 +832,124 @@
   </div>
 
 </div><!-- /tab-fire -->
+
+<!-- ── FORECAST TAB ─────────────────────────────────────────────────────── -->
+<div class="tab-content" id="tab-forecast">
+  <div style="padding:16px">
+
+    <div style="color:var(--gold);font-size:11px;letter-spacing:2px;margin-bottom:16px">WEALTH FORECAST</div>
+
+    <!-- Controls -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">EXPECTED RETURN % p.a.</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" id="fc-return" min="4" max="25" step="0.5" value="11"
+            style="flex:1;accent-color:var(--gold)" oninput="ODIN.updateForecast()">
+          <span id="fc-return-val" style="font-size:18px;font-weight:700;color:var(--gold);min-width:50px">11%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:2px">
+          <span>4% (FD)</span><span>11% (equity)</span><span>25% (aggressive)</span>
+        </div>
+      </div>
+
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">MONTHLY SIP / SAVINGS (₹)</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" id="fc-sip" min="0" max="500000" step="5000" value="100000"
+            style="flex:1;accent-color:var(--gold)" oninput="ODIN.updateForecast()">
+          <span id="fc-sip-val" style="font-size:18px;font-weight:700;color:var(--gold);min-width:60px">₹1L</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:2px">
+          <span>₹0</span><span>₹2.5L</span><span>₹5L</span>
+        </div>
+      </div>
+
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">FORECAST HORIZON (YEARS)</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" id="fc-years" min="1" max="30" step="1" value="15"
+            style="flex:1;accent-color:var(--gold)" oninput="ODIN.updateForecast()">
+          <span id="fc-years-val" style="font-size:18px;font-weight:700;color:var(--gold);min-width:50px">15 yrs</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:2px">
+          <span>1 yr</span><span>15 yrs</span><span>30 yrs</span>
+        </div>
+      </div>
+
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:6px">INFLATION % p.a.</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" id="fc-inflation" min="2" max="12" step="0.5" value="6"
+            style="flex:1;accent-color:var(--gold)" oninput="ODIN.updateForecast()">
+          <span id="fc-inflation-val" style="font-size:18px;font-weight:700;color:var(--text-dim);min-width:40px">6%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);margin-top:2px">
+          <span>2%</span><span>6%</span><span>12%</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Summary strip -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:4px">STARTING NW</div>
+        <div id="fc-start-nw" style="font-size:16px;font-weight:700;color:var(--text)">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:4px">PROJECTED NW</div>
+        <div id="fc-end-nw" style="font-size:16px;font-weight:700;color:var(--gold)">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:4px">REAL NW (adj.)</div>
+        <div id="fc-real-nw" style="font-size:16px;font-weight:700;color:var(--text-sec)">—</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:4px">TOTAL INVESTED</div>
+        <div id="fc-total-sip" style="font-size:16px;font-weight:700;color:var(--text-sec)">—</div>
+      </div>
+    </div>
+
+    <!-- Milestone badges -->
+    <div id="fc-milestones" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px"></div>
+
+    <!-- Chart -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:20px">
+      <canvas id="fc-chart" height="280"></canvas>
+    </div>
+
+    <!-- Year-by-year table -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text-dim);letter-spacing:1.5px">
+        YEAR-BY-YEAR PROJECTION
+      </div>
+      <div style="overflow-x:auto;max-height:320px;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead style="position:sticky;top:0;background:var(--bg2)">
+            <tr>
+              <th style="padding:8px 12px;text-align:left;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Year</th>
+              <th style="padding:8px 12px;text-align:left;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Age</th>
+              <th style="padding:8px 12px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">NW (nominal)</th>
+              <th style="padding:8px 12px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">NW (real)</th>
+              <th style="padding:8px 12px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Growth</th>
+              <th style="padding:8px 12px;text-align:right;color:var(--text-dim);font-weight:600;border-bottom:1px solid var(--border)">Milestones</th>
+            </tr>
+          </thead>
+          <tbody id="fc-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Scenario comparison -->
+    <div style="margin-top:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px">
+      <div style="font-size:10px;color:var(--text-dim);letter-spacing:1.5px;margin-bottom:12px">SCENARIO COMPARISON (same SIP + years)</div>
+      <div id="fc-scenarios" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"></div>
+    </div>
+
+  </div>
+</div><!-- /tab-forecast -->
 
 
 </div>
@@ -2395,6 +2514,7 @@ const ODIN = (() => {
     if (tab) tab.classList.add('active');
     if (btn) btn.classList.add('active');
     try { localStorage.setItem('odin_active_tab', name); } catch {}
+    if (name === 'forecast') setTimeout(updateForecast, 50);
   }
   function _wireTabs() {
     document.querySelectorAll('.tab-btn').forEach(b => {
@@ -2857,7 +2977,147 @@ const ODIN = (() => {
     }
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, syncAptExtra, openLCModal, closeLCModal, updateLCSim, buildLCSched, syncLCExtra };
+  // ── FORECAST TAB ────────────────────────────────────────────────────────────
+  let _fcChart = null;
+
+  const MILESTONES_INR = [
+    { label: '₹1 Cr',   val: 1e7  },
+    { label: '₹5 Cr',   val: 5e7  },
+    { label: '₹10 Cr',  val: 1e8  },
+    { label: '₹25 Cr',  val: 2.5e8},
+    { label: '₹50 Cr',  val: 5e8  },
+    { label: '₹100 Cr', val: 1e9  },
+  ];
+
+  function _fmtCr(v) {
+    if (v >= 1e9) return '₹' + (v/1e7).toFixed(1) + 'Cr';
+    if (v >= 1e7) return '₹' + (v/1e7).toFixed(2) + 'Cr';
+    if (v >= 1e5) return '₹' + (v/1e5).toFixed(1) + 'L';
+    return '₹' + Math.round(v).toLocaleString('en-IN');
+  }
+
+  function _projectWealth(nw0, annualReturn, monthlySip, years, inflation) {
+    const r    = annualReturn / 100 / 12;
+    const inf  = inflation    / 100 / 12;
+    let nw = nw0, rows = [];
+    const currentAge = S.seed?.fire?.current_age || 36;
+    for (let y = 1; y <= years; y++) {
+      for (let m = 0; m < 12; m++) {
+        nw = nw * (1 + r) + monthlySip;
+      }
+      const realNw = nw / Math.pow(1 + inflation/100, y);
+      rows.push({ year: new Date().getFullYear() + y, age: currentAge + y,
+                  nw: Math.round(nw), realNw: Math.round(realNw),
+                  growth: y === 1 ? 0 : Math.round((nw / rows[y-2].nw - 1) * 100 * 10) / 10 });
+    }
+    return rows;
+  }
+
+  function updateForecast() {
+    const ret   = parseFloat(document.getElementById('fc-return').value)    || 11;
+    const sip   = parseFloat(document.getElementById('fc-sip').value)        || 0;
+    const yrs   = parseInt  (document.getElementById('fc-years').value)      || 15;
+    const inf   = parseFloat(document.getElementById('fc-inflation').value)  || 6;
+
+    document.getElementById('fc-return-val').textContent    = ret + '%';
+    document.getElementById('fc-sip-val').textContent       = sip === 0 ? '₹0' : '₹' + (sip/1e5).toFixed(1) + 'L';
+    document.getElementById('fc-years-val').textContent     = yrs + ' yrs';
+    document.getElementById('fc-inflation-val').textContent = inf + '%';
+
+    const v    = view();
+    const nw0  = v.netWorth || 0;
+    const rows = _projectWealth(nw0, ret, sip, yrs, inf);
+    const endNw = rows[rows.length - 1]?.nw || 0;
+    const realNw= rows[rows.length - 1]?.realNw || 0;
+    const totalSip = sip * 12 * yrs;
+
+    document.getElementById('fc-start-nw').textContent = _fmtCr(nw0);
+    document.getElementById('fc-end-nw').textContent   = _fmtCr(endNw);
+    document.getElementById('fc-real-nw').textContent  = _fmtCr(realNw);
+    document.getElementById('fc-total-sip').textContent= _fmtCr(totalSip);
+
+    // Milestones
+    const mDiv = document.getElementById('fc-milestones');
+    mDiv.innerHTML = MILESTONES_INR.map(m => {
+      const hitRow = rows.find(r => r.nw >= m.val);
+      if (!hitRow) return `<span style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text-dim)">${m.label} — beyond ${yrs}y</span>`;
+      const yrsLeft = hitRow.year - new Date().getFullYear();
+      return `<span style="background:rgba(212,168,76,0.15);border:1px solid var(--gold-dim);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--gold)">🎯 ${m.label} in ${yrsLeft}y (${hitRow.year}, age ${hitRow.age})</span>`;
+    }).join('');
+
+    // FIRE milestone
+    const fireTarget = (S.seed?.fire?.annual_expenses_inr || 2400000) / ((S.seed?.fire?.swr_pct || 4) / 100);
+    const fireRow = rows.find(r => r.nw >= fireTarget);
+    if (fireRow) {
+      const yrsLeft = fireRow.year - new Date().getFullYear();
+      mDiv.innerHTML += `<span style="background:rgba(255,80,80,0.15);border:1px solid #f87171;border-radius:20px;padding:4px 12px;font-size:11px;color:#f87171">🔥 FIRE (${_fmtCr(fireTarget)}) in ${yrsLeft}y (${fireRow.year})</span>`;
+    }
+
+    // Table
+    const tbody = document.getElementById('fc-table-body');
+    const fireNum = fireTarget;
+    const prevMilestone = { val: 0 };
+    tbody.innerHTML = rows.map((r, i) => {
+      const isMilestone = MILESTONES_INR.find(m => r.nw >= m.val && (i === 0 || rows[i-1].nw < m.val));
+      const isFire = r.nw >= fireNum && (i === 0 || rows[i-1].nw < fireNum);
+      const rowBg = isFire ? 'background:rgba(255,80,80,0.08)' : isMilestone ? 'background:rgba(212,168,76,0.08)' : (i%2===0?'background:var(--bg3)':'');
+      const milTag = isFire ? ' 🔥 FIRE' : isMilestone ? ` 🎯 ${isMilestone.label}` : '';
+      const growthColor = r.growth >= ret ? 'color:var(--gain,#4ecf82)' : 'color:var(--text)';
+      return `<tr style="${rowBg}">
+        <td style="padding:7px 12px">${r.year}</td>
+        <td style="padding:7px 12px;color:var(--text-dim)">Age ${r.age}</td>
+        <td style="padding:7px 12px;text-align:right;font-weight:600;color:var(--gold)">${_fmtCr(r.nw)}</td>
+        <td style="padding:7px 12px;text-align:right;color:var(--text-sec)">${_fmtCr(r.realNw)}</td>
+        <td style="padding:7px 12px;text-align:right;${growthColor}">${i===0?'—':'+'+r.growth+'%'}</td>
+        <td style="padding:7px 12px;text-align:right;font-size:12px">${milTag}</td>
+      </tr>`;
+    }).join('');
+
+    // Chart
+    const labels  = rows.map(r => r.year);
+    const nominal = rows.map(r => r.nw / 1e7);
+    const real    = rows.map(r => r.realNw / 1e7);
+    const ctx = document.getElementById('fc-chart').getContext('2d');
+    if (_fcChart) { _fcChart.destroy(); }
+    _fcChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'NW nominal (₹Cr)', data: nominal, borderColor: '#d4a84c', backgroundColor: 'rgba(212,168,76,0.08)', tension: 0.4, fill: true, pointRadius: 3 },
+          { label: 'NW real (adj.)',    data: real,    borderColor: '#6b7280', borderDash: [4,4], backgroundColor: 'transparent', tension: 0.4, pointRadius: 2 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#b8b8d8', font: { size: 11 } } },
+                   tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ₹${ctx.raw.toFixed(2)} Cr` } } },
+        scales: {
+          x: { ticks: { color: '#b8b8d8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: '#b8b8d8', font: { size: 10 }, callback: v => '₹'+v.toFixed(1)+'Cr' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+        }
+      }
+    });
+
+    // Scenario comparison
+    const scenarios = [
+      { name: 'Conservative', ret: 7,   color: '#60a5fa' },
+      { name: 'Expected',     ret: ret,  color: '#d4a84c' },
+      { name: 'Aggressive',   ret: 18,   color: '#4ecf82' },
+    ];
+    document.getElementById('fc-scenarios').innerHTML = scenarios.map(sc => {
+      const r2 = _projectWealth(nw0, sc.ret, sip, yrs, inf);
+      const end = r2[r2.length-1]?.nw || 0;
+      const fireHit = r2.find(r => r.nw >= fireNum);
+      return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:6px">${sc.name} (${sc.ret}%)</div>
+        <div style="font-size:20px;font-weight:700;color:${sc.color};margin-bottom:4px">${_fmtCr(end)}</div>
+        <div style="font-size:10px;color:var(--text-dim)">${fireHit ? '🔥 FIRE yr '+(fireHit.year-new Date().getFullYear()) : 'FIRE: beyond '+yrs+'y'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, syncAptExtra, openLCModal, closeLCModal, updateLCSim, buildLCSched, syncLCExtra, updateForecast };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

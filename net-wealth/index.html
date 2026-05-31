@@ -3015,18 +3015,23 @@ const ODIN = (() => {
     const a    = seed.assets || {};
     const v    = view();
 
-    // ── Starting asset values (INR) ───────────────────────────────────────────
-    const goldGrams    = (a.gold_jewellery_grams||0) + (a.malabar_grams||0);
-    const goldRateINR  = seed.gold_rate_inr_per_gram || 8500;
+    // ── Starting asset values (INR) — use LIVE view() values for equities ────
+    // view() has live prices from holdings_prices.json; seed.assets has stale values.
+    // Gold rate: prefer live rate from portfolio (GOLDBEES NAV proxy) or seed.
+    const usCashINR  = (v.us_stocks_inr ? 0 : 0); // us_stocks_inr already includes cash equivalent
+    // Gold: use live rates from view() matching how ODIN calculates it
+    const goldVal    = (v.jewel_inr || (a.gold_jewellery_grams||0)*(v.jewel22kRate||8500)) +
+                       (v.malabar_inr || (a.malabar_grams||0)*(a.malabar_rate_inr_per_g||8500));
     let assets = {
-      india_eq:  v.india_stocks_inr  || (a.india_stocks||0),
-      us_eq:    (v.us_stocks_usd||a.us_stocks_usd||0) * FX_USD,
-      gold:      goldGrams * goldRateINR,
+      india_eq:  (v.india_stocks_inr  || (a.india_stocks||0)) + (v.india_mutual_fund_inr||0),
+      us_eq:     (v.us_stocks_inr     || (a.us_stocks_usd||0)*FX_USD),
+      gold:      goldVal,
       apt_mkt:   a.apartment_market_value || 6500000,
       car_inr:  (a.land_cruiser_resale_qar||195000) * FX_QAR,
       gratuity: (a.gratuity_qar||84000) * FX_QAR,
-      fo_cash:   a.fo_corpus_cash || 0,
-      mf:        a.india_mutual_fund_inr || 0,
+      fo_cash:   v.fo_inr || a.fo_corpus_cash || 0,
+      mf:        0,  // already included in india_eq above
+      banks:     (v.cash_in_inr||0) + (v.cash_qa_inr||0),
       custom:    (seed.custom_assets||[]).reduce((s,c)=>s+(c.ccy==='QAR'?c.value*FX_QAR:c.ccy==='USD'?c.value*FX_USD:c.value),0),
     };
 
@@ -3152,7 +3157,11 @@ const ODIN = (() => {
     const realNw= rows[rows.length - 1]?.realNw || 0;
     const totalSip = 1000 * 95 * yrs; // locked $1K/mo US SIP × FX 95
 
-    document.getElementById('fc-start-nw').textContent = _fmtCr(nw0);
+    // Show forecast starting NW — year-0 of component model (should match dashboard NW)
+    const fcStartNw = rows[0] ? Math.round(rows[0].nw / (1 + ret/100) * 1) : nw0;
+    // Actually: starting NW = sum of starting assets - liabilities (before any growth)
+    // Best proxy = view().netWorth (live dashboard value)
+    document.getElementById('fc-start-nw').textContent = _fmtCr(nw0) + (Math.abs(nw0 - (rows[0]?.nw||nw0)) > 5e5 ? ' ⚠️' : '');
     document.getElementById('fc-end-nw').textContent   = _fmtCr(endNw);
     document.getElementById('fc-real-nw').textContent  = _fmtCr(realNw);
     document.getElementById('fc-total-sip').textContent= _fmtCr(totalSip);

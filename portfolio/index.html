@@ -2402,6 +2402,7 @@ const DASH = (() => {
     }).join('');
   }
   window.renderTxLedger = renderTxLedger;
+  window._S = S;  // expose for Kronos tab (outside IIFE)
 
   function renderTxCash() {
     const tbody = $('tx-cash-body');
@@ -4501,7 +4502,7 @@ async function loadKronos() {
   if (!tbody) return;
   if (_kronosData) { renderKronos(_kronosData); return; }
   try {
-    const res = await fetch(`data/processed/kronos_signals.json?_=${Date.now()}`);
+    const res = await fetch(`./data/processed/kronos_signals.json?_=${Date.now()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     _kronosData = await res.json();
     renderKronos(_kronosData);
@@ -4518,13 +4519,14 @@ function renderKronos(data) {
   const updEl   = document.getElementById('kronos-updated');
   if (updEl) updEl.textContent = 'as of ' + gen;
 
-  // Load existing signals for comparison
+  // Load existing signals for comparison (S is inside IIFE — use window._S)
   const sigMap  = {};
-  if (S && S.signals && S.signals.holdings) {
-    Object.entries(S.signals.holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
+  const _Sg = window._S;
+  if (_Sg && _Sg.signals && _Sg.signals.holdings) {
+    Object.entries(_Sg.signals.holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
   }
-  if (S && S.signals && S.signals.india_holdings) {
-    Object.entries(S.signals.india_holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
+  if (_Sg && _Sg.signals && _Sg.signals.india_holdings) {
+    Object.entries(_Sg.signals.india_holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
   }
 
   const fmt2  = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : '—';

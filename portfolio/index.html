@@ -4513,7 +4513,8 @@ async function loadKronos() {
 function renderKronos(data) {
   const tbody   = document.getElementById('kronos-table-body');
   const forecasts = data.forecasts || {};
-  const gen     = data.generated ? new Date(data.generated).toLocaleString() : '—';
+  const _kgen   = data.generated ? data.generated.replace(/\+00:00Z$/, 'Z').replace(/\+00:00$/, 'Z') : null;
+  const gen     = _kgen ? new Date(_kgen).toLocaleString() : '—';
   const updEl   = document.getElementById('kronos-updated');
   if (updEl) updEl.textContent = 'as of ' + gen;
 
@@ -4549,7 +4550,7 @@ function renderKronos(data) {
         ? `<span style="color:#4ecf82;font-weight:600">✓ ${existSig}</span>`
         : `<span style="color:var(--warn)">${existSig} ≠</span>`;
     }
-    return `<tr style="${rows.indexOf(Object.fromEntries([[tk,f]])) % 2 === 0 ? 'background:var(--bg3)' : ''}">
+    return `<tr style="${rows.findIndex(([t])=>t===tk) % 2 === 0 ? 'background:var(--bg3)' : ''}">
       <td style="padding:9px 14px;font-weight:600">${tk}<br><span style="font-size:10px;color:var(--text-dim)">${f.market}</span></td>
       <td style="padding:9px 14px;text-align:right">${fmtPx(f.current_close)}</td>
       <td style="padding:9px 14px;text-align:right;color:var(--text-sec)">${fmtPx(f.pred_1d)}</td>

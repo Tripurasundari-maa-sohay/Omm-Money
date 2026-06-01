@@ -1649,7 +1649,8 @@ const DASH = (() => {
     } else {
       // Show actual data timestamp + dominant source per region
       const _dataTs = Object.values(S.prices).map(p=>p.as_of).filter(Boolean).sort().pop();
-      const _tsStr  = _dataTs ? new Date(_dataTs).toLocaleTimeString() : new Date().toLocaleTimeString();
+      const _tsClean = _dataTs ? _dataTs.replace(/\+00:00Z$/, 'Z').replace(/\+00:00$/, 'Z') : null;
+      const _tsStr  = _tsClean ? new Date(_tsClean).toLocaleTimeString() : new Date().toLocaleTimeString();
 
       // Detect dominant source for US and India
       const _usTickers  = (S.cost?.us?.open    || []).map(h=>h.tk);

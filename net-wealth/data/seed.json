@@ -20,8 +20,8 @@
   },
   "custom_assets": [
     {
-      "id": "pending_lgl",
-      "label": "Pending from LGL",
+      "id": "maa_tala_bari",
+      "label": "Maa Tala Bari",
       "ccy": "INR",
       "value": 1100000,
       "category": "Real Estate"
@@ -87,20 +87,18 @@
     {
       "id": "apartment",
       "label": "Apartment Loan",
-      "provider": "Canara Bank Home Loan",
+      "provider": "HDFC Home Loan",
       "ccy": "INR",
-      "outstanding": 3880624,
-      "tenure_months_remaining": 171,
-      "contract_end": "2051-03-31",
-      "forecast_end": "2040-08-01"
+      "outstanding": 3904117,
+      "tenure_months_remaining": 0
     },
     {
       "id": "lc",
       "label": "Land Cruiser Loan",
-      "provider": "Doha Bank Auto Finance",
+      "provider": "QNB Auto Finance",
       "ccy": "QAR",
-      "outstanding": 272136.62,
-      "tenure_months_remaining": 44
+      "outstanding": 271110.92,
+      "tenure_months_remaining": 0
     },
     {
       "id": "india_car",
@@ -182,17 +180,10 @@
   ],
   "fire": {
     "current_age": 36,
-    "retire_age": 42,
-    "annual_expenses_inr": 2400000,
-    "monthly_income_inr": 0,
-    "barista_parttime_income_inr": 75000,
+    "retire_age": 43,
+    "annual_expenses_inr": 3000000,
     "expected_return_pct": 11,
     "inflation_pct": 6,
-    "swr_pct": 4
-  },
-  "child_education": {
-    "years_to_college": 18,
-    "college_cost_today_inr": 5000000,
-    "education_inflation_pct": 8
+    "swr_pct": 5
   }
 }

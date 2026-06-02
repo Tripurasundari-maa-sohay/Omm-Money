@@ -99,9 +99,17 @@ def main() -> None:
                     print(f"  [{tk}] fx_buy   = {fx}")
                 changed_cost = True
 
+    # ── 1b. Remove VOOG phantom from closed (6:1 split artefact, reappears each PDF parse) ──
+    before = len(cost.get("us", {}).get("closed", []))
+    cost["us"]["closed"] = [h for h in cost.get("us", {}).get("closed", []) if h["tk"] != "VOOG"]
+    after = len(cost["us"]["closed"])
+    if before != after:
+        print(f"  ✓ VOOG phantom removed from closed ({before} → {after})")
+        changed_cost = True
+
     if changed_cost:
         COST_FILE.write_text(json.dumps(cost, indent=2))
-        print("  ✓ holdings_cost.json updated (buy_date/fx_buy)")
+        print("  ✓ holdings_cost.json updated")
 
     # ── 2. Detect tickers missing from fetch_all_prices_vm.py ────────────────
     vm_text  = VM_SCRIPT.read_text()

@@ -918,6 +918,12 @@
           <div id="us-upl-wrap" style="height:280px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
         </div>
       </div>
+      <!-- Day % bar chart — full width between weight and mix -->
+      <div style="margin-top:16px;">
+        <h3 style="margin-bottom:8px;">Today's Gain/Loss % by Position</h3>
+        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-day-pct-chart"></canvas></div>
+      </div>
+
       <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3 style="margin-bottom:8px;">Stock · ETF · Cash Mix</h3>
@@ -2996,6 +3002,33 @@ const DASH = (() => {
           datalabels: _DL_PCT
         }
       }
+    });
+
+    // ── Day % horizontal bar chart ──────────────────────────────────────────
+    const usDaySorted = [...usOpen]
+      .filter(p => p.dayPct !== null)
+      .sort((a,b) => b.dayPct - a.dayPct);
+    mkChart('us-day-pct-chart', { type:'bar',
+      data: {
+        labels: usDaySorted.map(p => p.tk),
+        datasets: [{ label:"Today's %",
+          data:            usDaySorted.map(p => +(p.dayPct||0).toFixed(2)),
+          backgroundColor: usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainC+'bb' : _lossC+'bb'),
+          borderColor:     usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainC : _lossC),
+          borderRadius: 4, borderWidth: 1 }]
+      },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${Math.abs(ctx.parsed.x).toFixed(2)}%` } },
+          datalabels:{ display:true, anchor:'end',
+            align: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
+            formatter: v => `${sign(v)}${Math.abs(v).toFixed(2)}%`,
+            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _gainC : _lossC,
+            font:{ size:11, weight:'700' } } },
+        scales:{
+          x:{ grid:{color:_gridC}, ticks:{color:_secC, font:{size:11}, callback: v=>`${v}%`},
+              title:{display:true, text:"Day %", color:_secC, font:{size:11}} },
+          y:{ grid:{display:false}, ticks:{color:_priC, font:{size:12}, crossAlign:'far'} } } }
     });
 
     // US return % horizontal bar

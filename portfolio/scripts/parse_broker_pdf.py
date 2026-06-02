@@ -65,6 +65,9 @@ TICKER_MAP = {
     "seanergymaritimeholdings":            ("SHIP",  "SHIP",  "Stock"),
     "servicenowinc.":                      ("NOW",   "NOW",   "Stock"),
     "corp.servicenowinc.":                 ("NOW",   "NOW",   "Stock"),
+    # Added 2026-06-02
+    "oraclecorp.":                         ("ORCL",  "ORCL",  "Stock"),
+    "oraclecorporation":                   ("ORCL",  "ORCL",  "Stock"),
 }
 
 

@@ -102,6 +102,7 @@ if [ -f "$REPO/.venv/bin/activate" ]; then
   source "$REPO/.venv/bin/activate"
 fi
 
+python3 "$SCRIPTS/onboard_new_tickers.py" || echo "  ⚠ onboard_new_tickers.py failed — new tickers may need manual mapping"
 python3 "$SCRIPTS/market_data.py"     || echo "  ⚠ market_data.py failed — keeping last good prices file"
 python3 "$SCRIPTS/signals_update.py"  || echo "  ⚠ signals_update.py failed — signals stale"
 python3 "$SCRIPTS/data_audit.py"      || echo "  ⚠ data_audit.py failed — audit stale"

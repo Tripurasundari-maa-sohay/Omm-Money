@@ -70,7 +70,7 @@ YAHOO_INDIA_FALLBACK = {}
 
 US_HOLDINGS = [
     "GOOG","AMZN","AVGO","GLW","GEV","MU","MSFT","MP","RKLB","TTE","EWY","HUMN","VOOG",
-    "SHIP","NOW"
+    "SHIP","NOW","ORCL"
 ]
 
 # ── Angel One ─────────────────────────────────────────────────────────────

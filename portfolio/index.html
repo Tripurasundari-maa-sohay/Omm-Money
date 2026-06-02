@@ -274,6 +274,14 @@
   .analytics-header{display:flex;align-items:center;justify-content:space-between;
     flex-wrap:wrap;gap:10px;margin-bottom:14px}
   .analytics-header h2{margin-bottom:0}
+  /* Analytics responsive grid + cards */
+  .an-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .an-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;padding:12px}
+  .an-card-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-sec);
+    text-transform:uppercase;margin-bottom:10px}
+  @media(max-width:700px){
+    .an-grid-2{grid-template-columns:1fr}
+  }
   .chart-container canvas{width:100%!important}
   .chart-wide{height:280px}
   .chart-square{height:260px}
@@ -907,41 +915,46 @@
 
     <div class="analytics-section">
       <div class="analytics-header"><h2>🇺🇸 US PORTFOLIO · ANALYTICS</h2></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div>
-          <h3 style="margin-bottom:8px;">Open Positions by Weight</h3>
-          <div style="height:320px;max-width:420px;position:relative;overflow:visible;padding:30px;"><canvas id="us-weight-chart"></canvas></div>
-          <div id="us-weight-legend" style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:11px;"></div>
+
+      <!-- ROW 1: Weight donut + Day % bars — equal columns -->
+      <div class="an-grid-2">
+        <div class="an-card">
+          <div class="an-card-title">Open Positions by Weight</div>
+          <div style="height:260px;position:relative;overflow:visible;display:flex;justify-content:center;"><canvas id="us-weight-chart"></canvas></div>
+          <div id="us-weight-legend" style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:11px;"></div>
         </div>
-        <div>
-          <h3 style="margin-bottom:8px;">Return % by Position</h3>
-          <div id="us-upl-wrap" style="height:280px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
+        <div class="an-card">
+          <div class="an-card-title">Today's Gain / Loss %</div>
+          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-day-pct-chart"></canvas></div>
         </div>
-      </div>
-      <!-- Day % bar chart — full width between weight and mix -->
-      <div style="margin-top:16px;">
-        <h3 style="margin-bottom:8px;">Today's Gain/Loss % by Position</h3>
-        <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-day-pct-chart"></canvas></div>
       </div>
 
-      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div>
-          <h3 style="margin-bottom:8px;">Stock · ETF · Cash Mix</h3>
-          <div style="height:280px;max-width:320px;position:relative;overflow:hidden;"><canvas id="us-asset-mix-chart"></canvas></div>
+      <!-- ROW 2: Return % — full width (tall chart) -->
+      <div class="an-card" style="margin-top:12px;">
+        <div class="an-card-title">Return % by Position (ITD)</div>
+        <div id="us-upl-wrap" style="height:300px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
+      </div>
+
+      <!-- ROW 3: Mix + Sector — equal columns -->
+      <div class="an-grid-2" style="margin-top:12px;">
+        <div class="an-card">
+          <div class="an-card-title">Stock · ETF · Cash Mix</div>
+          <div style="height:260px;position:relative;overflow:hidden;display:flex;justify-content:center;"><canvas id="us-asset-mix-chart"></canvas></div>
         </div>
-        <div>
-          <h3 style="margin-bottom:8px;">Sector Exposure (Market Value)</h3>
-          <div style="height:280px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
+        <div class="an-card">
+          <div class="an-card-title">Sector Exposure (Market Value)</div>
+          <div style="height:260px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
         </div>
       </div>
-      <!-- Signal dist + Waterfall side by side -->
-      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:start;">
-        <div>
-          <h3 style="margin-bottom:8px;">Signal Score Distribution</h3>
+
+      <!-- ROW 4: Signals + Waterfall -->
+      <div class="an-grid-2" style="margin-top:12px;">
+        <div class="an-card">
+          <div class="an-card-title">Signal Score Distribution</div>
           <div style="height:220px;position:relative;overflow:hidden;"><canvas id="us-signal-dist-chart"></canvas></div>
         </div>
-        <div>
-          <h3 style="margin-bottom:8px;">Closed Positions P&amp;L Waterfall</h3>
+        <div class="an-card">
+          <div class="an-card-title">Closed Positions P&amp;L Waterfall</div>
           <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
         </div>
       </div>

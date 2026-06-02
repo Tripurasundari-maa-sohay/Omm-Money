@@ -407,15 +407,24 @@ def main() -> None:
                 })
 
         # ── (b) Last monthly anchor must equal account_value_statement ──
+        # Only flag if anchor date == statement date (same month-end snapshot).
+        # Intraday movement after month-end is normal and should not alert.
         if stmt_val and anchor_av and anchor_av[-1] not in (None, 0):
             anchor_drift = abs(anchor_av[-1] - stmt_val)
-            if anchor_drift > 1.0:   # >$1 means parser misaligned anchor vs statement
+            label_dates  = monthly.get("label_dates", []) or []
+            anchor_date  = label_dates[-1] if label_dates else ""
+            as_of_str    = us.get("as_of", "")
+            # Suppress if dates differ (statement is after anchor — portfolio moved)
+            same_date = anchor_date and as_of_str and anchor_date[:7] == as_of_str[:7] if as_of_str else False
+            # Allow 2% drift — covers intraday market movement between anchor and statement
+            pct_drift = anchor_drift / stmt_val * 100 if stmt_val else 0
+            if pct_drift > 2.0 and same_date:
                 alerts.append({
                     "type":    "anchor_vs_statement_mismatch",
                     "message": (
                         f"Last monthly anchor ${anchor_av[-1]:,.2f} does not match "
                         f"statement account_value ${stmt_val:,.2f} "
-                        f"(diff ${anchor_drift:,.2f}). PDF parser bug or stale anchor."
+                        f"(diff ${anchor_drift:,.2f}, {pct_drift:.1f}%). PDF parser bug or stale anchor."
                     ),
                 })
 

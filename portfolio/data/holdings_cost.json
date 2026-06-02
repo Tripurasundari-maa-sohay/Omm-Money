@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "29-May-2026",
-  "fx_inr_usd": 94.98,
+  "as_of": "01-Jun-2026",
+  "fx_inr_usd": 95.23,
   "us": {
     "broker": "US Broker",
-    "cash": 996.29,
+    "cash": 70.55,
     "cash_infusion_itd": 17190.14,
-    "account_value_statement": 20741.37,
-    "total_pl_statement": 3551.23,
+    "account_value_statement": 21080.37,
+    "total_pl_statement": 3890.23,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -25,7 +25,7 @@
         "2026-02-28",
         "2026-03-31",
         "2026-04-30",
-        "2026-05-29"
+        "2026-05-31"
       ],
       "cash_balance": [
         0.0,
@@ -34,7 +34,7 @@
         1568.12,
         2016.07,
         268.16,
-        996.29
+        997.81
       ],
       "account_value": [
         0.0,
@@ -43,7 +43,7 @@
         14248.11,
         13692.49,
         16432.87,
-        20741.37
+        20742.89
       ],
       "monthly_pct_return": [
         0.0,
@@ -70,7 +70,7 @@
         -766.0,
         -966.58,
         2740.38,
-        1993.43
+        1994.95
       ],
       "monthly_cost": [
         0.0,
@@ -309,8 +309,8 @@
         "income": 0.0,
         "costs": 0.0,
         "_costs_paid": -5.0,
-        "realised": 65.14,
-        "ret_pct": -1.17,
+        "realised": -28.66,
+        "ret_pct": -4.6,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -335,7 +335,7 @@
       },
       {
         "tk": "INOD",
-        "name": "2025to29-May-2026 InnodataInc.",
+        "name": "2025to01-Jun-2026 InnodataInc.",
         "cls": "Stock",
         "income": 0.0,
         "costs": -20.0,
@@ -380,8 +380,8 @@
         "income": 0.3,
         "costs": 0.0,
         "_costs_paid": -10.0,
-        "realised": 815.75,
-        "ret_pct": 149.43,
+        "realised": 880.25,
+        "ret_pct": 166.0,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -441,8 +441,19 @@
         "income": 0.0,
         "costs": 0.0,
         "_costs_paid": -5.0,
-        "realised": 589.21,
-        "ret_pct": 38.32,
+        "realised": 687.04,
+        "ret_pct": 45.62,
+        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
+      },
+      {
+        "tk": "VOOG",
+        "name": "VanguardS&P500GrowthETF",
+        "cls": "ETF",
+        "income": 3.49,
+        "costs": 0.0,
+        "_costs_paid": -5.0,
+        "realised": 205.05,
+        "ret_pct": 15.44,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -460,11 +471,11 @@
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -2.36
+        "amt": -2.41
       },
       {
         "type": "Custody Fee (ongoing)",
-        "amt": -7.14
+        "amt": -9.4
       },
       {
         "type": "Exchange Fee",
@@ -472,7 +483,7 @@
       },
       {
         "type": "Commission",
-        "amt": -371.2
+        "amt": -376.2
       },
       {
         "type": "French FTT",

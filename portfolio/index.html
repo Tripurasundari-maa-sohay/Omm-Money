@@ -277,7 +277,7 @@
   /* Analytics responsive grid + cards */
   .an-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .an-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;padding:12px}
-  .an-card-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-sec);
+  .an-card-title{font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--accent-g,var(--text-pri));
     text-transform:uppercase;margin-bottom:10px}
   @media(max-width:700px){
     .an-grid-2{grid-template-columns:1fr}
@@ -2635,6 +2635,29 @@ const DASH = (() => {
     const _gridC  = _thc.getPropertyValue('--border').trim()|| '#2a2a4a';
     const _secC   = _thc.getPropertyValue('--text-sec').trim()||'#8892aa';
     const _priC   = _thc.getPropertyValue('--text-pri').trim()||'#e8eaf0';
+    // High-contrast chart helpers
+    // Bar fill: full opacity solid colors for readability
+    const _gainBar = _gainC;
+    const _lossBar = _lossC;
+    // Datalabel text: always white on dark themes, dark on light themes
+    const _isDark  = !['ivory','arctic'].includes(document.documentElement.dataset.theme||'');
+    const _dlColor = _isDark ? '#ffffff' : '#111111';
+    const _dlShadow = _isDark ? '#00000088' : '#ffffff88';
+    // Axis ticks: use text-pri (bright) not text-sec (dim) for readability
+    const _tickC   = _priC;
+    // Shared datalabel config for bar charts
+    const _DL_BAR = {
+      display: true,
+      anchor: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'end' : 'start',
+      align:  ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
+      formatter: v => `${v>=0?'+':''}${Math.abs(v).toFixed(2)}%`,
+      color: _dlColor,
+      font: { size: 11, weight: '700' },
+      textShadowBlur: 3,
+      textShadowColor: _dlShadow,
+      clip: false,
+      padding: { left: 4, right: 4 },
+    };
     const m = us.monthly;
     const cashBase = us.cashInfusion || 0;
     const dualLabel = ctx => {
@@ -2870,14 +2893,18 @@ const DASH = (() => {
         data: { labels: wf.map(p=>p.tk||'?'),
           datasets:[{ label:'Realised P&L ($)',
             data: wf.map(p=>+(p.realised||0).toFixed(2)),
-            backgroundColor: wf.map(p=>(p.realised||0)>=0?_gainC+'bb':_lossC+'bb'),
-            borderColor:     wf.map(p=>(p.realised||0)>=0?_gainC:_lossC),
-            borderWidth:1 }]
+            backgroundColor: wf.map(p=>(p.realised||0)>=0?_gainBar+'cc':_lossBar+'cc'),
+            borderColor:     wf.map(p=>(p.realised||0)>=0?_gainBar:_lossBar),
+            borderWidth:1.5 }]
         },
         options:{ responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>sign(ctx.parsed.y)+usd(Math.abs(ctx.parsed.y)) } } },
-          scales:{ x:{ grid:{display:false}, ticks:{color:_priC,font:{size:10}} },
-                   y:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>sign(v)+usd(Math.abs(v))} } } }
+          plugins:{ legend:{display:false},
+            tooltip:{ callbacks:{ label: ctx=>sign(ctx.parsed.y)+usd(Math.abs(ctx.parsed.y)) } },
+            datalabels:{ display:true, anchor:'end', align:'end',
+              formatter: v => sign(v)+usd(Math.abs(v)),
+              color:_dlColor, font:{size:9,weight:'600'}, textShadowBlur:2, textShadowColor:_dlShadow } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:_tickC,font:{size:10}} },
+                   y:{ grid:{color:_gridC}, ticks:{color:_tickC, callback:v=>sign(v)+usd(Math.abs(v))} } } }
       });
     }
 
@@ -3021,56 +3048,50 @@ const DASH = (() => {
     const usDaySorted = [...usOpen]
       .filter(p => p.dayPct !== null)
       .sort((a,b) => b.dayPct - a.dayPct);
-    mkChart('us-day-pct-chart', { type:'bar',
-      data: {
-        labels: usDaySorted.map(p => p.tk),
-        datasets: [{ label:"Today's %",
-          data:            usDaySorted.map(p => +(p.dayPct||0).toFixed(2)),
-          backgroundColor: usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainC+'bb' : _lossC+'bb'),
-          borderColor:     usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainC : _lossC),
-          borderRadius: 4, borderWidth: 1 }]
+    // ── Shared bar chart options factory ─────────────────────────────────────
+    const _hbarOpts = (labelFmt, tickSize=12) => ({
+      indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
+      layout:{ padding:{ right: 60 } },   // room for datalabels outside bar
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${Math.abs(ctx.parsed.x).toFixed(2)}%` } },
+        datalabels: { ..._DL_BAR, formatter: labelFmt },
       },
-      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
-        plugins:{ legend:{display:false},
-          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${Math.abs(ctx.parsed.x).toFixed(2)}%` } },
-          datalabels:{ display:true, anchor:'end',
-            align: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
-            formatter: v => `${sign(v)}${Math.abs(v).toFixed(2)}%`,
-            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _gainC : _lossC,
-            font:{ size:11, weight:'700' } } },
-        scales:{
-          x:{ grid:{color:_gridC}, ticks:{color:_secC, font:{size:11}, callback: v=>`${v}%`},
-              title:{display:true, text:"Day %", color:_secC, font:{size:11}} },
-          y:{ grid:{display:false}, ticks:{color:_priC, font:{size:12}, crossAlign:'far'} } } }
+      scales:{
+        x:{ grid:{color:_gridC},
+            ticks:{ color:_tickC, font:{size:11}, callback:v=>`${v}%` } },
+        y:{ grid:{display:false},
+            ticks:{ color:_tickC, font:{size:tickSize, weight:'600'}, crossAlign:'far' } }
+      }
+    });
+
+    mkChart('us-day-pct-chart', { type:'bar',
+      data:{
+        labels: usDaySorted.map(p => p.tk),
+        datasets:[{ label:"Today's %",
+          data:            usDaySorted.map(p => +(p.dayPct||0).toFixed(2)),
+          backgroundColor: usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainBar+'cc' : _lossBar+'cc'),
+          borderColor:     usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainBar : _lossBar),
+          borderRadius:4, borderWidth:1.5 }]
+      },
+      options: _hbarOpts(v=>`${v>=0?'+':''}${Math.abs(v).toFixed(2)}%`, 13)
     });
 
     // US return % horizontal bar
     const usRetSorted = [...usOpen].sort((a,b)=>b.ret-a.ret);
-    // dynamic height: at least 32px per bar, min 300
-    const _uplH = Math.max(300, usRetSorted.length * 32);
+    const _uplH = Math.max(320, usRetSorted.length * 34);
     const _uplWrap = document.getElementById('us-upl-wrap');
     if (_uplWrap) _uplWrap.style.height = _uplH + 'px';
     mkChart('us-upl-chart', { type:'bar',
-      data: {
+      data:{
         labels: usRetSorted.map(p=>p.tk),
-        datasets: [{ label:'Return %',
+        datasets:[{ label:'Return %',
           data: usRetSorted.map(p=>+(p.ret||0).toFixed(2)),
-          backgroundColor: usRetSorted.map(p=>(p.ret||0)>=0?_gainC+'bb':_lossC+'bb'),
-          borderColor:     usRetSorted.map(p=>(p.ret||0)>=0?_gainC:_lossC),
-          borderRadius: 3,
-          borderWidth:1 }]
+          backgroundColor: usRetSorted.map(p=>(p.ret||0)>=0?_gainBar+'cc':_lossBar+'cc'),
+          borderColor:     usRetSorted.map(p=>(p.ret||0)>=0?_gainBar:_lossBar),
+          borderRadius:3, borderWidth:1.5 }]
       },
-      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
-        plugins:{ legend:{display:false},
-          tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${Math.abs(ctx.parsed.x).toFixed(2)}%` } },
-          datalabels:{ display:true, anchor:'end',
-            align: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
-            formatter: v => `${sign(v)}${Math.abs(v).toFixed(1)}%`,
-            color: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? _gainC : _priC,
-            font:{ size:11, weight:'700' } } },
-        scales:{
-          x:{ grid:{color:_gridC}, ticks:{color:_secC, font:{size:11}, callback:v=>`${v}%`} },
-          y:{ grid:{display:false}, ticks:{color:_priC, font:{size:12}, crossAlign:'far'} } } }
+      options: _hbarOpts(v=>`${v>=0?'+':''}${Math.abs(v).toFixed(1)}%`, 13)
     });
   }
   function lineOpts(extraTooltip={}){

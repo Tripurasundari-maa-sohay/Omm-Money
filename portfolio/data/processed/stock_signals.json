@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-01T21:30:52.080595Z",
+  "generated": "2026-06-02T08:49:23.032276Z",
   "regime": "BULL",
   "spy": {
     "px": 758.54,
@@ -31,7 +31,7 @@
         "val": 0
       },
       "sector": "Communication Services",
-      "industry": "Diversified Telecommunication Services"
+      "industry": ""
     },
     "AMZN": {
       "score": 61,
@@ -56,8 +56,8 @@
         "w52": 8,
         "val": 3
       },
-      "sector": "Consumer Discretionary",
-      "industry": "Internet & Direct Marketing Retail"
+      "sector": "Consumer Cyclical",
+      "industry": ""
     },
     "AVGO": {
       "score": 71,
@@ -82,8 +82,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Information Technology",
-      "industry": "Semiconductors & Semiconductor Equipment"
+      "sector": "Technology",
+      "industry": ""
     },
     "GLW": {
       "score": 71,
@@ -108,8 +108,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Information Technology",
-      "industry": "Electronic Equipment, Instruments & Components"
+      "sector": "Technology",
+      "industry": ""
     },
     "GEV": {
       "score": 48,
@@ -134,7 +134,7 @@
         "w52": 6,
         "val": 0
       },
-      "sector": "Energy",
+      "sector": "Industrials",
       "industry": ""
     },
     "MU": {
@@ -160,8 +160,8 @@
         "w52": 8,
         "val": 0
       },
-      "sector": "Information Technology",
-      "industry": "Semiconductors & Semiconductor Equipment"
+      "sector": "Technology",
+      "industry": ""
     },
     "MSFT": {
       "score": 53,
@@ -186,11 +186,11 @@
         "w52": 6,
         "val": 8
       },
-      "sector": "Information Technology",
-      "industry": "Software"
+      "sector": "Technology",
+      "industry": ""
     },
     "MP": {
-      "score": 59,
+      "score": 67,
       "action": "HOLD",
       "regime": "BULL",
       "rsi": 64.2,
@@ -207,13 +207,13 @@
         "wk": 10,
         "rsi": 8,
         "macd": 10,
-        "vol": 0,
+        "vol": 8,
         "rs": 10,
         "w52": 6,
         "val": 3
       },
-      "sector": "Materials",
-      "industry": "Metals & Mining"
+      "sector": "Basic Materials",
+      "industry": ""
     },
     "RKLB": {
       "score": 71,
@@ -239,7 +239,7 @@
         "val": 0
       },
       "sector": "Industrials",
-      "industry": "Aerospace & Defense"
+      "industry": ""
     },
     "SHIP": {
       "score": 61,
@@ -265,7 +265,7 @@
         "val": 0
       },
       "sector": "Industrials",
-      "industry": "Marine"
+      "industry": ""
     },
     "NOW": {
       "score": 48,
@@ -290,8 +290,8 @@
         "w52": 3,
         "val": 10
       },
-      "sector": "Information Technology",
-      "industry": "Software"
+      "sector": "Technology",
+      "industry": ""
     },
     "TTE": {
       "score": 52,
@@ -317,7 +317,7 @@
         "val": 0
       },
       "sector": "Energy",
-      "industry": "Oil, Gas & Consumable Fuels"
+      "industry": ""
     },
     "EWY": {
       "score": 63,
@@ -403,14 +403,14 @@
       "score": 41,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 42.5,
-      "v200": -0.2,
-      "rs": -31.4,
+      "rsi": 40.3,
+      "v200": -1.1,
+      "rs": -29.7,
       "hi52": 1206.06,
       "lo52": 771.2,
-      "rng": 44,
-      "vsMean": 3.6,
-      "px": 964.4,
+      "rng": 43,
+      "vsMean": 2.8,
+      "px": 958.9,
       "sc": {
         "vs200": 4,
         "cross": 8,
@@ -426,17 +426,17 @@
       "industry": ""
     },
     "AVADHSUGAR": {
-      "score": 67,
+      "score": 58,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 22.0,
-      "v200": 8.6,
-      "rs": 21.2,
-      "hi52": 554.16,
+      "rsi": 24.7,
+      "v200": 8.4,
+      "rs": 2.5,
+      "hi52": 539.51,
       "lo52": 311.25,
-      "rng": 56,
-      "vsMean": 4.0,
-      "px": 447.4,
+      "rng": 59,
+      "vsMean": 4.1,
+      "px": 447.05,
       "sc": {
         "vs200": 12,
         "cross": 8,
@@ -444,7 +444,7 @@
         "rsi": 12,
         "macd": 0,
         "vol": 8,
-        "rs": 15,
+        "rs": 6,
         "w52": 6,
         "val": 6
       },
@@ -455,14 +455,14 @@
       "score": 66,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 60.9,
+      "rsi": 61.1,
       "v200": 3.0,
-      "rs": -12.6,
+      "rs": -12.7,
       "hi52": 60.71,
-      "lo52": 48.94,
+      "lo52": 49.02,
       "rng": 98,
-      "vsMean": 4.6,
-      "px": 60.46,
+      "vsMean": 4.5,
+      "px": 60.47,
       "sc": {
         "vs200": 8,
         "cross": 8,
@@ -478,25 +478,25 @@
       "industry": ""
     },
     "JYOTISTRUC": {
-      "score": 45,
+      "score": 40,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 57.8,
-      "v200": 4.6,
-      "rs": -9.9,
-      "hi52": 21.48,
+      "rsi": 43.9,
+      "v200": 0.9,
+      "rs": -3.4,
+      "hi52": 20.37,
       "lo52": 7.97,
-      "rng": 37,
-      "vsMean": -5.4,
-      "px": 12.95,
+      "rng": 36,
+      "vsMean": -8.5,
+      "px": 12.43,
       "sc": {
         "vs200": 8,
         "cross": 0,
-        "wk": 10,
-        "rsi": 8,
+        "wk": 0,
+        "rsi": 10,
         "macd": 0,
         "vol": 8,
-        "rs": 0,
+        "rs": 3,
         "w52": 3,
         "val": 8
       },
@@ -507,14 +507,14 @@
       "score": 49,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 47.5,
-      "v200": -2.7,
-      "rs": -17.3,
+      "rsi": 42.2,
+      "v200": -4.5,
+      "rs": -17.5,
       "hi52": 1251.89,
       "lo52": 666.3,
-      "rng": 45,
-      "vsMean": 2.6,
-      "px": 928.4,
+      "rng": 42,
+      "vsMean": 0.7,
+      "px": 913.45,
       "sc": {
         "vs200": 4,
         "cross": 8,
@@ -533,14 +533,14 @@
       "score": 54,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 48.3,
-      "v200": 14.9,
-      "rs": -20.1,
+      "rsi": 49.6,
+      "v200": 14.4,
+      "rs": -15.9,
       "hi52": 146.53,
       "lo52": 79.1,
       "rng": 73,
-      "vsMean": 21.8,
-      "px": 128.65,
+      "vsMean": 21.3,
+      "px": 128.58,
       "sc": {
         "vs200": 12,
         "cross": 8,
@@ -559,14 +559,14 @@
       "score": 54,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 48.3,
-      "v200": 14.9,
-      "rs": -20.1,
+      "rsi": 49.6,
+      "v200": 14.4,
+      "rs": -15.9,
       "hi52": 146.53,
       "lo52": 79.1,
       "rng": 73,
-      "vsMean": 21.8,
-      "px": 128.65,
+      "vsMean": 21.3,
+      "px": 128.58,
       "sc": {
         "vs200": 12,
         "cross": 8,
@@ -585,14 +585,14 @@
       "score": 18,
       "action": "REDUCE",
       "regime": "BULL",
-      "rsi": 30.5,
-      "v200": -7.5,
-      "rs": -15.8,
+      "rsi": 32.3,
+      "v200": -7.4,
+      "rs": -17.9,
       "hi52": 1592.3,
       "lo52": 1304.6,
       "rng": 6,
-      "vsMean": -7.7,
-      "px": 1321.2,
+      "vsMean": -7.6,
+      "px": 1322.5,
       "sc": {
         "vs200": 0,
         "cross": 0,
@@ -608,19 +608,19 @@
       "industry": ""
     },
     "WAAREEENER": {
-      "score": 64,
+      "score": 60,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 59.7,
-      "v200": 0.6,
-      "rs": 5.7,
+      "rsi": 50.8,
+      "v200": -0.6,
+      "rs": 4.1,
       "hi52": 3737.7,
       "lo52": 2419.0,
-      "rng": 55,
-      "vsMean": 1.4,
-      "px": 3140.8,
+      "rng": 52,
+      "vsMean": 0.1,
+      "px": 3100.8999,
       "sc": {
-        "vs200": 8,
+        "vs200": 4,
         "cross": 8,
         "wk": 0,
         "rsi": 8,
@@ -637,14 +637,14 @@
       "score": 69,
       "action": "BUY",
       "regime": "BULL",
-      "rsi": 55.6,
-      "v200": 32.8,
-      "rs": 28.7,
+      "rsi": 54.4,
+      "v200": 32.3,
+      "rs": 28.1,
       "hi52": 206.65,
       "lo52": 100.44,
       "rng": 88,
-      "vsMean": 34.7,
-      "px": 194.31,
+      "vsMean": 34.0,
+      "px": 194.0,
       "sc": {
         "vs200": 12,
         "cross": 8,
@@ -660,25 +660,25 @@
       "industry": ""
     },
     "FILATFASH": {
-      "score": 38,
+      "score": 34,
       "action": "REDUCE",
       "regime": "BULL",
-      "rsi": 31.8,
-      "v200": -37.3,
-      "rs": -8.6,
+      "rsi": 60.9,
+      "v200": -34.0,
+      "rs": 1.2,
       "hi52": 0.7,
       "lo52": 0.14,
-      "rng": 16,
-      "vsMean": -44.1,
-      "px": 0.23,
+      "rng": 18,
+      "vsMean": -41.4,
+      "px": 0.24,
       "sc": {
         "vs200": 0,
         "cross": 0,
         "wk": 10,
-        "rsi": 10,
+        "rsi": 8,
         "macd": 0,
-        "vol": 8,
-        "rs": 0,
+        "vol": 0,
+        "rs": 6,
         "w52": 0,
         "val": 10
       },
@@ -686,26 +686,26 @@
       "industry": ""
     },
     "NBCC": {
-      "score": 51,
+      "score": 60,
       "action": "HOLD",
       "regime": "BULL",
-      "rsi": 71.1,
-      "v200": -2.3,
-      "rs": -0.9,
+      "rsi": 73.9,
+      "v200": 0.8,
+      "rs": 6.0,
       "hi52": 127.87,
       "lo52": 77.52,
-      "rng": 45,
-      "vsMean": -5.0,
-      "px": 100.26,
+      "rng": 52,
+      "vsMean": -1.9,
+      "px": 103.46,
       "sc": {
-        "vs200": 4,
+        "vs200": 8,
         "cross": 0,
         "wk": 10,
-        "rsi": 5,
+        "rsi": 0,
         "macd": 10,
         "vol": 8,
-        "rs": 3,
-        "w52": 3,
+        "rs": 10,
+        "w52": 6,
         "val": 8
       },
       "sector": "Industrials",

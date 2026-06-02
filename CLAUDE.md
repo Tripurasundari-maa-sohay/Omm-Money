@@ -895,6 +895,13 @@ URL: `https://tripurasundari-maa-sohay.github.io/Omm-Money/expense/`
   No VM needed, no API key, works even if VM is down.
 - **Privacy (January 2026 review)** — Decide: private repo (GitHub Pro $4/mo) vs
   Cloudflare Access vs VM data serve. Dashboard/ODIN data JSON files are still public.
+- **Congress/Politician trade tracking** — Track US politician STOCK Act disclosures.
+  Source: Capitol Trades API (free, no auth) + Quiver Quant (free key).
+  Script: `congress_fetch.py` on VM daily → `portfolio/data/processed/congress_trades.json`.
+  Dashboard: new CONGRESS tab (politician · party · ticker · amount · date · days_ago).
+  Signal integration: politician BUY on your holdings = +score in signals.
+  Scope options: (A) your holdings only, (B) broader watchlist ideas, (C) both.
+  User to confirm scope before build.
 
 ### 🟡 Low priority / noise
 - WAAREEENER / GOLDBEES_U on NSE — broker exchange unconfirmed; tiny gaps,
@@ -1025,3 +1032,86 @@ After fixes (PARAMATRIX phantom aside, everything within live-timing noise):
   API read, chart-endpoint India fallback, Angel SME tokens, Angel BSE map.
 - Pushed via Contents API PUT (git push loses race to every-minute VM commits):
   `cacf2adec`, `8110787d6`, `31b03a13a`, `6a5280791`, `d9ccc5916`.
+
+---
+
+# Session log — 2026-06-02 (Mon) · PDF parse, Auto-onboard, Dashboard upgrades
+
+## PDF parse (new statement 01-Jun-2026)
+- Statement date: 01-Jun-2026
+- Account value: $21,080.37 · Cash: $70.55 · Total P&L: +$3,890.23
+- 16 open positions (ORCL added) · 16 closed
+
+## New position: ORCL (Oracle Corp.)
+- 4 shares @ $230.00, bought 2026-06-01, FX ₹94.99/USD
+- Added to: `holdings_cost.json`, `fetch_all_prices_vm.py` US_HOLDINGS,
+  `parse_broker_pdf.py` TICKER_MAP, `signals_update.py` SECTOR_MAP (Technology)
+- VM price fetch triggered manually: ORCL → $248.15 (+9.91%) from Finnhub
+
+## Auto-onboard script (`portfolio/scripts/onboard_new_tickers.py`)
+- Runs automatically in `sync.sh` after PDF/xlsx parse, before `market_data.py`
+- Detects new tickers in `holdings_cost.json` not yet in:
+  1. `fetch_all_prices_vm.py` US_HOLDINGS (appends)
+  2. `signals_update.py` SECTOR_MAP (sector via FinanceDatabase)
+  3. `parse_broker_pdf.py` TICKER_MAP (PDF name → ticker)
+- Auto-fixes `buy_date` + `fx_buy` from `transactions_us.json` + frankfurter.app
+- **VOOG phantom auto-removal baked in** — parser re-creates phantom every PDF parse;
+  onboard script detects and removes it, keeping fees at $0.00 diff vs xlsx.
+
+## Fee reconciliation fixes
+- RKLB open fee corrected: −$25 → −$5 (only 5 remaining shares = 1 buy lot)
+- VOOG phantom removed (6:1 split artefact) → fees reconcile $0.00 diff vs xlsx
+- SHIP open fee confirmed: −$5 (single lot 2026-05-27)
+
+## Audit alert fix (`data_audit.py`)
+- `anchor_vs_statement_mismatch` now only fires if same calendar month AND >2% drift
+- Previously fired on any >$1 diff — false positive after portfolio gains between
+  month-end anchor and next-day statement
+
+## Dashboard upgrades (portfolio/index.html)
+
+### Drag-to-reorder columns
+- Both US + India holdings tables: drag `<th>` headers to reorder columns
+- Order persisted in `localStorage` per table
+- **↺ cols** button resets to default order
+- `US_COL_ORDER` / `IN_COL_ORDER` arrays drive both header + row render
+- Column config: `US_COL_DEFS` / `IN_COL_DEFS` with `renderCell(p)` per column
+- Footer rows (`TOTAL` + `NET IF CLOSED`) rebuild dynamically with column order
+
+### Default column order (US)
+TICKER · QTY · AVG · LTP · **MKT VALUE** · DAY P&L · DAY % · FEES · UNREAL P&L · RETURN % · INR RETURN % · SIGNAL
+
+### US Analytics redesign
+- Layout: 4 rows with consistent `an-card` / `an-grid-2` CSS
+  - Row 1: Weight donut | Today's Day % chart
+  - Row 2: Return % ITD (full width)
+  - Row 3: Stock/ETF mix | Sector exposure
+  - Row 4: Signal distribution | P&L Waterfall
+- Mobile responsive: `@media(max-width:700px)` collapses `an-grid-2` to single column
+- Card titles use `--accent-g` (teal) for contrast
+
+### Chart contrast improvements (all themes + mobile)
+- Datalabels: **white text** (`_dlColor`) with shadow — no longer same color as bar
+- Bars: `cc` (80%) opacity + 1.5px border — crisper than previous `bb` (73%)
+- Axis ticks: `_tickC = _priC` (bright primary text) not `_secC` (dim secondary)
+- `layout.padding.right: 60` — space for labels outside bar on mobile
+- Works correctly on all 4 themes: default dark / violet / ivory (light) / arctic (light)
+- `_isDark` check: white labels on dark themes, dark labels on light themes
+- Shared `_DL_BAR` config for Day % + Return % charts
+- Waterfall chart: datalabels added (USD values on each bar)
+
+### DATA badge fix
+- `⚠ DATA` badge was showing false positive from `anchor_vs_statement_mismatch`
+- Fixed in `data_audit.py` — see above
+
+## Congress trade tracking (PENDING — scope decision needed)
+- Added to TODO list. User to confirm scope (A/B/C) before build.
+- See KNOWN PENDING section above.
+
+## Key commits this session
+- `onboard_new_tickers.py` added to repo + sync.sh
+- `parse_broker_pdf.py` TICKER_MAP: ORCL added
+- `fetch_all_prices_vm.py` + `signals_update.py`: ORCL added, deployed to VM
+- Multiple `portfolio/index.html` pushes: column reorder, analytics redesign, chart contrast
+- `data_audit.py`: anchor mismatch threshold fix
+- All pushed via GitHub Contents API (bypasses VM commit race)

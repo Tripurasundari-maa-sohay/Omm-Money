@@ -1,9 +1,30 @@
 {
-  "generated": "2026-05-30T09:20:08Z",
+  "generated": "2026-06-02T08:47:14Z",
   "source": "US broker transactions xlsx",
   "period_from": "2025-12-15",
-  "period_to": "2026-05-27",
+  "period_to": "2026-06-01",
   "trades": [
+    {
+      "trade_id": "6732551928",
+      "date": "2026-06-01",
+      "tk": "ORCL",
+      "side": "buy",
+      "qty": 4.0,
+      "price": 230.0,
+      "gross": 920.0,
+      "commission": -5.0,
+      "ftt": 0.0,
+      "exchange_fee": 0.0,
+      "net": -925,
+      "open_close": "open",
+      "order_type": "Limit",
+      "realised_pl": null,
+      "name": "Oracle Corp.",
+      "isin": "US68389X1054",
+      "ccy": "USD",
+      "asset_type": "Stock",
+      "exchange": "New York Stock Exchange"
+    },
     {
       "trade_id": "6727005493",
       "date": "2026-05-27",
@@ -1456,6 +1477,24 @@
   ],
   "cash_moves": [
     {
+      "date": "2026-06-01",
+      "type": "Client Custody Fee",
+      "event": null,
+      "amount": -2.26,
+      "ccy": "USD",
+      "tk": null,
+      "name": null
+    },
+    {
+      "date": "2026-06-01",
+      "type": "Client Interest",
+      "event": null,
+      "amount": 1.52,
+      "ccy": "USD",
+      "tk": null,
+      "name": null
+    },
+    {
       "date": "2026-05-29",
       "type": "Cash Transfer",
       "event": "Deposit",
@@ -1880,18 +1919,18 @@
     }
   ],
   "totals": {
-    "trades_count": 69,
-    "buys_count": 47,
+    "trades_count": 70,
+    "buys_count": 48,
     "sells_count": 22,
-    "gross_buys": 35388.86,
+    "gross_buys": 36308.86,
     "gross_sells": 19647.11,
-    "commission_total": -371.2,
+    "commission_total": -376.2,
     "realised_pl_total": 1308.61,
     "deposits": 17190.14,
     "withdrawals": 0,
     "dividends": 25.08,
-    "interest": 7.96,
-    "custody_fees": -7.14,
+    "interest": 9.48,
+    "custody_fees": -9.4,
     "withholding_tax": -7.13
   }
 }

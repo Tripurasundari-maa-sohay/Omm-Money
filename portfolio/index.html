@@ -2131,7 +2131,7 @@ const DASH = (() => {
     fm:     { label:'FM',         sort:null,     renderCell: p => `<td><span class="badge ${fmBadge(p.fm)}">${p.fm}</span></td>` },
   };
 
-  const US_COLS_DEFAULT  = ['tk','qty','avg','ltp','dayPL','dayPct','mv','fees','upl','ret','inrRet','signal'];
+  const US_COLS_DEFAULT  = ['tk','qty','avg','ltp','mv','dayPL','dayPct','fees','upl','ret','inrRet','signal'];
   const IN_COLS_DEFAULT  = ['tk','name','broker','exch','qty','avg','ltp','pc','dayPL','dayPct','upl','mv','wt','fm'];
 
   function _loadColOrder(key, defaults) {
@@ -2216,18 +2216,29 @@ const DASH = (() => {
     const totNetIfClosed = totPL + totExit;
     const totNetRet  = totCost ? (totNetIfClosed/totCost)*100 : 0;
 
-    setText('us-foot-day',  sign(totDay)+usd2(totDay));   setClass('us-foot-day', pn(totDay));
-    setText('us-foot-mv',   usd2(totMV));
-    setText('us-foot-fees', usd2(totFee));
-    setText('us-foot-pl',   sign(totPL)+usd2(totPL));     setClass('us-foot-pl',  pn(totPL));
-    setText('us-foot-ret',  sign(totRet)+pct(totRet));    setClass('us-foot-ret', pn(totRet));
-
-    // Exit cost row
-    setText('us-foot-exit-cost', usd2(totExit));
-    setText('us-foot-net-pl',    sign(totNetIfClosed)+usd2(totNetIfClosed));
-    setClass('us-foot-net-pl', pn(totNetIfClosed));
-    setText('us-foot-net-ret',   sign(totNetRet)+pct(totNetRet));
-    setClass('us-foot-net-ret', pn(totNetRet));
+    // ── Dynamic tfoot — aligns with current column order ─────────────────────
+    const US_FOOT_VALS = {
+      dayPL:  { v1: sign(totDay)+usd2(totDay),          cls1: pn(totDay),        v2: '',                                   cls2: '' },
+      dayPct: { v1: '',                                  cls1: '',                v2: '',                                   cls2: '' },
+      mv:     { v1: usd2(totMV),                         cls1: '',                v2: usd2(totMV),                          cls2: '' },
+      fees:   { v1: usd2(totFee),                        cls1: 'loss',            v2: usd2(totExit)+' (exit)',              cls2: 'loss' },
+      upl:    { v1: sign(totPL)+usd2(totPL),             cls1: pn(totPL),         v2: sign(totNetIfClosed)+usd2(totNetIfClosed), cls2: pn(totNetIfClosed) },
+      ret:    { v1: sign(totRet)+pct(totRet),            cls1: pn(totRet),        v2: sign(totNetRet)+pct(totNetRet),       cls2: pn(totNetRet) },
+    };
+    const usTfoot = document.querySelector('#us-holdings-table tfoot');
+    if (usTfoot) {
+      // find first "label" col (tk or qty — whichever comes first)
+      const labelIdx = Math.max(0, Math.min(US_COL_ORDER.indexOf('tk'), US_COL_ORDER.indexOf('avg') < 0 ? 99 : US_COL_ORDER.indexOf('avg') - 1));
+      const span = US_COL_ORDER.filter(id => !US_FOOT_VALS[id]).length || 1;
+      const buildRow = (label, valKey) => `<tr${valKey===2?' style="font-size:12px;color:var(--text-dim)"':''}>
+        <td colspan="${span}" style="text-align:right;font-style:${valKey===2?'italic':'normal'}">${label}</td>
+        ${US_COL_ORDER.filter(id=>US_FOOT_VALS[id]).map(id=>{
+          const fv=US_FOOT_VALS[id]; const v=valKey===1?fv.v1:fv.v2; const c=valKey===1?fv.cls1:fv.cls2;
+          return `<td class="${c}">${v||'—'}</td>`;
+        }).join('')}
+      </tr>`;
+      usTfoot.innerHTML = buildRow('TOTAL',1) + buildRow('NET IF CLOSED (exit fees)',2);
+    }
     setLiveBadge('us-live-badge', us.open);
     setText('us-asof', 'as of ' + (S.view.asOf || '—'));
   }

@@ -1,135 +1,109 @@
 {
-  "generated": "2026-06-02T10:59:03.614471+00:00Z",
+  "generated": "2026-06-02T13:01:00.554540+00:00Z",
   "prices": {
     "HUMN": {
       "ltp": 38.46,
       "pc": 37.72,
-      "change": 0.74,
-      "change_pct": 1.96,
-      "as_of": "2026-06-01T22:36:47.243561Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 95.6958
+      "as_of": "2026-06-02T13:00:42.633635+00:00Z",
+      "fx_buy": 95.6958,
+      "buy_date": "2026-05-14"
     },
     "GOOG": {
       "ltp": 372.58,
       "pc": 376.43,
-      "change": -3.85,
-      "change_pct": -1.02,
-      "as_of": "2026-06-01T22:35:50.796696Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 90.7769
+      "as_of": "2026-06-02T13:00:03.763964+00:00Z",
+      "fx_buy": 90.7769,
+      "buy_date": "2025-12-16"
     },
     "AMZN": {
       "ltp": 261.26,
       "pc": 270.64,
-      "change": -9.38,
-      "change_pct": -3.47,
-      "as_of": "2026-06-01T22:35:55.156573Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 94.9468
+      "as_of": "2026-06-02T13:00:07.393832+00:00Z",
+      "fx_buy": 94.9468,
+      "buy_date": "2026-04-14"
     },
     "AVGO": {
       "ltp": 459.97,
       "pc": 446.77,
-      "change": 13.2,
-      "change_pct": 2.95,
-      "as_of": "2026-06-01T22:35:59.471369Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 90.7769
+      "as_of": "2026-06-02T13:00:11.297707+00:00Z",
+      "fx_buy": 90.7769,
+      "buy_date": "2025-12-16"
     },
     "GLW": {
       "ltp": 176.7,
       "pc": 181.16,
-      "change": -4.46,
-      "change_pct": -2.46,
-      "as_of": "2026-06-01T22:36:03.859706Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 95.183
+      "as_of": "2026-06-02T13:00:15.085536+00:00Z",
+      "fx_buy": 95.183,
+      "buy_date": "2026-05-06"
     },
     "GEV": {
       "ltp": 950.54,
       "pc": 968.32,
-      "change": -17.78,
-      "change_pct": -1.84,
-      "as_of": "2026-06-01T22:36:08.158105Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 94.2503
+      "as_of": "2026-06-02T13:00:18.487966+00:00Z",
+      "fx_buy": 94.2503,
+      "buy_date": "2026-04-27"
     },
     "MU": {
       "ltp": 1035.5,
       "pc": 971.0,
-      "change": 64.5,
-      "change_pct": 6.64,
-      "as_of": "2026-06-01T22:36:12.498828Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 94.2585
+      "as_of": "2026-06-02T13:00:21.957151+00:00Z",
+      "fx_buy": 94.2585,
+      "buy_date": "2026-04-28"
     },
     "MSFT": {
       "ltp": 460.52,
       "pc": 450.24,
-      "change": 10.28,
-      "change_pct": 2.28,
-      "as_of": "2026-06-01T22:36:16.952853Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 90.1059
+      "as_of": "2026-06-02T13:00:25.458550+00:00Z",
+      "fx_buy": 90.1059,
+      "buy_date": "2025-12-26"
     },
     "MP": {
       "ltp": 69.29,
       "pc": 64.7,
-      "change": 4.59,
-      "change_pct": 7.09,
-      "as_of": "2026-06-01T22:36:21.270287Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 90.9489
+      "as_of": "2026-06-02T13:00:28.866138+00:00Z",
+      "fx_buy": 90.9489,
+      "buy_date": "2025-12-17"
     },
     "RKLB": {
       "ltp": 122.39,
       "pc": 143.48,
-      "change": -21.09,
-      "change_pct": -14.7,
-      "as_of": "2026-06-01T22:36:25.549311Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 94.4253
+      "as_of": "2026-06-02T13:00:32.296701+00:00Z",
+      "fx_buy": 94.4253,
+      "buy_date": "2026-05-11"
     },
     "TTE": {
       "ltp": 88.71,
       "pc": 87.32,
-      "change": 1.39,
-      "change_pct": 1.59,
-      "as_of": "2026-06-01T22:36:38.619501Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 92.3899
+      "as_of": "2026-06-02T13:00:35.711602+00:00Z",
+      "fx_buy": 92.3899,
+      "buy_date": "2026-03-13"
     },
     "EWY": {
       "ltp": 216.7,
       "pc": 205.83,
-      "change": 10.87,
-      "change_pct": 5.28,
-      "as_of": "2026-06-01T22:36:42.961756Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 95.633
+      "as_of": "2026-06-02T13:00:39.239934+00:00Z",
+      "fx_buy": 95.633,
+      "buy_date": "2026-05-13"
     },
     "VOOG": {
       "ltp": 85.11,
       "pc": 84.35,
-      "change": 0.76,
-      "change_pct": 0.9,
-      "as_of": "2026-06-01T22:36:51.571860Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 90.577
+      "as_of": "2026-06-02T13:00:46.289248+00:00Z",
+      "fx_buy": 90.577,
+      "buy_date": "2025-12-15"
     },
     "SBIN": {
       "ltp": 956.65,
@@ -218,22 +192,26 @@
     "SHIP": {
       "ltp": 16.39,
       "pc": 15.5,
-      "change": 0.89,
-      "change_pct": 5.74,
-      "as_of": "2026-06-01T22:36:29.935599Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 95.905
+      "as_of": "2026-06-02T13:00:49.819148+00:00Z",
+      "fx_buy": 95.69,
+      "buy_date": "2026-05-27"
     },
     "NOW": {
       "ltp": 135.86,
       "pc": 124.37,
-      "change": 11.49,
-      "change_pct": 9.24,
-      "as_of": "2026-06-01T22:36:34.203882Z",
-      "manual": false,
       "source": "finnhub",
-      "fx_buy": 95.905
+      "as_of": "2026-06-02T13:00:53.343620+00:00Z",
+      "fx_buy": 95.69,
+      "buy_date": "2026-05-27"
+    },
+    "ORCL": {
+      "ltp": 248.15,
+      "pc": 225.78,
+      "source": "finnhub",
+      "as_of": "2026-06-02T13:00:56.749785+00:00Z",
+      "fx_buy": 94.99,
+      "buy_date": "2026-06-01"
     }
   },
   "demo_prices": {

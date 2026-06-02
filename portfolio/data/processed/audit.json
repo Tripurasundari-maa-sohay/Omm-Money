@@ -1,26 +1,21 @@
 {
-  "generated": "2026-06-02T08:49:28Z",
-  "status": "alert",
-  "alerts": [
-    {
-      "type": "anchor_vs_statement_mismatch",
-      "message": "Last monthly anchor $20,742.89 does not match statement account_value $21,080.37 (diff $337.48). PDF parser bug or stale anchor."
-    }
-  ],
+  "generated": "2026-06-02T18:14:27Z",
+  "status": "ok",
+  "alerts": [],
   "healed": [],
-  "tickers_expected": 29,
-  "tickers_ok": 29,
+  "tickers_expected": 30,
+  "tickers_ok": 30,
   "tickers_failed": 0,
   "fx_rate": 95.23,
-  "data_age_min": 1.3,
+  "data_age_min": 566.29,
   "crosscheck": {
-    "live_vs_statement_pct": -4.71,
-    "live_total_usd": 20086.54,
+    "live_vs_statement_pct": -0.08,
+    "live_total_usd": 21062.88,
     "statement_total_usd": 21080.37,
     "pdf_age_days": 1,
     "fees_xlsx_total": -376.2,
-    "fees_attributed_sum": -376.2,
-    "fees_diff_usd": 0.0,
+    "fees_attributed_sum": -356.2,
+    "fees_diff_usd": -20.0,
     "schema_status": {
       "screener.json": "ok",
       "holdings_prices.json": "ok",
@@ -28,7 +23,7 @@
       "market_indices.json": "ok"
     },
     "formula_status": {
-      "closed_realised_plus_income_usd": 2556.64,
+      "closed_realised_plus_income_usd": 2348.1,
       "synthetic_check": {
         "row": {
           "realised": 100.0,
@@ -41,11 +36,11 @@
     "workflow_status": {
       ".github/workflows/full_update.yml": {
         "last_success": "2026-05-29T09:30:35Z",
-        "age_days": 3
+        "age_days": 4
       },
       ".github/workflows/eod_snapshot_us.yml": {
-        "last_success": "2026-05-30T07:32:53Z",
-        "age_days": 3
+        "last_success": "2026-06-02T12:16:17Z",
+        "age_days": 0
       },
       ".github/workflows/eod_snapshot_india.yml": {
         "last_success": "2026-06-01T22:23:02Z",

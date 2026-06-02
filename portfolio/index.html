@@ -2812,14 +2812,14 @@ const DASH = (() => {
       mkChart('rolling-alpha-chart', { type:'bar',
         data: { labels: m.labels,
           datasets: [{ label:'3m Rolling Alpha (%)', data: alphaData,
-            backgroundColor: alphaData.map(v=>v===null?'transparent':v>=0?_gainC+'99':_lossC+'99'),
+            backgroundColor: alphaData.map(v=>v===null?'transparent':v>=0?_gainC+'cc':_lossC+'cc'),
             borderColor:     alphaData.map(v=>v===null?'transparent':v>=0?_gainC:_lossC),
-            borderWidth:1 }]
+            borderWidth:1.5 }]
         },
         options: { responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>ctx.parsed.y===null?'':sign(ctx.parsed.y)+ctx.parsed.y.toFixed(2)+'%' } } },
-          scales:{ x:{ grid:{color:_gridC}, ticks:{color:_secC} },
-                   y:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>sign(v)+v+'%'} } } }
+          scales:{ x:{ grid:{color:_gridC}, ticks:{color:_tickC, font:{size:10}} },
+                   y:{ grid:{color:_gridC}, ticks:{color:_tickC, callback:v=>sign(v)+v+'%'} } } }
       });
     }
 
@@ -2923,7 +2923,7 @@ const DASH = (() => {
     mkChart('alloc-chart', { type:'doughnut',
       data: { labels, datasets:[{ data:data.map(v=>Math.round(v)), backgroundColor:colors, borderColor:_aBg, borderWidth:2 }] },
       options: { responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{ position:'right', labels:{ color:_aPri, boxWidth:14, font:{size:12}, padding:8 } },
+        plugins:{ legend:{ position:'right', labels:{ color:_priC, boxWidth:14, font:{size:12, weight:'600'}, padding:8 } },
                   tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; const tot=data.reduce((s,x)=>s+x,0); return `${ctx.label}: $${v.toLocaleString('en-US')} (${pct(v/tot*100)})`; } } },
                   datalabels: _DL_PCT } }
     });
@@ -3019,8 +3019,8 @@ const DASH = (() => {
       options: { responsive:true, maintainAspectRatio:false,
         plugins: {
           legend:{ position:'right',
-            labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0',
-                     boxWidth:14, font:{size:12}, padding:8,
+            labels:{ color:_priC,
+                     boxWidth:14, font:{size:12, weight:'600'}, padding:8,
                      generateLabels: chart => {
                        const ds = chart.data.datasets[0];
                        return chart.data.labels.map((lbl,i) => {
@@ -3030,6 +3030,8 @@ const DASH = (() => {
                            text: `${lbl}: ${usd(v)} (${p}%)`,
                            fillStyle: ds.backgroundColor[i],
                            strokeStyle: ds.backgroundColor[i],
+                           fontColor: _priC,   // explicit — prevents Chart.js defaulting to black
+                           color: _priC,
                            index: i,
                          };
                        });

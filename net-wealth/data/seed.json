@@ -1,16 +1,16 @@
 {
   "owner": "ODIN",
-  "as_of": "2026-05-26",
+  "as_of": "2026-06-04",
   "_comment": "Single source of truth. Mutated in place by saveInputs() in index.html. localStorage caches user edits; export downloads this file with edits applied; commit to persist.",
   "assets": {
     "india_stocks": 2734879.52,
     "us_stocks_usd": 18400,
-    "fo_corpus_cash": 1818693.78,
-    "fo_margin_used": 5706715.55,
-    "india_mutual_fund_inr": 78700,
+    "fo_corpus_cash": 1628986.99,
+    "fo_margin_used": 5945814.06,
+    "india_mutual_fund_inr": 78100,
     "gold_jewellery_grams": 471,
     "jewel_22k_rate_inr_per_g": 14580,
-    "malabar_grams": 68.4,
+    "malabar_grams": 76.85,
     "malabar_grams_at_maturity": 107,
     "malabar_maturity": "2026-09-30",
     "malabar_rate_inr_per_g": 13271.125,
@@ -30,11 +30,11 @@
   "banks_qatar": [
     {
       "name": "Doha Bank · Savings",
-      "balance_qar": 175.98
+      "balance_qar": 174.48
     },
     {
       "name": "Doha Bank · Current",
-      "balance_qar": 8220.51
+      "balance_qar": 18598.34
     },
     {
       "name": "HSBC - SAVINGS",
@@ -48,11 +48,11 @@
     },
     {
       "name": "IDFC FB (NRE)",
-      "balance_inr": 7055
+      "balance_inr": 4573
     },
     {
       "name": "IDFC FB (BABA)",
-      "balance_inr": 256005
+      "balance_inr": 195291.83
     },
     {
       "name": "HDFC (Bou)",

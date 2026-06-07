@@ -655,7 +655,8 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v90</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v91</div>
+        <pre id="debug-overlay" style="font-size:9px;color:var(--text-dim);margin-top:4px;max-width:340px;white-space:pre-wrap;line-height:1.3;font-family:ui-monospace,monospace;opacity:0.7;"></pre>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1649,27 +1650,33 @@ const DASH = (() => {
     try {
       const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
       clearTimeout(tid);
-      if (!r.ok) return null;
-      return await r.json();
+      if (!r.ok) return { _err: 'HTTP ' + r.status };
+      try { return await r.json(); } catch (pe) { return { _err: 'JSON parse: ' + (pe && pe.message) }; }
     } catch (e) {
       clearTimeout(tid);
-      return null;
+      return { _err: (e && e.name === 'AbortError') ? 'TIMEOUT 10s' : 'NETWORK: ' + (e && e.message) };
     }
   };
 
+  // On-screen debug log — visible without DevTools
+  window._fetchLog = [];
+  const _dbg = (msg) => {
+    window._fetchLog.push(new Date().toLocaleTimeString() + ' ' + msg);
+    const el = document.getElementById('debug-overlay');
+    if (el) el.textContent = window._fetchLog.slice(-12).join('\n');
+  };
+
   const fetchJSON = async (path) => {
-    // Append cache-buster query so stale SW/CDN caches can't match the URL
     const buster = '_=' + Date.now();
     const localUrl = path + (path.includes('?') ? '&' : '?') + buster;
-    let data = await _tryFetch(localUrl);
-    if (data) return data;
-    // Fallback: try raw.githubusercontent.com directly (bypasses Pages CDN + SW cache)
+    let res = await _tryFetch(localUrl);
+    if (res && !res._err) { _dbg('✓ ' + path); return res; }
+    _dbg('✗ local ' + path + ' → ' + (res && res._err || 'null'));
     const rawUrl = RAW_BASE + path + '?' + buster;
-    console.warn('[fetchJSON] local failed, trying raw:', path);
-    data = await _tryFetch(rawUrl);
-    if (data) console.info('[fetchJSON] raw succeeded:', path);
-    else console.warn('[fetchJSON] BOTH failed:', path);
-    return data;
+    res = await _tryFetch(rawUrl);
+    if (res && !res._err) { _dbg('✓✓ raw ' + path); return res; }
+    _dbg('✗✗ raw ' + path + ' → ' + (res && res._err || 'null'));
+    return null;
   };
 
   async function load() {

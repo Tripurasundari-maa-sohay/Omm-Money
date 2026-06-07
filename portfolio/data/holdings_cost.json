@@ -183,25 +183,6 @@
         "fx_buy": 94.95
       },
       {
-        "tk": "JDZG",
-        "yf": "JDZG",
-        "name": "JiadeLtd",
-        "cls": "Stock",
-        "qty": 30,
-        "avg": 58.9,
-        "fees": -10.0,
-        "income": 0.0,
-        "buy_date": "2026-06-04",
-        "fx_buy": 95.78,
-        "quarantine": true,
-        "quarantine_reason": "Trading halted/banned post-pump. Cannot sell. Cayman Islands China small-cap.",
-        "quarantine_date": "2026-06-06",
-        "lesson": "greed is a killer",
-        "rule_born": "don't trade if it's not in index",
-        "write_off": true,
-        "write_off_loss": -1777.0
-      },
-      {
         "tk": "MU",
         "yf": "MU",
         "name": "MicronTechnologyInc.",
@@ -498,6 +479,24 @@
         "realised": -4.54,
         "ret_pct": -0.81,
         "_costs_paid": -10.0
+      },
+      {
+        "tk": "JDZG",
+        "yf": "JDZG",
+        "name": "JiadeLtd",
+        "cls": "Stock",
+        "qty": 30,
+        "realised": -1782.0,
+        "_costs_paid": -5.0,
+        "income": 0.0,
+        "user_force_closed": true,
+        "sell_price": 0.0,
+        "sell_date": "2026-06-06",
+        "lesson": "greed is a killer",
+        "rule_born": "don't trade if it's not in index",
+        "reason": "Trading halted/banned post-pump. Cannot sell. Cayman Islands China small-cap. Written off \u2014 expect zero recovery.",
+        "avg": 58.9,
+        "quarantine_date": "2026-06-06"
       }
     ],
     "charges_breakdown": [

@@ -1639,14 +1639,24 @@ const DASH = (() => {
 
   /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
   const fetchJSON = async (path) => {
+    // Append cache-buster query so stale SW/CDN caches can't match the URL
+    const buster = '_=' + Date.now();
+    const url = path + (path.includes('?') ? '&' : '?') + buster;
     const ctrl = new AbortController();
     const tid  = setTimeout(() => ctrl.abort(), 10000); // 10s timeout
     try {
-      const r = await fetch(path, { cache: 'no-store', signal: ctrl.signal });
+      const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
       clearTimeout(tid);
-      if (!r.ok) return null;
+      if (!r.ok) {
+        console.warn('[fetchJSON]', path, 'non-OK', r.status);
+        return null;
+      }
       return await r.json();
-    } catch { clearTimeout(tid); return null; }
+    } catch (e) {
+      clearTimeout(tid);
+      console.warn('[fetchJSON]', path, 'error', e && e.message);
+      return null;
+    }
   };
 
   async function load() {

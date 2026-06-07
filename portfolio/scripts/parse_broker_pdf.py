@@ -68,6 +68,11 @@ TICKER_MAP = {
     # Added 2026-06-02
     "oraclecorp.":                         ("ORCL",  "ORCL",  "Stock"),
     "oraclecorporation":                   ("ORCL",  "ORCL",  "Stock"),
+    # Added 2026-06-06
+    "intelcorp.":                          ("INTC",  "INTC",  "Stock"),
+    "intelcorporation":                    ("INTC",  "INTC",  "Stock"),
+    "jiadeltd":                            ("JDZG",  "JDZG",  "Stock"),
+    "jiadelimited":                        ("JDZG",  "JDZG",  "Stock"),
 }
 
 

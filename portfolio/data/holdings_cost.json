@@ -1,13 +1,13 @@
 {
   "_comment": "Cost basis only. LTPs are fetched live by scripts/market_data.py and written to holdings_prices.json. Edit this file when you trade.",
-  "as_of": "01-Jun-2026",
-  "fx_inr_usd": 94.935,
+  "as_of": "05-Jun-2026",
+  "fx_inr_usd": 94.95,
   "us": {
     "broker": "US Broker",
-    "cash": 70.55,
-    "cash_infusion_itd": 17190.14,
-    "account_value_statement": 21080.37,
-    "total_pl_statement": 3890.23,
+    "cash": 783.55,
+    "cash_infusion_itd": 20190.14,
+    "account_value_statement": 21768.84,
+    "total_pl_statement": 1578.7,
     "monthly": {
       "labels": [
         "Nov-25",
@@ -171,6 +171,30 @@
         "fx_buy": 94.2503
       },
       {
+        "tk": "INTC",
+        "yf": "INTC",
+        "name": "IntelCorp.",
+        "cls": "Stock",
+        "qty": 5,
+        "avg": 101.0,
+        "fees": -5.0,
+        "income": 0.0,
+        "buy_date": "2026-06-05",
+        "fx_buy": 94.95
+      },
+      {
+        "tk": "JDZG",
+        "yf": "JDZG",
+        "name": "JiadeLtd",
+        "cls": "Stock",
+        "qty": 30,
+        "avg": 58.9,
+        "fees": -10.0,
+        "income": 0.0,
+        "buy_date": "2026-06-04",
+        "fx_buy": 95.78
+      },
+      {
         "tk": "MU",
         "yf": "MU",
         "name": "MicronTechnologyInc.",
@@ -207,13 +231,25 @@
         "fx_buy": 90.9489
       },
       {
+        "tk": "ORCL",
+        "yf": "ORCL",
+        "name": "OracleCorp.",
+        "cls": "Stock",
+        "qty": 4,
+        "avg": 230.0,
+        "fees": -5.0,
+        "income": 0.0,
+        "buy_date": "2026-06-01",
+        "fx_buy": 94.99
+      },
+      {
         "tk": "RKLB",
         "yf": "RKLB",
         "name": "RocketLabCorporation",
         "cls": "Stock",
         "qty": 5,
         "avg": 104.5,
-        "fees": -5.0,
+        "fees": -25.0,
         "income": 0.0,
         "buy_date": "2026-05-11",
         "fx_buy": 94.4253
@@ -233,7 +269,7 @@
       {
         "tk": "NOW",
         "yf": "NOW",
-        "name": "Corp. ServiceNowInc.",
+        "name": "ServiceNowInc.",
         "cls": "Stock",
         "qty": 10,
         "avg": 102.78,
@@ -289,18 +325,6 @@
         "income": 3.49,
         "buy_date": "2025-12-15",
         "fx_buy": 90.577
-      },
-      {
-        "tk": "ORCL",
-        "yf": "ORCL",
-        "name": "OracleCorp.",
-        "cls": "Stock",
-        "qty": 4,
-        "avg": 230.0,
-        "fees": -5.0,
-        "income": 0,
-        "buy_date": "2026-06-01",
-        "fx_buy": 94.99
       }
     ],
     "closed": [
@@ -321,8 +345,8 @@
         "income": 0.0,
         "costs": 0.0,
         "_costs_paid": -5.0,
-        "realised": -28.66,
-        "ret_pct": -4.6,
+        "realised": -180.96,
+        "ret_pct": -10.15,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
@@ -347,7 +371,7 @@
       },
       {
         "tk": "INOD",
-        "name": "2025to01-Jun-2026 InnodataInc.",
+        "name": "2025to05-Jun-2026 InnodataInc.",
         "cls": "Stock",
         "income": 0.0,
         "costs": -20.0,
@@ -387,24 +411,25 @@
       },
       {
         "tk": "MU",
-        "name": "MicronTechnologyInc.",
+        "name": "CostSummarysection. MicronTechnologyInc.",
         "cls": "Stock",
         "income": 0.3,
         "costs": 0.0,
         "_costs_paid": -10.0,
-        "realised": 880.25,
-        "ret_pct": 166.0,
+        "realised": 708.76,
+        "ret_pct": 121.94,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
-        "tk": "NVDA",
-        "name": "NVIDIACorp.",
+        "tk": "RKLB",
+        "name": "RocketLabCorporation",
         "cls": "Stock",
         "income": 0.0,
-        "costs": -10.0,
-        "realised": -4.54,
-        "ret_pct": -0.81,
-        "_costs_paid": -10.0
+        "costs": 0.0,
+        "_costs_paid": -10.0,
+        "realised": 353.26,
+        "ret_pct": 87.21,
+        "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
         "tk": "TOL",
@@ -453,26 +478,25 @@
         "income": 0.0,
         "costs": 0.0,
         "_costs_paid": -5.0,
-        "realised": 687.04,
-        "ret_pct": 45.62,
+        "realised": 313.45,
+        "ret_pct": 17.73,
         "_note": "realised is net of all period costs; costs=0 avoids double-deduction in total"
       },
       {
-        "tk": "RKLB",
-        "name": "RocketLabCorporation",
+        "tk": "NVDA",
+        "name": "NVIDIACorp.",
         "cls": "Stock",
         "income": 0.0,
-        "costs": -20.0,
-        "_costs_paid": -10.0,
-        "realised": 458.66,
-        "ret_pct": 123.07,
-        "_note": "realised is net of all period costs"
+        "costs": -10.0,
+        "realised": -4.54,
+        "ret_pct": -0.81,
+        "_costs_paid": -10.0
       }
     ],
     "charges_breakdown": [
       {
         "type": "External Product Costs (implicit)",
-        "amt": -2.41
+        "amt": -2.58
       },
       {
         "type": "Custody Fee (ongoing)",
@@ -484,7 +508,7 @@
       },
       {
         "type": "Commission",
-        "amt": -376.2
+        "amt": -391.2
       },
       {
         "type": "French FTT",

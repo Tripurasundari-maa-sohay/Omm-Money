@@ -533,7 +533,8 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
         }
         prev_p = prev_open_meta.get(h["tk"])
         if prev_p:
-            for k in ("buy_date", "fx_buy"):
+            for k in ("buy_date", "fx_buy", "quarantine", "quarantine_reason",
+                     "quarantine_date", "lesson", "rule_born"):
                 if prev_p.get(k) is not None:
                     entry[k] = prev_p[k]
         open_full.append(entry)

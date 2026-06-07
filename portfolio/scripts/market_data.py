@@ -1643,7 +1643,14 @@ def main() -> int:
                     holdings["inr_fx_monthly"] = inr_monthly
         except Exception as exc:
             print(f"  WARN  snp_actual fetch failed: {exc}", file=sys.stderr)
-        OUT_HOLDINGS.write_text(json.dumps(holdings, indent=2))
+        # Scrub NaN/Inf → None so the JSON is valid for strict browser parsers
+        def _scrub(o):
+            if isinstance(o, float):
+                return None if (o != o or o == float('inf') or o == float('-inf')) else o
+            if isinstance(o, dict): return {k: _scrub(v) for k, v in o.items()}
+            if isinstance(o, list): return [_scrub(v) for v in o]
+            return o
+        OUT_HOLDINGS.write_text(json.dumps(_scrub(holdings), indent=2, allow_nan=False))
         print(f"  wrote {OUT_HOLDINGS.relative_to(ROOT)}")
     return 0
 

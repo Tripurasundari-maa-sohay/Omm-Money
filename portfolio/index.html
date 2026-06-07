@@ -2131,8 +2131,8 @@ const DASH = (() => {
     setText('us-account-statement', (_stmt ? `Statement: ${usd(_stmt)}${_stmtDate ? ' · ' + _stmtDate : ''}` : '') + _activeNote);
     setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');
     setText('us-etf-count',    us.open.filter(p=>p.cls==='ETF').length + ' positions');
-    renderQuarantine(us);
-    renderLessons(us);
+    safe(() => renderQuarantine(us), 'quarantine');
+    safe(() => renderLessons(us),    'lessons');
 
     // 💱 INR Return tile — only renders when fx_buy populated via parser
     const withFx = us.open.filter(p => p.inrRet !== null && p.cost > 0);

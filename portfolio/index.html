@@ -1791,11 +1791,21 @@ const DASH = (() => {
     const list = us.quar || [];
     if (!list.length) { strip.style.display = 'none'; return; }
     strip.style.display = '';
-    if (mvEl) mvEl.textContent = `${list.length} pos · MV ${usd(us.quarMV)} · cost ${usd(us.quarCost)} · paper ${usd(us.quarMV - us.quarCost)}`;
+    const writeoffTotal = (us.writeoffLoss || 0);
+    if (mvEl) mvEl.textContent = writeoffTotal < 0
+      ? `${list.length} pos · cost ${usd(us.quarCost)} · ✗ WRITTEN OFF ${usd(writeoffTotal)}`
+      : `${list.length} pos · MV ${usd(us.quarMV)} · cost ${usd(us.quarCost)} · paper ${usd(us.quarMV - us.quarCost)}`;
     rows.innerHTML = list.map(p => {
+      const reason  = p.quarantine_reason || 'Blocked';
+      if (p.write_off) {
+        const loss = p.write_off_loss !== undefined ? p.write_off_loss : -((p.cost||0)+10);
+        return `<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid rgba(255,140,80,0.15);">
+          <div><span style="color:#ff8c50;font-weight:600;">✗ ${p.tk}</span> · ${p.qty} sh @ $${p.avg.toFixed(2)} <span style="color:var(--text-dim);">— WRITTEN OFF (${reason})</span></div>
+          <div style="text-align:right;"><span class="loss-text" style="color:var(--loss);font-weight:600;">${usd(loss)}</span> <span style="color:var(--text-dim);">(booked)</span></div>
+        </div>`;
+      }
       const paperPL = (p.mv || 0) - (p.cost || 0);
       const pctTxt  = p.cost ? `${(paperPL/p.cost*100).toFixed(1)}%` : '—';
-      const reason  = p.quarantine_reason || 'Blocked';
       return `<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid rgba(255,140,80,0.15);">
         <div><span style="color:#ff8c50;font-weight:600;">🔒 ${p.tk}</span> · ${p.qty} sh @ $${p.avg.toFixed(2)} → $${(p.ltp||0).toFixed(2)} <span style="color:var(--text-dim);">(${reason})</span></div>
         <div style="text-align:right;"><span class="${pn(paperPL)}">${usd(paperPL)}</span> <span style="color:var(--text-dim);">(${pctTxt})</span></div>
@@ -1812,15 +1822,18 @@ const DASH = (() => {
     if (!list.length) { card.style.display = 'none'; return; }
     card.style.display = '';
     body.innerHTML = list.map(p => {
-      const paperPL = (p.mv || 0) - (p.cost || 0);
+      const isWO    = !!p.write_off;
+      const woLoss  = p.write_off_loss !== undefined ? p.write_off_loss : -((p.cost||0)+10);
+      const paperPL = isWO ? woLoss : (p.mv || 0) - (p.cost || 0);
+      const lblPL   = isWO ? 'Booked Loss (written off)' : 'Paper P&L';
       return `<div style="padding:14px;border:1px solid rgba(255,140,80,0.35);border-left:4px solid #ff8c50;border-radius:6px;background:rgba(255,140,80,0.03);">
         <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap;">
           <div>
-            <div style="font-size:18px;font-weight:700;color:#ff8c50;">🪦 ${p.tk}</div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Quarantined ${p.quarantine_date || '—'} · ${p.qty} sh @ $${p.avg.toFixed(2)} · cost ${usd(p.cost)}</div>
+            <div style="font-size:18px;font-weight:700;color:#ff8c50;">${isWO ? '✗' : '🪦'} ${p.tk}${isWO ? ' <span style="font-size:11px;font-weight:400;background:rgba(255,92,92,0.15);color:var(--loss);padding:2px 8px;border-radius:3px;margin-left:6px;">WRITTEN OFF</span>' : ''}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Quarantined ${p.quarantine_date || '—'} · ${p.qty} sh @ $${p.avg.toFixed(2)} · cost ${usd(p.cost)}${isWO ? ' + $10 exit' : ''}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:11px;color:var(--text-dim);">Paper P&amp;L</div>
+            <div style="font-size:11px;color:var(--text-dim);">${lblPL}</div>
             <div class="${pn(paperPL)}" style="font-size:16px;font-weight:600;">${usd(paperPL)}</div>
           </div>
         </div>
@@ -1841,8 +1854,13 @@ const DASH = (() => {
     const usQuar    = usAllOpen.filter(p => p.quarantine);
     const usOpen    = usAllOpen.filter(p => !p.quarantine);  // active only
     const usMV      = usOpen.reduce((s,p)=>s+p.mv,0);
-    const usQuarMV  = usQuar.reduce((s,p)=>s+p.mv,0);
+    // For quarantine MV: written-off positions count as $0 recovery (booked as loss).
+    // Live (non-written-off) quarantined positions still carry their MV.
+    const usQuarMV  = usQuar.reduce((s,p)=>s+(p.write_off ? 0 : p.mv),0);
     const usQuarCost= usQuar.reduce((s,p)=>s+(p.cost||0),0);
+    // Write-off loss = cost basis + exit fee, booked as realized once user gives up on recovery
+    const usWriteoffLoss = usQuar.filter(p=>p.write_off)
+      .reduce((s,p)=>s+(p.write_off_loss !== undefined ? p.write_off_loss : -((p.cost||0)+10)),0);
     usOpen.forEach(p => p.wt = usMV ? (p.mv/usMV)*100 : 0);
     const us = {
       cash:         S.cost.us.cash,
@@ -1851,6 +1869,7 @@ const DASH = (() => {
       quar:         usQuar,                    // quarantined — drives 🔒 strip + Lessons tab
       quarMV:       usQuarMV,
       quarCost:     usQuarCost,
+      writeoffLoss: usWriteoffLoss,            // booked realized loss from write-offs (≤0)
       closed:       S.cost.us.closed || [],
       monthly:      S.cost.us.monthly,
       charges:      S.cost.us.charges_breakdown || [],
@@ -1868,7 +1887,7 @@ const DASH = (() => {
     // Return % uses statementTotal (incl quarantine MV) so it matches broker reality.
     // Otherwise comparing active-MV to total-deposits-incl-quarantine-cost shows a false loss.
     us.returnPct  = us.cashInfusion ? ((us.statementTotal - us.cashInfusion) / us.cashInfusion) * 100 : 0;
-    us.realisedPL = us.closed.reduce((s,p)=>s+p.realised,0);
+    us.realisedPL = us.closed.reduce((s,p)=>s+p.realised,0) + (us.writeoffLoss || 0);
     us.dividends  = us.open.reduce((s,p)=>s+(p.income||0),0) + us.closed.reduce((s,p)=>s+(p.income||0),0);
     us.charges_total = us.charges.reduce((s,c)=>s+c.amt,0);
 
@@ -2123,12 +2142,14 @@ const DASH = (() => {
       setText('us-day-pl-pct', sign(us.dayPct) + pct(us.dayPct));
       setClass('us-day-pl-pct', 'mchg pv ' + pn(us.dayPct));
     }
-    // Tile shows statementTotal (matches broker app). Active broken out below.
+    // Tile shows statementTotal. If JDZG written off, statementTotal = active only ($0 recovery).
+    // Broker statement still includes the $1,500 — shown as a side note for reconciliation.
     setText('us-account-value', usd(us.statementTotal || us.totalValue));
     const _stmt = S.cost?.us?.account_value_statement;
     const _stmtDate = S.cost?.as_of;
-    const _activeNote = us.quarMV > 0 ? ` · active ${usd(us.totalValue)} + 🔒 ${usd(us.quarMV)}` : '';
-    setText('us-account-statement', (_stmt ? `Statement: ${usd(_stmt)}${_stmtDate ? ' · ' + _stmtDate : ''}` : '') + _activeNote);
+    const _writeoffNote = us.writeoffLoss < 0 ? ` · ✗ wrote off ${usd(us.writeoffLoss)}` : '';
+    const _quarLiveNote = us.quarMV > 0 ? ` · 🔒 ${usd(us.quarMV)}` : '';
+    setText('us-account-statement', (_stmt ? `Broker stmt: ${usd(_stmt)}${_stmtDate ? ' · ' + _stmtDate : ''}` : '') + _writeoffNote + _quarLiveNote);
     setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');
     setText('us-etf-count',    us.open.filter(p=>p.cls==='ETF').length + ' positions');
     safe(() => renderQuarantine(us), 'quarantine');
@@ -2730,7 +2751,7 @@ const DASH = (() => {
       display: true,
       anchor: ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'end' : 'start',
       align:  ctx => (ctx.dataset.data[ctx.dataIndex]||0) >= 0 ? 'right' : 'left',
-      formatter: v => `${v>=0?'+':''}${Math.abs(v).toFixed(2)}%`,
+      formatter: v => `${v>0?'+':''}${v.toFixed(2)}%`,
       color: _dlColor,
       font: { size: 11, weight: '700' },
       textShadowBlur: 3,
@@ -3179,10 +3200,10 @@ const DASH = (() => {
           borderColor:     usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainBar : _lossBar),
           borderRadius:4, borderWidth:1.5 }]
       },
-      options:{ ..._hbarOpts(v=>`${v>=0?'+':''}${Math.abs(v).toFixed(2)}%`, 13,
+      options:{ ..._hbarOpts(v=>`${v>0?'+':''}${v.toFixed(2)}%`, 13,
           _hbarAxis(usDaySorted.map(p=>+(p.dayPct||0)))),
         layout:{ padding:{ right:64, left:0 } },
-        scales:{ ...(_hbarOpts(v=>`${v>=0?'+':''}${Math.abs(v).toFixed(2)}%`, 13,
+        scales:{ ...(_hbarOpts(v=>`${v>0?'+':''}${v.toFixed(2)}%`, 13,
           _hbarAxis(usDaySorted.map(p=>+(p.dayPct||0)))).scales),
           y:{ grid:{display:false}, ticks:{color:_tickC, font:{size:13, weight:'700'} } }
         }
@@ -3203,7 +3224,7 @@ const DASH = (() => {
           borderColor:     usRetSorted.map(p=>(p.ret||0)>=0?_gainBar:_lossBar),
           borderRadius:3, borderWidth:1.5 }]
       },
-      options: _hbarOpts(v=>`${v>=0?'+':''}${Math.abs(v).toFixed(1)}%`, 13,
+      options: _hbarOpts(v=>`${v>0?'+':''}${v.toFixed(1)}%`, 13,
         _hbarAxis(usRetSorted.map(p=>+(p.ret||0))))
     });
   }

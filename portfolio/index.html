@@ -1638,25 +1638,37 @@ const DASH = (() => {
   function ccyLabel() { return S.ui.currency; }
 
   /* ── 1. LOAD DATA ─────────────────────────────────────────────── */
-  const fetchJSON = async (path) => {
-    // Append cache-buster query so stale SW/CDN caches can't match the URL
-    const buster = '_=' + Date.now();
-    const url = path + (path.includes('?') ? '&' : '?') + buster;
+  // Raw GitHub fallback — bypasses GH Pages CDN + Service Worker entirely.
+  // Used when the relative fetch returns null (stale SW returning empty, etc).
+  const RAW_BASE = 'https://raw.githubusercontent.com/Tripurasundari-maa-sohay/Omm-Money/main/portfolio/';
+
+  const _tryFetch = async (url) => {
     const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 10000); // 10s timeout
+    const tid  = setTimeout(() => ctrl.abort(), 10000);
     try {
       const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
       clearTimeout(tid);
-      if (!r.ok) {
-        console.warn('[fetchJSON]', path, 'non-OK', r.status);
-        return null;
-      }
+      if (!r.ok) return null;
       return await r.json();
     } catch (e) {
       clearTimeout(tid);
-      console.warn('[fetchJSON]', path, 'error', e && e.message);
       return null;
     }
+  };
+
+  const fetchJSON = async (path) => {
+    // Append cache-buster query so stale SW/CDN caches can't match the URL
+    const buster = '_=' + Date.now();
+    const localUrl = path + (path.includes('?') ? '&' : '?') + buster;
+    let data = await _tryFetch(localUrl);
+    if (data) return data;
+    // Fallback: try raw.githubusercontent.com directly (bypasses Pages CDN + SW cache)
+    const rawUrl = RAW_BASE + path + '?' + buster;
+    console.warn('[fetchJSON] local failed, trying raw:', path);
+    data = await _tryFetch(rawUrl);
+    if (data) console.info('[fetchJSON] raw succeeded:', path);
+    else console.warn('[fetchJSON] BOTH failed:', path);
+    return data;
   };
 
   async function load() {

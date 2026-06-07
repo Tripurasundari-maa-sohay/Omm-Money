@@ -1782,30 +1782,20 @@ const DASH = (() => {
     const houseMoney = !holding.avg;  // catches both 0 and undefined/null
     return { ...holding, ltp, pc, live, manual: manual || false, mv, upl, uplNet, exitFee, dayPL, dayPct, ret, cost, houseMoney, inrRet, fxAlpha };
   }
-  // 🔒 Quarantine strip — 1-liner per blocked position (no day P&L, just qty + last px + reason)
+  // 🔒 Quarantine strip — for LIVE quarantined positions still tracked at MV (not written off)
   function renderQuarantine(us) {
     const strip = document.getElementById('us-quarantine-strip');
     const rows  = document.getElementById('us-quar-rows');
     const mvEl  = document.getElementById('us-quar-mv');
     if (!strip || !rows) return;
-    const list = us.quar || [];
+    const list = (us.quar || []);  // active quarantine (not yet written off)
     if (!list.length) { strip.style.display = 'none'; return; }
     strip.style.display = '';
-    const writeoffTotal = (us.writeoffLoss || 0);
-    if (mvEl) mvEl.textContent = writeoffTotal < 0
-      ? `${list.length} pos · cost ${usd(us.quarCost)} · ✗ WRITTEN OFF ${usd(writeoffTotal)}`
-      : `${list.length} pos · MV ${usd(us.quarMV)} · cost ${usd(us.quarCost)} · paper ${usd(us.quarMV - us.quarCost)}`;
+    if (mvEl) mvEl.textContent = `${list.length} pos · MV ${usd(us.quarMV)} · cost ${usd(us.quarCost)} · paper ${usd(us.quarMV - us.quarCost)}`;
     rows.innerHTML = list.map(p => {
-      const reason  = p.quarantine_reason || 'Blocked';
-      if (p.write_off) {
-        const loss = p.write_off_loss !== undefined ? p.write_off_loss : -((p.cost||0)+10);
-        return `<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid rgba(255,140,80,0.15);">
-          <div><span style="color:#ff8c50;font-weight:600;">✗ ${p.tk}</span> · ${p.qty} sh @ $${p.avg.toFixed(2)} <span style="color:var(--text-dim);">— WRITTEN OFF (${reason})</span></div>
-          <div style="text-align:right;"><span class="loss-text" style="color:var(--loss);font-weight:600;">${usd(loss)}</span> <span style="color:var(--text-dim);">(booked)</span></div>
-        </div>`;
-      }
       const paperPL = (p.mv || 0) - (p.cost || 0);
       const pctTxt  = p.cost ? `${(paperPL/p.cost*100).toFixed(1)}%` : '—';
+      const reason  = p.quarantine_reason || 'Blocked';
       return `<div style="display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-top:1px solid rgba(255,140,80,0.15);">
         <div><span style="color:#ff8c50;font-weight:600;">🔒 ${p.tk}</span> · ${p.qty} sh @ $${p.avg.toFixed(2)} → $${(p.ltp||0).toFixed(2)} <span style="color:var(--text-dim);">(${reason})</span></div>
         <div style="text-align:right;"><span class="${pn(paperPL)}">${usd(paperPL)}</span> <span style="color:var(--text-dim);">(${pctTxt})</span></div>
@@ -1813,31 +1803,33 @@ const DASH = (() => {
     }).join('');
   }
 
-  // 📚 Lessons — full memorial card per quarantined position
+  // 📚 Lessons — memorial cards for closed-with-lesson positions (force-closed write-offs).
+  // Source: us.closed entries with user_force_closed=true. Realized loss already booked.
   function renderLessons(us) {
     const card = document.getElementById('us-lessons-card');
     const body = document.getElementById('us-lessons-body');
     if (!card || !body) return;
-    const list = (us.quar || []).filter(p => p.lesson || p.rule_born);
+    const list = (us.closed || []).filter(p => p.user_force_closed && (p.lesson || p.rule_born));
     if (!list.length) { card.style.display = 'none'; return; }
     card.style.display = '';
     body.innerHTML = list.map(p => {
-      const isWO    = !!p.write_off;
-      const woLoss  = p.write_off_loss !== undefined ? p.write_off_loss : -((p.cost||0)+10);
-      const paperPL = isWO ? woLoss : (p.mv || 0) - (p.cost || 0);
-      const lblPL   = isWO ? 'Booked Loss (written off)' : 'Paper P&L';
+      const loss   = p.realised || 0;
+      const sellPx = p.sell_price !== undefined ? p.sell_price : 0;
+      const exitFee= Math.abs(p._costs_paid || 0);
+      const avg    = p.avg || 0;
+      const cost   = (p.qty || 0) * avg;
       return `<div style="padding:14px;border:1px solid rgba(255,140,80,0.35);border-left:4px solid #ff8c50;border-radius:6px;background:rgba(255,140,80,0.03);">
         <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap;">
           <div>
-            <div style="font-size:18px;font-weight:700;color:#ff8c50;">${isWO ? '✗' : '🪦'} ${p.tk}${isWO ? ' <span style="font-size:11px;font-weight:400;background:rgba(255,92,92,0.15);color:var(--loss);padding:2px 8px;border-radius:3px;margin-left:6px;">WRITTEN OFF</span>' : ''}</div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Quarantined ${p.quarantine_date || '—'} · ${p.qty} sh @ $${p.avg.toFixed(2)} · cost ${usd(p.cost)}${isWO ? ' + $10 exit' : ''}</div>
+            <div style="font-size:18px;font-weight:700;color:#ff8c50;">✗ ${p.tk} <span style="font-size:11px;font-weight:400;background:rgba(255,92,92,0.15);color:var(--loss);padding:2px 8px;border-radius:3px;margin-left:6px;">WRITTEN OFF</span></div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Closed ${p.sell_date || p.quarantine_date || '—'} · ${p.qty} sh @ $${avg.toFixed(2)} → sold $${sellPx.toFixed(2)} · cost ${usd(cost)} + $${exitFee.toFixed(2)} exit</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:11px;color:var(--text-dim);">${lblPL}</div>
-            <div class="${pn(paperPL)}" style="font-size:16px;font-weight:600;">${usd(paperPL)}</div>
+            <div style="font-size:11px;color:var(--text-dim);">Realized Loss (booked)</div>
+            <div class="loss-text" style="color:var(--loss);font-size:18px;font-weight:700;">${usd(loss)}</div>
           </div>
         </div>
-        ${p.quarantine_reason ? `<div style="margin-top:10px;font-size:12px;color:var(--text-sec);"><strong style="color:var(--text-dim);">Why quarantined:</strong> ${p.quarantine_reason}</div>` : ''}
+        ${p.reason ? `<div style="margin-top:10px;font-size:12px;color:var(--text-sec);"><strong style="color:var(--text-dim);">Why:</strong> ${p.reason}</div>` : ''}
         ${p.lesson ? `<div style="margin-top:8px;padding:8px 12px;background:rgba(255,200,80,0.08);border-left:3px solid #ffc850;border-radius:4px;"><strong style="color:#ffc850;">📚 Lesson:</strong> <span style="color:var(--text-pri);">${p.lesson}</span></div>` : ''}
         ${p.rule_born ? `<div style="margin-top:6px;padding:8px 12px;background:rgba(80,200,140,0.08);border-left:3px solid #50c88c;border-radius:4px;"><strong style="color:#50c88c;">🪦 Rule born:</strong> <span style="color:var(--text-pri);font-weight:600;">${p.rule_born}</span></div>` : ''}
       </div>`;
@@ -2142,12 +2134,16 @@ const DASH = (() => {
       setText('us-day-pl-pct', sign(us.dayPct) + pct(us.dayPct));
       setClass('us-day-pl-pct', 'mchg pv ' + pn(us.dayPct));
     }
-    // Tile shows statementTotal. If JDZG written off, statementTotal = active only ($0 recovery).
-    // Broker statement still includes the $1,500 — shown as a side note for reconciliation.
+    // Tile shows statementTotal. Force-closed write-offs (JDZG) are excluded from active.
+    // Broker statement still includes their MV — shown as side note for reconciliation.
     setText('us-account-value', usd(us.statementTotal || us.totalValue));
     const _stmt = S.cost?.us?.account_value_statement;
     const _stmtDate = S.cost?.as_of;
-    const _writeoffNote = us.writeoffLoss < 0 ? ` · ✗ wrote off ${usd(us.writeoffLoss)}` : '';
+    const _forceClosed = (us.closed || []).filter(p => p.user_force_closed);
+    const _woLoss      = _forceClosed.reduce((s,p) => s + (p.realised || 0), 0);
+    const _writeoffNote = _woLoss < 0
+      ? ` · ✗ ${_forceClosed.map(p=>p.tk).join(',')} written off ${usd(_woLoss)}`
+      : '';
     const _quarLiveNote = us.quarMV > 0 ? ` · 🔒 ${usd(us.quarMV)}` : '';
     setText('us-account-statement', (_stmt ? `Broker stmt: ${usd(_stmt)}${_stmtDate ? ' · ' + _stmtDate : ''}` : '') + _writeoffNote + _quarLiveNote);
     setText('us-stocks-count', us.open.filter(p=>p.cls==='Stock').length + ' positions');

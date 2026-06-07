@@ -503,6 +503,13 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     # backfill in market_data.py and must survive PDF reparse.
     prev_open_meta = {p["tk"]: p for p in (prev or {}).get("us", {}).get("open", []) if "tk" in p}
 
+    # user_force_closed: user has decided to write off & close a still-broker-held position
+    # (e.g. JDZG — halted, expect zero recovery). Keep these in closed[] across reparses,
+    # do NOT re-add to open[] even if PDF lists them.
+    prev_closed_all      = (prev or {}).get("us", {}).get("closed", [])
+    force_closed_tks     = {p["tk"] for p in prev_closed_all if p.get("user_force_closed")}
+    force_closed_entries = [p for p in prev_closed_all if p.get("user_force_closed")]
+
     # Build ticker → pl_row map. Sum costs if same ticker appears twice.
     pl_by_ticker: dict[str, dict] = {}
     for r in pl_rows:
@@ -519,6 +526,9 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     for h in holdings:
         if h["tk"].startswith("UNKNOWN"):
             print(f"  [WARN] skipping UNKNOWN ticker in open positions: {h['tk']!r} ({h['name']!r})", file=sys.stderr)
+            continue
+        if h["tk"] in force_closed_tks:
+            print(f"  [INFO] {h['tk']} is user-force-closed (written off) — not re-adding to open[]", file=sys.stderr)
             continue
         plr = pl_by_ticker.get(h["tk"], {})
         entry = {
@@ -593,7 +603,9 @@ def build_cost_json(pdf_path: Path, prev: dict | None) -> dict:
     # Merge closed positions: preserve historical records not in current statement period.
     # New statement only covers its own date range — older closed tranches would be lost
     # without this merge. De-duplicate by ticker, preferring new data when both exist.
-    prev_closed = (prev or {}).get("us", {}).get("closed", [])
+    # Exception: user_force_closed entries ALWAYS win — they are the user's overlay decision.
+    closed_full   = [p for p in closed_full if p["tk"] not in force_closed_tks]
+    prev_closed   = prev_closed_all
     new_closed_tks = {p["tk"] for p in closed_full}
     merged_closed = closed_full + [p for p in prev_closed if p["tk"] not in new_closed_tks]
 

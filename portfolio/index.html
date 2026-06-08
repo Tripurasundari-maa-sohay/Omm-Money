@@ -627,7 +627,6 @@
         <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
         <button class="tab-button" data-tab="signals"><span class="tl">📡 SIGNALS</span><span class="ts">SIGNALS</span></button>
         <button class="tab-button" data-tab="screener"><span class="tl">🔍 SCREENER</span><span class="ts">SCREEN</span></button>
-        <button class="tab-button" data-tab="kronos"><span class="tl">🤖 KRONOS AI</span><span class="ts">AI</span></button>
       </div>
       <div class="banner-controls">
         <!-- FX Rates Display -->
@@ -655,7 +654,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v94</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v95</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1494,63 +1493,6 @@
     <div id="scr-updated" style="font-size:12px;color:var(--text-dim);margin-top:10px;text-align:right"></div>
 
   </div><!-- /screener-tab -->
-
-  <!-- ── KRONOS AI FORECAST TAB ────────────────────────────────────────── -->
-  <div id="kronos-tab" class="tab-content">
-    <div style="padding:16px">
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="color:var(--accent-g);font-size:11px;font-weight:700;letter-spacing:2px">🤖 KRONOS AI · 5-DAY PRICE FORECAST</div>
-        <span id="kronos-updated" style="font-size:11px;color:var(--text-dim)">—</span>
-      </div>
-
-      <div style="font-size:11px;color:var(--text-dim);margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:6px;border-left:3px solid var(--accent-g)">
-        Predictions from <b>Kronos-small</b> (24.7M params, trained on 45+ global exchanges).
-        Each prediction uses last 60 days OHLCV. Compare with <b>📡 SIGNALS</b> tab for confluence.
-        UP = predicted &gt;+1% · DOWN = predicted &lt;−1% · FLAT = within ±1%
-      </div>
-
-      <!-- Summary strip -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <div style="background:rgba(78,207,130,0.1);border:1px solid rgba(78,207,130,0.3);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PREDICTED UP</div>
-          <div id="kr-count-up" style="font-size:22px;font-weight:700;color:#4ecf82">—</div>
-        </div>
-        <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PREDICTED DOWN</div>
-          <div id="kr-count-down" style="font-size:22px;font-weight:700;color:#f87171">—</div>
-        </div>
-        <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">FLAT</div>
-          <div id="kr-count-flat" style="font-size:22px;font-weight:700;color:var(--text-dim)">—</div>
-        </div>
-      </div>
-
-      <!-- Forecast table -->
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead>
-            <tr style="background:var(--bg3)">
-              <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px">TICKER</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">CURRENT</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">1D PRED</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D PRED</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D CHANGE</th>
-              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">SIGNAL</th>
-              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">vs SIGNALS</th>
-            </tr>
-          </thead>
-          <tbody id="kronos-table-body">
-            <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">Loading Kronos forecasts…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- 5-day curve per ticker -->
-      <div id="kronos-curves" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
-
-    </div>
-  </div><!-- /kronos-tab -->
 
   </div><!-- /main-content -->
 </div><!-- /dashboard-container -->
@@ -2595,7 +2537,7 @@ const DASH = (() => {
     }).join('');
   }
   window.renderTxLedger = renderTxLedger;
-  window._S = S;  // expose for Kronos tab (outside IIFE)
+  window._S = S;  // expose for tabs/diagnostics outside IIFE
 
   function renderTxCash() {
     const tbody = $('tx-cash-body');
@@ -3399,7 +3341,6 @@ const DASH = (() => {
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
     if (name === 'signals') loadSignals();
     if (name === 'screener') DASH_SCR.init();
-    if (name === 'kronos') loadKronos();
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
   }
@@ -4590,7 +4531,7 @@ const DASH = (() => {
     // Restore last active tab (refresh persistence)
     try {
       const _savedTab = localStorage.getItem('active_tab');
-      const _validTabs = ['portfolio','us','india','transactions','signals','screener','kronos'];
+      const _validTabs = ['portfolio','us','india','transactions','signals','screener'];
       if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
         switchTab(_savedTab);
       }
@@ -4786,130 +4727,9 @@ if ('serviceWorker' in navigator) {
     .catch(() => {});
 }
 
-// ── KRONOS AI FORECAST ────────────────────────────────────────────────────
-let _kronosData = null;
-
-async function loadKronos() {
-  const tbody = document.getElementById('kronos-table-body');
-  if (!tbody) return;
-  if (_kronosData) { renderKronos(_kronosData); return; }
-  try {
-    const res = await fetch(`./data/processed/kronos_signals.json?_=${Date.now()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    _kronosData = await res.json();
-    renderKronos(_kronosData);
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--warn)">Kronos data unavailable — runs daily at 22:00 UTC. ${e.message}</td></tr>`;
-  }
-}
-
-function renderKronos(data) {
-  const tbody   = document.getElementById('kronos-table-body');
-  const forecasts = data.forecasts || {};
-  const _kgen   = data.generated ? data.generated.replace(/\+00:00Z$/, 'Z').replace(/\+00:00$/, 'Z') : null;
-  const gen     = _kgen ? new Date(_kgen).toLocaleString() : '—';
-  const updEl   = document.getElementById('kronos-updated');
-  if (updEl) updEl.textContent = 'as of ' + gen;
-
-  // Load existing signals for comparison (S is inside IIFE — use window._S)
-  const sigMap  = {};
-  const _Sg = window._S;
-  if (_Sg && _Sg.signals && _Sg.signals.holdings) {
-    Object.entries(_Sg.signals.holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
-  }
-  if (_Sg && _Sg.signals && _Sg.signals.india_holdings) {
-    Object.entries(_Sg.signals.india_holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
-  }
-
-  const fmt2  = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : '—';
-  const fmtPx = v => v != null ? v.toLocaleString(undefined, {maximumFractionDigits:2}) : '—';
-
-  let up=0, down=0, flat=0;
-  const allRows = Object.entries(forecasts).sort((a,b) => (b[1].pred_pct_5d||0) - (a[1].pred_pct_5d||0));
-  const usRows  = allRows.filter(([,f]) => f.market === 'US');
-  const inRows  = allRows.filter(([,f]) => f.market === 'India');
-
-  function buildRows(rows) {
-    return rows.map(([tk, f], i) => {
-      const sig    = f.signal || 'FLAT';
-      const pct    = f.pred_pct_5d;
-      if (sig === 'UP')   up++;
-      else if (sig === 'DOWN') down++;
-      else flat++;
-      const sigColor = sig === 'UP' ? '#4ecf82' : sig === 'DOWN' ? '#f87171' : 'var(--text-dim)';
-      const sigIcon  = sig === 'UP' ? '▲' : sig === 'DOWN' ? '▼' : '●';
-      const pctColor = pct > 0 ? '#4ecf82' : pct < 0 ? '#f87171' : 'var(--text-dim)';
-      const existSig = sigMap[tk];
-      let confluence = '—';
-      if (existSig) {
-        const match = (sig==='UP'&&existSig==='BUY')||(sig==='DOWN'&&existSig==='REDUCE')||(sig==='FLAT'&&existSig==='HOLD');
-        confluence = match ? `<span style="color:#4ecf82;font-weight:600">✓ ${existSig}</span>`
-                           : `<span style="color:var(--warn)">${existSig} ≠</span>`;
-      }
-      return `<tr style="${i%2===0?'background:var(--bg3)':''}">
-        <td style="padding:9px 14px;font-weight:600">${tk}</td>
-        <td style="padding:9px 14px;text-align:right">${fmtPx(f.current_close)}</td>
-        <td style="padding:9px 14px;text-align:right;color:var(--text-sec)">${fmtPx(f.pred_1d)}</td>
-        <td style="padding:9px 14px;text-align:right;font-weight:600;color:${sigColor}">${fmtPx(f.pred_5d)}</td>
-        <td style="padding:9px 14px;text-align:right;font-weight:700;color:${pctColor}">${fmt2(pct)}</td>
-        <td style="padding:9px 14px;text-align:center;font-weight:700;color:${sigColor}">${sigIcon} ${sig}</td>
-        <td style="padding:9px 14px;text-align:center;font-size:12px">${confluence}</td>
-      </tr>`;
-    }).join('');
-  }
-
-  const thead = `<thead><tr style="background:var(--bg3)">
-    <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px">TICKER</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">CURRENT</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">1D PRED</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D PRED</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D CHANGE</th>
-    <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">SIGNAL</th>
-    <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">vs SIGNALS</th>
-  </tr></thead>`;
-
-  tbody.innerHTML = `
-    <tr><td colspan="7" style="padding:10px 14px;font-size:11px;font-weight:700;color:#60a5fa;letter-spacing:2px;background:rgba(96,165,250,0.08)">🇺🇸 US HOLDINGS (${usRows.length})</td></tr>
-    ${thead.replace('<thead>','').replace('</thead>','')}
-    ${buildRows(usRows) || '<tr><td colspan="7" style="padding:12px 14px;color:var(--text-dim)">No US forecasts available</td></tr>'}
-    <tr><td colspan="7" style="padding:10px 14px;font-size:11px;font-weight:700;color:#f97316;letter-spacing:2px;background:rgba(249,115,22,0.08)">🇮🇳 INDIA HOLDINGS (${inRows.length})</td></tr>
-    ${thead.replace('<thead>','').replace('</thead>','')}
-    ${buildRows(inRows) || '<tr><td colspan="7" style="padding:12px 14px;color:var(--text-dim)">No India forecasts available</td></tr>'}
-  `;
-
-  // Counters
-  const u = document.getElementById('kr-count-up');   if(u) u.textContent = up;
-  const d = document.getElementById('kr-count-down'); if(d) d.textContent = down;
-  const fl= document.getElementById('kr-count-flat'); if(fl) fl.textContent = flat;
-
-  // 5-day sparklines per ticker
-  const curves = document.getElementById('kronos-curves');
-  if (curves) {
-    curves.innerHTML = allRows.map(([tk, f]) => {
-      if (!f.pred_closes || !f.pred_closes.length) return '';
-      const sig    = f.signal;
-      const color  = sig === 'UP' ? '#4ecf82' : sig === 'DOWN' ? '#f87171' : '#9ca3af';
-      const allPx  = [f.current_close, ...f.pred_closes];
-      const minPx  = Math.min(...allPx), maxPx = Math.max(...allPx);
-      const range  = maxPx - minPx || 1;
-      const w = 180, h = 50, pad = 6;
-      const pts = allPx.map((v,i) => {
-        const x = pad + (i / (allPx.length-1)) * (w - pad*2);
-        const y = pad + (1 - (v-minPx)/range) * (h - pad*2);
-        return `${x},${y}`;
-      }).join(' ');
-      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px">
-        <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:6px">${tk} <span style="font-size:10px;font-weight:400;color:var(--text-dim)">${f.pred_pct_5d != null ? (f.pred_pct_5d>0?'+':'')+f.pred_pct_5d.toFixed(2)+'%' : ''}</span></div>
-        <svg width="${w}" height="${h}" style="overflow:visible">
-          <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
-          <circle cx="${pts.split(' ')[0].split(',')[0]}" cy="${pts.split(' ')[0].split(',')[1]}" r="3" fill="var(--text-dim)"/>
-          <circle cx="${pts.split(' ').slice(-1)[0].split(',')[0]}" cy="${pts.split(' ').slice(-1)[0].split(',')[1]}" r="3" fill="${color}"/>
-        </svg>
-        <div style="font-size:9px;color:var(--text-dim);margin-top:4px">Today → ${f.pred_dates ? f.pred_dates[f.pred_dates.length-1] : ''}</div>
-      </div>`;
-    }).join('');
-  }
-}
+// Kronos tab removed 2026-06-09 — daily backtest verdict: no edge (51% hit, naive baseline beats it).
+// Raw CSV: /tmp/kronos_bt_raw.csv on VM. Scripts kept on VM (kronos_predict.py + Kronos/).
+// VM cron entry "0 22 * * 1-5 ... kronos_predict.py" should be disabled separately.
 </script>
 </body>
 </html>

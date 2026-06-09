@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v107</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v108</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1640,7 +1640,7 @@ const DASH = (() => {
   /* ══ CONFIG ══════════════════════════════════════════════════════ */
   const REFRESH_MS  = 30 * 1000;   // 30s — Oracle VM commits every ~60s → max 90s lag
   const FX_DEFAULT  = 95.0;    // INR per USD (fallback — live rate fetched by market_data.py)
-  const QAR_PER_USD = 3.65;  // fixed peg — update if needed
+  const QAR_PER_USD = 3.6413;  // fixed peg — update if needed
 
   /* ══ STATE ═══════════════════════════════════════════════════════
      ui.currency : 'USD' | 'QAR' | 'INR'  — hero banner display ccy
@@ -4633,7 +4633,7 @@ const DASH = (() => {
 
   /* ── INIT ── */
   async function loadFXRates() {
-    const QAR_PER_USD = 3.65;
+    const QAR_PER_USD = 3.6413;
     const paths = [
       './data/processed/market_indices.json',
       '../portfolio/data/processed/market_indices.json',

@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v109</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v110</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -5101,11 +5101,12 @@ function _wlUpdateSumTile(sum, n, total) {
     else if (available <= 0) {
       covEl.innerHTML = `<span style="background:rgba(248,113,113,0.18);color:#f87171;padding:3px 9px;border-radius:4px;">🔴 NO CASH SET</span>`;
     } else {
-      // Coverage % = (cash + emergency) / needed × 100 — higher is better
-      const pct = (available / sum) * 100;
+      const pct  = (available / sum) * 100;
+      const gap  = sum - available;
       const color = pct >= 100 ? '#4ecf82' : pct >= 75 ? '#f0b429' : '#f87171';
       const label = pct >= 100 ? '🟢 COVERED' : pct >= 75 ? '🟡 TIGHT' : '🔴 SHORT';
-      covEl.innerHTML = `<span style="background:${color}22;color:${color};padding:3px 9px;border-radius:4px;">${label} ${pct.toFixed(0)}%</span>`;
+      const gapTxt = gap > 0 ? `need ${fmt$(gap)} more` : `${fmt$(-gap)} surplus`;
+      covEl.innerHTML = `<span style="background:${color}22;color:${color};padding:3px 9px;border-radius:4px;">${label} ${pct.toFixed(0)}%</span> <span style="color:var(--text-dim);font-size:11px;font-weight:400;margin-left:6px;">${gapTxt}</span>`;
     }
   }
 }

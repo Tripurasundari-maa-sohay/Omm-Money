@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v99</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v100</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -734,6 +734,14 @@
         <div class="metric-card"><label id="hero-pl-label">UNREALISED P&amp;L (USD)</label><div class="mval loading pv" id="hero-total-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card" style="flex-direction:row;align-items:stretch;gap:0"><div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:0"><label id="hero-day-label">TODAY'S GAIN (USD)</label><div class="mval loading pv" id="hero-day-pl">…</div><div class="mchg pv" id="hero-day-pl-pct">--</div></div><div style="width:1px;background:var(--border);margin:4px 10px;flex-shrink:0"></div><div id="hero-day-region-breakdown" style="display:flex;flex-direction:column;justify-content:center;gap:5px;flex-shrink:0"></div></div>
         <div class="metric-card"><label>CASH INFUSED (US)</label><div class="mval loading pv" id="hero-cash-infused">…</div><div class="mdesc">Net deposits ITD</div></div>
+      </div>
+    </div>
+
+    <!-- Watchlist quick tile -->
+    <div style="margin:14px 0;padding:12px 16px;background:rgba(78,207,130,0.05);border:1px solid rgba(78,207,130,0.25);border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()" title="Open Watchlist tab">
+      <span style="font-size:11px;color:var(--accent-g);font-weight:700;letter-spacing:1.5px;">👀 WATCHLIST</span>
+      <div id="wl-main-tile" style="display:flex;gap:8px;align-items:center;font-size:13px;">
+        <span style="color:var(--text-dim);">loading…</span>
       </div>
     </div>
 
@@ -1541,11 +1549,13 @@
           <thead>
             <tr style="background:var(--bg-card);">
               <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px;">TICKER</th>
+              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">HELD</th>
               <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">CURRENT</th>
               <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">TARGET</th>
               <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">DIST %</th>
               <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">STATUS</th>
               <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">COMMENT</th>
+              <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">FROM</th>
               <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">⚙</th>
             </tr>
           </thead>
@@ -1585,6 +1595,10 @@
         <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-dim);">
           COMMENT
           <input id="wl-input-comment" style="background:var(--bg-base);border:1px solid var(--border);padding:8px;border-radius:5px;color:var(--text-pri);font-size:14px;" placeholder="Start buying 170"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-dim);">
+          FROM (source — e.g. friend, news, sector rotation)
+          <input id="wl-input-from" style="background:var(--bg-base);border:1px solid var(--border);padding:8px;border-radius:5px;color:var(--text-pri);font-size:14px;" placeholder="Optional"/>
         </label>
         <div style="display:flex;gap:8px;margin-top:6px;">
           <button type="submit" style="background:var(--accent-g);color:#000;border:none;padding:10px 16px;border-radius:6px;font-weight:600;cursor:pointer;flex:1;">Save</button>
@@ -4888,13 +4902,24 @@ function renderWatchlist() {
   if (!tbody) return;
   const rows = _wlMerged();
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim);">No tickers yet. Click <b>+ Add Ticker</b> to start.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--text-dim);">No tickers yet. Click <b>+ Add Ticker</b> to start.</td></tr>';
     ['buy','near','watch','exp','total'].forEach(k => { const el = document.getElementById('wl-count-' + k); if (el) el.textContent = '0'; });
+    _wlUpdateMainTile({buy:0,near:0,watch:0,exp:0,total:0});
     return;
   }
   const counts = {buy:0, near:0, watch:0, exp:0, none:0};
   const fmt$ = v => v != null ? '$' + v.toLocaleString(undefined, {maximumFractionDigits:2}) : '—';
   const fmtPct = v => v != null ? (v > 0 ? '+' : '') + v.toFixed(1) + '%' : '—';
+
+  // Build held-set from S.view.us.open (active holdings + quarantine)
+  const heldMap = {};
+  const _Sg = window._S;
+  if (_Sg && _Sg.cost && _Sg.cost.us) {
+    (_Sg.cost.us.open || []).forEach(h => { heldMap[h.tk] = {qty: h.qty, avg: h.avg}; });
+    (_Sg.cost.us.closed || []).filter(h => h.user_force_closed).forEach(h => {
+      heldMap[h.tk] = {written_off: true};
+    });
+  }
 
   tbody.innerHTML = rows.map((r, i) => {
     const current = _wlPriceFor(r.tk);
@@ -4904,13 +4929,24 @@ function renderWatchlist() {
     const distColor = st.dist != null && st.dist > 0 ? 'var(--loss)' : 'var(--gain)';
     const srcBadge = r._src === 'repo' ? '' :
       `<span style="display:inline-block;font-size:9px;color:var(--text-dim);background:rgba(255,255,255,0.05);padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle;">${r._src === 'overlay' ? 'EDITED' : 'LOCAL'}</span>`;
+    const held = heldMap[r.tk];
+    let heldCell;
+    if (!held) {
+      heldCell = `<span style="color:var(--text-dim);font-size:11px;">—</span>`;
+    } else if (held.written_off) {
+      heldCell = `<span style="background:rgba(255,140,80,0.15);color:#ff8c50;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;" title="Written off">✗ WO</span>`;
+    } else {
+      heldCell = `<span style="background:rgba(78,207,130,0.15);color:#4ecf82;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;" title="${held.qty} sh @ $${held.avg.toFixed(2)}">✓ ${held.qty}</span>`;
+    }
     return `<tr style="${i % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : ''}">
       <td style="padding:9px 14px;"><strong>${r.tk}</strong>${srcBadge}<br><span style="color:var(--text-dim);font-size:11px;">${r.name || ''}</span></td>
+      <td style="padding:9px 14px;text-align:center;">${heldCell}</td>
       <td style="padding:9px 14px;text-align:right;font-weight:600;">${fmt$(current)}</td>
       <td style="padding:9px 14px;text-align:right;color:var(--text-sec);">${fmt$(r.buy_target)}</td>
       <td style="padding:9px 14px;text-align:right;color:${distColor};font-weight:600;">${distTxt}</td>
       <td style="padding:9px 14px;text-align:center;"><span style="background:${st.color}22;color:${st.color};padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;">${st.emoji} ${st.label}</span></td>
       <td style="padding:9px 14px;color:var(--text-sec);font-size:12px;">${r.comment || ''}</td>
+      <td style="padding:9px 14px;color:var(--text-dim);font-size:11px;font-style:italic;">${r.from || ''}</td>
       <td style="padding:9px 14px;text-align:center;white-space:nowrap;">
         <button onclick="wlEdit('${r.tk}')" style="background:transparent;border:1px solid var(--border);color:var(--text-sec);padding:2px 7px;border-radius:3px;cursor:pointer;font-size:11px;">✎</button>
         <button onclick="wlDelete('${r.tk}')" style="background:transparent;border:1px solid var(--loss);color:var(--loss);padding:2px 7px;border-radius:3px;cursor:pointer;font-size:11px;margin-left:3px;">×</button>
@@ -4923,6 +4959,20 @@ function renderWatchlist() {
   document.getElementById('wl-count-watch').textContent = counts.watch || 0;
   document.getElementById('wl-count-exp').textContent   = counts.exp   || 0;
   document.getElementById('wl-count-total').textContent = rows.length;
+  _wlUpdateMainTile({buy: counts.buy||0, near: counts.near||0, watch: counts.watch||0, exp: counts.exp||0, total: rows.length});
+}
+
+// Update the dashboard tile in PORTFOLIO tab
+function _wlUpdateMainTile(c) {
+  const el = document.getElementById('wl-main-tile');
+  if (!el) return;
+  el.innerHTML = `
+    <span style="background:rgba(78,207,130,0.18);color:#4ecf82;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🟢 ${c.buy}</span>
+    <span style="background:rgba(240,180,41,0.18);color:#f0b429;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🟡 ${c.near}</span>
+    <span style="background:rgba(249,115,22,0.18);color:#f97316;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🟠 ${c.watch}</span>
+    <span style="background:rgba(248,113,113,0.18);color:#f87171;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🔴 ${c.exp}</span>
+    <span style="color:var(--text-dim);font-size:11px;margin-left:4px;">of ${c.total}</span>
+  `;
 }
 
 function wlEdit(tk) {
@@ -4935,6 +4985,7 @@ function wlEdit(tk) {
   document.getElementById('wl-input-name').value    = row.name || '';
   document.getElementById('wl-input-target').value  = row.buy_target || '';
   document.getElementById('wl-input-comment').value = row.comment || '';
+  document.getElementById('wl-input-from').value    = row.from || '';
   document.getElementById('wl-modal').style.display = 'flex';
 }
 
@@ -5042,6 +5093,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wl-input-name').value = '';
     document.getElementById('wl-input-target').value = '';
     document.getElementById('wl-input-comment').value = '';
+    document.getElementById('wl-input-from').value = '';
     modal.style.display = 'flex';
     setTimeout(() => document.getElementById('wl-input-tk').focus(), 50);
   });
@@ -5091,6 +5143,7 @@ document.addEventListener('DOMContentLoaded', () => {
       name:        document.getElementById('wl-input-name').value.trim(),
       buy_target:  parseFloat(document.getElementById('wl-input-target').value),
       comment:     document.getElementById('wl-input-comment').value.trim(),
+      from:        document.getElementById('wl-input-from').value.trim(),
       added:       new Date().toISOString().slice(0,10),
     };
     if (!Number.isFinite(entry.buy_target)) { alert('Target must be a number'); return; }
@@ -5132,10 +5185,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => _wlSetStatus('— idle'), 2000);
   });
 
-  // Start polling for remote changes once user visits watchlist tab
   document.addEventListener('click', e => {
     if (e.target.dataset && e.target.dataset.tab === 'watchlist') _wlStartPolling();
   });
+
+  // Background-load watchlist so PORTFOLIO tab tile populates without visiting Watchlist tab.
+  // Defer 2s so it doesn't compete with main data load.
+  setTimeout(() => { loadWatchlist().catch(() => {}); }, 2000);
 });
 </script>
 </body>

@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v102</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v103</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -5105,6 +5105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wl-input-tk').value = '';
     document.getElementById('wl-input-tk').disabled = false;
     document.getElementById('wl-input-name').value = '';
+    delete document.getElementById('wl-input-name').dataset.userTyped;
     document.getElementById('wl-input-target').value = '';
     document.getElementById('wl-input-comment').value = '';
     document.getElementById('wl-input-from').value = '';
@@ -5118,19 +5119,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Live lookup as user types ticker → autofill name + preview price
   let _wlLookupTimer = null;
   let _wlPreviewPx = {};  // {tk: ltp} fetched via /lookup, used until VM cycle catches up
-  const tkInput = document.getElementById('wl-input-tk');
+  const tkInput   = document.getElementById('wl-input-tk');
+  const nameInput = document.getElementById('wl-input-name');
+  // Track whether user manually edited the name field — if not, every fresh
+  // ticker lookup overwrites stale autofill (fixes "M → Macy's" sticking when
+  // user keeps typing "MELI" → MercadoLibre).
+  if (nameInput) nameInput.addEventListener('input', () => { nameInput.dataset.userTyped = '1'; });
   if (tkInput) tkInput.addEventListener('input', () => {
     clearTimeout(_wlLookupTimer);
     const tk = tkInput.value.trim().toUpperCase();
-    const nameInput = document.getElementById('wl-input-name');
     if (!tk || tk.length < 1) return;
     _wlLookupTimer = setTimeout(async () => {
       try {
         const r = await fetch('https://save.145-241-158-254.nip.io/lookup?tk=' + encodeURIComponent(tk));
         const d = await r.json();
         if (d && d.ltp != null) {
-          if (nameInput && !nameInput.value) nameInput.value = d.name || '';
-          // Tiny preview under the target input
+          // Overwrite name UNLESS user typed something custom
+          if (nameInput && !nameInput.dataset.userTyped) nameInput.value = d.name || '';
           let preview = document.getElementById('wl-preview');
           if (!preview) {
             preview = document.createElement('div');
@@ -5141,6 +5146,8 @@ document.addEventListener('DOMContentLoaded', () => {
           preview.innerHTML = `Live: <b style="color:var(--accent-g)">$${d.ltp.toFixed(2)}</b> · ${d.name || tk}`;
           _wlPreviewPx[tk] = d.ltp;
         } else {
+          // Clear stale name on lookup miss (avoids wrong name from prior partial typing)
+          if (nameInput && !nameInput.dataset.userTyped) nameInput.value = '';
           const preview = document.getElementById('wl-preview');
           if (preview) preview.innerHTML = `<span style="color:var(--warn)">⚠ ${tk} not found (${d.error || 'unknown'})</span>`;
         }

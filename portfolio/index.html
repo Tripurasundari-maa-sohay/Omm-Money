@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v100</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v101</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -5035,14 +5035,15 @@ async function _wlAutoSync(why) {
     if (data && data.ok) {
       localStorage.removeItem(WL_LS_KEY);
       _wlRepo = payload;
-      _wlSetStatus('✓ synced', 'var(--gain)');
-      setTimeout(() => _wlSetStatus('— idle'), 3000);
+      _wlSetStatus('✓ synced ' + new Date().toLocaleTimeString(), 'var(--gain)');
     } else {
-      _wlSetStatus('⚠ saved local · sync failed', 'var(--warn)');
-      console.warn('wl sync', data);
+      const err = (data && data.error) || 'unknown';
+      _wlSetStatus('⚠ NOT synced: ' + err, 'var(--loss)');
+      alert('Sync to repo FAILED: ' + err + '\n\nYour entry is saved in this browser only. It will be lost if you clear cache or use a different device. Fix the sync issue (likely expired token), then click "↻ Refresh".');
+      console.error('wl sync failed', data);
     }
   } catch (e) {
-    _wlSetStatus('⚠ offline · saved local', 'var(--warn)');
+    _wlSetStatus('⚠ OFFLINE — saved local only', 'var(--loss)');
     console.warn('wl sync err', e);
   } finally {
     _wlSyncInflight = false;

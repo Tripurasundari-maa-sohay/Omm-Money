@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v103</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v104</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -5021,6 +5021,7 @@ async function wlDelete(tk) {
 const WL_SAVE_URL = 'https://save.145-241-158-254.nip.io/save';
 let _wlSyncInflight = false;
 let _wlSyncQueued = false;
+let _wlLastSyncAt = 0;  // ms epoch — used to suppress poll while CDN catches up
 function _wlSetStatus(msg, color) {
   const el = document.getElementById('wl-sync-status');
   if (el) { el.textContent = msg; el.style.color = color || 'var(--text-dim)'; }
@@ -5048,6 +5049,7 @@ async function _wlAutoSync(why) {
     if (data && data.ok) {
       localStorage.removeItem(WL_LS_KEY);
       _wlRepo = payload;
+      _wlLastSyncAt = Date.now();   // poll will skip for next 90s to avoid CDN-lag overwrite
       _wlSetStatus('✓ synced ' + new Date().toLocaleTimeString(), 'var(--gain)');
     } else {
       const err = (data && data.error) || 'unknown';
@@ -5072,14 +5074,19 @@ function _wlStartPolling() {
     if (document.hidden) return;
     const activeTab = document.querySelector('.tab-button.active');
     if (!activeTab || activeTab.dataset.tab !== 'watchlist') return;
+    // Skip poll if we just synced — GitHub CDN may still serve stale content
+    if (Date.now() - _wlLastSyncAt < 90_000) return;
     try {
       const r = await fetch('./data/watchlist.json?_=' + Date.now(), {cache: 'no-store'});
       if (!r.ok) return;
       const fresh = await r.json();
-      // Detect change by ticker-set + buy_target diff
       const a = JSON.stringify((_wlRepo && _wlRepo.us || []).map(e => [e.tk, e.buy_target, e.comment]).sort());
       const b = JSON.stringify((fresh.us || []).map(e => [e.tk, e.buy_target, e.comment]).sort());
       if (a !== b) {
+        // Sanity guard: if remote has FEWER tickers than local _wlRepo, treat as CDN lag and skip
+        const localCount  = (_wlRepo && _wlRepo.us || []).length;
+        const remoteCount = (fresh.us || []).length;
+        if (remoteCount < localCount) return;
         _wlRepo = fresh;
         renderWatchlist();
         _wlSetStatus('⤓ pulled remote', 'var(--accent-b)');

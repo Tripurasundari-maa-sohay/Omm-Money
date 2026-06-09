@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v97</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v98</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -4979,6 +4979,39 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cancelBtn) cancelBtn.addEventListener('click', () => modal.style.display = 'none');
   if (modal) modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
 
+  // Live lookup as user types ticker → autofill name + preview price
+  let _wlLookupTimer = null;
+  let _wlPreviewPx = {};  // {tk: ltp} fetched via /lookup, used until VM cycle catches up
+  const tkInput = document.getElementById('wl-input-tk');
+  if (tkInput) tkInput.addEventListener('input', () => {
+    clearTimeout(_wlLookupTimer);
+    const tk = tkInput.value.trim().toUpperCase();
+    const nameInput = document.getElementById('wl-input-name');
+    if (!tk || tk.length < 1) return;
+    _wlLookupTimer = setTimeout(async () => {
+      try {
+        const r = await fetch('https://save.145-241-158-254.nip.io/lookup?tk=' + encodeURIComponent(tk));
+        const d = await r.json();
+        if (d && d.ltp != null) {
+          if (nameInput && !nameInput.value) nameInput.value = d.name || '';
+          // Tiny preview under the target input
+          let preview = document.getElementById('wl-preview');
+          if (!preview) {
+            preview = document.createElement('div');
+            preview.id = 'wl-preview';
+            preview.style.cssText = 'font-size:11px;color:var(--text-sec);padding:4px 8px;background:rgba(78,207,130,0.08);border-radius:4px;margin-top:-6px;';
+            form.insertBefore(preview, document.getElementById('wl-input-target').parentElement.nextSibling);
+          }
+          preview.innerHTML = `Live: <b style="color:var(--accent-g)">$${d.ltp.toFixed(2)}</b> · ${d.name || tk}`;
+          _wlPreviewPx[tk] = d.ltp;
+        } else {
+          const preview = document.getElementById('wl-preview');
+          if (preview) preview.innerHTML = `<span style="color:var(--warn)">⚠ ${tk} not found (${d.error || 'unknown'})</span>`;
+        }
+      } catch (e) {}
+    }, 350);  // debounce
+  });
+
   if (form) form.addEventListener('submit', e => {
     e.preventDefault();
     const tk = document.getElementById('wl-input-tk').value.trim().toUpperCase();
@@ -4995,6 +5028,15 @@ document.addEventListener('DOMContentLoaded', () => {
     local.us = (local.us || []).filter(e => e.tk !== tk);
     local.us.push(entry);
     _wlSaveLocal(local);
+    // Seed live preview price into S.prices so row renders status immediately
+    if (_wlPreviewPx[tk] && window._S && window._S.prices) {
+      window._S.prices[tk] = window._S.prices[tk] || {};
+      window._S.prices[tk].ltp = _wlPreviewPx[tk];
+      window._S.prices[tk].source = 'finnhub-preview';
+    }
+    // Clear preview element
+    const preview = document.getElementById('wl-preview');
+    if (preview) preview.remove();
     modal.style.display = 'none';
     renderWatchlist();
   });

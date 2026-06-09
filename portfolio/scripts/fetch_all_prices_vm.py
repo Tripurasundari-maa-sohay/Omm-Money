@@ -73,9 +73,29 @@ US_HOLDINGS = [
     "SHIP","NOW","ORCL",
     "INTC",
     "JDZG",
-    # Watchlist tickers (data/watchlist.json) — not held, monitored for buy zones
-    "NVDA","AMD","META","TSM","QCOM","CRCL"
 ]
+# Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
+# each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.
+
+def load_watchlist_tickers():
+    """Read portfolio/data/watchlist.json from GitHub and return list of US tickers.
+    Merges into US_HOLDINGS at fetch time so UI-added tickers go live next cycle."""
+    try:
+        h = {"Authorization": f"token {os.environ.get('GITHUB_TOKEN','')}",
+             "Accept": "application/vnd.github.v3+json"} if os.environ.get("GITHUB_TOKEN") else {}
+        r = requests.get(
+            "https://api.github.com/repos/Tripurasundari-maa-sohay/Omm-Money/contents/"
+            "portfolio/data/watchlist.json?ref=main",
+            headers=h, timeout=10
+        )
+        if r.status_code != 200:
+            return []
+        import base64
+        d = json.loads(base64.b64decode(r.json()["content"]).decode())
+        return [e["tk"] for e in (d.get("us") or []) if e.get("tk")]
+    except Exception as e:
+        print(f"  WARN watchlist load: {e}", file=sys.stderr)
+        return []
 
 # ── Angel One ─────────────────────────────────────────────────────────────
 _jwt = {"token": None, "expires": 0}
@@ -513,6 +533,12 @@ def main():
         print(f"  India: {len(angel_p)} Angel One + {len(yahoo_p)} Yahoo = {len(india_p)} total")
 
     if MODE in ("us", "all"):
+        # Merge watchlist tickers dynamically (dedup) — picks up UI-added tickers
+        wl_tickers = load_watchlist_tickers()
+        added = [t for t in wl_tickers if t not in US_HOLDINGS]
+        if added:
+            US_HOLDINGS.extend(added)
+            print(f"\n  watchlist merge: +{len(added)} tickers ({','.join(added[:10])}{'…' if len(added)>10 else ''})")
         print("\n── US (Finnhub)")
         us_p = fetch_us_finnhub()
         # Stamp fx_buy + buy_date from holdings_cost.json into each US price entry.

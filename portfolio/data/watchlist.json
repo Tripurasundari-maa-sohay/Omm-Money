@@ -1,6 +1,7 @@
 {
   "_comment": "Watchlist of tickers to monitor for buy opportunities. Source of truth for VM price fetch. Auto-synced from dashboard.",
   "as_of": "2026-06-09",
+  "emergency_cash_qar": 12000,
   "us": [
     {
       "tk": "AMD",

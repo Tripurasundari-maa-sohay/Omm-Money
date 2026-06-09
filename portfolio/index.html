@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v104</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v105</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1514,6 +1514,7 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button id="wl-add-btn" style="background:var(--accent-g);color:#000;border:none;padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer;">+ Add Ticker</button>
+          <button id="wl-plan-btn" style="background:transparent;color:var(--accent-b);border:1px solid var(--accent-b);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;" title="Show planning columns: TARGET QTY, FUND NEEDED, HELD, FROM">📊 Planning view</button>
           <span id="wl-sync-status" style="font-size:11px;color:var(--text-dim);padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:5px;min-width:90px;text-align:center;">— idle</span>
           <button id="wl-refresh-btn" style="background:transparent;color:var(--text-sec);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;" title="Pull latest from repo (other devices may have synced)">↻ Refresh</button>
           <button id="wl-export-btn" style="background:transparent;color:var(--text-sec);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;">⤓ Export</button>
@@ -1544,21 +1545,17 @@
         </div>
       </div>
 
+      <!-- Planning sum tile (only shown in planning view) -->
+      <div id="wl-plan-sum" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.35);border-radius:8px;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div style="font-size:11px;color:var(--accent-b);font-weight:700;letter-spacing:1.5px;">💰 CAPITAL NEEDED (if all hit target)</div>
+        <div id="wl-plan-sum-val" style="font-size:18px;font-weight:700;color:var(--text-pri);">—</div>
+      </div>
+
       <!-- Table -->
       <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;overflow:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px;">
-          <thead>
-            <tr style="background:var(--bg-card);">
-              <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px;">TICKER</th>
-              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">HELD</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">CURRENT</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">TARGET</th>
-              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">DIST %</th>
-              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">STATUS</th>
-              <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">COMMENT</th>
-              <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">FROM</th>
-              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">⚙</th>
-            </tr>
+          <thead id="wl-thead">
+            <!-- header rebuilt by render based on planning view mode -->
           </thead>
           <tbody id="wl-body">
             <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim);">Loading watchlist…</td></tr>
@@ -1592,6 +1589,10 @@
         <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-dim);">
           BUY TARGET PRICE (USD)
           <input id="wl-input-target" type="number" step="0.01" required style="background:var(--bg-base);border:1px solid var(--border);padding:8px;border-radius:5px;color:var(--text-pri);font-size:14px;" placeholder="170"/>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-dim);">
+          TARGET QTY (optional — shares to buy at target)
+          <input id="wl-input-qty" type="number" step="1" min="0" style="background:var(--bg-base);border:1px solid var(--border);padding:8px;border-radius:5px;color:var(--text-pri);font-size:14px;" placeholder="0"/>
         </label>
         <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-dim);">
           COMMENT
@@ -4910,21 +4911,61 @@ function _wlStatusOf(current, target) {
   return                  {label:'EXPENSIVE', color:'#f87171', emoji:'🔴', bucket:'exp',   dist};
 }
 
+// Planning view toggle state — persisted per-device.
+const WL_PLAN_KEY = 'wl_planning_view_v1';
+function _wlPlanningOn() { return localStorage.getItem(WL_PLAN_KEY) === '1'; }
+function _wlSetPlanning(on) {
+  if (on) localStorage.setItem(WL_PLAN_KEY, '1');
+  else    localStorage.removeItem(WL_PLAN_KEY);
+  const btn = document.getElementById('wl-plan-btn');
+  if (btn) {
+    btn.style.background = on ? 'var(--accent-b)' : 'transparent';
+    btn.style.color      = on ? '#fff' : 'var(--accent-b)';
+    btn.textContent      = on ? '📊 Planning ON' : '📊 Planning view';
+  }
+  const sum = document.getElementById('wl-plan-sum');
+  if (sum) sum.style.display = on ? 'flex' : 'none';
+  renderWatchlist();
+}
+
 function renderWatchlist() {
   const tbody = document.getElementById('wl-body');
-  if (!tbody) return;
+  const thead = document.getElementById('wl-thead');
+  if (!tbody || !thead) return;
   const rows = _wlMerged();
+  const plan = _wlPlanningOn();
+
+  // Build header dynamically based on plan mode
+  const baseCols = ['TICKER','CURRENT','TARGET','DIST %','STATUS','COMMENT'];
+  const planCols = plan ? ['HELD','TARGET QTY','FUND NEEDED','FROM'] : [];
+  // Order: TICKER · [HELD] · CURRENT · TARGET · [TARGET QTY] · [FUND] · DIST · STATUS · COMMENT · [FROM] · ⚙
+  const headerCells = [];
+  headerCells.push(`<th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px;">TICKER</th>`);
+  if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">HELD</th>`);
+  headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">CURRENT</th>`);
+  headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">TARGET</th>`);
+  if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--accent-b);font-weight:600;font-size:11px;">TARGET QTY</th>`);
+  if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--accent-b);font-weight:600;font-size:11px;">FUND NEEDED</th>`);
+  headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">DIST %</th>`);
+  headerCells.push(`<th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">STATUS</th>`);
+  headerCells.push(`<th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">COMMENT</th>`);
+  if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">FROM</th>`);
+  headerCells.push(`<th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">⚙</th>`);
+  thead.innerHTML = `<tr style="background:var(--bg-card);">${headerCells.join('')}</tr>`;
+  const colCount = headerCells.length;
+
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--text-dim);">No tickers yet. Click <b>+ Add Ticker</b> to start.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${colCount}" style="padding:20px;text-align:center;color:var(--text-dim);">No tickers yet. Click <b>+ Add Ticker</b> to start.</td></tr>`;
     ['buy','near','watch','exp','total'].forEach(k => { const el = document.getElementById('wl-count-' + k); if (el) el.textContent = '0'; });
     _wlUpdateMainTile({buy:0,near:0,watch:0,exp:0,total:0});
+    _wlUpdateSumTile(0, 0, 0);
     return;
   }
   const counts = {buy:0, near:0, watch:0, exp:0, none:0};
   const fmt$ = v => v != null ? '$' + v.toLocaleString(undefined, {maximumFractionDigits:2}) : '—';
   const fmtPct = v => v != null ? (v > 0 ? '+' : '') + v.toFixed(1) + '%' : '—';
 
-  // Build held-set from S.view.us.open (active holdings + quarantine)
+  // Held-set from S.view.us.open + user_force_closed
   const heldMap = {};
   const _Sg = window._S;
   if (_Sg && _Sg.cost && _Sg.cost.us) {
@@ -4933,6 +4974,8 @@ function renderWatchlist() {
       heldMap[h.tk] = {written_off: true};
     });
   }
+
+  let fundSum = 0, fundCount = 0;
 
   tbody.innerHTML = rows.map((r, i) => {
     const current = _wlPriceFor(r.tk);
@@ -4944,27 +4987,34 @@ function renderWatchlist() {
       `<span style="display:inline-block;font-size:9px;color:var(--text-dim);background:rgba(255,255,255,0.05);padding:1px 5px;border-radius:3px;margin-left:6px;vertical-align:middle;">${r._src === 'overlay' ? 'EDITED' : 'LOCAL'}</span>`;
     const held = heldMap[r.tk];
     let heldCell;
-    if (!held) {
-      heldCell = `<span style="color:var(--text-dim);font-size:11px;">—</span>`;
-    } else if (held.written_off) {
-      heldCell = `<span style="background:rgba(255,140,80,0.15);color:#ff8c50;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;" title="Written off">✗ WO</span>`;
-    } else {
-      heldCell = `<span style="background:rgba(78,207,130,0.15);color:#4ecf82;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;" title="${held.qty} sh @ $${held.avg.toFixed(2)}">✓ ${held.qty}</span>`;
-    }
-    return `<tr style="${i % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : ''}">
-      <td style="padding:9px 14px;"><strong>${r.tk}</strong>${srcBadge}<br><span style="color:var(--text-dim);font-size:11px;">${r.name || ''}</span></td>
-      <td style="padding:9px 14px;text-align:center;">${heldCell}</td>
-      <td style="padding:9px 14px;text-align:right;font-weight:600;">${fmt$(current)}</td>
-      <td style="padding:9px 14px;text-align:right;color:var(--text-sec);">${fmt$(r.buy_target)}</td>
-      <td style="padding:9px 14px;text-align:right;color:${distColor};font-weight:600;">${distTxt}</td>
-      <td style="padding:9px 14px;text-align:center;"><span style="background:${st.color}22;color:${st.color};padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;">${st.emoji} ${st.label}</span></td>
-      <td style="padding:9px 14px;color:var(--text-sec);font-size:12px;">${r.comment || ''}</td>
-      <td style="padding:9px 14px;color:var(--text-dim);font-size:11px;font-style:italic;">${r.from || ''}</td>
-      <td style="padding:9px 14px;text-align:center;white-space:nowrap;">
-        <button onclick="wlEdit('${r.tk}')" style="background:transparent;border:1px solid var(--border);color:var(--text-sec);padding:2px 7px;border-radius:3px;cursor:pointer;font-size:11px;">✎</button>
-        <button onclick="wlDelete('${r.tk}')" style="background:transparent;border:1px solid var(--loss);color:var(--loss);padding:2px 7px;border-radius:3px;cursor:pointer;font-size:11px;margin-left:3px;">×</button>
-      </td>
-    </tr>`;
+    if (!held) heldCell = `<span style="color:var(--text-dim);font-size:11px;">—</span>`;
+    else if (held.written_off) heldCell = `<span style="background:rgba(255,140,80,0.15);color:#ff8c50;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;" title="Written off">✗ WO</span>`;
+    else heldCell = `<span style="background:rgba(78,207,130,0.15);color:#4ecf82;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;" title="${held.qty} sh @ $${held.avg.toFixed(2)}">✓ ${held.qty}</span>`;
+
+    // Planning math
+    const qty = +(r.target_qty || 0);
+    const fund = qty > 0 ? qty * r.buy_target : 0;
+    if (qty > 0) { fundSum += fund; fundCount++; }
+    const qtyCell  = qty > 0 ? `<strong>${qty}</strong>` : `<span style="color:var(--text-dim);">—</span>`;
+    const fundCell = qty > 0 ? `<strong style="color:var(--accent-b);">${fmt$(fund)}</strong>` : `<span style="color:var(--text-dim);">—</span>`;
+
+    const cells = [];
+    cells.push(`<td style="padding:9px 14px;"><strong>${r.tk}</strong>${srcBadge}<br><span style="color:var(--text-dim);font-size:11px;">${r.name || ''}</span></td>`);
+    if (plan) cells.push(`<td style="padding:9px 14px;text-align:center;">${heldCell}</td>`);
+    cells.push(`<td style="padding:9px 14px;text-align:right;font-weight:600;">${fmt$(current)}</td>`);
+    cells.push(`<td style="padding:9px 14px;text-align:right;color:var(--text-sec);">${fmt$(r.buy_target)}</td>`);
+    if (plan) cells.push(`<td style="padding:9px 14px;text-align:right;">${qtyCell}</td>`);
+    if (plan) cells.push(`<td style="padding:9px 14px;text-align:right;">${fundCell}</td>`);
+    cells.push(`<td style="padding:9px 14px;text-align:right;color:${distColor};font-weight:600;">${distTxt}</td>`);
+    cells.push(`<td style="padding:9px 14px;text-align:center;"><span style="background:${st.color}22;color:${st.color};padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;">${st.emoji} ${st.label}</span></td>`);
+    cells.push(`<td style="padding:9px 14px;color:var(--text-sec);font-size:12px;">${r.comment || ''}</td>`);
+    if (plan) cells.push(`<td style="padding:9px 14px;color:var(--text-dim);font-size:11px;font-style:italic;">${r.from || ''}</td>`);
+    cells.push(`<td style="padding:9px 14px;text-align:center;white-space:nowrap;">
+      <button onclick="wlEdit('${r.tk}')" style="background:transparent;border:1px solid var(--border);color:var(--text-sec);padding:2px 7px;border-radius:3px;cursor:pointer;font-size:11px;">✎</button>
+      <button onclick="wlDelete('${r.tk}')" style="background:transparent;border:1px solid var(--loss);color:var(--loss);padding:2px 7px;border-radius:3px;cursor:pointer;font-size:11px;margin-left:3px;">×</button>
+    </td>`);
+
+    return `<tr style="${i % 2 === 0 ? 'background:rgba(255,255,255,0.02);' : ''}">${cells.join('')}</tr>`;
   }).join('');
 
   document.getElementById('wl-count-buy').textContent   = counts.buy   || 0;
@@ -4973,6 +5023,18 @@ function renderWatchlist() {
   document.getElementById('wl-count-exp').textContent   = counts.exp   || 0;
   document.getElementById('wl-count-total').textContent = rows.length;
   _wlUpdateMainTile({buy: counts.buy||0, near: counts.near||0, watch: counts.watch||0, exp: counts.exp||0, total: rows.length});
+  _wlUpdateSumTile(fundSum, fundCount, rows.length);
+}
+
+function _wlUpdateSumTile(sum, n, total) {
+  const el = document.getElementById('wl-plan-sum-val');
+  if (!el) return;
+  if (sum > 0) {
+    const fmt$ = v => '$' + v.toLocaleString(undefined, {maximumFractionDigits:0});
+    el.innerHTML = `${fmt$(sum)} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">across ${n} of ${total} tickers · avg ${fmt$(sum/n)}/ticker</span>`;
+  } else {
+    el.innerHTML = `<span style="color:var(--text-dim);font-size:13px;font-weight:400;">Set TARGET QTY on a ticker (✎ edit) to see capital needed</span>`;
+  }
 }
 
 // Update the dashboard tile in PORTFOLIO tab
@@ -4997,6 +5059,7 @@ function wlEdit(tk) {
   document.getElementById('wl-input-tk').disabled = true;
   document.getElementById('wl-input-name').value    = row.name || '';
   document.getElementById('wl-input-target').value  = row.buy_target || '';
+  document.getElementById('wl-input-qty').value     = row.target_qty || '';
   document.getElementById('wl-input-comment').value = row.comment || '';
   document.getElementById('wl-input-from').value    = row.from || '';
   document.getElementById('wl-modal').style.display = 'flex';
@@ -5114,6 +5177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('wl-input-name').value = '';
     delete document.getElementById('wl-input-name').dataset.userTyped;
     document.getElementById('wl-input-target').value = '';
+    document.getElementById('wl-input-qty').value = '';
     document.getElementById('wl-input-comment').value = '';
     document.getElementById('wl-input-from').value = '';
     modal.style.display = 'flex';
@@ -5166,10 +5230,12 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const tk = document.getElementById('wl-input-tk').value.trim().toUpperCase();
     if (!tk) return;
+    const qtyRaw = document.getElementById('wl-input-qty').value;
     const entry = {
       tk,
       name:        document.getElementById('wl-input-name').value.trim(),
       buy_target:  parseFloat(document.getElementById('wl-input-target').value),
+      target_qty:  qtyRaw ? parseInt(qtyRaw, 10) : 0,
       comment:     document.getElementById('wl-input-comment').value.trim(),
       from:        document.getElementById('wl-input-from').value.trim(),
       added:       new Date().toISOString().slice(0,10),
@@ -5203,6 +5269,13 @@ document.addEventListener('DOMContentLoaded', () => {
     a.click();
     URL.revokeObjectURL(a.href);
   });
+
+  const planBtn = document.getElementById('wl-plan-btn');
+  if (planBtn) {
+    // Initial state from localStorage
+    _wlSetPlanning(_wlPlanningOn());
+    planBtn.addEventListener('click', () => _wlSetPlanning(!_wlPlanningOn()));
+  }
 
   const refreshBtn = document.getElementById('wl-refresh-btn');
   if (refreshBtn) refreshBtn.addEventListener('click', async () => {

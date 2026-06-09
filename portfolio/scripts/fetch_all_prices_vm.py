@@ -72,7 +72,9 @@ US_HOLDINGS = [
     "GOOG","AMZN","AVGO","GLW","GEV","MU","MSFT","MP","RKLB","TTE","EWY","HUMN","VOOG",
     "SHIP","NOW","ORCL",
     "INTC",
-    "JDZG"
+    "JDZG",
+    # Watchlist tickers (data/watchlist.json) — not held, monitored for buy zones
+    "NVDA","AMD","META","TSM","QCOM","CRCL"
 ]
 
 # ── Angel One ─────────────────────────────────────────────────────────────

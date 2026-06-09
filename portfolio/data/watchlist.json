@@ -1,1 +1,71 @@
-{"_ping":"debug","as_of":"2026-06-09","us":[],"india":[]}
+{
+  "_comment": "Watchlist of tickers to monitor for buy opportunities. Source of truth for VM price fetch. UI 'Add' button stores localStorage overlay until committed here.",
+  "as_of": "2026-06-09",
+  "us": [
+    {
+      "tk": "NVDA",
+      "yf": "NVDA",
+      "name": "NVIDIA Corp",
+      "buy_target": 170.0,
+      "comment": "Start buying 170",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "GOOG",
+      "yf": "GOOG",
+      "name": "Alphabet Class C",
+      "buy_target": 300.0,
+      "comment": "Start buying below 300",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "AMD",
+      "yf": "AMD",
+      "name": "Advanced Micro Devices",
+      "buy_target": 200.0,
+      "comment": "Strong, start buying below 200",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "MSFT",
+      "yf": "MSFT",
+      "name": "Microsoft Corp",
+      "buy_target": 380.0,
+      "comment": "340 possible, start buying 380",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "META",
+      "yf": "META",
+      "name": "Meta Platforms",
+      "buy_target": 400.0,
+      "comment": "500 target, below 400 if lucky \u00b7 300-390",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "TSM",
+      "yf": "TSM",
+      "name": "Taiwan Semiconductor ADR",
+      "buy_target": 226.0,
+      "comment": "226 target to start buying",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "QCOM",
+      "yf": "QCOM",
+      "name": "Qualcomm",
+      "buy_target": 100.0,
+      "comment": "121 target might overshoot to 102, heavy buy at 100",
+      "added": "2026-06-09"
+    },
+    {
+      "tk": "CRCL",
+      "yf": "CRCL",
+      "name": "Circle Internet Financial",
+      "buy_target": 60.0,
+      "comment": "Below 60",
+      "added": "2026-06-09"
+    }
+  ],
+  "india": []
+}

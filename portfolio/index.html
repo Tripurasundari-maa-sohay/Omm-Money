@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v96</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v97</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1505,6 +1505,7 @@
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button id="wl-add-btn" style="background:var(--accent-g);color:#000;border:none;padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer;">+ Add Ticker</button>
+          <button id="wl-sync-btn" style="background:var(--accent-b);color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;" title="Push local edits to repo so they sync across devices">☁ Sync to repo</button>
           <button id="wl-export-btn" style="background:transparent;color:var(--text-sec);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;">⤓ Export JSON</button>
           <button id="wl-clear-local-btn" style="background:transparent;color:var(--loss);border:1px solid var(--loss);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;" title="Wipe localStorage additions (repo entries preserved)">↺ Clear local</button>
         </div>
@@ -5015,6 +5016,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('Clear all local watchlist edits? Repo entries preserved.')) return;
     localStorage.removeItem(WL_LS_KEY);
     renderWatchlist();
+  });
+
+  const syncBtn = document.getElementById('wl-sync-btn');
+  if (syncBtn) syncBtn.addEventListener('click', async () => {
+    if (!confirm('Push current watchlist (repo + local edits) to GitHub? This overwrites the repo file.')) return;
+    syncBtn.disabled = true;
+    const orig = syncBtn.textContent;
+    syncBtn.textContent = '… syncing';
+    try {
+      const merged = _wlMerged().filter(e => !e._deleted).map(e => {
+        const {_src, _deleted, ...rest} = e; return rest;
+      });
+      const payload = {
+        _comment: 'Watchlist of tickers to monitor for buy opportunities. Source of truth for VM price fetch. Synced from dashboard.',
+        as_of: new Date().toISOString().slice(0,10),
+        us: merged,
+        india: []
+      };
+      const res = await fetch('https://save.145-241-158-254.nip.io/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          path: 'portfolio/data/watchlist.json',
+          content: JSON.stringify(payload, null, 2)
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        localStorage.removeItem(WL_LS_KEY);   // repo now has everything → clear overlay
+        _wlRepo = payload;                     // refresh in-memory cache
+        renderWatchlist();
+        syncBtn.textContent = '✓ synced';
+        setTimeout(() => { syncBtn.textContent = orig; syncBtn.disabled = false; }, 2000);
+      } else {
+        alert('Sync failed: ' + (data.error || 'unknown'));
+        syncBtn.textContent = orig;
+        syncBtn.disabled = false;
+      }
+    } catch (e) {
+      alert('Sync error: ' + e.message);
+      syncBtn.textContent = orig;
+      syncBtn.disabled = false;
+    }
   });
 });
 </script>

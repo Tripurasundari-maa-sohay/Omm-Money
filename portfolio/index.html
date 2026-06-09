@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v110</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v111</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -4904,6 +4904,14 @@ async function loadWatchlist() {
       _wlRepo = r.ok ? await r.json() : {us:[], india:[]};
     } catch { _wlRepo = {us:[], india:[]}; }
   }
+  // Populate emergency QAR input from repo — every load, so cross-device updates land.
+  // Skip overwrite while user is actively typing in that field.
+  const emrgInput = document.getElementById('wl-emerg-qar');
+  if (emrgInput && _wlRepo && _wlRepo.emergency_cash_qar != null) {
+    if (document.activeElement !== emrgInput) {
+      emrgInput.value = _wlRepo.emergency_cash_qar;
+    }
+  }
   renderWatchlist();
 }
 
@@ -5102,10 +5110,14 @@ function _wlUpdateSumTile(sum, n, total) {
       covEl.innerHTML = `<span style="background:rgba(248,113,113,0.18);color:#f87171;padding:3px 9px;border-radius:4px;">🔴 NO CASH SET</span>`;
     } else {
       const pct  = (available / sum) * 100;
-      const gap  = sum - available;
+      const gap  = sum - available;            // USD
+      const gapQar = Math.abs(gap) * WL_QAR_PER_USD;
+      const fmtQ = v => '﷼' + Math.round(v).toLocaleString('en-US');
       const color = pct >= 100 ? '#4ecf82' : pct >= 75 ? '#f0b429' : '#f87171';
       const label = pct >= 100 ? '🟢 COVERED' : pct >= 75 ? '🟡 TIGHT' : '🔴 SHORT';
-      const gapTxt = gap > 0 ? `need ${fmt$(gap)} more` : `${fmt$(-gap)} surplus`;
+      const gapTxt = gap > 0
+        ? `need ${fmt$(gap)} (${fmtQ(gapQar)}) more`
+        : `${fmt$(-gap)} (${fmtQ(gapQar)}) surplus`;
       covEl.innerHTML = `<span style="background:${color}22;color:${color};padding:3px 9px;border-radius:4px;">${label} ${pct.toFixed(0)}%</span> <span style="color:var(--text-dim);font-size:11px;font-weight:400;margin-left:6px;">${gapTxt}</span>`;
     }
   }
@@ -5227,6 +5239,11 @@ function _wlStartPolling() {
         const remoteCount = (fresh.us || []).length;
         if (remoteCount < localCount) return;
         _wlRepo = fresh;
+        // Refresh emergency input if remote moved
+        const ei = document.getElementById('wl-emerg-qar');
+        if (ei && fresh.emergency_cash_qar != null && document.activeElement !== ei) {
+          ei.value = fresh.emergency_cash_qar;
+        }
         renderWatchlist();
         _wlSetStatus('⤓ pulled remote', 'var(--accent-b)');
         setTimeout(() => _wlSetStatus('— idle'), 3000);

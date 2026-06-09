@@ -655,7 +655,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v105</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v106</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1521,34 +1521,45 @@
         </div>
       </div>
 
-      <!-- Summary strip -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;">
-        <div style="background:rgba(78,207,130,0.08);border:1px solid rgba(78,207,130,0.3);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">🟢 BUY ZONE</div>
-          <div id="wl-count-buy" style="font-size:18px;font-weight:700;color:#4ecf82">—</div>
+      <!-- Summary strip (compact for narrow viewports) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;margin-bottom:14px;">
+        <div style="background:rgba(78,207,130,0.08);border:1px solid rgba(78,207,130,0.3);border-radius:5px;padding:6px 4px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:1px;">🟢 BUY</div>
+          <div id="wl-count-buy" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
         </div>
-        <div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">🟡 NEAR (≤5%)</div>
-          <div id="wl-count-near" style="font-size:18px;font-weight:700;color:#f0b429">—</div>
+        <div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:5px;padding:6px 4px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:1px;">🟡 NEAR</div>
+          <div id="wl-count-near" style="font-size:15px;font-weight:700;color:#f0b429">—</div>
         </div>
-        <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">🟠 WATCH (5-15%)</div>
-          <div id="wl-count-watch" style="font-size:18px;font-weight:700;color:#f97316">—</div>
+        <div style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:5px;padding:6px 4px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:1px;">🟠 WATCH</div>
+          <div id="wl-count-watch" style="font-size:15px;font-weight:700;color:#f97316">—</div>
         </div>
-        <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">🔴 EXPENSIVE (>15%)</div>
-          <div id="wl-count-exp" style="font-size:18px;font-weight:700;color:#f87171">—</div>
+        <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:5px;padding:6px 4px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:1px;">🔴 EXP</div>
+          <div id="wl-count-exp" style="font-size:15px;font-weight:700;color:#f87171">—</div>
         </div>
-        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center;">
-          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:2px;">TOTAL</div>
-          <div id="wl-count-total" style="font-size:18px;font-weight:700;color:var(--text-pri)">—</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:5px;padding:6px 4px;text-align:center;">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:0.5px;margin-bottom:1px;">TOTAL</div>
+          <div id="wl-count-total" style="font-size:15px;font-weight:700;color:var(--text-pri)">—</div>
         </div>
       </div>
 
-      <!-- Planning sum tile (only shown in planning view) -->
-      <div id="wl-plan-sum" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.35);border-radius:8px;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-        <div style="font-size:11px;color:var(--accent-b);font-weight:700;letter-spacing:1.5px;">💰 CAPITAL NEEDED (if all hit target)</div>
-        <div id="wl-plan-sum-val" style="font-size:18px;font-weight:700;color:var(--text-pri);">—</div>
+      <!-- Planning sum + capital coverage tile (only shown in planning view) -->
+      <div id="wl-plan-sum" style="display:none;margin-bottom:14px;padding:12px 14px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.35);border-radius:8px;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:11px;color:var(--accent-b);font-weight:700;letter-spacing:1.5px;">💰 CAPITAL NEEDED (if all hit target)</div>
+          <div id="wl-plan-sum-val" style="font-size:16px;font-weight:700;color:var(--text-pri);">—</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--text-sec);">
+          <span>🏦 Broker cash: <strong id="wl-cap-broker" style="color:var(--text-pri);">—</strong></span>
+          <label style="display:flex;align-items:center;gap:6px;">
+            <span>💵 Emergency (QAR):</span>
+            <input id="wl-emerg-qar" type="number" step="100" min="0" style="background:var(--bg-base);border:1px solid var(--border);padding:4px 8px;border-radius:4px;color:var(--text-pri);font-size:12px;width:90px;" placeholder="0"/>
+            <span id="wl-emerg-usd" style="color:var(--text-dim);font-size:11px;">= $0</span>
+          </label>
+          <span id="wl-cap-coverage" style="margin-left:auto;font-weight:700;font-size:13px;">—</span>
+        </div>
       </div>
 
       <!-- Table -->
@@ -4925,28 +4936,66 @@ function _wlSetPlanning(on) {
   }
   const sum = document.getElementById('wl-plan-sum');
   if (sum) sum.style.display = on ? 'flex' : 'none';
+  // Populate emergency QAR input from repo state if planning view opens
+  if (on) {
+    const emrgInput = document.getElementById('wl-emerg-qar');
+    if (emrgInput && _wlRepo && _wlRepo.emergency_cash_qar != null) emrgInput.value = _wlRepo.emergency_cash_qar;
+  }
   renderWatchlist();
+}
+
+// Click-to-sort state (per-device)
+const WL_SORT_KEY = 'wl_sort_v1';
+function _wlSortState() {
+  try { return JSON.parse(localStorage.getItem(WL_SORT_KEY) || '{"col":"tk","dir":1}'); }
+  catch { return {col:'tk', dir:1}; }
+}
+function _wlSetSort(col) {
+  const s = _wlSortState();
+  if (s.col === col) s.dir = -s.dir;  // toggle direction
+  else { s.col = col; s.dir = 1; }
+  localStorage.setItem(WL_SORT_KEY, JSON.stringify(s));
+  renderWatchlist();
+}
+// Sort a rows array by current state. Computes dist via live price.
+function _wlSortRows(rows) {
+  const s = _wlSortState();
+  const k = s.col, d = s.dir;
+  return [...rows].sort((a, b) => {
+    let av, bv;
+    if (k === 'tk') { av = a.tk; bv = b.tk; return av.localeCompare(bv) * d; }
+    if (k === 'target') { av = +a.buy_target || 0; bv = +b.buy_target || 0; }
+    else if (k === 'qty') { av = +a.target_qty || 0; bv = +b.target_qty || 0; }
+    else if (k === 'fund') { av = (+a.target_qty||0)*(+a.buy_target||0); bv = (+b.target_qty||0)*(+b.buy_target||0); }
+    else if (k === 'current') { av = _wlPriceFor(a.tk) || 0; bv = _wlPriceFor(b.tk) || 0; }
+    else if (k === 'dist') {
+      const pa = _wlPriceFor(a.tk), pb = _wlPriceFor(b.tk);
+      av = (pa != null && a.buy_target) ? (pa - a.buy_target) / a.buy_target : 999;
+      bv = (pb != null && b.buy_target) ? (pb - b.buy_target) / b.buy_target : 999;
+    } else { av = a[k] || ''; bv = b[k] || ''; }
+    return (av < bv ? -1 : av > bv ? 1 : 0) * d;
+  });
 }
 
 function renderWatchlist() {
   const tbody = document.getElementById('wl-body');
   const thead = document.getElementById('wl-thead');
   if (!tbody || !thead) return;
-  const rows = _wlMerged();
+  const rows = _wlSortRows(_wlMerged());
   const plan = _wlPlanningOn();
+  const ss = _wlSortState();
+  const arrow = col => ss.col === col ? (ss.dir > 0 ? ' ▴' : ' ▾') : '';
+  const sortableTh = (col, label, align) => `<th onclick="_wlSetSort('${col}')" style="padding:10px 14px;text-align:${align};color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px;cursor:pointer;user-select:none;" title="Click to sort">${label}${arrow(col)}</th>`;
 
-  // Build header dynamically based on plan mode
-  const baseCols = ['TICKER','CURRENT','TARGET','DIST %','STATUS','COMMENT'];
-  const planCols = plan ? ['HELD','TARGET QTY','FUND NEEDED','FROM'] : [];
-  // Order: TICKER · [HELD] · CURRENT · TARGET · [TARGET QTY] · [FUND] · DIST · STATUS · COMMENT · [FROM] · ⚙
+  // Build header dynamically — every column click-to-sort
   const headerCells = [];
-  headerCells.push(`<th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px;">TICKER</th>`);
+  headerCells.push(sortableTh('tk', 'TICKER', 'left'));
   if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">HELD</th>`);
-  headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">CURRENT</th>`);
-  headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">TARGET</th>`);
-  if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--accent-b);font-weight:600;font-size:11px;">TARGET QTY</th>`);
-  if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--accent-b);font-weight:600;font-size:11px;">FUND NEEDED</th>`);
-  headerCells.push(`<th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px;">DIST %</th>`);
+  headerCells.push(sortableTh('current', 'CURRENT', 'right'));
+  headerCells.push(sortableTh('target', 'TARGET', 'right'));
+  if (plan) headerCells.push(`<th onclick="_wlSetSort('qty')" style="padding:10px 14px;text-align:right;color:var(--accent-b);font-weight:600;font-size:11px;cursor:pointer;user-select:none;">TARGET QTY${arrow('qty')}</th>`);
+  if (plan) headerCells.push(`<th onclick="_wlSetSort('fund')" style="padding:10px 14px;text-align:right;color:var(--accent-b);font-weight:600;font-size:11px;cursor:pointer;user-select:none;">FUND NEEDED${arrow('fund')}</th>`);
+  headerCells.push(sortableTh('dist', 'DIST %', 'right'));
   headerCells.push(`<th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px;">STATUS</th>`);
   headerCells.push(`<th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">COMMENT</th>`);
   if (plan) headerCells.push(`<th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;">FROM</th>`);
@@ -5026,14 +5075,37 @@ function renderWatchlist() {
   _wlUpdateSumTile(fundSum, fundCount, rows.length);
 }
 
+const WL_QAR_PER_USD = 3.6413;  // pegged
+
 function _wlUpdateSumTile(sum, n, total) {
   const el = document.getElementById('wl-plan-sum-val');
   if (!el) return;
+  const fmt$ = v => '$' + v.toLocaleString(undefined, {maximumFractionDigits:0});
   if (sum > 0) {
-    const fmt$ = v => '$' + v.toLocaleString(undefined, {maximumFractionDigits:0});
     el.innerHTML = `${fmt$(sum)} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">across ${n} of ${total} tickers · avg ${fmt$(sum/n)}/ticker</span>`;
   } else {
-    el.innerHTML = `<span style="color:var(--text-dim);font-size:13px;font-weight:400;">Set TARGET QTY on a ticker (✎ edit) to see capital needed</span>`;
+    el.innerHTML = `<span style="color:var(--text-dim);font-size:13px;font-weight:400;">Set TARGET QTY (✎ edit) to see capital needed</span>`;
+  }
+  // Coverage math: broker cash + emergency (QAR→USD)
+  const brokerCash = (window._S && window._S.cost && window._S.cost.us && window._S.cost.us.cash) || 0;
+  const emrgQar    = parseFloat((document.getElementById('wl-emerg-qar')||{}).value) || 0;
+  const emrgUsd    = emrgQar / WL_QAR_PER_USD;
+  const available  = brokerCash + emrgUsd;
+  const brokerEl   = document.getElementById('wl-cap-broker');
+  if (brokerEl) brokerEl.textContent = fmt$(brokerCash);
+  const emrgUsdEl  = document.getElementById('wl-emerg-usd');
+  if (emrgUsdEl) emrgUsdEl.textContent = '= ' + fmt$(emrgUsd);
+  const covEl = document.getElementById('wl-cap-coverage');
+  if (covEl) {
+    if (sum <= 0) covEl.textContent = '';
+    else if (available <= 0) {
+      covEl.innerHTML = `<span style="background:rgba(248,113,113,0.18);color:#f87171;padding:3px 9px;border-radius:4px;">🔴 NO CASH SET</span>`;
+    } else {
+      const pct = (sum / available) * 100;
+      const color = pct <= 75 ? '#4ecf82' : pct <= 100 ? '#f0b429' : '#f87171';
+      const label = pct <= 75 ? '🟢 COVERED' : pct <= 100 ? '🟡 TIGHT' : '🔴 SHORT';
+      covEl.innerHTML = `<span style="background:${color}22;color:${color};padding:3px 9px;border-radius:4px;">${label} ${pct.toFixed(0)}%</span>`;
+    }
   }
 }
 
@@ -5097,9 +5169,11 @@ async function _wlAutoSync(why) {
     const merged = _wlMerged().filter(e => !e._deleted).map(e => {
       const {_src, _deleted, ...rest} = e; return rest;
     });
+    const emrgQar = parseFloat((document.getElementById('wl-emerg-qar')||{}).value);
     const payload = {
       _comment: 'Watchlist of tickers to monitor for buy opportunities. Source of truth for VM price fetch. Auto-synced from dashboard.',
       as_of: new Date().toISOString().slice(0,10),
+      emergency_cash_qar: Number.isFinite(emrgQar) ? emrgQar : (_wlRepo && _wlRepo.emergency_cash_qar) || 0,
       us: merged,
       india: []
     };
@@ -5272,9 +5346,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const planBtn = document.getElementById('wl-plan-btn');
   if (planBtn) {
-    // Initial state from localStorage
     _wlSetPlanning(_wlPlanningOn());
     planBtn.addEventListener('click', () => _wlSetPlanning(!_wlPlanningOn()));
+  }
+
+  // Emergency QAR — debounced sync to repo on change
+  const emrgInput = document.getElementById('wl-emerg-qar');
+  let _emrgTimer = null;
+  if (emrgInput) {
+    emrgInput.addEventListener('input', () => {
+      // Update display immediately
+      renderWatchlist();
+      clearTimeout(_emrgTimer);
+      _emrgTimer = setTimeout(async () => {
+        const v = parseFloat(emrgInput.value) || 0;
+        if (_wlRepo) _wlRepo.emergency_cash_qar = v;
+        await _wlAutoSync('emergency_cash_qar=' + v);
+      }, 800);  // wait 800ms after last keystroke before syncing
+    });
   }
 
   const refreshBtn = document.getElementById('wl-refresh-btn');

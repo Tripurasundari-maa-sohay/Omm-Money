@@ -282,6 +282,11 @@
   @media(max-width:700px){
     .an-grid-2{grid-template-columns:1fr}
   }
+  /* Hero compaction: hide the 5-tile banner-metrics on mobile when NOT on PORTFOLIO tab.
+     Saves ~80px of vertical space on every other tab. */
+  @media(max-width:640px){
+    body:not([data-active-tab="portfolio"]) .banner-metrics { display:none !important; }
+  }
   /* Watchlist mobile compaction */
   @media(max-width:640px){
     #wl-table { font-size:12px !important; min-width:0 !important; }
@@ -674,7 +679,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v113</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v114</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -3501,6 +3506,7 @@ const DASH = (() => {
     if (name === 'signals') loadSignals();
     if (name === 'screener') DASH_SCR.init();
     if (name === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
+    document.body.dataset.activeTab = name;  // CSS hooks off this to compact hero on non-portfolio tabs
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
   }
@@ -4694,8 +4700,11 @@ const DASH = (() => {
       const _validTabs = ['portfolio','us','india','transactions','signals','screener','watchlist'];
       if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
         switchTab(_savedTab);
+        document.body.dataset.activeTab = _savedTab;
+      } else {
+        document.body.dataset.activeTab = 'portfolio';
       }
-    } catch(e) {}
+    } catch(e) { document.body.dataset.activeTab = 'portfolio'; }
     // Sortable US holdings table
     document.querySelectorAll('#us-holdings-table th.sortable').forEach(th => {
       th.addEventListener('click', () => {

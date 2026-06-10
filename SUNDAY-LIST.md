@@ -40,6 +40,13 @@ Run weekly (Sunday). Tick, don't skip the 🔴 items.
 
 ---
 
+## ⛔ VM DOCROOT — never git-manage it
+- `/home/opc/web` is now a **standalone dir** (`.git` removed 2026-06-10). It holds the
+  ONLY copy of personal data (seed, history, holdings_cost, holdings_prices, signals).
+- **NEVER** `git clone`/`pull`/`reset` over it — personal files are gone from origin,
+  so a pull would DELETE them. Deploy code via `scp` only.
+- Back it up: `tar czf ~/web-bak-$(date +%F).tgz -C /home/opc web/net-wealth/data web/portfolio/data` (do weekly).
+
 ## 🟠 ZERO-TRACE — after Phase 2 cutover (verify GitHub stays clean)
 
 - [ ] **Raw URLs 404** for personal files — must NOT return data:

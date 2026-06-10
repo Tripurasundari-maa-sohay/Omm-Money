@@ -155,6 +155,52 @@ def compute_nw(seed, prices_data, cost, fx_rate_live):
 
     net_worth = assets_tot - liab_tot
 
+    # ── Per-line-item breakdown (INR equivalents, for trend drill-down) ───
+    breakdown = {
+        # Equities
+        "eq_india_stocks":   round(india_mv_inr, 2),
+        "eq_us_stocks":      round(us_mv_usd * usd_to_inr, 2),
+        "eq_fo_corpus":      round(fo_inr, 2),
+        "eq_india_mf":       round(mf_inr, 2),
+        # Gold
+        "gold_jewellery":    round(jewel_inr, 2),
+        "gold_malabar":      round(malabar_inr, 2),
+        "gold_jewel_grams":  round(jewel_g, 3),
+        "gold_malabar_grams": round(malabar_g, 3),
+        # Real estate
+        "re_apartment":      round(apt_inr, 2),
+        # Vehicles
+        "veh_landcruiser":   round(lc_qar * qar_to_inr, 2),
+        # Retirement
+        "ret_gratuity":      round(grat_qar * qar_to_inr, 2),
+        # Cash aggregates
+        "cash_qatar_total":  round(cash_qa_inr, 2),
+        "cash_india_total":  round(cash_in_inr, 2),
+        # FX & rates
+        "rate_gold_inr_g":   round(gold_rate, 2),
+    }
+    # Per-bank
+    for b in banks_qa:
+        bid = b.get("id") or b.get("label", "qa_bank").lower().replace(" ", "_")
+        breakdown[f"bank_qa_{bid}"] = round((b.get("balance_qar", 0) or 0) * qar_to_inr, 2)
+    for b in banks_in:
+        bid = b.get("id") or b.get("label", "in_bank").lower().replace(" ", "_")
+        breakdown[f"bank_in_{bid}"] = round(b.get("balance_inr", 0) or 0, 2)
+    # Per custom asset
+    for ca in custom_assets:
+        cid = ca.get("id") or ca.get("label", "custom").lower().replace(" ", "_")
+        val = ca.get("value", 0) or 0
+        ccy = ca.get("ccy")
+        inr = val * usd_to_inr if ccy == "USD" else val * qar_to_inr if ccy == "QAR" else val
+        breakdown[f"custom_{cid}"] = round(inr, 2)
+    # Per loan
+    for ln in loans:
+        lid = ln.get("id") or ln.get("label", "loan").lower().replace(" ", "_")
+        out = ln.get("outstanding", 0) or 0
+        ccy = ln.get("ccy")
+        inr = out * usd_to_inr if ccy == "USD" else out * qar_to_inr if ccy == "QAR" else out
+        breakdown[f"loan_{lid}"] = round(inr, 2)
+
     return {
         "net_worth":       round(net_worth, 2),
         "assets":          round(assets_tot, 2),
@@ -164,6 +210,7 @@ def compute_nw(seed, prices_data, cost, fx_rate_live):
         "us_stocks_usd":   round(us_mv_usd, 2),
         "fx_usd_inr":      round(usd_to_inr, 4),
         "fx_qar_inr":      round(qar_to_inr, 4),
+        "breakdown":       breakdown,
     }
 
 
@@ -220,6 +267,8 @@ def main():
         "us_stocks_inr":   nw["us_stocks_inr"],
         "us_stocks_usd":   nw["us_stocks_usd"],
         "fx_usd_inr":      nw["fx_usd_inr"],
+        "fx_qar_inr":      nw["fx_qar_inr"],
+        "breakdown":       nw["breakdown"],
         "_auto":           True,
     }
     print(f"  NW: ₹{nw['net_worth']/1e5:.2f}L  assets: ₹{nw['assets']/1e5:.2f}L  liab: ₹{nw['liab']/1e5:.2f}L")

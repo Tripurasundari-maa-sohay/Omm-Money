@@ -4,6 +4,56 @@ Run weekly (Sunday). Tick, don't skip the 🔴 items.
 
 ---
 
+## 🔴🔴 ONE-TIME PENDING — git history scrub (finish the zero-trace cutover)
+
+Main/HEAD is already clean (personal files 404), but OLD COMMITS still hold the
+data: `raw.githubusercontent.com/.../<old-sha>/net-wealth/data/seed.json` still
+serves to anyone who knows a past SHA. This scrub wipes them from ALL history.
+**IRREVERSIBLE — rewrites every commit SHA + force-push. Do in a quiet window.**
+
+```bash
+# 0. pip install git-filter-repo  (if missing)
+# 1. PAUSE the VM crons so they don't commit mid-scrub
+ssh -i ~/Downloads/ssh-key-2026-05-26.key opc@145.241.158.254 \
+  'crontab -l | sed "s|^\([^#].*fetch_all_prices_vm.py.*\)|#SCRUB \1|" | crontab -'
+
+# 2. fresh mirror clone (filter-repo needs a clean clone)
+cd /tmp && rm -rf scrub && git clone https://github.com/Tripurasundari-maa-sohay/Omm-Money scrub && cd scrub
+
+# 3. strip personal paths from ALL history
+git filter-repo --invert-paths \
+  --path net-wealth/data/seed.json \
+  --path net-wealth/data/history.json \
+  --path portfolio/data/holdings_cost.json \
+  --path portfolio/data/transactions_us.json \
+  --path portfolio/data/watchlist.json \
+  --path portfolio/data/processed/holdings_prices.json \
+  --path portfolio/data/processed/stock_signals.json \
+  --path portfolio/data/processed/india_prices.json \
+  --path portfolio/data/processed/kronos_signals.json \
+  --path portfolio/data/processed/audit.json \
+  --path portfolio/data/processed/audit_history.json \
+  --path portfolio/data/history/signals_history.csv \
+  --path-glob 'portfolio/data/snapshots/*'
+
+# 4. force-push rewritten history
+git remote add origin https://github.com/Tripurasundari-maa-sohay/Omm-Money
+git push origin --force --all && git push origin --force --tags
+
+# 5. RESUME crons
+ssh -i ~/Downloads/ssh-key-2026-05-26.key opc@145.241.158.254 \
+  'crontab -l | sed "s|^#SCRUB ||" | crontab -'
+
+# 6. verify an OLD sha now 404s (pick any pre-2026-06-10 commit sha)
+curl -s -o /dev/null -w "%{http_code}\n" \
+  https://raw.githubusercontent.com/Tripurasundari-maa-sohay/Omm-Money/<OLD_SHA>/net-wealth/data/seed.json   # want 404
+```
+- [ ] After scrub: re-clone your dev repo (`/Users/sabarna/Omm-Money`) fresh — its history is now divergent.
+- [ ] GitHub may cache old blobs ~couple weeks; optionally open a support request to purge, or accept the decay.
+- [ ] Consider rotating any secret that ever sat in history (none currently — data only).
+
+---
+
 ## 🔴 SECRET KEEPSAFE — credentials hygiene
 
 ### Rotate-now (exposed in plaintext chat during 2026-06-10 build)

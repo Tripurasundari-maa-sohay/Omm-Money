@@ -1131,17 +1131,20 @@ const ODIN = (() => {
     try { S.history = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]'); }
     catch { S.history = []; }
   }
-  // Load committed history.json from repo and merge (repo wins for older entries, local wins for today)
+  // Load committed history.json from repo and merge.
+  // Repo (VM cron) is AUTHORITATIVE — it overrides local cache for any date it
+  // contains. Local localStorage only fills dates the repo lacks (e.g. today's
+  // not-yet-committed manual snapshot). Was the reverse → stale local cache
+  // clobbered corrected repo rows (NW formula-fix backfill showed old values).
   async function loadHistoryFromRepo() {
     try {
       const r = await fetch('data/history.json?_=' + Date.now());
       if (!r.ok) return;
       const repoHist = await r.json();
       if (!Array.isArray(repoHist)) return;
-      // Merge by date (YYYY-MM-DD key); local overrides same-day, repo fills older gaps
       const byDate = new Map();
-      repoHist.forEach(h => byDate.set((h.date || '').slice(0, 10), h));
-      S.history.forEach(h => byDate.set((h.date || '').slice(0, 10), h));   // local wins
+      S.history.forEach(h => byDate.set((h.date || '').slice(0, 10), h));   // local baseline (fills today)
+      repoHist.forEach(h => byDate.set((h.date || '').slice(0, 10), h));    // repo wins (authoritative)
       S.history = Array.from(byDate.values()).filter(h => h.date).sort((a, b) => a.date.localeCompare(b.date));
       localStorage.setItem(LS_HISTORY, JSON.stringify(S.history));
     } catch { /* no committed history yet — fine */ }

@@ -112,15 +112,22 @@ def compute_nw(seed, prices_data, cost, fx_rate_live):
             india_mv_inr += float(ltp) * qty
 
     # ── ASSETS (INR equivalent) ───────────────────────────────────────────────
+    # MIRROR index.html view(): jewellery valued at 22K manual rate when set,
+    # else fall back to 24K seed gold_rate. (Was using seed gold_rate only →
+    # undercounted jewellery; fixed 2026-06-10.)
     gold_rate = seed.get("gold_rate_inr_per_gram", 8500)
     jewel_g   = a.get("gold_jewellery_grams", 0)
-    jewel_inr = jewel_g * gold_rate
+    jewel_22k = a.get("jewel_22k_rate_inr_per_g", 0) or 0
+    jewel_rate = jewel_22k if jewel_22k > 0 else gold_rate
+    jewel_inr = jewel_g * jewel_rate
 
     malabar_g    = a.get("malabar_grams", 0)
     malabar_rate = a.get("malabar_rate_inr_per_g", gold_rate)
     malabar_inr  = malabar_g * malabar_rate
 
-    fo_inr   = a.get("fo_corpus_cash", 0) or 0
+    # F&O corpus = cash + margin used (index.html sums BOTH; snapshot was
+    # missing fo_margin_used → ~₹59L undercount; fixed 2026-06-10).
+    fo_inr   = (a.get("fo_corpus_cash", 0) or 0) + (a.get("fo_margin_used", 0) or 0)
     mf_inr   = a.get("india_mutual_fund_inr", 0) or 0
     apt_inr  = a.get("apartment_market_value", 0) or 0
     lc_qar   = a.get("land_cruiser_resale_qar", 0) or 0

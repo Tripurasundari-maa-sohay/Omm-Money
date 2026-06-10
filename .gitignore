@@ -27,3 +27,16 @@ Thumbs.db
 # ── History CSVs — tracked in git but excluded from diff noise ──
 # To view history size: git ls-files data/history/ | wc -l
 # These ARE committed — just suppressed in default diff output
+
+# ── Personal finance data — VM-local only, served gated behind Google OAuth ──
+# Never commit these to the public repo. Source of truth = /home/opc/web on VM.
+net-wealth/data/seed.json
+net-wealth/data/history.json
+portfolio/data/holdings_cost.json
+portfolio/data/transactions_us.json
+portfolio/data/watchlist.json
+portfolio/data/processed/holdings_prices.json
+portfolio/data/processed/stock_signals.json
+portfolio/data/processed/india_prices.json
+portfolio/data/processed/kronos_signals.json
+portfolio/data/history/signals_history.csv

@@ -2,6 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Personal-finance data moved off public GitHub → served gated behind Google
+     OAuth on the VM. Bounce any public github.io visit to the gated VM URL. -->
+<script>
+(function(){if(location.hostname.endsWith('github.io')){
+  location.replace('https://save.145-241-158-254.nip.io'+location.pathname.replace(/^\/Omm-Money/,''));
+}})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Multi Country Portfolio Tracker</title>
 <!-- PWA -->

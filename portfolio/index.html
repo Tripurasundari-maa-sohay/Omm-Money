@@ -287,6 +287,14 @@
     #wl-table { font-size:12px !important; min-width:0 !important; }
     #wl-table th, #wl-table td { padding:7px 6px !important; }
     .wl-hide-narrow { display:none !important; }
+    /* Toolbar: 2-col grid so all buttons visible */
+    #wl-toolbar { display:grid !important; grid-template-columns:1fr 1fr; gap:6px !important; width:100%; }
+    #wl-toolbar button, #wl-toolbar span {
+      width:100%; padding:9px 8px !important; font-size:12px !important; box-sizing:border-box;
+    }
+    #wl-add-btn { grid-column:1 / -1; }  /* Add button full-width row 1 */
+    #wl-plan-btn { grid-column:1 / -1; } /* Planning toggle full-width row 2 */
+    #wl-sync-status { grid-column:1 / -1; min-width:0 !important; }
   }
   @media(max-width:480px){
     #wl-table { font-size:11px !important; }
@@ -666,7 +674,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v112</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v113</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1523,10 +1531,10 @@
           <div style="color:var(--accent-g);font-size:11px;font-weight:700;letter-spacing:2px">👀 WATCHLIST · BUY-ZONE MONITOR</div>
           <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">Manually-tracked tickers with buy targets. Status auto-computes from live price vs target.</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div id="wl-toolbar" style="display:flex;gap:8px;flex-wrap:wrap;">
           <button id="wl-add-btn" style="background:var(--accent-g);color:#000;border:none;padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer;">+ Add Ticker</button>
           <button id="wl-plan-btn" style="background:transparent;color:var(--accent-b);border:1px solid var(--accent-b);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;" title="Show planning columns: TARGET QTY, FUND NEEDED, HELD, FROM">📊 Planning view</button>
-          <span id="wl-sync-status" style="font-size:11px;color:var(--text-dim);padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:5px;min-width:90px;text-align:center;">— idle</span>
+          <span id="wl-sync-status" style="font-size:11px;color:var(--text-dim);padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:5px;text-align:center;">— idle</span>
           <button id="wl-refresh-btn" style="background:transparent;color:var(--text-sec);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;" title="Pull latest from repo (other devices may have synced)">↻ Refresh</button>
           <button id="wl-export-btn" style="background:transparent;color:var(--text-sec);border:1px solid var(--border);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:12px;">⤓ Export</button>
         </div>

@@ -521,7 +521,9 @@
     .tab-button{padding:5px 8px;font-size:10px;white-space:nowrap;flex-shrink:0;border-width:1px}
     .tab-button .tl{display:none}
     .tab-button .ts{display:inline}
-    .dashboard-container{padding-top:108px}
+    .dashboard-container{padding-top:160px}
+    /* When banner-metrics is hidden (non-portfolio tabs), trim padding */
+    body:not([data-active-tab="portfolio"]) .dashboard-container{padding-top:130px}
     .main-content{padding:10px}
     .portfolio-overview,.portfolio-metrics,.analytics-section,.holdings-section,
     .holdings-preview,.tab-section{padding:12px;margin-bottom:14px;border-radius:6px}
@@ -547,7 +549,8 @@
   @media (max-width:420px){
     .logo{font-size:10px}
     .banner-right{display:none}
-    .dashboard-container{padding-top:100px}
+    .dashboard-container{padding-top:150px}
+    body:not([data-active-tab="portfolio"]) .dashboard-container{padding-top:120px}
     .main-content{padding:8px}
     .metrics-grid{grid-template-columns:1fr 1fr;gap:6px}
     .metric-card{padding:9px}
@@ -679,7 +682,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v114</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v115</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -5043,7 +5046,7 @@ function renderWatchlist() {
     tbody.innerHTML = `<tr><td colspan="${colCount}" style="padding:20px;text-align:center;color:var(--text-dim);">No tickers yet. Click <b>+ Add Ticker</b> to start.</td></tr>`;
     ['buy','near','watch','exp','total'].forEach(k => { const el = document.getElementById('wl-count-' + k); if (el) el.textContent = '0'; });
     _wlUpdateMainTile({buy:0,near:0,watch:0,exp:0,total:0});
-    _wlUpdateSumTile(0, 0, 0);
+    _wlUpdateSumTile(0, 0, 0, 0);
     return;
   }
   const counts = {buy:0, near:0, watch:0, exp:0, none:0};
@@ -5060,7 +5063,7 @@ function renderWatchlist() {
     });
   }
 
-  let fundSum = 0, fundCount = 0;
+  let fundSum = 0, fundSumCur = 0, fundCount = 0;
 
   tbody.innerHTML = rows.map((r, i) => {
     const current = _wlPriceFor(r.tk);
@@ -5079,7 +5082,11 @@ function renderWatchlist() {
     // Planning math
     const qty = +(r.target_qty || 0);
     const fund = qty > 0 ? qty * r.buy_target : 0;
-    if (qty > 0) { fundSum += fund; fundCount++; }
+    if (qty > 0) {
+      fundSum += fund;
+      if (current != null) fundSumCur += qty * current;
+      fundCount++;
+    }
     const qtyCell  = qty > 0 ? `<strong>${qty}</strong>` : `<span style="color:var(--text-dim);">—</span>`;
     const fundCell = qty > 0 ? `<strong style="color:var(--accent-b);">${fmt$(fund)}</strong>` : `<span style="color:var(--text-dim);">—</span>`;
 
@@ -5108,17 +5115,26 @@ function renderWatchlist() {
   document.getElementById('wl-count-exp').textContent   = counts.exp   || 0;
   document.getElementById('wl-count-total').textContent = rows.length;
   _wlUpdateMainTile({buy: counts.buy||0, near: counts.near||0, watch: counts.watch||0, exp: counts.exp||0, total: rows.length});
-  _wlUpdateSumTile(fundSum, fundCount, rows.length);
+  _wlUpdateSumTile(fundSum, fundCount, rows.length, fundSumCur);
 }
 
 const WL_QAR_PER_USD = 3.65;  // pegged
 
-function _wlUpdateSumTile(sum, n, total) {
+function _wlUpdateSumTile(sum, n, total, sumCur) {
   const el = document.getElementById('wl-plan-sum-val');
   if (!el) return;
   const fmt$ = v => '$' + v.toLocaleString(undefined, {maximumFractionDigits:0});
   if (sum > 0) {
-    el.innerHTML = `${fmt$(sum)} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">across ${n} of ${total} tickers · avg ${fmt$(sum/n)}/ticker</span>`;
+    let curLine = '';
+    if (sumCur && sumCur > 0) {
+      const premium = sumCur - sum;
+      const pct = (premium / sum) * 100;
+      const color = premium >= 0 ? 'var(--loss)' : 'var(--gain)';
+      const sign = premium >= 0 ? '+' : '−';
+      const absP = Math.abs(premium);
+      curLine = ` <span style="display:block;margin-top:3px;font-size:11px;font-weight:400;color:var(--text-dim);">@ current px: <strong style="color:var(--text-pri);">${fmt$(sumCur)}</strong> <span style="color:${color};">(${sign}${fmt$(absP)} · ${sign}${Math.abs(pct).toFixed(0)}% vs target)</span></span>`;
+    }
+    el.innerHTML = `${fmt$(sum)} <span style="font-size:11px;color:var(--text-dim);font-weight:400;">across ${n} of ${total} tickers · avg ${fmt$(sum/n)}/ticker</span>${curLine}`;
   } else {
     el.innerHTML = `<span style="color:var(--text-dim);font-size:13px;font-weight:400;">Set TARGET QTY (✎ edit) to see capital needed</span>`;
   }

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-11T21:51:12.385725+00:00Z",
+  "generated": "2026-06-11T21:52:03.246240+00:00Z",
   "usa_market": {
     "status": "POSTMARKET",
     "indices": {
@@ -27,9 +27,14 @@
         "change": -53.35,
         "change_pct": -0.23
       },
-      "sensex": null
+      "sensex": {
+        "current": 73832.55,
+        "prev_close": 73983.18,
+        "change": -150.63,
+        "change_pct": -0.2
+      }
     },
-    "timestamp": "2026-06-11T21:50:23.378485+00:00Z"
+    "timestamp": "2026-06-11T21:52:04.123080+00:00Z"
   },
   "fx_rate": 95.75
 }

@@ -1,7 +1,7 @@
 {
-  "generated": "2026-06-15T08:00:03.608111+00:00Z",
+  "generated": "2026-06-15T08:01:04.802860+00:00Z",
   "usa_market": {
-    "status": "CLOSED",
+    "status": "PREMARKET",
     "indices": {
       "snp_500": {
         "current": 7431.46,
@@ -16,7 +16,7 @@
         "change_pct": 0.31
       }
     },
-    "timestamp": "2026-06-15T07:59:06.499211+00:00Z"
+    "timestamp": "2026-06-15T08:01:06.840061+00:00Z"
   },
   "india_market": {
     "status": "OPEN",
@@ -36,5 +36,5 @@
     },
     "timestamp": "2026-06-15T08:00:05.174378+00:00Z"
   },
-  "fx_rate": 94.598
+  "fx_rate": 94.603
 }

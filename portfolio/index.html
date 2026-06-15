@@ -530,7 +530,7 @@
     .tab-button .ts{display:inline}
     .dashboard-container{padding-top:160px}
     /* When banner-metrics is hidden (non-portfolio tabs), trim padding */
-    body:not([data-active-tab="portfolio"]) .dashboard-container{padding-top:130px}
+    body:not([data-active-tab="portfolio"]) .dashboard-container{padding-top:150px}
     .main-content{padding:10px}
     .portfolio-overview,.portfolio-metrics,.analytics-section,.holdings-section,
     .holdings-preview,.tab-section{padding:12px;margin-bottom:14px;border-radius:6px}
@@ -557,7 +557,7 @@
     .logo{font-size:10px}
     .banner-right{display:none}
     .dashboard-container{padding-top:150px}
-    body:not([data-active-tab="portfolio"]) .dashboard-container{padding-top:120px}
+    body:not([data-active-tab="portfolio"]) .dashboard-container{padding-top:140px}
     .main-content{padding:8px}
     .metrics-grid{grid-template-columns:1fr 1fr;gap:6px}
     .metric-card{padding:9px}
@@ -4756,7 +4756,7 @@ const DASH = (() => {
     // Targets inside any of SWIPE_BLOCK_SELECTOR don't trigger tab swap —
     // tables (horizontal scrolling), canvases (chart pan), .scroll-x, and
     // any element explicitly opted out with data-no-swipe.
-    const TAB_ORDER          = ['portfolio','us','india','transactions','signals','screener'];
+    const TAB_ORDER          = ['portfolio','us','india','transactions','signals','screener','watchlist'];
     const SWIPE_MIN_DX       = 60;
     const SWIPE_MAX_DY_RATIO = 0.5;
     const SWIPE_MAX_MS       = 350;

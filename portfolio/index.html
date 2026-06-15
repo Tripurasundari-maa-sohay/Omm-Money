@@ -4751,7 +4751,7 @@ const DASH = (() => {
     const SWIPE_MAX_DY_RATIO = 0.5;
     const SWIPE_MAX_MS       = 350;
     const SWIPE_EDGE_PX      = 24;
-    const SWIPE_BLOCK_SELECTOR = 'table, canvas, .scroll-x, [data-no-swipe]';
+    const SWIPE_BLOCK_SELECTOR = 'canvas, .scroll-x, input, button, select, textarea, [data-no-swipe]';
     let _swipeX = 0, _swipeY = 0, _swipeT = 0, _swipeBlocked = false;
     document.addEventListener('touchstart', e => {
       _swipeX = e.touches[0].clientX;

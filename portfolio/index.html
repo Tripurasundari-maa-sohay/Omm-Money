@@ -2404,13 +2404,23 @@ const DASH = (() => {
       const sortCls = d.sort ? ' class="sortable"' : '';
       const sortData = d.sort ? ` data-${sortAttr}="${d.sort}"` : '';
       const arrow = d.sort && sortObj.col===d.sort ? (sortObj.dir===1?' ▲':' ▼') : '';
-      return `<th${sortCls}${sortData} draggable="true" data-colid="${id}"
-        style="cursor:grab;user-select:none"
+      const onClick = d.sort ? ` onclick="DASH._sortCol('${d.sort}','${saveKey}')"` : '';
+      const title = d.sort ? 'Click to sort · Drag to reorder' : 'Drag to reorder';
+      return `<th${sortCls}${sortData} draggable="true" data-colid="${id}"${onClick}
+        style="cursor:${d.sort?'pointer':'grab'};user-select:none"
         ondragstart="event.dataTransfer.setData('colid','${id}');event.dataTransfer.setData('table','${saveKey}')"
         ondragover="event.preventDefault()"
         ondrop="DASH._dropCol(event,'${saveKey}')"
-        title="Drag to reorder">${d.label}${arrow}</th>`;
+        title="${title}">${d.label}${arrow}</th>`;
     }).join('');
+  }
+
+  function _sortCol(col, saveKey) {
+    const isUs = saveKey === 'us_col_order';
+    const obj = isUs ? US_SORT : IN_SORT;
+    if (obj.col === col) obj.dir *= -1;
+    else { obj.col = col; obj.dir = 1; }
+    isUs ? renderUSHoldings() : renderIndiaHoldings();
   }
 
   function _dropCol(event, tableKey) {
@@ -4715,27 +4725,7 @@ const DASH = (() => {
         document.body.dataset.activeTab = 'portfolio';
       }
     } catch(e) { document.body.dataset.activeTab = 'portfolio'; }
-    // Sortable US holdings table
-    document.querySelectorAll('#us-holdings-table th.sortable').forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.dataset.sc;
-        if (US_SORT.col === col) US_SORT.dir *= -1;
-        else { US_SORT.col = col; US_SORT.dir = 1; }
-        renderUSHoldings();
-      });
-    });
-    // Sortable India holdings table
-    document.querySelectorAll('th[data-incol]').forEach(th => {
-      th.style.cursor = 'pointer';
-      th.addEventListener('click', () => {
-        const col = th.dataset.incol;
-        if (IN_SORT.col === col) IN_SORT.dir *= -1;
-        else { IN_SORT.col = col; IN_SORT.dir = -1; }
-        document.querySelectorAll('th[data-incol]').forEach(t => t.textContent = t.textContent.replace(/ [▲▾]$/,''));
-        th.textContent += IN_SORT.dir === 1 ? ' ▲' : ' ▾';
-        renderIndiaHoldings();
-      });
-    });
+    // Sort wired via DASH._sortCol onclick in _buildDraggableHeader — survives innerHTML re-renders
     // Signal holdings table sort + watchlist
     initSigTableSort();
     sigWatchlistInit();
@@ -4896,7 +4886,7 @@ const DASH = (() => {
     else                { IN_COL_ORDER = [...IN_COLS_DEFAULT];  _saveColOrder('in_col_order', IN_COL_ORDER);  renderIndiaHoldings(); }
   }
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, resetColOrder };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder };
 })();
 
 // Register service worker for PWA installability

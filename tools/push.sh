@@ -45,13 +45,11 @@ if [[ "$BUMP" == 1 ]]; then
   cur_sw=$new
 fi
 
-if [[ -z "$(git status --porcelain portfolio/)" ]]; then
-  echo "→ No portfolio/ changes to commit"
+git add -u portfolio/ tools/ 2>/dev/null || true
+git add portfolio/sw.js portfolio/index.html tools/push.sh 2>/dev/null || true
+if [[ -z "$(git status --porcelain)" ]]; then
+  echo "→ No changes to commit (will still re-deploy current HEAD to VM)"
 else
-  git add portfolio/index.html portfolio/sw.js
-  # also stage any other portfolio file the caller touched + tools/
-  git add -u portfolio/ tools/ || true
-  git add tools/push.sh 2>/dev/null || true
   git commit -m "$MSG"
 fi
 

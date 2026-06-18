@@ -1,22 +1,22 @@
 {
-  "generated": "2026-06-18T15:06:03.790512+00:00Z",
+  "generated": "2026-06-18T15:06:07.487343+00:00Z",
   "usa_market": {
     "status": "OPEN",
     "indices": {
       "snp_500": {
-        "current": 7493.74,
+        "current": 7493.07,
         "prev_close": 7420.1,
-        "change": 73.64,
-        "change_pct": 0.99
+        "change": 72.97,
+        "change_pct": 0.98
       },
       "nasdaq": {
-        "current": 26366.064,
+        "current": 26371.02,
         "prev_close": 26021.656,
-        "change": 344.41,
-        "change_pct": 1.32
+        "change": 349.36,
+        "change_pct": 1.34
       }
     },
-    "timestamp": "2026-06-18T15:04:09.730221+00:00Z"
+    "timestamp": "2026-06-18T15:06:09.013879+00:00Z"
   },
   "india_market": {
     "status": "CLOSED",
@@ -34,7 +34,7 @@
         "change_pct": 0.33
       }
     },
-    "timestamp": "2026-06-18T15:06:05.350295+00:00Z"
+    "timestamp": "2026-06-18T15:04:04.361477+00:00Z"
   },
   "fx_rate": 94.323
 }

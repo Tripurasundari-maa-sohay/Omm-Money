@@ -261,12 +261,12 @@
   .portfolio-overview,.portfolio-metrics{background:var(--bg-card);border:1px solid var(--accent-y);
     border-radius:8px;padding:14px;margin-bottom:14px}
   .portfolio-metrics{border-color:var(--border);position:relative;z-index:2}
-  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
   .metric-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;
-    padding:10px;display:flex;flex-direction:column;gap:4px}
-  .metric-card label{color:var(--text-sec);font-size:var(--fs-xs);font-weight:700;
-    text-transform:uppercase;letter-spacing:1px}
-  .metric-card .mval{color:var(--text-pri);font-size:var(--fs-xl);font-weight:700;font-family:Monaco,monospace}
+    padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+  .metric-card label{color:var(--text-sec);font-size:10px;font-weight:700;
+    text-transform:uppercase;letter-spacing:0.5px}
+  .metric-card .mval{color:var(--text-pri);font-size:16px;font-weight:700;font-family:Monaco,monospace;line-height:1.2}
   .metric-card .mchg{font-size:var(--fs-xs)}
   .metric-card .mchg.positive{color:var(--gain)}
   .metric-card .mchg.negative{color:var(--loss)}
@@ -278,9 +278,11 @@
   .metric-card .positive{color:var(--gain)} .metric-card .negative{color:var(--loss)}
   [data-theme="ivory"] .metric-card .positive{color:#1a6b3c} [data-theme="ivory"] .metric-card .negative{color:#b83222}
   [data-theme="arctic"] .metric-card .positive{color:#0a7a50} [data-theme="arctic"] .metric-card .negative{color:#c02020}
-  /* Hero responsive: hero account value scales, stacks PnL below on narrow widths */
-  #us-account-value{font-size:clamp(20px,5vw,30px)!important;line-height:1.2}
-  #us-hero-pnl-usd{font-size:clamp(16px,3.5vw,24px)!important}
+  /* Hero — compact */
+  #us-account-value{font-size:22px!important;line-height:1.2}
+  #us-hero-pnl-usd{font-size:18px!important;line-height:1.2}
+  /* Broker breakdown rows — tight */
+  [id^="us-bd-"] > div{font-size:11px!important;line-height:1.5}
   @media (max-width:600px){
     /* Hero stacks vertically on narrow screens — PnL goes below, left border becomes top border */
     .portfolio-metrics > .metric-card:first-of-type{grid-template-columns:1fr!important}
@@ -705,7 +707,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v134</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v135</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -904,7 +906,7 @@
       <h2>USA Portfolio Metrics</h2>
 
       <!-- Hero — grid layout: account value left, PnL right -->
-      <div class="metric-card" style="display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:14px 18px;margin-bottom:10px">
+      <div class="metric-card" style="display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;padding:10px 12px;margin-bottom:8px">
         <div style="min-width:0">
           <label>ACCOUNT VALUE</label>
           <div class="mval loading pv" id="us-account-value">…</div>

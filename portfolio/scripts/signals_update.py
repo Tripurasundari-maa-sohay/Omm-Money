@@ -49,6 +49,7 @@ SECTOR_MAP: dict[str, str] = {
     "NOW":  "Technology",             "TTE":  "Energy",
     "EWY":  "ETF",                    "HUMN": "ETF",
     "VOOG": "ETF",
+    "NVDA": "Unknown",
     "JDZG": "Financial Services",
     "INTC": "Technology",
     "ORCL": "Technology",

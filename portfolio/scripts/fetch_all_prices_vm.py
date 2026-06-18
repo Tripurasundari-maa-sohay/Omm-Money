@@ -72,7 +72,8 @@ US_HOLDINGS = [
     "GOOG","AMZN","AVGO","GLW","GEV","MU","MSFT","MP","RKLB","TTE","EWY","HUMN","VOOG",
     "SHIP","NOW","ORCL",
     "INTC",
-    "JDZG",
+    "JDZG",,
+    "NVDA"
 ]
 # Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
 # each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.

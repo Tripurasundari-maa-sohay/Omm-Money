@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v119</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v120</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1866,6 +1866,9 @@ const DASH = (() => {
   /* ── 2. BUILD VIEW MODEL ──────────────────────────────────────── */
   // SME tickers that may lack live prices — support manual LTP override
   const SME_TICKERS = ['PARAMATRIX', 'ASHALOG'];
+  // Tickers whose dayPL is noisy (halted/illiquid) — excluded from Day P&L SUMS
+  // (per-row dayPL still shown, just not aggregated into hero/tile totals).
+  const DAY_PL_EXCLUDE = new Set(['JDZG']);
 
   function priceFor(holding) {
     // Guard: tk can be undefined/null if a row was malformed
@@ -2008,7 +2011,7 @@ const DASH = (() => {
       etfsMV:       usOpen.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
       mv:           usMV,
       unrealPL:     usOpen.reduce((s,p)=>s+p.uplNet,0),  // net of buy fees
-      dayPL:        usOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
+      dayPL:        usOpen.reduce((s,p)=>(p.dayPL!==null && !DAY_PL_EXCLUDE.has(p.tk))?s+p.dayPL:s, 0),
       exitCost:     usOpen.length * -5,                   // -$5 per position to close
     };
     us.totalValue     = us.mv + (us.cash||0);             // ACTIVE total
@@ -2047,7 +2050,7 @@ const DASH = (() => {
       closed:       (S.cost.india && S.cost.india.closed) || [],
       mv:           inMV,
       unrealPL:     inOpen.reduce((s,p)=>s+p.uplNet,0),
-      dayPL:        inOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
+      dayPL:        inOpen.reduce((s,p)=>(p.dayPL!==null && !DAY_PL_EXCLUDE.has(p.tk))?s+p.dayPL:s, 0),
     };
     india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
     const _inDen = india.mv - india.dayPL;
@@ -2360,7 +2363,7 @@ const DASH = (() => {
     qty:    { label:'QTY',          sort:'qty',    renderCell: p => `<td>${p.qty}</td>` },
     avg:    { label:'AVG',          sort:'avg',    renderCell: p => `<td>${usd2(p.avg)}</td>` },
     ltp:    { label:'LTP',          sort:'ltp',    renderCell: p => `<td><strong>${usd2(p.ltp)}</strong></td>` },
-    dayPL:  { label:'DAY P&L',      sort:'dayPL',  renderCell: p => `<td class="${pn(p.dayPL)}">${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}</td>` },
+    dayPL:  { label:'DAY P&L',      sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk); const tip=ex?' title="Excluded from Day P&L total (halted/illiquid)"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${pn(p.dayPL)}"${tip}>${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}${tag}</td>`; } },
     dayPct: { label:'DAY %',        sort:'dayPct', renderCell: p => `<td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>` },
     mv:     { label:'MKT VALUE',    sort:'mv',     renderCell: p => `<td>${usd2(p.mv)}</td>` },
     fees:   { label:'FEES',         sort:'fees',   renderCell: p => `<td>${usd2(p.fees)}</td>` },
@@ -2378,7 +2381,7 @@ const DASH = (() => {
     avg:    { label:'AVG',        sort:'avg',    renderCell: p => `<td>${p.houseMoney?FREE_TAG:inr2(p.avg)}</td>` },
     ltp:    { label:'LTP',        sort:'ltp',    renderCell: p => { const isSME=SME_TICKERS.includes(p.tk); const pencil=isSME?` <span style="cursor:pointer;font-size:11px;opacity:0.7;" onclick="DASH.editSMELTP('${p.tk}',${p.ltp})" title="Set manual LTP">✏️</span>`:''; return `<td><strong>${inr2(p.ltp)}</strong>${pencil}</td>`; } },
     pc:     { label:'PREV CLOSE', sort:null,     renderCell: p => `<td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>` },
-    dayPL:  { label:'DAY P&L',    sort:'dayPL',  renderCell: p => `<td class="${p.dayPL!==null?pn(p.dayPL):''}">${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}</td>` },
+    dayPL:  { label:'DAY P&L',    sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk); const tip=ex?' title="Excluded from Day P&L total (halted/illiquid)"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${p.dayPL!==null?pn(p.dayPL):''}"${tip}>${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}${tag}</td>`; } },
     dayPct: { label:'DAY %',      sort:'dayPct', renderCell: p => `<td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>` },
     upl:    { label:'UNREAL P&L', sort:'upl',    renderCell: p => `<td class="${pn(p.uplNet)}">${sign(p.uplNet)}${inr(p.uplNet)}</td>` },
     mv:     { label:'MKT VAL',    sort:'mv',     renderCell: p => `<td>${inr(p.mv)}</td>` },

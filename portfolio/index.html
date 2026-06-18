@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v127</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v128</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -2254,7 +2254,7 @@ const DASH = (() => {
     if (_stkEl) _stkEl.style.color = 'var(--accent-b)';   // blue — stocks
     if (_etfEl) _etfEl.style.color = 'var(--warn)';       // amber — ETF
     if (_csEl)  _csEl.style.color  = 'var(--text-dim)';   // muted — cash
-    setText('us-unreal-pl',    sign(us.returnPct) + pct(us.returnPct));
+    setText('us-unreal-pl', `${sign(us.unrealPL)}${usd(us.unrealPL)} (${sign(us.returnPct)}${pct(us.returnPct)})`);
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
     const lbl = $('us-day-pl-label');

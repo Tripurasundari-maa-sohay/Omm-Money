@@ -274,6 +274,17 @@
   .metric-card .mval.positive{color:var(--gain)}
   .metric-card .mval.negative{color:var(--loss)}
   .metric-card .mval.loading{color:var(--text-dim);font-size:var(--fs-md)}
+  /* Generic positive/negative for non-.mval contexts (broker breakdown strongs etc.) */
+  .metric-card .positive{color:var(--gain)} .metric-card .negative{color:var(--loss)}
+  [data-theme="ivory"] .metric-card .positive{color:#1a6b3c} [data-theme="ivory"] .metric-card .negative{color:#b83222}
+  [data-theme="arctic"] .metric-card .positive{color:#0a7a50} [data-theme="arctic"] .metric-card .negative{color:#c02020}
+  /* Hero responsive: hero account value scales, stacks PnL below on narrow widths */
+  #us-account-value{font-size:clamp(20px,5vw,30px)!important;line-height:1.2}
+  #us-hero-pnl-usd{font-size:clamp(16px,3.5vw,24px)!important}
+  @media (max-width:480px){
+    #us-account-value{font-size:22px!important}
+    #us-hero-pnl-usd{font-size:18px!important}
+  }
 
   /* ── CHARTS ── */
   .analytics-section{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
@@ -689,7 +700,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v132</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v133</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -931,7 +942,7 @@
           <div class="mdesc"><span id="us-stocks-count">--</span> stocks · <span id="us-etf-count">--</span> ETFs · cash <span id="us-cash-value">…</span></div>
         </div>
         <div class="metric-card"><label>JDZG DRAG</label>
-          <div class="mval pv neg" id="us-jdzg-drag">—</div>
+          <div class="mval pv" id="us-jdzg-drag">—</div>
           <div class="mdesc">Halted — manual LTP</div>
         </div>
       </div>
@@ -2334,7 +2345,7 @@ const DASH = (() => {
       }
       const fmtPct = v => (v>=0?'+':'') + v.toFixed(2) + '%';
       const fmtMon = v => (v>=0?'+':'') + usd(v);
-      const cls    = v => v>=0 ? 'pos' : (v<0 ? 'neg' : '');
+      const cls    = v => v>0 ? 'mval positive' : (v<0 ? 'mval negative' : '');
       const row    = (label, val, valCls='') =>
         `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">${label}</span><strong class="${valCls}">${val}</strong></div>`;
       const totalRow = (label, val, valCls='') =>

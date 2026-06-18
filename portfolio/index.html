@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v129</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v130</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -893,6 +893,7 @@
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div><div id="us-day-pl-toggle" style="margin-top:4px;font-size:10px;cursor:pointer;color:var(--text-dim);user-select:none;" onclick="DASH.toggleJDZGdayPL()" title="Toggle whether JDZG (halted) is included in Day P&amp;L sum">JDZG: <span id="us-day-pl-jdzg-state">excluded</span> ⇄</div></div>
         <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div><div class="mdesc" id="us-account-invested" style="font-size:10px;color:var(--accent-b);margin-top:2px"></div><div class="mdesc" id="us-account-statement" style="font-size:10px;color:var(--text-dim);margin-top:2px"></div></div>
+        <div class="metric-card"><label>ACCOUNT VALUE · BROKER</label><div class="mdesc" id="us-broker-breakdown" style="font-size:13px;margin-top:6px;line-height:1.7;">…</div></div>
         <div class="metric-card" style="border-color:var(--accent-y);border-width:1.5px" title="Return in INR terms vs pure USD return — gap = currency effect">
           <label style="color:var(--accent-y)">💱 RETURN IN INR</label>
           <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px">
@@ -2286,6 +2287,20 @@ const DASH = (() => {
     const _invEl    = document.getElementById('us-account-invested');
     if (_invEl) _invEl.innerHTML =
       `<span class="${_pnlCls}">PnL ${_pnl>=0?'+':''}${usd(_pnl)}</span><br>Cash invested: ${usd(_invested)}`;
+    // Per-broker breakdown tile
+    const _brokers = S.cost?.us?.brokers || {};
+    const _brkEl   = document.getElementById('us-broker-breakdown');
+    if (_brkEl) {
+      const dbgLive = us.totalValue
+        ? (us.totalValue - (_brokers.IBKR?.account_value || 0))
+        : (_brokers.DBG?.account_value || 0);
+      const lines = [];
+      for (const [name, b] of Object.entries(_brokers)) {
+        const val = name === 'DBG' ? dbgLive : (b.account_value || 0);
+        lines.push(`<div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">${name}</span><strong>${usd(val)}</strong></div>`);
+      }
+      _brkEl.innerHTML = lines.join('');
+    }
     const _stmt = S.cost?.us?.account_value_statement;
     const _stmtDate = S.cost?.as_of;
     const _forceClosed = (us.closed || []).filter(p => p.user_force_closed);

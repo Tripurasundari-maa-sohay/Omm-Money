@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v130</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v131</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -892,8 +892,12 @@
         <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mchg pv" id="us-cash-share" style="color:var(--text-dim)">--</div><div class="mdesc">From broker statement</div></div>
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
         <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div><div id="us-day-pl-toggle" style="margin-top:4px;font-size:10px;cursor:pointer;color:var(--text-dim);user-select:none;" onclick="DASH.toggleJDZGdayPL()" title="Toggle whether JDZG (halted) is included in Day P&amp;L sum">JDZG: <span id="us-day-pl-jdzg-state">excluded</span> ⇄</div></div>
-        <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div><div class="mdesc" id="us-account-invested" style="font-size:10px;color:var(--accent-b);margin-top:2px"></div><div class="mdesc" id="us-account-statement" style="font-size:10px;color:var(--text-dim);margin-top:2px"></div></div>
-        <div class="metric-card"><label>ACCOUNT VALUE · BROKER</label><div class="mdesc" id="us-broker-breakdown" style="font-size:13px;margin-top:6px;line-height:1.7;">…</div></div>
+        <div class="metric-card" style="grid-column:span 2;min-width:0"><label>ACCOUNT VALUE · BROKER BREAKDOWN</label>
+          <div id="us-broker-table-wrap" style="margin-top:6px;overflow-x:auto"><table id="us-broker-table" style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="color:var(--text-dim);font-weight:600;text-align:right">
+            <th style="text-align:left;padding:4px 6px">BROKER</th><th style="padding:4px 6px">ACCT VAL</th><th style="padding:4px 6px">INVESTED</th><th style="padding:4px 6px">PnL</th><th style="padding:4px 6px">PnL %</th><th style="padding:4px 6px">DAY Δ (ex JDZG)</th>
+          </tr></thead><tbody id="us-broker-tbody">…</tbody></table></div>
+          <div class="mdesc" id="us-account-statement" style="font-size:10px;color:var(--text-dim);margin-top:4px"></div>
+        </div>
         <div class="metric-card" style="border-color:var(--accent-y);border-width:1.5px" title="Return in INR terms vs pure USD return — gap = currency effect">
           <label style="color:var(--accent-y)">💱 RETURN IN INR</label>
           <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px">
@@ -2279,27 +2283,60 @@ const DASH = (() => {
     }
     // Tile shows statementTotal. Force-closed write-offs (JDZG) are excluded from active.
     // Broker statement still includes their MV — shown as side note for reconciliation.
-    setText('us-account-value', usd(us.statementTotal || us.totalValue));
-    const _invested = us.cashInfusion || 0;
-    const _live     = us.statementTotal || us.totalValue || 0;
-    const _pnl      = _live - _invested;
-    const _pnlCls   = _pnl >= 0 ? 'pv pos' : 'pv neg';
-    const _invEl    = document.getElementById('us-account-invested');
-    if (_invEl) _invEl.innerHTML =
-      `<span class="${_pnlCls}">PnL ${_pnl>=0?'+':''}${usd(_pnl)}</span><br>Cash invested: ${usd(_invested)}`;
-    // Per-broker breakdown tile
+    // Combined broker breakdown table
     const _brokers = S.cost?.us?.brokers || {};
-    const _brkEl   = document.getElementById('us-broker-breakdown');
-    if (_brkEl) {
-      const dbgLive = us.totalValue
-        ? (us.totalValue - (_brokers.IBKR?.account_value || 0))
-        : (_brokers.DBG?.account_value || 0);
-      const lines = [];
-      for (const [name, b] of Object.entries(_brokers)) {
-        const val = name === 'DBG' ? dbgLive : (b.account_value || 0);
-        lines.push(`<div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">${name}</span><strong>${usd(val)}</strong></div>`);
+    const _tbody   = document.getElementById('us-broker-tbody');
+    if (_tbody && Object.keys(_brokers).length) {
+      // Per-broker totals using OPEN positions tagged broker:X
+      const perBroker = {};
+      for (const name of Object.keys(_brokers)) {
+        perBroker[name] = { mv: 0, cost: 0, day: 0, cash: _brokers[name]?.cash || 0,
+                            invested: _brokers[name]?.cash_infusion_itd || 0 };
       }
-      _brkEl.innerHTML = lines.join('');
+      for (const p of (us.open || [])) {
+        const brk = p.broker || 'DBG';
+        if (!perBroker[brk]) perBroker[brk] = { mv:0, cost:0, day:0, cash:0, invested:0 };
+        perBroker[brk].mv   += (p.mv || 0);
+        perBroker[brk].cost += (p.qty * p.avg) || 0;
+        if (p.dayPL !== null && !DAY_PL_EXCLUDE.has(p.tk))
+          perBroker[brk].day += (p.dayPL || 0);
+      }
+      const fmtPct = v => (v>=0?'+':'') + v.toFixed(2) + '%';
+      const fmtMon = v => (v>=0?'+':'') + usd(v);
+      const cls    = v => v>=0 ? 'pos' : 'neg';
+      let totMV=0, totInv=0, totDay=0, totDayBase=0;
+      let rows = '';
+      for (const [name, b] of Object.entries(perBroker)) {
+        const acctVal = b.mv + b.cash;
+        const pnl     = acctVal - b.invested;
+        const pnlPct  = b.invested ? (pnl / b.invested * 100) : 0;
+        const dayBase = b.mv - b.day;
+        const dayPct  = dayBase ? (b.day / dayBase * 100) : 0;
+        totMV += acctVal; totInv += b.invested; totDay += b.day; totDayBase += dayBase;
+        const dayCell = b.day !== 0
+          ? `<span class="${cls(b.day)}">${fmtMon(b.day)}</span> / <span class="${cls(b.day)}">${fmtPct(dayPct)}</span>`
+          : '<span style="color:var(--text-dim)">—</span>';
+        rows += `<tr style="border-top:1px solid var(--border)">
+          <td style="padding:5px 6px;font-weight:600">${name}</td>
+          <td style="padding:5px 6px;text-align:right"><strong>${usd(acctVal)}</strong></td>
+          <td style="padding:5px 6px;text-align:right;color:var(--text-dim)">${usd(b.invested)}</td>
+          <td style="padding:5px 6px;text-align:right" class="${cls(pnl)}">${fmtMon(pnl)}</td>
+          <td style="padding:5px 6px;text-align:right" class="${cls(pnl)}">${fmtPct(pnlPct)}</td>
+          <td style="padding:5px 6px;text-align:right">${dayCell}</td>
+        </tr>`;
+      }
+      const totPnl    = totMV - totInv;
+      const totPnlPct = totInv ? (totPnl / totInv * 100) : 0;
+      const totDayPct = totDayBase ? (totDay / totDayBase * 100) : 0;
+      rows += `<tr style="border-top:2px solid var(--accent-b);background:var(--bg-card2)">
+        <td style="padding:6px 6px;font-weight:700;color:var(--accent-b)">TOTAL</td>
+        <td style="padding:6px 6px;text-align:right"><strong>${usd(totMV)}</strong></td>
+        <td style="padding:6px 6px;text-align:right;color:var(--text-dim)">${usd(totInv)}</td>
+        <td style="padding:6px 6px;text-align:right" class="${cls(totPnl)}"><strong>${fmtMon(totPnl)}</strong></td>
+        <td style="padding:6px 6px;text-align:right" class="${cls(totPnl)}"><strong>${fmtPct(totPnlPct)}</strong></td>
+        <td style="padding:6px 6px;text-align:right"><span class="${cls(totDay)}">${fmtMon(totDay)}</span> / <span class="${cls(totDay)}">${fmtPct(totDayPct)}</span></td>
+      </tr>`;
+      _tbody.innerHTML = rows;
     }
     const _stmt = S.cost?.us?.account_value_statement;
     const _stmtDate = S.cost?.as_of;

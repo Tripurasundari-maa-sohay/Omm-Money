@@ -281,6 +281,11 @@
   /* Hero responsive: hero account value scales, stacks PnL below on narrow widths */
   #us-account-value{font-size:clamp(20px,5vw,30px)!important;line-height:1.2}
   #us-hero-pnl-usd{font-size:clamp(16px,3.5vw,24px)!important}
+  @media (max-width:600px){
+    /* Hero stacks vertically on narrow screens — PnL goes below, left border becomes top border */
+    .portfolio-metrics > .metric-card:first-of-type{grid-template-columns:1fr!important}
+    .portfolio-metrics > .metric-card:first-of-type > div:last-child{text-align:left!important;border-left:none!important;border-top:1px solid var(--border)!important;padding-left:0!important;padding-top:10px!important}
+  }
   @media (max-width:480px){
     #us-account-value{font-size:22px!important}
     #us-hero-pnl-usd{font-size:18px!important}
@@ -700,7 +705,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v133</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v134</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -898,17 +903,17 @@
     <div class="portfolio-metrics">
       <h2>USA Portfolio Metrics</h2>
 
-      <!-- Hero -->
-      <div class="metric-card" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 18px;margin-bottom:10px">
-        <div>
+      <!-- Hero — grid layout: account value left, PnL right -->
+      <div class="metric-card" style="display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:14px 18px;margin-bottom:10px">
+        <div style="min-width:0">
           <label>ACCOUNT VALUE</label>
-          <div class="mval loading pv" id="us-account-value" style="font-size:30px;line-height:1.2">…</div>
+          <div class="mval loading pv" id="us-account-value">…</div>
           <div class="mdesc" id="us-account-invested" style="font-size:11px;color:var(--text-dim);margin-top:2px"></div>
           <div class="mdesc" id="us-account-statement" style="font-size:10px;color:var(--text-dim);margin-top:2px"></div>
         </div>
-        <div style="text-align:right">
+        <div style="text-align:right;border-left:1px solid var(--border);padding-left:18px">
           <label>PnL</label>
-          <div class="mval pv" id="us-hero-pnl-usd" style="font-size:24px">—</div>
+          <div class="mval pv" id="us-hero-pnl-usd">—</div>
           <div class="mchg pv" id="us-hero-pnl-pct" style="font-size:13px">—</div>
         </div>
       </div>
@@ -937,9 +942,13 @@
           </div>
           <div class="mdesc" id="us-inr-ret-desc">Run parser to activate</div>
         </div>
-        <div class="metric-card"><label>STOCKS / ETF</label>
-          <div class="mval pv" style="font-size:14px"><span id="us-stocks-value">…</span> <span style="color:var(--text-dim);font-size:11px">/ <span id="us-etf-value">…</span></span></div>
-          <div class="mdesc"><span id="us-stocks-count">--</span> stocks · <span id="us-etf-count">--</span> ETFs · cash <span id="us-cash-value">…</span></div>
+        <div class="metric-card"><label>STOCKS · ETF · CASH</label>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-top:6px;line-height:1.6">
+            <span style="color:var(--text-dim)">Stocks</span><strong style="text-align:right" id="us-stocks-value">…</strong>
+            <span style="color:var(--text-dim)">ETF</span><strong style="text-align:right" id="us-etf-value">…</strong>
+            <span style="color:var(--text-dim)">Cash</span><strong style="text-align:right" id="us-cash-value">…</strong>
+          </div>
+          <div class="mdesc" style="margin-top:4px"><span id="us-stocks-count">--</span> · <span id="us-etf-count">--</span></div>
         </div>
         <div class="metric-card"><label>JDZG DRAG</label>
           <div class="mval pv" id="us-jdzg-drag">—</div>
@@ -2294,7 +2303,10 @@ const DASH = (() => {
     if (_stkEl) _stkEl.style.color = 'var(--accent-b)';   // blue — stocks
     if (_etfEl) _etfEl.style.color = 'var(--warn)';       // amber — ETF
     if (_csEl)  _csEl.style.color  = 'var(--text-dim)';   // muted — cash
-    setText('us-unreal-pl', `${sign(us.unrealPL)}${usd(us.unrealPL)} (${sign(us.returnPct)}${pct(us.returnPct)})`);
+    // Unreal P&L % uses SAME base as unrealPL — open lots cost (not cash deposits)
+    const _openCost = us.open.reduce((s,p) => s + (p.qty*p.avg || 0), 0);
+    const _uplPct   = _openCost > 0 ? (us.unrealPL / _openCost * 100) : 0;
+    setText('us-unreal-pl', `${sign(us.unrealPL)}${usd(us.unrealPL)} (${sign(_uplPct)}${pct(_uplPct)})`);
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
     const lbl = $('us-day-pl-label');

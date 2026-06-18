@@ -55,7 +55,7 @@ fi
 
 echo "→ Pushing with rebase retry..."
 for i in 1 2 3 4 5 6 7 8; do
-  git pull --rebase origin main >/dev/null 2>&1 || true
+  git pull --rebase -X theirs origin main >/dev/null 2>&1 || true
   if git push origin main 2>&1 | tee /tmp/push.log | grep -q "main -> main"; then
     echo "✓ Push attempt $i: OK"
     break

@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v120</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v121</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -891,7 +891,7 @@
         <div class="metric-card"><label>ETF VALUE</label><div class="mval loading pv" id="us-etf-value">…</div><div class="mchg pv" id="us-etf-ret">--</div><div class="mdesc" id="us-etf-count">-- positions</div></div>
         <div class="metric-card"><label>CASH</label><div class="mval loading pv" id="us-cash-value">…</div><div class="mchg pv" id="us-cash-share" style="color:var(--text-dim)">--</div><div class="mdesc">From broker statement</div></div>
         <div class="metric-card"><label>UNREALISED RETURN</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div></div>
+        <div class="metric-card"><label id="us-day-pl-label">TODAY'S P&amp;L</label><div class="mval loading pv" id="us-day-pl">…</div><div class="mchg pv" id="us-day-pl-pct">--</div><div id="us-day-pl-toggle" style="margin-top:4px;font-size:10px;cursor:pointer;color:var(--text-dim);user-select:none;" onclick="DASH.toggleJDZGdayPL()" title="Toggle whether JDZG (halted) is included in Day P&amp;L sum">JDZG: <span id="us-day-pl-jdzg-state">excluded</span> ⇄</div></div>
         <div class="metric-card"><label>ACCOUNT VALUE</label><div class="mval loading pv" id="us-account-value">…</div><div class="mdesc">Live (stocks + cash)</div><div class="mdesc" id="us-account-statement" style="font-size:10px;color:var(--text-dim);margin-top:2px"></div></div>
         <div class="metric-card" style="border-color:var(--accent-y);border-width:1.5px" title="Return in INR terms vs pure USD return — gap = currency effect">
           <label style="color:var(--accent-y)">💱 RETURN IN INR</label>
@@ -1685,7 +1685,7 @@ const DASH = (() => {
   const S = {
     cost: null, prices: {}, demoPrices: {}, demoCost: null,
     indices: null, view: null, charts: {},
-    ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '' },
+    ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '', includeJDZGdayPL: (localStorage.getItem('include_jdzg_daypl') === '1') },
     _realView: null
   };
 
@@ -2011,7 +2011,7 @@ const DASH = (() => {
       etfsMV:       usOpen.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
       mv:           usMV,
       unrealPL:     usOpen.reduce((s,p)=>s+p.uplNet,0),  // net of buy fees
-      dayPL:        usOpen.reduce((s,p)=>(p.dayPL!==null && !DAY_PL_EXCLUDE.has(p.tk))?s+p.dayPL:s, 0),
+      dayPL:        usOpen.reduce((s,p)=>(p.dayPL!==null && (S.ui.includeJDZGdayPL || !DAY_PL_EXCLUDE.has(p.tk)))?s+p.dayPL:s, 0),
       exitCost:     usOpen.length * -5,                   // -$5 per position to close
     };
     us.totalValue     = us.mv + (us.cash||0);             // ACTIVE total
@@ -2050,7 +2050,7 @@ const DASH = (() => {
       closed:       (S.cost.india && S.cost.india.closed) || [],
       mv:           inMV,
       unrealPL:     inOpen.reduce((s,p)=>s+p.uplNet,0),
-      dayPL:        inOpen.reduce((s,p)=>(p.dayPL!==null && !DAY_PL_EXCLUDE.has(p.tk))?s+p.dayPL:s, 0),
+      dayPL:        inOpen.reduce((s,p)=>(p.dayPL!==null && (S.ui.includeJDZGdayPL || !DAY_PL_EXCLUDE.has(p.tk)))?s+p.dayPL:s, 0),
     };
     india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
     const _inDen = india.mv - india.dayPL;
@@ -2363,7 +2363,7 @@ const DASH = (() => {
     qty:    { label:'QTY',          sort:'qty',    renderCell: p => `<td>${p.qty}</td>` },
     avg:    { label:'AVG',          sort:'avg',    renderCell: p => `<td>${usd2(p.avg)}</td>` },
     ltp:    { label:'LTP',          sort:'ltp',    renderCell: p => `<td><strong>${usd2(p.ltp)}</strong></td>` },
-    dayPL:  { label:'DAY P&L',      sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk); const tip=ex?' title="Excluded from Day P&L total (halted/illiquid)"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${pn(p.dayPL)}"${tip}>${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}${tag}</td>`; } },
+    dayPL:  { label:'DAY P&L',      sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk) && !S.ui.includeJDZGdayPL; const tip=ex?' title="Excluded from Day P&L total — toggle in tile"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${pn(p.dayPL)}"${tip}>${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}${tag}</td>`; } },
     dayPct: { label:'DAY %',        sort:'dayPct', renderCell: p => `<td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>` },
     mv:     { label:'MKT VALUE',    sort:'mv',     renderCell: p => `<td>${usd2(p.mv)}</td>` },
     fees:   { label:'FEES',         sort:'fees',   renderCell: p => `<td>${usd2(p.fees)}</td>` },
@@ -2381,7 +2381,7 @@ const DASH = (() => {
     avg:    { label:'AVG',        sort:'avg',    renderCell: p => `<td>${p.houseMoney?FREE_TAG:inr2(p.avg)}</td>` },
     ltp:    { label:'LTP',        sort:'ltp',    renderCell: p => { const isSME=SME_TICKERS.includes(p.tk); const pencil=isSME?` <span style="cursor:pointer;font-size:11px;opacity:0.7;" onclick="DASH.editSMELTP('${p.tk}',${p.ltp})" title="Set manual LTP">✏️</span>`:''; return `<td><strong>${inr2(p.ltp)}</strong>${pencil}</td>`; } },
     pc:     { label:'PREV CLOSE', sort:null,     renderCell: p => `<td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>` },
-    dayPL:  { label:'DAY P&L',    sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk); const tip=ex?' title="Excluded from Day P&L total (halted/illiquid)"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${p.dayPL!==null?pn(p.dayPL):''}"${tip}>${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}${tag}</td>`; } },
+    dayPL:  { label:'DAY P&L',    sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk) && !S.ui.includeJDZGdayPL; const tip=ex?' title="Excluded from Day P&L total — toggle in tile"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${p.dayPL!==null?pn(p.dayPL):''}"${tip}>${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}${tag}</td>`; } },
     dayPct: { label:'DAY %',      sort:'dayPct', renderCell: p => `<td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>` },
     upl:    { label:'UNREAL P&L', sort:'upl',    renderCell: p => `<td class="${pn(p.uplNet)}">${sign(p.uplNet)}${inr(p.uplNet)}</td>` },
     mv:     { label:'MKT VAL',    sort:'mv',     renderCell: p => `<td>${inr(p.mv)}</td>` },
@@ -4884,12 +4884,25 @@ const DASH = (() => {
     _wireChartExpand();
   }
 
+  function toggleJDZGdayPL() {
+    S.ui.includeJDZGdayPL = !S.ui.includeJDZGdayPL;
+    localStorage.setItem('include_jdzg_daypl', S.ui.includeJDZGdayPL ? '1' : '0');
+    const lbl = document.getElementById('us-day-pl-jdzg-state');
+    if (lbl) lbl.textContent = S.ui.includeJDZGdayPL ? 'included' : 'excluded';
+    if (typeof refresh === 'function') refresh();
+  }
+  // Sync label on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const lbl = document.getElementById('us-day-pl-jdzg-state');
+    if (lbl) lbl.textContent = S.ui.includeJDZGdayPL ? 'included' : 'excluded';
+  });
+
   function resetColOrder(table) {
     if (table === 'us') { US_COL_ORDER = [...US_COLS_DEFAULT]; _saveColOrder('us_col_order', US_COL_ORDER); renderUSHoldings(); }
     else                { IN_COL_ORDER = [...IN_COLS_DEFAULT];  _saveColOrder('in_col_order', IN_COL_ORDER);  renderIndiaHoldings(); }
   }
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, toggleJDZGdayPL };
 })();
 
 // Register service worker for PWA installability

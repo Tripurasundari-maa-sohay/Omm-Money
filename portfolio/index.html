@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v121</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v122</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1598,7 +1598,7 @@
 
       <!-- Table -->
       <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:8px;overflow:auto;">
-        <table id="wl-table" style="width:100%;border-collapse:collapse;font-size:13px;min-width:480px;">
+        <table id="wl-table" data-allow-swipe style="width:100%;border-collapse:collapse;font-size:13px;min-width:480px;">
           <thead id="wl-thead">
             <!-- header rebuilt by render based on planning view mode -->
           </thead>
@@ -4750,11 +4750,14 @@ const DASH = (() => {
     // tables (horizontal scrolling), canvases (chart pan), .scroll-x, and
     // any element explicitly opted out with data-no-swipe.
     const TAB_ORDER          = ['portfolio','us','india','transactions','signals','screener','watchlist'];
-    const SWIPE_MIN_DX       = 60;
-    const SWIPE_MAX_DY_RATIO = 0.5;
-    const SWIPE_MAX_MS       = 350;
-    const SWIPE_EDGE_PX      = 24;
-    const SWIPE_BLOCK_SELECTOR = 'canvas, .scroll-x, input, button, select, textarea, [data-no-swipe]';
+    const SWIPE_MIN_DX       = 120;   // bumped 60→120: column scroll on wide tables won't trigger
+    const SWIPE_MAX_DY_RATIO = 0.35;  // tighter 0.5→0.35: stricter horizontal-only
+    const SWIPE_MAX_MS       = 300;   // 350→300: only fast flicks
+    const SWIPE_EDGE_PX      = 28;
+    // Block swipe inside table — column scrolling deserves precedence over tab swap.
+    // Tap a tab button to switch instead. Watchlist tab is wrapped in <div data-no-swipe-table>
+    // exception so its swipe still works (table content but no horizontal scroll).
+    const SWIPE_BLOCK_SELECTOR = 'table:not([data-allow-swipe]), canvas, .scroll-x, input, button, select, textarea, [data-no-swipe]';
     let _swipeX = 0, _swipeY = 0, _swipeT = 0, _swipeBlocked = false;
     document.addEventListener('touchstart', e => {
       _swipeX = e.touches[0].clientX;

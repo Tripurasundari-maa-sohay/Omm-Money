@@ -689,7 +689,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v126</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v127</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -2279,7 +2279,19 @@ const DASH = (() => {
     // Tile shows statementTotal. Force-closed write-offs (JDZG) are excluded from active.
     // Broker statement still includes their MV — shown as side note for reconciliation.
     setText('us-account-value', usd(us.statementTotal || us.totalValue));
-    setText('us-account-invested', `Cash invested: ${usd(us.cashInfusion || 0)}`);
+    const _invested    = us.cashInfusion || 0;
+    const _live        = us.statementTotal || us.totalValue || 0;
+    // Transfer fees (QAR per IBKR transfer) — convert to USD using fixed 3.6413 peg
+    const _xferFeesQAR = Object.values(S.cost?.us?.brokers || {})
+      .reduce((s, b) => s + (b.transfer_fees_qar || 0), 0);
+    const _xferFeesUSD = _xferFeesQAR / 3.6413;
+    const _pnl         = _live - _invested - _xferFeesUSD;
+    const _pnlCls      = _pnl >= 0 ? 'pv pos' : 'pv neg';
+    const _invEl       = document.getElementById('us-account-invested');
+    if (_invEl) _invEl.innerHTML =
+      `<span class="${_pnlCls}">PnL ${_pnl>=0?'+':''}${usd(_pnl)}</span>`
+      + (_xferFeesQAR > 0 ? ` <span style="color:var(--text-dim);font-size:9px">(incl. ${_xferFeesQAR.toFixed(0)} QAR xfer fees)</span>` : '')
+      + `<br>Cash invested: ${usd(_invested)}`;
     const _stmt = S.cost?.us?.account_value_statement;
     const _stmtDate = S.cost?.as_of;
     const _forceClosed = (us.closed || []).filter(p => p.user_force_closed);

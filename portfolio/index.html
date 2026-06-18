@@ -281,8 +281,13 @@
   /* Hero — compact */
   #us-account-value{font-size:22px!important;line-height:1.2}
   #us-hero-pnl-usd{font-size:18px!important;line-height:1.2}
-  /* Broker breakdown rows — tight */
+  /* Broker breakdown rows — tight + nowrap so values don't break onto 2 lines */
   [id^="us-bd-"] > div{font-size:11px!important;line-height:1.5}
+  [id^="us-bd-"] strong{white-space:nowrap}
+  /* Watch tab — wrap long instructional text */
+  #wl-export-note,.wl-foot-note{word-wrap:break-word;white-space:normal;overflow-wrap:anywhere}
+  /* DATA alert badge — dim if only workflow_stale (non-actionable) */
+  .audit-badge[data-only-workflow-stale="1"]{opacity:0.35!important;filter:grayscale(0.6)!important}
   @media (max-width:600px){
     /* Hero stacks vertically on narrow screens — PnL goes below, left border becomes top border */
     .portfolio-metrics > .metric-card:first-of-type{grid-template-columns:1fr!important}
@@ -707,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v136</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v137</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -3574,7 +3579,7 @@ const DASH = (() => {
         setText('nasdaq-value', nq.current.toLocaleString('en-US',{minimumFractionDigits:2}));
         setIndexChange('nasdaq-change', nq.change, nq.change_pct);
       }
-      setText('usa-time', 'Updated: ' + new Date(usa.timestamp).toLocaleTimeString('en-US',{timeZone:'Asia/Qatar',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+      setText('usa-time', 'Updated: ' + new Date(String(usa.timestamp||'').replace(/\+00:00Z$/, 'Z')).toLocaleTimeString('en-US',{timeZone:'Asia/Qatar',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       setText('snp-time', 'Market: ' + liveMarketStatus('America/New_York', 9, 30, 16, 0));
     }
     if (ind) {
@@ -3591,7 +3596,7 @@ const DASH = (() => {
         setText('sensex-value', sx.current.toLocaleString('en-IN',{minimumFractionDigits:2}));
         setIndexChange('sensex-change', sx.change, sx.change_pct);
       }
-      setText('india-time', 'Updated: ' + new Date(ind.timestamp).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+      setText('india-time', 'Updated: ' + new Date(String(ind.timestamp||'').replace(/\+00:00Z$/, 'Z')).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',second:'2-digit'}));
       setText('nifty-time', 'Market: ' + liveMarketStatus('Asia/Kolkata', 9, 15, 15, 30));
     }
   }

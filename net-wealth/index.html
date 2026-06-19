@@ -2452,7 +2452,9 @@ const ODIN = (() => {
 
   // VM save API (Oracle VM, replaces Cloudflare Worker).
   // Source: /home/opc/save_api.py on VM 145.241.158.254.
-  const SAVE_WORKER_URL = 'https://save.145-241-158-254.nip.io/save';
+  const SAVE_WORKER_URL = (location.host.includes('.nip.io')||location.host.includes('.duckdns.org'))
+    ? location.origin + '/save'
+    : 'https://ommoney.duckdns.org/save';
 
   async function pushSeedToGitHub() {
     try {

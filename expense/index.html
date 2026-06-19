@@ -6,17 +6,17 @@
 <title>Expense Planner</title>
 
 <!-- PWA -->
-<link rel="manifest" href="/Omm-Money/expense/manifest.json">
+<link rel="manifest" href="/expense/manifest.json">
 <meta name="theme-color" content="#d4a84c">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Expenses">
-<link rel="apple-touch-icon" href="/Omm-Money/expense/icon.svg">
+<link rel="apple-touch-icon" href="/expense/icon.svg">
 <script>
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>{
-      navigator.serviceWorker.register('/Omm-Money/expense/sw.js')
+      navigator.serviceWorker.register('/expense/sw.js')
         .catch(e=>console.warn('SW:',e));
     });
   }

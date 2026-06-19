@@ -15,7 +15,7 @@ set -euo pipefail
 REPO="/Users/sabarna/Omm-Money"
 SW="$REPO/portfolio/sw.js"
 HTML="$REPO/portfolio/index.html"
-VM_KEY="$HOME/Downloads/ssh-key-2026-05-26.key"
+VM_KEY="$HOME/.ssh/ssh-key-2026-05-26.key"
 VM_USER="opc"
 VM_HOST="145.241.158.254"
 VM_DIR="/home/opc/web/portfolio"

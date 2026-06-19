@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v138</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v139</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -5378,7 +5378,11 @@ async function wlDelete(tk) {
 }
 
 // Auto-sync: push merged state to repo. Called after every CRUD operation.
-const WL_SAVE_URL = 'https://save.145-241-158-254.nip.io/save';
+// Use same origin as page (works for both nip.io + duckdns.org) so cookie travels.
+// Fall back to nip.io for github.io previews where there's no origin gateway.
+const WL_SAVE_URL = (location.host.includes('.nip.io') || location.host.includes('.duckdns.org'))
+  ? location.origin + '/save'
+  : 'https://ommoney.duckdns.org/save';
 let _wlSyncInflight = false;
 let _wlSyncQueued = false;
 let _wlLastSyncAt = 0;  // ms epoch — used to suppress poll while CDN catches up
@@ -5506,7 +5510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!tk || tk.length < 1) return;
     _wlLookupTimer = setTimeout(async () => {
       try {
-        const r = await fetch('https://save.145-241-158-254.nip.io/lookup?tk=' + encodeURIComponent(tk));
+        const r = await fetch((location.host.includes('.nip.io')||location.host.includes('.duckdns.org')?location.origin:'https://ommoney.duckdns.org') + '/lookup?tk=' + encodeURIComponent(tk));
         const d = await r.json();
         if (d && d.ltp != null) {
           // Overwrite name UNLESS user typed something custom

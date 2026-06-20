@@ -2,7 +2,7 @@
 // Why: OAuth-gated origin returns 302→Google when cookie missing. Caching shell
 // responses leaks the redirect HTML, which then returns to subsequent requests
 // causing ERR_FAILED + breaks. Network-only is safe + always fresh.
-const CACHE = 'portfolio-v139';
+const CACHE = 'portfolio-v140';
 
 self.addEventListener('install', e => { self.skipWaiting(); });
 

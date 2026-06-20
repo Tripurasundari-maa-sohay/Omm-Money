@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v140</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v141</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1491,6 +1491,35 @@
       </div>
       <div id="v1-summary" style="font-size:11px;color:var(--text-dim);margin-top:6px;text-align:right"></div>
     </div>
+
+    <!-- V1 QUICK ADD -->
+    <div class="analytics-section" style="margin-bottom:18px;padding:12px 16px">
+      <h2 style="margin:0 0 10px">ADD TO V1 · SA QUICK-CHECK</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px">TICKER</label>
+          <input id="v1-add-ticker" type="text" placeholder="NVDA" maxlength="10"
+            style="width:90px;background:var(--bg-card2);border:1px solid var(--border);color:var(--text-pri);border-radius:4px;padding:6px 10px;font-size:13px;font-family:monospace;text-transform:uppercase"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')V1.addTicker()">
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px">SA QUANT RATING (optional)</label>
+          <input id="v1-add-rating" type="number" placeholder="4.85" min="1" max="5" step="0.01"
+            style="width:100px;background:var(--bg-card2);border:1px solid var(--border);color:var(--text-pri);border-radius:4px;padding:6px 10px;font-size:13px"
+            onkeydown="if(event.key==='Enter')V1.addTicker()">
+        </div>
+        <button onclick="V1.addTicker()"
+          style="padding:7px 16px;background:var(--accent-b);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;height:33px">
+          + CHECK V1
+        </button>
+        <span id="v1-add-status" style="font-size:11px;align-self:center"></span>
+      </div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:8px">
+        Paste SA Quant ticker + rating → V1 runs all 5 modules (bear case, peer rank, weather, decay, exit timer). Results in table above within ~60s. No SA rating? Leave blank — still screens, just skips SA pre-filter gate.
+      </div>
+    </div>
+
     <hr style="border:none;border-top:1px solid var(--border);margin:0 0 16px">
 
     <!-- Market selector -->
@@ -4921,7 +4950,52 @@ const DASH = (() => {
       _render();
     }
 
-    return { load, setFilter };
+    async function addTicker() {
+      const tkEl  = document.getElementById('v1-add-ticker');
+      const rtEl  = document.getElementById('v1-add-rating');
+      const stEl  = document.getElementById('v1-add-status');
+      const tk    = (tkEl?.value || '').trim().toUpperCase();
+      const rt    = parseFloat(rtEl?.value || '');
+      if (!tk) { if(stEl){stEl.textContent='⚠ enter ticker';stEl.style.color='var(--loss)'} return; }
+
+      if(stEl){stEl.textContent='⏳ saving…';stEl.style.color='var(--text-dim)'}
+
+      // Build ratings payload (merge existing + new ticker)
+      let existing = {};
+      try {
+        const r = await fetch('./data/v1_ratings.json?_='+Date.now(),{cache:'no-store'});
+        if(r.ok) existing = await r.json();
+      } catch{}
+      const as_of = new Date().toISOString().slice(0,10);
+      existing[tk] = isNaN(rt) ? {as_of} : {rating: rt, as_of};
+
+      // Save via save-api → triggers run_v1.py on VM
+      const saveUrl = (location.host.includes('.nip.io')||location.host.includes('.duckdns.org'))
+        ? location.origin + '/save'
+        : 'https://ommoney.duckdns.org/save';
+
+      try {
+        const res  = await fetch(saveUrl, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({path:'portfolio/data/v1_ratings.json', content: JSON.stringify(existing,null,2)})
+        });
+        const data = await res.json();
+        if(data && data.ok) {
+          if(stEl){stEl.textContent=`✓ ${tk} queued — results in ~60s`;stEl.style.color='var(--gain)'}
+          if(tkEl) tkEl.value='';
+          if(rtEl) rtEl.value='';
+          // Reload V1 table after 70s
+          setTimeout(()=>load(), 70000);
+        } else {
+          if(stEl){stEl.textContent='⚠ save failed: '+(data?.error||'?');stEl.style.color='var(--loss)'}
+        }
+      } catch(e) {
+        if(stEl){stEl.textContent='⚠ offline — not saved';stEl.style.color='var(--loss)'}
+      }
+    }
+
+    return { load, setFilter, addTicker };
   })();
   window.V1 = V1;
 

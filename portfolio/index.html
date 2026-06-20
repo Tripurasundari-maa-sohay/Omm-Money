@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v139</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v140</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1462,6 +1462,36 @@
 
   <!-- ══════════ TAB 6 · SCREENER ══════════ -->
   <div id="screener-tab" class="tab-content">
+
+    <!-- V1 RESEARCH SECTION -->
+    <div class="analytics-section" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <h2 style="margin:0">V1 RESEARCH · SA QUANT PIPELINE</h2>
+        <div style="display:flex;gap:4px" id="v1-filter-bar">
+          <button onclick="V1.setFilter('ALL')"   data-v1f="ALL"   style="padding:3px 10px;border:1px solid var(--accent-b);background:var(--accent-b);color:#fff;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">ALL</button>
+          <button onclick="V1.setFilter('BUY+')"  data-v1f="BUY+"  style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">BUY+</button>
+          <button onclick="V1.setFilter('AVOID')" data-v1f="AVOID" style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">AVOID</button>
+        </div>
+        <span id="v1-generated" style="font-size:10px;color:var(--text-dim)"></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="v1-table" style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="color:var(--text-dim);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">
+            <th style="padding:6px 8px;text-align:left">TICKER</th>
+            <th style="padding:6px 8px;text-align:center">VERDICT</th>
+            <th style="padding:6px 8px;text-align:right">FUND</th>
+            <th style="padding:6px 8px;text-align:right">DECAY</th>
+            <th style="padding:6px 8px;text-align:center">PEER</th>
+            <th style="padding:6px 8px;text-align:center">WEATHER</th>
+            <th style="padding:6px 8px;text-align:right">SA ⭐</th>
+            <th style="padding:6px 8px;text-align:left">FLAGS</th>
+          </tr></thead>
+          <tbody id="v1-tbody"><tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Loading V1 research…</td></tr></tbody>
+        </table>
+      </div>
+      <div id="v1-summary" style="font-size:11px;color:var(--text-dim);margin-top:6px;text-align:right"></div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:0 0 16px">
 
     <!-- Market selector -->
     <div class="scr-filter-bar" style="margin-bottom:6px">
@@ -4813,7 +4843,87 @@ const DASH = (() => {
 
     return { init, filter, switchMarket, initSort };
   })();
-  window.DASH_SCR = DASH_SCR;  // expose to global scope for inline onchange handlers
+  window.DASH_SCR = DASH_SCR;
+
+  // ══ V1 RESEARCH MODULE ════════════════════════════════════════════════════
+  const V1 = (() => {
+    let _data = null;
+    let _filter = 'ALL';
+
+    const VERDICT_STYLE = {
+      'STRONG BUY': 'background:#0a4a2a;color:#4ade80;font-weight:700',
+      'BUY':        'background:#0a3a4a;color:#38bdf8;font-weight:700',
+      'AVOID':      'background:#4a2a00;color:#f59e0b',
+      'AVOID (RED MACRO)': 'background:#4a1a00;color:#fb923c',
+      'EXIT':       'background:#4a0a0a;color:#f87171;font-weight:700',
+      'TAKE PROFIT':'background:#1a4a0a;color:#86efac;font-weight:700',
+      'INSTANT REJECT': 'background:#2a0a2a;color:#c084fc;font-style:italic',
+    };
+    const WEATHER_ICON = { GREEN:'🟢', YELLOW:'🟡', RED:'🔴' };
+
+    function _render() {
+      const tbody = document.getElementById('v1-tbody');
+      const sum   = document.getElementById('v1-summary');
+      if (!tbody || !_data) return;
+      let rows = _data.tickers || [];
+      if (_filter === 'BUY+')  rows = rows.filter(r => r.verdict === 'STRONG BUY' || r.verdict === 'BUY');
+      if (_filter === 'AVOID') rows = rows.filter(r => r.verdict && r.verdict.startsWith('AVOID'));
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text-dim)">No tickers match filter.</td></tr>`;
+      } else {
+        tbody.innerHTML = rows.map(r => {
+          const vs = VERDICT_STYLE[r.verdict] || '';
+          const wi = r.weather ? (WEATHER_ICON[r.weather] || '') : '—';
+          const flags = (r.flags || []).slice(0,2).join(' · ') || '';
+          const fundBar = r.fund > 0 ? `<span style="display:inline-block;width:${r.fund}px;max-width:80px;height:5px;background:${r.fund>=75?'var(--gain)':r.fund>=50?'var(--warn)':'var(--loss)'};border-radius:2px;vertical-align:middle;margin-left:4px"></span>` : '';
+          return `<tr style="border-top:1px solid var(--border)">
+            <td style="padding:7px 8px;font-weight:700">${r.tk}</td>
+            <td style="padding:7px 8px;text-align:center"><span style="padding:2px 8px;border-radius:4px;font-size:11px;${vs}">${r.verdict}</span></td>
+            <td style="padding:7px 8px;text-align:right">${r.fund}/100${fundBar}</td>
+            <td style="padding:7px 8px;text-align:right;color:${r.decay>65?'var(--loss)':r.decay>35?'var(--warn)':'var(--gain)'}">${r.decay}/100</td>
+            <td style="padding:7px 8px;text-align:center;color:var(--text-dim)">${r.peer || '—'}</td>
+            <td style="padding:7px 8px;text-align:center">${wi} ${r.weather || '—'}</td>
+            <td style="padding:7px 8px;text-align:right;color:var(--accent-y)">${r.sa ? r.sa.toFixed(2) : '—'}</td>
+            <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(r.flags||[]).join(' · ')}">${flags}</td>
+          </tr>`;
+        }).join('');
+      }
+      const s = _data.summary || {};
+      if (sum) sum.textContent = `${s.total||0} total · ${s.strong_buy||0} strong buy · ${s.buy||0} buy · ${s.avoid||0} avoid · ${s.reject||0} rejected`;
+    }
+
+    async function load() {
+      try {
+        const r = await fetch('./data/processed/screener_v1.json?_=' + Date.now(), {cache:'no-store'});
+        if (!r.ok) throw new Error(r.status);
+        _data = await r.json();
+        const genEl = document.getElementById('v1-generated');
+        if (genEl && _data.generated) {
+          const d = new Date(String(_data.generated).replace(/\+00:00Z$/,'Z'));
+          genEl.textContent = 'Updated ' + d.toLocaleString('en-US',{timeZone:'Asia/Qatar',hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'});
+        }
+        _render();
+      } catch(e) {
+        const tbody = document.getElementById('v1-tbody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text-dim)">V1 data not available yet — runs nightly 22:30 UTC.<br><small>${e}</small></td></tr>`;
+      }
+    }
+
+    function setFilter(f) {
+      _filter = f;
+      document.querySelectorAll('#v1-filter-bar button').forEach(b => {
+        const on = b.dataset.v1f === f;
+        b.style.background  = on ? 'var(--accent-b)' : 'var(--bg-card2)';
+        b.style.color       = on ? '#fff' : 'var(--text-sec)';
+        b.style.borderColor = on ? 'var(--accent-b)' : 'var(--border)';
+      });
+      _render();
+    }
+
+    return { load, setFilter };
+  })();
+  window.V1 = V1;
 
   /* ── INIT ── */
   async function loadFXRates() {
@@ -4869,6 +4979,7 @@ const DASH = (() => {
     initSigTableSort();
     sigWatchlistInit();
     DASH_SCR.initSort();
+    V1.load();
     tickCountdowns();
     setInterval(tickCountdowns, 1000);
     refresh();

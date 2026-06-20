@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v141</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v142</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1484,6 +1484,7 @@
             <th style="padding:6px 8px;text-align:center">PEER</th>
             <th style="padding:6px 8px;text-align:center">WEATHER</th>
             <th style="padding:6px 8px;text-align:right">SA ⭐</th>
+            <th style="padding:6px 8px;text-align:center" title="Days at SA Quant Rating — lower = fresher signal, more runway">🗓 DAYS</th>
             <th style="padding:6px 8px;text-align:left">FLAGS</th>
           </tr></thead>
           <tbody id="v1-tbody"><tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Loading V1 research…</td></tr></tbody>
@@ -4898,14 +4899,30 @@ const DASH = (() => {
       if (_filter === 'BUY+')  rows = rows.filter(r => r.verdict === 'STRONG BUY' || r.verdict === 'BUY');
       if (_filter === 'AVOID') rows = rows.filter(r => r.verdict && r.verdict.startsWith('AVOID'));
 
+      // Sort: BUY+ first, then by days ascending (freshest first), then fund desc
+      rows.sort((a,b) => {
+        const order = {'STRONG BUY':0,'BUY':1,'AVOID':2,'AVOID (RED MACRO)':3,'EXIT':4,'INSTANT REJECT':5};
+        const oa = order[a.verdict] ?? 6, ob = order[b.verdict] ?? 6;
+        if (oa !== ob) return oa - ob;
+        const da = a.days_at_rating ?? 999, db = b.days_at_rating ?? 999;
+        if (da !== db) return da - db;
+        return (b.fund||0) - (a.fund||0);
+      });
+
       if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text-dim)">No tickers match filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--text-dim)">No tickers match filter.</td></tr>`;
       } else {
         tbody.innerHTML = rows.map(r => {
-          const vs = VERDICT_STYLE[r.verdict] || '';
-          const wi = r.weather ? (WEATHER_ICON[r.weather] || '') : '—';
+          const vs  = VERDICT_STYLE[r.verdict] || '';
+          const wi  = r.weather ? (WEATHER_ICON[r.weather] || '') : '—';
           const flags = (r.flags || []).slice(0,2).join(' · ') || '';
           const fundBar = r.fund > 0 ? `<span style="display:inline-block;width:${r.fund}px;max-width:80px;height:5px;background:${r.fund>=75?'var(--gain)':r.fund>=50?'var(--warn)':'var(--loss)'};border-radius:2px;vertical-align:middle;margin-left:4px"></span>` : '';
+          const days = r.days_at_rating;
+          const freshLabel = days == null ? '—'
+            : days <= 7  ? `<span style="background:#0a3a0a;color:#4ade80;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">${days}d FRESH</span>`
+            : days <= 21 ? `<span style="background:#2a2a0a;color:#f59e0b;padding:1px 6px;border-radius:3px;font-size:10px">${days}d</span>`
+            : days <= 45 ? `<span style="color:var(--text-dim);font-size:11px">${days}d</span>`
+            : `<span style="color:var(--loss);font-size:11px">${days}d LATE</span>`;
           return `<tr style="border-top:1px solid var(--border)">
             <td style="padding:7px 8px;font-weight:700">${r.tk}</td>
             <td style="padding:7px 8px;text-align:center"><span style="padding:2px 8px;border-radius:4px;font-size:11px;${vs}">${r.verdict}</span></td>
@@ -4914,7 +4931,8 @@ const DASH = (() => {
             <td style="padding:7px 8px;text-align:center;color:var(--text-dim)">${r.peer || '—'}</td>
             <td style="padding:7px 8px;text-align:center">${wi} ${r.weather || '—'}</td>
             <td style="padding:7px 8px;text-align:right;color:var(--accent-y)">${r.sa ? r.sa.toFixed(2) : '—'}</td>
-            <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(r.flags||[]).join(' · ')}">${flags}</td>
+            <td style="padding:7px 8px;text-align:center">${freshLabel}</td>
+            <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(r.flags||[]).join(' · ')}">${flags}</td>
           </tr>`;
         }).join('');
       }

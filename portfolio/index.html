@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v149</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v150</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1465,27 +1465,47 @@
 
     <!-- V1 RESEARCH SECTION -->
     <div class="analytics-section" style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
         <h2 style="margin:0">V1 RESEARCH · SA QUANT PIPELINE</h2>
-        <div style="display:flex;gap:4px" id="v1-filter-bar">
-          <button onclick="V1.setFilter('ALL')"   data-v1f="ALL"   style="padding:3px 10px;border:1px solid var(--accent-b);background:var(--accent-b);color:#fff;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">ALL</button>
-          <button onclick="V1.setFilter('BUY+')"  data-v1f="BUY+"  style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">BUY+</button>
-          <button onclick="V1.setFilter('AVOID')" data-v1f="AVOID" style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">AVOID</button>
-        </div>
         <span id="v1-generated" style="font-size:10px;color:var(--text-dim)"></span>
+      </div>
+      <!-- Filter + Sort bar -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+        <div style="display:flex;gap:3px" id="v1-filter-bar">
+          <button onclick="V1.setFilter('ALL')"    data-v1f="ALL"    style="padding:3px 10px;border:1px solid var(--accent-b);background:var(--accent-b);color:#fff;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">ALL</button>
+          <button onclick="V1.setFilter('BUY+')"   data-v1f="BUY+"   style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">BUY+</button>
+          <button onclick="V1.setFilter('AVOID')"  data-v1f="AVOID"  style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">AVOID</button>
+          <button onclick="V1.setFilter('FRESH')"  data-v1f="FRESH"  style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">🟢 FRESH</button>
+          <button onclick="V1.setFilter('STK')"    data-v1f="STK"    style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">STK</button>
+          <button onclick="V1.setFilter('ETF')"    data-v1f="ETF"    style="padding:3px 10px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">ETF</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;margin-left:8px">
+          <span style="font-size:10px;color:var(--text-dim)">SORT:</span>
+          <select id="v1-sort" onchange="V1.setSort(this.value)" style="font-size:11px;padding:2px 6px;background:var(--bg-card2);border:1px solid var(--border);color:var(--text-pri);border-radius:4px;cursor:pointer">
+            <option value="verdict_days">Verdict + Freshness</option>
+            <option value="days_asc">Days ↑ (Freshest)</option>
+            <option value="fund_desc">Fund Score ↓</option>
+            <option value="decay_asc">Decay ↑ (Safest)</option>
+            <option value="sa_desc">SA Rating ↓</option>
+            <option value="tk_asc">Ticker A→Z</option>
+          </select>
+        </div>
+        <input id="v1-search" type="text" placeholder="Search ticker…" maxlength="10"
+          style="width:100px;padding:3px 8px;font-size:11px;background:var(--bg-card2);border:1px solid var(--border);color:var(--text-pri);border-radius:4px;font-family:monospace;text-transform:uppercase"
+          oninput="this.value=this.value.toUpperCase();V1.setSearch(this.value)">
       </div>
       <div style="overflow-x:auto">
         <table id="v1-table" style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="color:var(--text-dim);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">
-            <th style="padding:6px 8px;text-align:left">TICKER</th>
-            <th style="padding:6px 8px;text-align:center">VERDICT</th>
-            <th style="padding:6px 8px;text-align:right">FUND</th>
-            <th style="padding:6px 8px;text-align:right">DECAY</th>
+          <thead><tr style="color:var(--text-dim);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;background:var(--bg-card2)">
+            <th style="padding:6px 8px;text-align:left;cursor:pointer" onclick="V1.setSort('tk_asc')">TICKER</th>
+            <th style="padding:6px 8px;text-align:center;cursor:pointer" onclick="V1.setSort('verdict_days')">VERDICT</th>
+            <th style="padding:6px 8px;text-align:right;cursor:pointer" onclick="V1.setSort('fund_desc')">FUND ↕</th>
+            <th style="padding:6px 8px;text-align:right;cursor:pointer" onclick="V1.setSort('decay_asc')">DECAY ↕</th>
             <th style="padding:6px 8px;text-align:center">PEER</th>
             <th style="padding:6px 8px;text-align:center">WEATHER</th>
             <th style="padding:6px 8px;text-align:center">TYPE</th>
-            <th style="padding:6px 8px;text-align:right">SA ⭐</th>
-            <th style="padding:6px 8px;text-align:center" title="Days at SA Quant Rating — lower = fresher signal, more runway">🗓 DAYS</th>
+            <th style="padding:6px 8px;text-align:right;cursor:pointer" onclick="V1.setSort('sa_desc')">SA ⭐ ↕</th>
+            <th style="padding:6px 8px;text-align:center;cursor:pointer" title="Days at SA Quant Rating — click to sort" onclick="V1.setSort('days_asc')">🗓 DAYS ↕</th>
             <th style="padding:6px 8px;text-align:left">FLAGS</th>
           </tr></thead>
           <tbody id="v1-tbody"><tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-dim)">Loading V1 research…</td></tr></tbody>
@@ -4758,6 +4778,8 @@ const DASH = (() => {
   const V1 = (() => {
     let _data = null;
     let _filter = 'ALL';
+    let _sort   = 'verdict_days';
+    let _search = '';
 
     const VERDICT_STYLE = {
       'STRONG BUY': 'background:#0a4a2a;color:#4ade80;font-weight:700',
@@ -4775,21 +4797,36 @@ const DASH = (() => {
       const sum   = document.getElementById('v1-summary');
       if (!tbody || !_data) return;
       let rows = _data.tickers || [];
+
+      // Apply filters
       if (_filter === 'BUY+')  rows = rows.filter(r => r.verdict === 'STRONG BUY' || r.verdict === 'BUY');
       if (_filter === 'AVOID') rows = rows.filter(r => r.verdict && r.verdict.startsWith('AVOID'));
+      if (_filter === 'FRESH') rows = rows.filter(r => (r.days_at_rating ?? 999) <= 7);
+      if (_filter === 'STK')   rows = rows.filter(r => r.sa_source === 'stock');
+      if (_filter === 'ETF')   rows = rows.filter(r => r.sa_source === 'etf');
+      if (_search)             rows = rows.filter(r => r.tk.includes(_search));
 
-      // Sort: BUY+ first, then by days ascending (freshest first), then fund desc
+      // Apply sort
+      const order = {'STRONG BUY':0,'BUY':1,'AVOID':2,'AVOID (RED MACRO)':3,'EXIT':4,'INSTANT REJECT':5};
       rows.sort((a,b) => {
-        const order = {'STRONG BUY':0,'BUY':1,'AVOID':2,'AVOID (RED MACRO)':3,'EXIT':4,'INSTANT REJECT':5};
-        const oa = order[a.verdict] ?? 6, ob = order[b.verdict] ?? 6;
-        if (oa !== ob) return oa - ob;
-        const da = a.days_at_rating ?? 999, db = b.days_at_rating ?? 999;
-        if (da !== db) return da - db;
-        return (b.fund||0) - (a.fund||0);
+        switch(_sort) {
+          case 'days_asc':   return (a.days_at_rating??999)-(b.days_at_rating??999);
+          case 'fund_desc':  return (b.fund||0)-(a.fund||0);
+          case 'decay_asc':  return (a.decay??999)-(b.decay??999);
+          case 'sa_desc':    return (b.sa||0)-(a.sa||0);
+          case 'tk_asc':     return a.tk.localeCompare(b.tk);
+          default: { // verdict_days
+            const oa=order[a.verdict]??6, ob_=order[b.verdict]??6;
+            if(oa!==ob_) return oa-ob_;
+            const da=a.days_at_rating??999, db=b.days_at_rating??999;
+            if(da!==db) return da-db;
+            return (b.fund||0)-(a.fund||0);
+          }
+        }
       });
 
       if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--text-dim)">No tickers match filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text-dim)">No tickers match filter.</td></tr>`;
       } else {
         tbody.innerHTML = rows.map(r => {
           const vs  = VERDICT_STYLE[r.verdict] || '';
@@ -4897,7 +4934,19 @@ const DASH = (() => {
       }
     }
 
-    return { load, setFilter, addTicker };
+    function setSort(s) {
+      _sort = s;
+      const el = document.getElementById('v1-sort');
+      if (el) el.value = s;
+      _render();
+    }
+
+    function setSearch(s) {
+      _search = s.trim().toUpperCase();
+      _render();
+    }
+
+    return { load, setFilter, setSort, setSearch, addTicker };
   })();
   window.V1 = V1;
 

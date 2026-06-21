@@ -29,21 +29,48 @@ _NOT_TICKER = {
     'LLC','LTD','REIT','SP','BUY','SELL','HOLD','STRONG','WEAK',
 }
 
+def _parse_stocks_line(tokens) -> tuple:
+    """Parse ranked stock line: Rank Ticker Name ... Quant% Days grades"""
+    if not re.match(r'^\d+$', tokens[0]): return None, None, None
+    tk = tokens[1]
+    if not re.match(r'^[A-Z]{2,6}$', tk) or tk in _NOT_TICKER: return None, None, None
+    floats = [float(t) for t in tokens if re.match(r'^\d{1,2}\.\d{2}$', t) and 3.9 <= float(t) <= 5.1]
+    quant  = next((f for f in floats if 4.0 <= f <= 5.0), None)
+    if not quant: return None, None, None
+    days = None
+    past = False
+    for t in tokens[2:]:
+        if re.match(r'^\d{1,2}\.\d{2}$', t): past = True
+        elif past and re.match(r'^\d{1,3}$', t) and 1 <= int(t) <= 999:
+            days = int(t); break
+    return tk, quant, days
+
+def _parse_etf_line(tokens) -> tuple:
+    """Parse ranked ETF line: Rank Ticker Name Price Change% ... DaysAtQuant DaysToCover QuantRating"""
+    if not (re.match(r'^\d+$', tokens[0]) or True): return None, None, None
+    tk = next((t for t in tokens if re.match(r'^[A-Z]{2,6}$',t) and t not in _NOT_TICKER), None)
+    if not tk: return None, None, None
+    last = tokens[-1]
+    if not re.match(r'^4\.\d{2}$', last): return None, None, None
+    days = next((int(t) for t in tokens if re.match(r'^\d{1,3}$',t) and 1<=int(t)<=999), None)
+    return tk, float(last), days
+
 def _parse_page_text(text: str) -> dict:
+    """Returns {ticker: {rating, days_at_rating}} — handles both stock + ETF formats."""
     results = {}
     for line in text.split('\n'):
         tokens = line.strip().split()
-        if len(tokens) < 3:
-            continue
-        last = tokens[-1]
-        if not re.match(r'^4\.\d{2}$', last):
-            continue
-        rating = float(last)
-        # Find ticker: standalone UPPERCASE 2-6 chars, not a noise word
-        for t in tokens[:-1]:
-            if re.match(r'^[A-Z]{2,6}$', t) and t not in _NOT_TICKER:
-                results[t] = rating
-                break
+        if len(tokens) < 4: continue
+        # Try stock ranked format first (starts with rank integer)
+        if re.match(r'^\d+$', tokens[0]):
+            tk, rating, days = _parse_stocks_line(tokens)
+            if tk and rating:
+                results[tk] = {'rating': rating, 'days_at_rating': days}
+                continue
+        # Try ETF format (ranked or unranked)
+        tk, rating, days = _parse_etf_line(tokens)
+        if tk and rating:
+            results[tk] = {'rating': rating, 'days_at_rating': days}
     return results
 
 def parse_pdf(path: str) -> dict:
@@ -68,9 +95,16 @@ def parse_all(pdf_paths: list) -> dict:
     for path in pdf_paths:
         tickers, src = parse_pdf(path)
         print(f"  {Path(path).name}: {len(tickers)} tickers extracted")
-        for tk, rating in tickers.items():
+        for tk, v in tickers.items():
+            rating = v['rating']
+            days   = v.get('days_at_rating')
             if tk not in merged or rating > merged[tk]['rating']:
-                merged[tk] = {'rating': rating, 'as_of': today, 'source': src}
+                merged[tk] = {
+                    'rating': rating,
+                    'days_at_rating': days,
+                    'as_of': today,
+                    'source': src
+                }
     return merged
 
 def push_to_vm(ratings: dict, key='~/.ssh/ssh-key-2026-05-26.key', host='opc@145.241.158.254'):

@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v143</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v144</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1523,139 +1523,17 @@
 
     <hr style="border:none;border-top:1px solid var(--border);margin:0 0 16px">
 
-    <!-- Market selector -->
-    <div class="scr-filter-bar" style="margin-bottom:6px">
-      <label>Market:
-        <select id="scr-market" onchange="DASH_SCR.switchMarket()">
-          <option value="us">🇺🇸 US (SP500 + NDX100)</option>
-          <option value="india">🇮🇳 India (NSE full universe)</option>
-          <option value="macro">🌐 Macro / Commodities</option>
-        </select>
-      </label>
-      <span id="scr-regime-badge" style="font-size:12px;padding:2px 8px;border-radius:3px;margin-left:8px"></span>
-    </div>
-
-    <!-- Filter bar (US + India) -->
-    <div class="scr-filter-bar" id="scr-filter-us">
-      <label>Universe:
-        <select id="scr-universe" onchange="DASH_SCR.filter()">
-          <option value="all">All (SP500 + NDX100)</option>
-          <option value="SP500">S&amp;P 500 only</option>
-          <option value="NDX100">Nasdaq 100 only</option>
-        </select>
-      </label>
-      <label>Signal:
-        <select id="scr-action" onchange="DASH_SCR.filter()">
-          <option value="all">All Signals</option>
-          <option value="BUY">BUY only</option>
-          <option value="HOLD">HOLD only</option>
-          <option value="REDUCE">REDUCE only</option>
-        </select>
-      </label>
-      <label>Min Score:
-        <input type="number" id="scr-min-score" value="0" min="0" max="87" style="width:52px"
-          oninput="DASH_SCR.filter()">
-      </label>
-      <span id="scr-count" style="font-size:12px;color:var(--text-dim);margin-left:auto"></span>
-    </div>
-
-    <!-- India filter bar -->
-    <div class="scr-filter-bar" id="scr-filter-india" style="display:none">
-      <label>Signal:
-        <select id="scr-india-action" onchange="DASH_SCR.filter()">
-          <option value="all">All Signals</option>
-          <option value="BUY">BUY only</option>
-          <option value="HOLD">HOLD only</option>
-          <option value="REDUCE">REDUCE only</option>
-        </select>
-      </label>
-      <label>Sector:
-        <select id="scr-india-sector" onchange="DASH_SCR.filter()">
-          <option value="all">All Sectors</option>
-        </select>
-      </label>
-      <label>Min Score:
-        <input type="number" id="scr-india-min-score" value="0" min="0" max="87" style="width:52px"
-          oninput="DASH_SCR.filter()">
-      </label>
-      <span id="scr-india-count" style="font-size:12px;color:var(--text-dim);margin-left:auto"></span>
-    </div>
-
-    <!-- Status -->
-    <div id="scr-status" style="color:var(--text-dim);font-size:13px;margin-bottom:10px"></div>
-
-    <!-- US Table -->
-    <div id="scr-panel-us" class="tab-section" style="padding:0;overflow-x:auto">
-      <table id="scr-table">
-        <thead>
-          <tr>
-            <th class="sortable" data-scrcol="tk">TICKER</th>
-            <th class="sortable" data-scrcol="sector">SECTOR</th>
-            <th>INDEX</th>
-            <th class="sortable sort-desc" data-scrcol="score">SCORE ▾</th>
-            <th>ACTION</th>
-            <th class="sortable" data-scrcol="rsi">RSI</th>
-            <th class="sortable" data-scrcol="v200">vs 200MA</th>
-            <th class="sortable" data-scrcol="rs">RS/SPY</th>
-            <th class="sortable" data-scrcol="rng">52W%</th>
-            <th class="sortable" data-scrcol="vsMean">vsMEAN</th>
-          </tr>
-        </thead>
-        <tbody id="scr-tbody">
-          <tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:30px">
-            Click <strong style="color:var(--gain)">🔍 SCREENER</strong> to load — runs Tue &amp; Sat after US close
-          </td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- India Table -->
-    <div id="scr-panel-india" style="display:none;overflow-x:auto">
-      <table id="scr-india-table" style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th class="sortable" data-inscrcol="tk" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">TICKER</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">PRICE ₹</th>
-            <th class="sortable" data-inscrcol="sector" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">SECTOR</th>
-            <th class="sortable sort-desc" data-inscrcol="score" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">SCORE ▾</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">ACTION</th>
-            <th class="sortable" data-inscrcol="rsi" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">RSI</th>
-            <th class="sortable" data-inscrcol="v200" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">vs 200MA</th>
-            <th class="sortable" data-inscrcol="rs" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">RS/NSEI</th>
-            <th class="sortable" data-inscrcol="rng" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">52W%</th>
-            <th class="sortable" data-inscrcol="vsMean" style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left;cursor:pointer">vsMEAN</th>
-          </tr>
-        </thead>
-        <tbody id="scr-india-tbody">
-          <tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:30px">Loading India universe…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Macro / Commodities Panel -->
-    <div id="scr-panel-macro" style="display:none">
-      <table id="scr-macro-table" style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">ASSET</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">CATEGORY</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">PRICE</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">SCORE</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">ACTION</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">RSI</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">vs 200MA</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">RS/SPY</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">52W%</th>
-            <th style="background:var(--bg-card2);color:var(--accent-b);padding:8px 10px;text-align:left">vsMEAN</th>
-          </tr>
-        </thead>
-        <tbody id="scr-macro-tbody">
-          <tr><td colspan="10" style="text-align:center;color:var(--text-dim);padding:30px">Loading macro data…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div id="scr-updated" style="font-size:12px;color:var(--text-dim);margin-top:10px;text-align:right"></div>
+    <!-- Hidden stubs keep DASH_SCR JS happy (no errors) -->
+    <div id="scr-filter-us" style="display:none"></div>
+    <div id="scr-filter-india" style="display:none"></div>
+    <div id="scr-panel-us" style="display:none"><table id="scr-table"><tbody id="scr-tbody"></tbody></table></div>
+    <div id="scr-panel-india" style="display:none"><table id="scr-india-table"><tbody id="scr-india-tbody"></tbody></table></div>
+    <div id="scr-panel-macro" style="display:none"><table id="scr-macro-table"><tbody id="scr-macro-tbody"></tbody></table></div>
+    <span id="scr-count" style="display:none"></span>
+    <span id="scr-india-count" style="display:none"></span>
+    <span id="scr-status" style="display:none"></span>
+    <span id="scr-updated" style="display:none"></span>
+    <span id="scr-regime-badge" style="display:none"></span>
 
   </div><!-- /screener-tab -->
 

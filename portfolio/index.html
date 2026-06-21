@@ -712,7 +712,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v146</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v147</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1483,11 +1483,12 @@
             <th style="padding:6px 8px;text-align:right">DECAY</th>
             <th style="padding:6px 8px;text-align:center">PEER</th>
             <th style="padding:6px 8px;text-align:center">WEATHER</th>
+            <th style="padding:6px 8px;text-align:center">TYPE</th>
             <th style="padding:6px 8px;text-align:right">SA ⭐</th>
             <th style="padding:6px 8px;text-align:center" title="Days at SA Quant Rating — lower = fresher signal, more runway">🗓 DAYS</th>
             <th style="padding:6px 8px;text-align:left">FLAGS</th>
           </tr></thead>
-          <tbody id="v1-tbody"><tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Loading V1 research…</td></tr></tbody>
+          <tbody id="v1-tbody"><tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-dim)">Loading V1 research…</td></tr></tbody>
         </table>
       </div>
       <div id="v1-summary" style="font-size:11px;color:var(--text-dim);margin-top:6px;text-align:right"></div>
@@ -4808,6 +4809,11 @@ const DASH = (() => {
             <td style="padding:7px 8px;text-align:right;color:${r.decay>65?'var(--loss)':r.decay>35?'var(--warn)':'var(--gain)'}">${r.decay}/100</td>
             <td style="padding:7px 8px;text-align:center;color:var(--text-dim)">${r.peer || '—'}</td>
             <td style="padding:7px 8px;text-align:center">${wi} ${r.weather || '—'}</td>
+            <td style="padding:7px 8px;text-align:center">${r.sa_source === 'etf'
+              ? '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#0a2a4a;color:#60a5fa;font-weight:700">ETF</span>'
+              : r.sa_source === 'stock'
+              ? '<span style="font-size:10px;padding:1px 6px;border-radius:3px;background:#0a3a1a;color:#4ade80;font-weight:700">STK</span>'
+              : '<span style="color:var(--text-dim);font-size:10px">—</span>'}</td>
             <td style="padding:7px 8px;text-align:right;color:var(--accent-y)">${r.sa ? r.sa.toFixed(2) : '—'}</td>
             <td style="padding:7px 8px;text-align:center">${freshLabel}</td>
             <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(r.flags||[]).join(' · ')}">${flags}</td>

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-28T07:53:15.659673+00:00Z",
+  "generated": "2026-06-28T07:54:03.148887+00:00Z",
   "usa_market": {
     "status": "CLOSED",
     "indices": {
@@ -27,9 +27,14 @@
         "change": 34.35,
         "change_pct": 0.14
       },
-      "sensex": null
+      "sensex": {
+        "current": 77100.47,
+        "prev_close": 76991.22,
+        "change": 109.25,
+        "change_pct": 0.14
+      }
     },
-    "timestamp": "2026-06-28T07:52:15.006771+00:00Z"
+    "timestamp": "2026-06-28T07:54:04.677501+00:00Z"
   },
   "fx_rate": 94.3
 }

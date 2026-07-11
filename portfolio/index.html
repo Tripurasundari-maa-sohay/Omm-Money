@@ -222,6 +222,13 @@
   .r-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .tab-content{display:none}
   .tab-content.active{display:block;animation:fadeIn .3s ease-in-out}
+  /* ── RESEARCH SUB-TABS ── */
+  .rsub-bar{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+  .rsub-btn{padding:8px 20px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-sec);cursor:pointer;font-size:12px;font-weight:700;letter-spacing:1px;transition:color .15s,border-color .15s}
+  .rsub-btn:hover{color:var(--accent-b)}
+  .rsub-btn.active{color:var(--accent-y);border-bottom-color:var(--accent-y)}
+  .rpanel{display:none}
+  .rpanel.active{display:block}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
   h2{font-size:var(--fs-md);color:var(--accent-y);font-weight:700;letter-spacing:1px;margin-bottom:14px}
@@ -523,17 +530,6 @@
     text-transform:uppercase; outline:none; }
   .wl-input:focus { border-color:var(--accent-b); }
 
-  /* ── RESPONSIVE: 1300px (small laptop / 100% zoom) ── */
-  @media (max-width:1300px){
-    .logo{font-size:13px;letter-spacing:1px}
-    .banner-tabs{gap:5px}
-    .tab-button{padding:5px 10px;font-size:11px;letter-spacing:.5px}
-    .banner-controls{gap:6px}
-    .ccy-btn{padding:4px 7px;font-size:10px}
-    .fs-btn{padding:3px 6px;font-size:10px}
-    .top-banner{padding:6px 14px 4px}
-  }
-
   /* ── RESPONSIVE: 900px (tablet) ── */
   @media (max-width:900px){
     .markets-status,.analytics-two-col,.charges-grid{grid-template-columns:1fr}
@@ -694,8 +690,7 @@
         <button class="tab-button" data-tab="india"><span class="tl">INDIA PORTFOLIO</span><span class="ts">INDIA</span></button>
         <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
         <button class="tab-button" data-tab="signals"><span class="tl">📡 SIGNALS</span><span class="ts">SIGNALS</span></button>
-        <button class="tab-button" data-tab="screener"><span class="tl">🔍 SCREENER</span><span class="ts">SCREEN</span></button>
-        <button class="tab-button" data-tab="watchlist"><span class="tl">👀 WATCHLIST</span><span class="ts">WATCH</span></button>
+        <button class="tab-button" data-tab="research"><span class="tl">🔍 RESEARCH</span><span class="ts">RSRCH</span></button>
       </div>
       <div class="banner-controls">
         <!-- FX Rates Display -->
@@ -806,7 +801,7 @@
     </div>
 
     <!-- Watchlist quick tile -->
-    <div style="margin:14px 0;padding:12px 16px;background:rgba(78,207,130,0.05);border:1px solid rgba(78,207,130,0.25);border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()" title="Open Watchlist tab">
+    <div style="margin:14px 0;padding:12px 16px;background:rgba(78,207,130,0.05);border:1px solid rgba(78,207,130,0.25);border-radius:8px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer;" onclick="(function(){const rb=document.querySelector('[data-tab=research]');if(rb){rb.click();setTimeout(()=>switchResearchSub('watchlist'),50);}})() " title="Open Watchlist tab">
       <span style="font-size:11px;color:var(--accent-g);font-weight:700;letter-spacing:1.5px;">👀 WATCHLIST</span>
       <div id="wl-main-tile" style="display:flex;gap:8px;align-items:center;font-size:13px;">
         <span style="color:var(--text-dim);">loading…</span>
@@ -1471,8 +1466,14 @@
 
   </div><!-- /signals-tab -->
 
-  <!-- ══════════ TAB 6 · SCREENER ══════════ -->
-  <div id="screener-tab" class="tab-content">
+  <!-- ══════════ TAB 6 · RESEARCH (SCREENER + WATCHLIST) ══════════ -->
+  <div id="research-tab" class="tab-content">
+    <div class="rsub-bar">
+      <button class="rsub-btn active" data-rsub="screener" onclick="switchResearchSub('screener')">🔍 SCREENER</button>
+      <button class="rsub-btn" data-rsub="watchlist" onclick="switchResearchSub('watchlist')">👀 WATCHLIST</button>
+    </div>
+    <!-- ── SCREENER panel ── -->
+    <div id="rpanel-screener" class="rpanel active">
 
     <!-- V1 RESEARCH SECTION -->
     <div class="analytics-section" style="margin-bottom:18px">
@@ -1567,10 +1568,9 @@
     <span id="scr-updated" style="display:none"></span>
     <span id="scr-regime-badge" style="display:none"></span>
 
-  </div><!-- /screener-tab -->
-
-  <!-- ── WATCHLIST TAB ──────────────────────────────────────────────────── -->
-  <div id="watchlist-tab" class="tab-content">
+    </div><!-- /rpanel-screener -->
+    <!-- ── WATCHLIST panel ── -->
+    <div id="rpanel-watchlist" class="rpanel">
     <div style="padding:16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap;">
         <div>
@@ -1643,7 +1643,8 @@
         Local edits saved to browser. To make them permanent across devices, export JSON and commit to <code>portfolio/data/watchlist.json</code>.
       </div>
     </div>
-  </div><!-- /watchlist-tab -->
+    </div><!-- /rpanel-watchlist -->
+  </div><!-- /research-tab -->
 
   <!-- ── ADD/EDIT WATCHLIST MODAL ──────────────────────────────────────── -->
   <div id="wl-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
@@ -3635,9 +3636,16 @@ const DASH = (() => {
     if (name === 'signals') loadSignals();
     if (name === 'screener') DASH_SCR.init();
     if (name === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
+    if (name === 'research') { const sub = document.querySelector('.rsub-btn.active'); if (!sub || sub.dataset.rsub === 'screener') DASH_SCR.init(); else { loadWatchlist(); _wlStartPolling(); } }
     document.body.dataset.activeTab = name;  // CSS hooks off this to compact hero on non-portfolio tabs
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
+  }
+  function switchResearchSub(sub) {
+    document.querySelectorAll('.rsub-btn').forEach(b => b.classList.toggle('active', b.dataset.rsub === sub));
+    document.querySelectorAll('.rpanel').forEach(p => p.classList.toggle('active', p.id === 'rpanel-' + sub));
+    if (sub === 'screener') DASH_SCR.init();
+    if (sub === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
   }
   /* ── Font size control ────────────────────────────────────────── */
   const FS_STEPS = [0.75, 0.85, 1, 1.1, 1.2, 1.35, 1.5];
@@ -5002,7 +5010,7 @@ const DASH = (() => {
     // Restore last active tab (refresh persistence)
     try {
       const _savedTab = localStorage.getItem('active_tab');
-      const _validTabs = ['portfolio','us','india','transactions','signals','screener','watchlist'];
+      const _validTabs = ['portfolio','us','india','transactions','signals','research'];
       if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
         switchTab(_savedTab);
         document.body.dataset.activeTab = _savedTab;
@@ -5032,7 +5040,7 @@ const DASH = (() => {
     // Targets inside any of SWIPE_BLOCK_SELECTOR don't trigger tab swap —
     // tables (horizontal scrolling), canvases (chart pan), .scroll-x, and
     // any element explicitly opted out with data-no-swipe.
-    const TAB_ORDER          = ['portfolio','us','india','transactions','signals','screener','watchlist'];
+    const TAB_ORDER          = ['portfolio','us','india','transactions','signals','research'];
     const SWIPE_MIN_DX       = 120;   // bumped 60→120: column scroll on wide tables won't trigger
     const SWIPE_MAX_DY_RATIO = 0.35;  // tighter 0.5→0.35: stricter horizontal-only
     const SWIPE_MAX_MS       = 300;   // 350→300: only fast flicks
@@ -5486,10 +5494,10 @@ function _wlUpdateMainTile(c) {
   const el = document.getElementById('wl-main-tile');
   if (!el) return;
   el.innerHTML = `
-    <span style="background:rgba(78,207,130,0.18);color:#4ecf82;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🟢 ${c.buy}</span>
-    <span style="background:rgba(240,180,41,0.18);color:#f0b429;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🟡 ${c.near}</span>
-    <span style="background:rgba(249,115,22,0.18);color:#f97316;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🟠 ${c.watch}</span>
-    <span style="background:rgba(248,113,113,0.18);color:#f87171;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="document.querySelector('[data-tab=watchlist]')?.click()">🔴 ${c.exp}</span>
+    <span style="background:rgba(78,207,130,0.18);color:#4ecf82;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="(function(){const rb=document.querySelector('[data-tab=research]');if(rb){rb.click();setTimeout(()=>switchResearchSub('watchlist'),50);}})() ">🟢 ${c.buy}</span>
+    <span style="background:rgba(240,180,41,0.18);color:#f0b429;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="(function(){const rb=document.querySelector('[data-tab=research]');if(rb){rb.click();setTimeout(()=>switchResearchSub('watchlist'),50);}})() ">🟡 ${c.near}</span>
+    <span style="background:rgba(249,115,22,0.18);color:#f97316;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="(function(){const rb=document.querySelector('[data-tab=research]');if(rb){rb.click();setTimeout(()=>switchResearchSub('watchlist'),50);}})() ">🟠 ${c.watch}</span>
+    <span style="background:rgba(248,113,113,0.18);color:#f87171;padding:3px 9px;border-radius:4px;font-weight:700;cursor:pointer;" onclick="(function(){const rb=document.querySelector('[data-tab=research]');if(rb){rb.click();setTimeout(()=>switchResearchSub('watchlist'),50);}})() ">🔴 ${c.exp}</span>
     <span style="color:var(--text-dim);font-size:11px;margin-left:4px;">of ${c.total}</span>
   `;
 }
@@ -5586,7 +5594,7 @@ function _wlStartPolling() {
   _wlPollTimer = setInterval(async () => {
     if (document.hidden) return;
     const activeTab = document.querySelector('.tab-button.active');
-    if (!activeTab || activeTab.dataset.tab !== 'watchlist') return;
+    const _activeSub = document.querySelector('.rsub-btn.active'); if (!activeTab || (activeTab.dataset.tab !== 'watchlist' && !(activeTab.dataset.tab === 'research' && _activeSub && _activeSub.dataset.rsub === 'watchlist'))) return;
     // Skip poll if we just synced — GitHub CDN may still serve stale content
     if (Date.now() - _wlLastSyncAt < 90_000) return;
     try {
@@ -5757,7 +5765,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('click', e => {
-    if (e.target.dataset && e.target.dataset.tab === 'watchlist') _wlStartPolling();
+    if (e.target.dataset && e.target.dataset.tab === 'watchlist') _wlStartPolling(); if (e.target.dataset && e.target.dataset.tab === 'research') { const _rs=document.querySelector('.rsub-btn.active'); if(_rs&&_rs.dataset.rsub==='watchlist'){loadWatchlist();_wlStartPolling();} }
   });
 
   // Background-load watchlist so PORTFOLIO tab tile populates without visiting Watchlist tab.

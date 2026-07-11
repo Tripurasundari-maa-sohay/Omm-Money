@@ -689,7 +689,6 @@
         <button class="tab-button" data-tab="us"><span class="tl">US PORTFOLIO</span><span class="ts">US</span></button>
         <button class="tab-button" data-tab="india"><span class="tl">INDIA PORTFOLIO</span><span class="ts">INDIA</span></button>
         <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
-        <button class="tab-button" data-tab="signals"><span class="tl">📡 SIGNALS</span><span class="ts">SIGNALS</span></button>
         <button class="tab-button" data-tab="research"><span class="tl">🔍 RESEARCH</span><span class="ts">RSRCH</span></button>
       </div>
       <div class="banner-controls">
@@ -1385,92 +1384,14 @@
 
   </div><!-- /transactions-tab -->
 
-  <!-- ══════════ TAB 5 · SIGNALS ══════════ -->
-  <div id="signals-tab" class="tab-content">
 
-    <!-- Regime banner -->
-    <div class="sig-regime-banner" id="sig-regime-banner">
-      <div>
-        <div style="color:var(--text-dim);font-size:12px;font-weight:700;letter-spacing:1.5px;margin-bottom:4px">MARKET REGIME · SPY vs 200MA</div>
-        <div id="sig-regime-val" style="font-size:20px;font-weight:700;color:var(--text-dim)">Loading…</div>
-      </div>
-      <div id="sig-regime-sub" style="font-size:12px;color:var(--text-dim);text-align:right"></div>
-    </div>
-
-    <!-- Holdings signal table -->
-    <div class="tab-section">
-      <h2 style="margin-bottom:14px">US HOLDINGS · SIGNAL SCORES</h2>
-      <div style="overflow-x:auto">
-        <table id="sig-holdings-table">
-          <thead>
-            <tr>
-              <th class="sortable" data-col="ticker">TICKER</th>
-              <th>SECTOR</th>
-              <th class="sortable sort-desc" data-col="score">SCORE</th>
-              <th>ACTION</th>
-              <th class="sortable" data-col="rsi">RSI</th>
-              <th class="sortable" data-col="v200">vs 200MA</th>
-              <th class="sortable" data-col="rs">RS/SPY</th>
-              <th class="sortable" data-col="rng">52W%</th>
-              <th class="sortable" data-col="vsMean">vsMEAN</th>
-              <th>MACD</th>
-              <th>VOL</th>
-              <th>REGIME</th>
-            </tr>
-          </thead>
-          <tbody id="sig-holdings-tbody">
-            <tr><td colspan="12" class="sig-loading">Click <strong style="color:var(--gain)">📡 SIGNALS</strong> to load…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Watchlist -->
-    <div class="tab-section">
-      <h2>WATCHLIST · SIGNAL TRACKER</h2>
-      <div id="sig-watchlist-inputs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
-        <!-- 5 inputs injected by JS -->
-        <button id="sig-watchlist-run"
-          style="background:var(--gain);color:var(--bg-base);border:none;border-radius:4px;padding:8px 18px;
-                 font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer">▶ ANALYZE</button>
-        <button id="sig-watchlist-clear"
-          style="background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:4px;
-                 padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px">CLEAR</button>
-      </div>
-      <div id="sig-watchlist-status" style="font-size:12px;color:var(--text-dim);margin-bottom:10px"></div>
-      <div id="sig-watchlist-out"></div>
-    </div>
-
-    <!-- Model legend -->
-    <div class="tab-section">
-      <h3 style="margin-bottom:12px">SIGNAL MODEL · 9 COMPONENTS (0–100 SCORE)</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px;margin-bottom:14px">
-        <div class="sig-legend-row"><span>Price vs 200-day MA</span><strong style="color:var(--accent-b)">12 pts</strong></div>
-        <div class="sig-legend-row"><span>Golden / Death Cross (50/200)</span><strong style="color:var(--accent-b)">8 pts</strong></div>
-        <div class="sig-legend-row"><span>Weekly trend vs 10-week MA</span><strong style="color:var(--accent-b)">10 pts</strong></div>
-        <div class="sig-legend-row"><span>RSI-14 (EWM)</span><strong style="color:var(--accent-b)">12 pts</strong></div>
-        <div class="sig-legend-row"><span>MACD vs Signal line</span><strong style="color:var(--accent-b)">10 pts</strong></div>
-        <div class="sig-legend-row"><span>Volume — up-day vs down-day</span><strong style="color:var(--accent-b)">8 pts</strong></div>
-        <div class="sig-legend-row"><span>Relative Strength vs SPY (60d)</span><strong style="color:var(--accent-b)">15 pts</strong></div>
-        <div class="sig-legend-row"><span>52-week range position</span><strong style="color:var(--accent-b)">8 pts</strong></div>
-        <div class="sig-legend-row"><span>Valuation vs 1-year mean</span><strong style="color:var(--accent-b)">10 pts</strong></div>
-      </div>
-      <div style="padding:10px 14px;background:var(--bg-card2);border-radius:4px;font-size:12px;display:flex;gap:20px;flex-wrap:wrap">
-        <span style="color:var(--text-dim);font-size:12px;letter-spacing:.5px">MODEL C</span>
-        <span><strong style="color:var(--gain)">BUY ≥ 68</strong></span>
-        <span><strong style="color:var(--warn)">HOLD 40–67</strong></span>
-        <span><strong style="color:var(--loss)">REDUCE &lt; 40</strong></span>
-        <span style="color:var(--text-dim)">Bear regime (SPY &lt; 200MA) applies ×0.75 multiplier · 2-week stability filter before acting</span>
-      </div>
-    </div>
-
-  </div><!-- /signals-tab -->
 
   <!-- ══════════ TAB 6 · RESEARCH (SCREENER + WATCHLIST) ══════════ -->
   <div id="research-tab" class="tab-content">
     <div class="rsub-bar">
       <button class="rsub-btn active" data-rsub="screener" onclick="switchResearchSub('screener')">🔍 SCREENER</button>
       <button class="rsub-btn" data-rsub="watchlist" onclick="switchResearchSub('watchlist')">👀 WATCHLIST</button>
+      <button class="rsub-btn" data-rsub="signals" onclick="switchResearchSub('signals')">📡 SIGNALS</button>
     </div>
     <!-- ── SCREENER panel ── -->
     <div id="rpanel-screener" class="rpanel active">
@@ -1644,6 +1565,86 @@
       </div>
     </div>
     </div><!-- /rpanel-watchlist -->
+    <!-- ── SIGNALS panel ── -->
+    <div id="rpanel-signals" class="rpanel">
+
+    <!-- Regime banner -->
+    <div class="sig-regime-banner" id="sig-regime-banner">
+      <div>
+        <div style="color:var(--text-dim);font-size:12px;font-weight:700;letter-spacing:1.5px;margin-bottom:4px">MARKET REGIME · SPY vs 200MA</div>
+        <div id="sig-regime-val" style="font-size:20px;font-weight:700;color:var(--text-dim)">Loading…</div>
+      </div>
+      <div id="sig-regime-sub" style="font-size:12px;color:var(--text-dim);text-align:right"></div>
+    </div>
+
+    <!-- Holdings signal table -->
+    <div class="tab-section">
+      <h2 style="margin-bottom:14px">US HOLDINGS · SIGNAL SCORES</h2>
+      <div style="overflow-x:auto">
+        <table id="sig-holdings-table">
+          <thead>
+            <tr>
+              <th class="sortable" data-col="ticker">TICKER</th>
+              <th>SECTOR</th>
+              <th class="sortable sort-desc" data-col="score">SCORE</th>
+              <th>ACTION</th>
+              <th class="sortable" data-col="rsi">RSI</th>
+              <th class="sortable" data-col="v200">vs 200MA</th>
+              <th class="sortable" data-col="rs">RS/SPY</th>
+              <th class="sortable" data-col="rng">52W%</th>
+              <th class="sortable" data-col="vsMean">vsMEAN</th>
+              <th>MACD</th>
+              <th>VOL</th>
+              <th>REGIME</th>
+            </tr>
+          </thead>
+          <tbody id="sig-holdings-tbody">
+            <tr><td colspan="12" class="sig-loading">Click <strong style="color:var(--gain)">📡 SIGNALS</strong> to load…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Watchlist -->
+    <div class="tab-section">
+      <h2>WATCHLIST · SIGNAL TRACKER</h2>
+      <div id="sig-watchlist-inputs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+        <!-- 5 inputs injected by JS -->
+        <button id="sig-watchlist-run"
+          style="background:var(--gain);color:var(--bg-base);border:none;border-radius:4px;padding:8px 18px;
+                 font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer">▶ ANALYZE</button>
+        <button id="sig-watchlist-clear"
+          style="background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:4px;
+                 padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px">CLEAR</button>
+      </div>
+      <div id="sig-watchlist-status" style="font-size:12px;color:var(--text-dim);margin-bottom:10px"></div>
+      <div id="sig-watchlist-out"></div>
+    </div>
+
+    <!-- Model legend -->
+    <div class="tab-section">
+      <h3 style="margin-bottom:12px">SIGNAL MODEL · 9 COMPONENTS (0–100 SCORE)</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px;margin-bottom:14px">
+        <div class="sig-legend-row"><span>Price vs 200-day MA</span><strong style="color:var(--accent-b)">12 pts</strong></div>
+        <div class="sig-legend-row"><span>Golden / Death Cross (50/200)</span><strong style="color:var(--accent-b)">8 pts</strong></div>
+        <div class="sig-legend-row"><span>Weekly trend vs 10-week MA</span><strong style="color:var(--accent-b)">10 pts</strong></div>
+        <div class="sig-legend-row"><span>RSI-14 (EWM)</span><strong style="color:var(--accent-b)">12 pts</strong></div>
+        <div class="sig-legend-row"><span>MACD vs Signal line</span><strong style="color:var(--accent-b)">10 pts</strong></div>
+        <div class="sig-legend-row"><span>Volume — up-day vs down-day</span><strong style="color:var(--accent-b)">8 pts</strong></div>
+        <div class="sig-legend-row"><span>Relative Strength vs SPY (60d)</span><strong style="color:var(--accent-b)">15 pts</strong></div>
+        <div class="sig-legend-row"><span>52-week range position</span><strong style="color:var(--accent-b)">8 pts</strong></div>
+        <div class="sig-legend-row"><span>Valuation vs 1-year mean</span><strong style="color:var(--accent-b)">10 pts</strong></div>
+      </div>
+      <div style="padding:10px 14px;background:var(--bg-card2);border-radius:4px;font-size:12px;display:flex;gap:20px;flex-wrap:wrap">
+        <span style="color:var(--text-dim);font-size:12px;letter-spacing:.5px">MODEL C</span>
+        <span><strong style="color:var(--gain)">BUY ≥ 68</strong></span>
+        <span><strong style="color:var(--warn)">HOLD 40–67</strong></span>
+        <span><strong style="color:var(--loss)">REDUCE &lt; 40</strong></span>
+        <span style="color:var(--text-dim)">Bear regime (SPY &lt; 200MA) applies ×0.75 multiplier · 2-week stability filter before acting</span>
+      </div>
+    </div>
+
+    </div><!-- /rpanel-signals -->
   </div><!-- /research-tab -->
 
   <!-- ── ADD/EDIT WATCHLIST MODAL ──────────────────────────────────────── -->
@@ -3633,10 +3634,9 @@ const DASH = (() => {
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
     const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
-    if (name === 'signals') loadSignals();
     if (name === 'screener') DASH_SCR.init();
     if (name === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
-    if (name === 'research') { const sub = document.querySelector('.rsub-btn.active'); if (!sub || sub.dataset.rsub === 'screener') DASH_SCR.init(); else { loadWatchlist(); _wlStartPolling(); } }
+    if (name === 'research') { const sub = document.querySelector('.rsub-btn.active'); if (!sub || sub.dataset.rsub === 'screener') DASH_SCR.init(); else if (sub.dataset.rsub === 'watchlist') { loadWatchlist(); _wlStartPolling(); } else if (sub.dataset.rsub === 'signals') loadSignals(); }
     document.body.dataset.activeTab = name;  // CSS hooks off this to compact hero on non-portfolio tabs
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
@@ -3646,6 +3646,7 @@ const DASH = (() => {
     document.querySelectorAll('.rpanel').forEach(p => p.classList.toggle('active', p.id === 'rpanel-' + sub));
     if (sub === 'screener') DASH_SCR.init();
     if (sub === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
+    if (sub === 'signals') loadSignals();
   }
   /* ── Font size control ────────────────────────────────────────── */
   const FS_STEPS = [0.75, 0.85, 1, 1.1, 1.2, 1.35, 1.5];
@@ -5010,7 +5011,7 @@ const DASH = (() => {
     // Restore last active tab (refresh persistence)
     try {
       const _savedTab = localStorage.getItem('active_tab');
-      const _validTabs = ['portfolio','us','india','transactions','signals','research'];
+      const _validTabs = ['portfolio','us','india','transactions','research'];
       if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
         switchTab(_savedTab);
         document.body.dataset.activeTab = _savedTab;
@@ -5040,7 +5041,7 @@ const DASH = (() => {
     // Targets inside any of SWIPE_BLOCK_SELECTOR don't trigger tab swap —
     // tables (horizontal scrolling), canvases (chart pan), .scroll-x, and
     // any element explicitly opted out with data-no-swipe.
-    const TAB_ORDER          = ['portfolio','us','india','transactions','signals','research'];
+    const TAB_ORDER          = ['portfolio','us','india','transactions','research'];
     const SWIPE_MIN_DX       = 120;   // bumped 60→120: column scroll on wide tables won't trigger
     const SWIPE_MAX_DY_RATIO = 0.35;  // tighter 0.5→0.35: stricter horizontal-only
     const SWIPE_MAX_MS       = 300;   // 350→300: only fast flicks

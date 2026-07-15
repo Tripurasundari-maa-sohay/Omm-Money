@@ -227,25 +227,29 @@
   #reco-tab .reco-pill{padding:3px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700;transition:all .15s}
   #reco-tab .reco-pill.active{background:var(--accent-b);border-color:var(--accent-b);color:#fff}
   #reco-tab .reco-pill.buy{border-color:#4ecf82;color:#4ecf82}
-  #reco-tab .reco-pill.buy.active{background:#4ecf82;color:#000}
+  #reco-tab .reco-pill.buy.active{background:#4ecf82;border-color:#4ecf82;color:#000}
   #reco-tab .reco-pill.hold{border-color:#f0b429;color:#f0b429}
-  #reco-tab .reco-pill.hold.active{background:#f0b429;color:#000}
+  #reco-tab .reco-pill.hold.active{background:#f0b429;border-color:#f0b429;color:#000}
   #reco-tab .reco-pill.sell{border-color:#f87171;color:#f87171}
-  #reco-tab .reco-pill.sell.active{background:#f87171;color:#000}
+  #reco-tab .reco-pill.sell.active{background:#f87171;border-color:#f87171;color:#000}
   #reco-tab .reco-pill.mf{border-color:#9b8cf5;color:#9b8cf5}
-  #reco-tab .reco-pill.mf.active{background:#9b8cf5;color:#000}
+  #reco-tab .reco-pill.mf.active{background:#9b8cf5;border-color:#9b8cf5;color:#000}
   #reco-tab .reco-pill.sa{border-color:#f0b429;color:#f0b429}
-  #reco-tab .reco-pill.sa.active{background:#f0b429;color:#000}
+  #reco-tab .reco-pill.sa.active{background:#f0b429;border-color:#f0b429;color:#000}
+  #reco-tab .reco-pill.pf{border-color:#4ecf82;color:#4ecf82}
+  #reco-tab .reco-pill.pf.active{background:#4ecf82;border-color:#4ecf82;color:#000}
   #reco-tab table{font-size:12px}
   #reco-tab thead th{background:var(--bg-card2);color:var(--accent-b);padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
   #reco-tab thead th:hover{color:var(--accent-g)}
   #reco-tab tbody td{padding:6px 10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
   #reco-tab tbody tr:hover{background:var(--bg-card2)}
+  #reco-tab tbody tr.in-pf{background:rgba(78,207,130,.04)}
   .reco-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.5px}
   .reco-badge.buy{background:rgba(78,207,130,.18);color:#4ecf82}
   .reco-badge.hold{background:rgba(240,180,41,.18);color:#f0b429}
   .reco-badge.sell{background:rgba(248,113,113,.18);color:#f87171}
   .reco-badge.reduce{background:rgba(249,115,22,.18);color:#f97316}
+  .reco-badge.other{background:rgba(148,163,184,.18);color:var(--text-sec)}
   .reco-src-mf{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(155,140,245,.18);color:#9b8cf5;letter-spacing:.5px}
   .reco-src-sa{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(240,180,41,.18);color:#f0b429;letter-spacing:.5px}
   /* ── RESEARCH SUB-TABS ── */
@@ -1692,12 +1696,15 @@
         <button class="reco-pill sell"  data-reco-filter="sell"   onclick="RECO.filter('sell')">SELL / REDUCE</button>
         <span style="width:1px;background:var(--border);height:20px;margin:0 6px"></span>
         <span style="font-size:10px;color:var(--text-dim);margin-right:2px">SOURCE:</span>
-        <button class="reco-pill mf active" data-reco-src="mf"   onclick="RECO.src('mf')">🟣 MF</button>
-        <button class="reco-pill sa"  data-reco-src="sa"         onclick="RECO.src('sa')">🟡 SA</button>
+        <button class="reco-pill active" data-reco-src="all" onclick="RECO.src('all')">ALL</button>
+        <button class="reco-pill mf"     data-reco-src="mf"  onclick="RECO.src('mf')">🟣 MF</button>
+        <button class="reco-pill sa"     data-reco-src="sa"  onclick="RECO.src('sa')">🟡 SA</button>
         <span style="width:1px;background:var(--border);height:20px;margin:0 6px"></span>
         <span style="font-size:10px;color:var(--text-dim);margin-right:2px">VIEW:</span>
         <button class="reco-pill active" data-reco-view="latest"  onclick="RECO.view('latest')">LATEST ONLY</button>
         <button class="reco-pill"        data-reco-view="all"     onclick="RECO.view('all')">FULL HISTORY</button>
+        <span style="width:1px;background:var(--border);height:20px;margin:0 6px"></span>
+        <button class="reco-pill pf" id="reco-pf-pill" onclick="RECO.togglePf()">💼 IN MY PF</button>
         <input id="reco-search" type="text" placeholder="Search ticker…" maxlength="10"
           style="margin-left:auto;width:110px;padding:3px 8px;font-size:11px;background:var(--bg-card2);border:1px solid var(--border);color:var(--text-pri);border-radius:4px;font-family:monospace;text-transform:uppercase"
           oninput="this.value=this.value.toUpperCase();RECO.search(this.value)">
@@ -1725,6 +1732,10 @@
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">TICKERS</div>
           <div id="reco-cnt-total" style="font-size:15px;font-weight:700;color:var(--accent-b)">—</div>
         </div>
+        <div style="background:rgba(78,207,130,.08);border:1px solid rgba(78,207,130,.3);border-radius:5px;padding:6px 4px;text-align:center">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">💼 IN MY PF</div>
+          <div id="reco-cnt-inpf" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
+        </div>
       </div>
 
       <!-- Table -->
@@ -1738,7 +1749,7 @@
               <th onclick="RECO.sort('rating')">RATING ↕</th>
               <th onclick="RECO.sort('rec_date')">REC DATE ↕</th>
               <th onclick="RECO.sort('return_pct')">RETURN ↕</th>
-              <th onclick="RECO.sort('market_cap')">MKT CAP</th>
+              <th style="text-align:center">PF</th>
             </tr>
           </thead>
           <tbody id="reco-tbody">
@@ -3751,6 +3762,9 @@ const DASH = (() => {
     if (sub === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
     if (sub === 'signals') loadSignals();
   }
+  // Inline onclick handlers resolve against window — must export explicitly (IIFE scope)
+  window.switchResearchSub = switchResearchSub;
+  window.switchTab = switchTab;
   /* ── Font size control ────────────────────────────────────────── */
   const FS_STEPS = [0.75, 0.85, 1, 1.1, 1.2, 1.35, 1.5];
   const FS_LABELS = ['XS','S','M','L','XL','2X','3X'];
@@ -5880,7 +5894,34 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── 💡 RECOMMENDATIONS ENGINE ─────────────────────────────────────────────
 const RECO = (() => {
   let _data = [];
-  let _fRating = 'all', _fSrc = 'mf', _fView = 'latest', _fSearch = '', _sortCol = 'rec_date', _sortDir = -1;
+  let _fRating = 'all', _fSrc = 'all', _fView = 'latest', _fPf = false, _fSearch = '';
+  let _sortCol = 'rec_date', _sortDir = -1;
+
+  function _set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
+  function _ratingKey(r) {
+    const v = (r || '').toLowerCase();
+    if (v === 'buy') return 'buy';
+    if (v === 'hold') return 'hold';
+    if (v === 'sell') return 'sell';
+    if (v === 'reduce') return 'reduce';
+    return 'other';
+  }
+
+  function _ratingBadge(r) {
+    const k = _ratingKey(r);
+    return `<span class="reco-badge ${k}">${(r || '—').toUpperCase()}</span>`;
+  }
+
+  function _fmtReturn(v) {
+    if (v == null) return '<span style="color:var(--text-dim)">—</span>';
+    const col = v >= 0 ? '#4ecf82' : '#f87171';
+    return `<span style="color:${col};font-weight:600">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>`;
+  }
+
+  function _pfBadge(inPf) {
+    return inPf ? '<span style="color:#4ecf82;font-size:13px" title="In your portfolio">💼</span>' : '';
+  }
 
   async function load() {
     try {
@@ -5890,89 +5931,68 @@ const RECO = (() => {
       _data = [];
       (d.motley_fool || []).forEach(row => _data.push({...row, src:'mf'}));
       (d.seeking_alpha || []).forEach(row => _data.push({...row, src:'sa'}));
+      const meta = document.getElementById('reco-meta');
+      if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA picks`;
       _updateSummary();
       render();
     } catch(e) {
-      document.getElementById('reco-tbody').innerHTML =
-        `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
+      const el = document.getElementById('reco-tbody');
+      if (el) el.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
     }
   }
 
-  function _ratingKey(r) {
-    const v = (r||'').toLowerCase();
-    if (v === 'buy') return 'buy';
-    if (v === 'hold') return 'hold';
-    if (v === 'sell') return 'sell';
-    if (v === 'reduce') return 'reduce';
-    return 'other';
-  }
+  function _latestRows() { return _data.filter(r => r.is_latest); }
 
   function _updateSummary() {
-    const latest = _data.filter(r => r.src === 'mf' && r.is_latest);
-    const cnt = {buy:0, hold:0, sell:0, reduce:0};
-    latest.forEach(r => { const k = _ratingKey(r.rating); if (cnt[k] !== undefined) cnt[k]++; });
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('reco-cnt-buy', cnt.buy);
-    set('reco-cnt-hold', cnt.hold);
-    set('reco-cnt-sell', cnt.sell);
-    set('reco-cnt-reduce', cnt.reduce);
-    set('reco-cnt-total', new Set(_data.filter(r=>r.src==='mf').map(r=>r.symbol)).size);
-    const meta = document.getElementById('reco-meta');
-    if (meta) meta.textContent = `${_data.filter(r=>r.src==='mf').length} MF recs · ${_data.filter(r=>r.src==='sa').length} SA recs`;
+    const rows = _latestRows();
+    _set('reco-cnt-buy',    rows.filter(r => _ratingKey(r.rating) === 'buy').length);
+    _set('reco-cnt-hold',   rows.filter(r => _ratingKey(r.rating) === 'hold').length);
+    _set('reco-cnt-sell',   rows.filter(r => _ratingKey(r.rating) === 'sell').length);
+    _set('reco-cnt-reduce', rows.filter(r => _ratingKey(r.rating) === 'reduce').length);
+    _set('reco-cnt-total',  new Set(rows.map(r => r.symbol)).size);
+    _set('reco-cnt-inpf',   new Set(rows.filter(r => r.in_pf).map(r => r.symbol)).size);
+  }
+
+  function _filtered() {
+    let rows = _fView === 'latest' ? _latestRows() : [..._data];
+    if (_fRating !== 'all') {
+      rows = rows.filter(r => {
+        const k = _ratingKey(r.rating);
+        return _fRating === 'sell' ? (k === 'sell' || k === 'reduce') : k === _fRating;
+      });
+    }
+    if (_fSrc !== 'all') rows = rows.filter(r => r.src === _fSrc);
+    if (_fPf) rows = rows.filter(r => r.in_pf);
+    if (_fSearch) rows = rows.filter(r => (r.symbol || '').toUpperCase().includes(_fSearch));
+    return rows;
   }
 
   function render() {
-    let rows = [..._data];
-    // Source filter
-    rows = rows.filter(r => r.src === _fSrc);
-    // View filter
-    if (_fView === 'latest') rows = rows.filter(r => r.is_latest);
-    // Rating filter
-    if (_fRating !== 'all') {
-      if (_fRating === 'sell') rows = rows.filter(r => _ratingKey(r.rating) === 'sell' || _ratingKey(r.rating) === 'reduce');
-      else rows = rows.filter(r => _ratingKey(r.rating) === _fRating);
-    }
-    // Search
-    if (_fSearch) rows = rows.filter(r => r.symbol.includes(_fSearch) || (r.company||'').toUpperCase().includes(_fSearch));
-    // Sort
+    const rows = _filtered();
     rows.sort((a, b) => {
       let av = a[_sortCol], bv = b[_sortCol];
-      if (_sortCol === 'return_pct') { av = av ?? -999; bv = bv ?? -999; }
-      if (av == null) av = ''; if (bv == null) bv = '';
+      if (av == null) av = _sortDir > 0 ? '\uffff' : '';
+      if (bv == null) bv = _sortDir > 0 ? '\uffff' : '';
       return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
     });
 
     const tbody = document.getElementById('reco-tbody');
+    if (!tbody) return;
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">No results</td></tr>';
-      return;
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(r => `<tr class="${r.in_pf ? 'in-pf' : ''}">
+        <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}</td>
+        <td style="color:var(--text-sec)">${r.company || '—'}</td>
+        <td><span class="reco-src-${r.src}">${r.src.toUpperCase()}</span></td>
+        <td>${_ratingBadge(r.rating)}</td>
+        <td style="color:var(--text-sec)">${r.rec_date || '—'}</td>
+        <td>${_fmtReturn(r.return_pct)}</td>
+        <td style="text-align:center">${_pfBadge(r.in_pf)}</td>
+      </tr>`).join('');
     }
-
-    tbody.innerHTML = rows.map(r => {
-      const rk = _ratingKey(r.rating);
-      const ratingBadge = `<span class="reco-badge ${rk}">${(r.rating||'').toUpperCase()}</span>`;
-      const srcBadge = r.src === 'mf'
-        ? `<span class="reco-src-mf">MF</span>`
-        : `<span class="reco-src-sa">SA</span>`;
-      const ret = r.return_pct != null
-        ? `<span style="color:${r.return_pct>=0?'#4ecf82':'#f87171'};font-weight:600">${r.return_pct>=0?'+':''}${r.return_pct.toFixed(2)}%</span>`
-        : `<span style="color:var(--text-dim)">—</span>`;
-      const date = r.rec_date ? r.rec_date.slice(0,10) : '—';
-      const mcap = r.market_cap || '—';
-      const latestDot = (!r.is_latest && _fView==='all') ? ' <span style="font-size:9px;color:var(--text-dim)">(old)</span>' : '';
-      return `<tr>
-        <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}${latestDot}</td>
-        <td style="color:var(--text-sec);max-width:180px;overflow:hidden;text-overflow:ellipsis">${r.company||''}</td>
-        <td>${srcBadge}</td>
-        <td>${ratingBadge}</td>
-        <td style="color:var(--text-sec)">${date}</td>
-        <td>${ret}</td>
-        <td style="color:var(--text-dim)">${mcap}</td>
-      </tr>`;
-    }).join('');
-
     const cl = document.getElementById('reco-count-line');
-    if (cl) cl.textContent = `Showing ${rows.length} ${_fView==='latest'?'current ratings':'records'}`;
+    if (cl) cl.textContent = `${rows.length} rows shown`;
   }
 
   return {
@@ -5985,7 +6005,6 @@ const RECO = (() => {
     src(v) {
       _fSrc = v;
       document.querySelectorAll('[data-reco-src]').forEach(b => b.classList.toggle('active', b.dataset.recoSrc === v));
-      _updateSummary();
       render();
     },
     view(v) {
@@ -5993,9 +6012,15 @@ const RECO = (() => {
       document.querySelectorAll('[data-reco-view]').forEach(b => b.classList.toggle('active', b.dataset.recoView === v));
       render();
     },
+    togglePf() {
+      _fPf = !_fPf;
+      const pill = document.getElementById('reco-pf-pill');
+      if (pill) pill.classList.toggle('active', _fPf);
+      render();
+    },
     search(v) { _fSearch = v.trim(); render(); },
     sort(col) {
-      if (_sortCol === col) _sortDir *= -1; else { _sortCol = col; _sortDir = -1; }
+      if (_sortCol === col) _sortDir *= -1; else { _sortCol = col; _sortDir = col === 'symbol' || col === 'company' ? 1 : -1; }
       render();
     }
   };

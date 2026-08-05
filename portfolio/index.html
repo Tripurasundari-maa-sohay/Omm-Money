@@ -719,8 +719,14 @@
         <button class="tab-button" data-tab="us"><span class="tl">US PORTFOLIO</span><span class="ts">US</span></button>
         <button class="tab-button" data-tab="india"><span class="tl">INDIA PORTFOLIO</span><span class="ts">INDIA</span></button>
         <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
+<<<<<<< Updated upstream
         <button class="tab-button" data-tab="research"><span class="tl">🔍 RESEARCH</span><span class="ts">RSRCH</span></button>
         <button class="tab-button" data-tab="reco"><span class="tl">💡 RECO</span><span class="ts">RECO</span></button>
+=======
+        <button class="tab-button" data-tab="signals"><span class="tl">📡 SIGNALS</span><span class="ts">SIGNALS</span></button>
+        <button class="tab-button" data-tab="screener"><span class="tl">🔍 SCREENER</span><span class="ts">SCREEN</span></button>
+        <button class="tab-button" data-tab="kronos"><span class="tl">🤖 KRONOS AI</span><span class="ts">AI</span></button>
+>>>>>>> Stashed changes
       </div>
       <div class="banner-controls">
         <!-- FX Rates Display -->
@@ -748,7 +754,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v150</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v162</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -932,6 +938,27 @@
 
   </div><!-- /portfolio-tab -->
 
+  <div class="chart-modal-backdrop" id="drill-modal-backdrop" onclick="if(event.target===this)DASH.closeDrilldown()">
+    <div class="chart-modal-content">
+      <button class="chart-modal-close" onclick="DASH.closeDrilldown()" aria-label="Close">✕</button>
+      <h2 id="drill-modal-title" style="margin:0 0 4px 0;padding-right:40px"></h2>
+      <div id="drill-modal-subtitle" style="font-size:12px;color:var(--text-dim);margin-bottom:14px"></div>
+      <div class="chart-modal-body" style="flex-direction:row;gap:20px;flex-wrap:wrap">
+        <div class="chart-container" style="flex:1 1 280px;min-width:260px;max-width:360px;min-height:280px">
+          <canvas id="drill-modal-canvas"></canvas>
+        </div>
+        <div style="flex:2 1 400px;min-width:300px;overflow:auto;max-height:60vh">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr id="drill-modal-thead" style="border-bottom:1px solid var(--border);text-align:left;color:var(--text-dim)"></tr>
+            </thead>
+            <tbody id="drill-modal-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ TAB 2 · US PORTFOLIO ══════════ -->
   <div id="us-tab" class="tab-content">
     <div class="index-card">
@@ -947,7 +974,7 @@
       <h2>USA Portfolio Metrics</h2>
 
       <!-- Hero — grid layout: account value left, PnL right -->
-      <div class="metric-card" style="display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;padding:10px 12px;margin-bottom:8px">
+      <div class="metric-card" style="display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;padding:10px 12px;margin-bottom:8px;cursor:pointer" onclick="DASH.openDrilldown('acct',event)" title="Click for per-position breakdown">
         <div style="min-width:0">
           <label>ACCOUNT VALUE</label>
           <div class="mval loading pv" id="us-account-value">…</div>
@@ -963,17 +990,17 @@
 
       <!-- 4 broker breakdown tiles -->
       <div class="metrics-grid" style="margin-bottom:10px">
-        <div class="metric-card"><label>ACCT VALUE</label><div id="us-bd-acct" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card"><label>INVESTED</label><div id="us-bd-invested" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card"><label>PnL (USD / %)</label><div id="us-bd-pnl" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card"><label id="us-day-pl-label">DAY Δ (ex JDZG)</label><div id="us-bd-day" style="margin-top:6px;font-size:12px;line-height:1.7">…</div>
-          <div id="us-day-pl-toggle" style="margin-top:4px;font-size:10px;cursor:pointer;color:var(--text-dim);user-select:none;" onclick="DASH.toggleJDZGdayPL()" title="Toggle whether JDZG (halted) is included in Day P&amp;L sum">JDZG: <span id="us-day-pl-jdzg-state">excluded</span> ⇄</div></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('acct',event)" title="Click for per-position breakdown"><label>ACCT VALUE</label><div id="us-bd-acct" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('invested',event)" title="Click for per-position breakdown"><label>INVESTED</label><div id="us-bd-invested" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('pnl',event)" title="Click for per-position breakdown"><label>PnL (USD / %)</label><div id="us-bd-pnl" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('day',event)" title="Click for per-position breakdown"><label id="us-day-pl-label">DAY Δ</label><div id="us-bd-day" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('realised',event)" title="Click for per-position breakdown"><label>REALIZED P&amp;L (net, incl. div)</label><div id="us-bd-realised" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
       </div>
 
       <!-- 4 small tiles -->
       <div class="metrics-grid">
-        <div class="metric-card"><label>UNREAL P&amp;L</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
-        <div class="metric-card" style="border-color:var(--accent-y);border-width:1.5px" title="Return in INR terms vs pure USD return — gap = currency effect">
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('unreal',event)" title="Click for per-position breakdown"><label>UNREAL P&amp;L</label><div class="mval loading pv" id="us-unreal-pl">…</div><div class="mdesc">Live MTM vs avg cost</div></div>
+        <div class="metric-card" style="border-color:var(--accent-y);border-width:1.5px;cursor:pointer" title="Return in INR terms vs pure USD return — gap = currency effect. Click for per-position breakdown" onclick="DASH.openDrilldown('inr',event)">
           <label style="color:var(--accent-y)">💱 RETURN IN INR</label>
           <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px">
             <div class="mval pv" id="us-inr-ret">—</div>
@@ -985,17 +1012,13 @@
           </div>
           <div class="mdesc" id="us-inr-ret-desc">Run parser to activate</div>
         </div>
-        <div class="metric-card"><label>STOCKS · ETF · CASH</label>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('mix',event)" title="Click for per-position breakdown"><label>STOCKS · ETF · CASH</label>
           <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-top:6px;line-height:1.6">
             <span style="color:var(--text-dim)">Stocks</span><strong style="text-align:right" id="us-stocks-value">…</strong>
             <span style="color:var(--text-dim)">ETF</span><strong style="text-align:right" id="us-etf-value">…</strong>
             <span style="color:var(--text-dim)">Cash</span><strong style="text-align:right" id="us-cash-value">…</strong>
           </div>
           <div class="mdesc" style="margin-top:4px"><span id="us-stocks-count">--</span> · <span id="us-etf-count">--</span></div>
-        </div>
-        <div class="metric-card"><label>JDZG DRAG</label>
-          <div class="mval pv" id="us-jdzg-drag">—</div>
-          <div class="mdesc">Halted — manual LTP</div>
         </div>
       </div>
     </div>
@@ -1279,6 +1302,53 @@
           <div class="txn-stat-card"><label>GROSS BUYS ITD</label><span class="v" id="in-tx-invested">--</span></div>
           <div class="txn-stat-card"><label>REALISED P&amp;L</label><span class="v" id="in-tx-realised">--</span></div>
         </div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--accent-g);border-radius:8px;padding:14px;margin-bottom:18px;">
+      <div style="color:var(--accent-g);font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">🇺🇸 REALIZED P&amp;L · NET OF CHARGES, INCL. DIVIDENDS · BY BROKER</div>
+      <div class="txn-summary-strip" style="grid-template-columns:repeat(2,1fr);">
+        <div class="txn-stat-card"><label>DBG</label><span class="v" id="tx-realised-dbg">--</span></div>
+        <div class="txn-stat-card"><label>IBKR</label><span class="v" id="tx-realised-ibkr">--</span></div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--accent-b);border-radius:8px;padding:14px;margin-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="color:var(--accent-b);font-size:12px;font-weight:700;letter-spacing:1px;">🇺🇸 MANAGE POSITIONS · US</div>
+        <div style="display:flex;gap:6px;">
+          <button id="mp-tab-open" onclick="DASH.mpSwitch('open')" style="padding:4px 10px;border:1px solid var(--accent-b);border-radius:4px;background:var(--accent-b);color:#fff;cursor:pointer;font-size:11px;font-weight:700">+ OPEN NEW</button>
+          <button id="mp-tab-close" onclick="DASH.mpSwitch('close')" style="padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">− CLOSE POSITION</button>
+        </div>
+      </div>
+
+      <div id="mp-open-form" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div><label style="font-size:10px;color:var(--text-dim)">TICKER</label><input id="mp-o-tk" type="text" placeholder="AAPL" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri);text-transform:uppercase"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">NAME</label><input id="mp-o-name" type="text" placeholder="Apple Inc." style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">CLASS</label><select id="mp-o-cls" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"><option>Stock</option><option>ETF</option></select></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">BROKER</label><select id="mp-o-broker" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"><option>DBG</option><option>IBKR</option></select></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">QTY</label><input id="mp-o-qty" type="number" step="any" placeholder="10" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">BUY PRICE</label><input id="mp-o-avg" type="number" step="any" placeholder="150.00" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">FEES (neg., optional)</label><input id="mp-o-fees" type="number" step="any" placeholder="-5.00" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">BUY DATE</label><input id="mp-o-date" type="date" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+      </div>
+
+      <div id="mp-close-form" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div style="grid-column:span 2"><label style="font-size:10px;color:var(--text-dim)">POSITION</label><select id="mp-c-pos" onchange="DASH.mpPosChange()" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></select></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">QTY TO CLOSE</label><input id="mp-c-qty" type="number" step="any" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">SELL PRICE</label><input id="mp-c-price" type="number" step="any" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">SELL DATE</label><input id="mp-c-date" type="date" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+        <div><label style="font-size:10px;color:var(--text-dim)">FEES (neg., optional)</label><input id="mp-c-fees" type="number" step="any" placeholder="-5.00" style="width:100%;padding:6px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;color:var(--text-pri)"></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+        <div id="mp-status" style="font-size:11px;color:var(--text-dim)"></div>
+        <button onclick="DASH.mpStage()" style="padding:6px 16px;border:none;border-radius:4px;background:var(--accent-g);color:#08150e;cursor:pointer;font-size:12px;font-weight:700">Stage for Review →</button>
+      </div>
+
+      <div id="mp-pending-wrap" style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:11px;color:var(--text-dim);font-weight:700;margin-bottom:8px;">PENDING REVIEW</div>
+        <div id="mp-pending-list" style="font-size:12px;color:var(--text-dim)">Loading…</div>
       </div>
     </div>
 
@@ -1802,6 +1872,63 @@
     </div>
   </div>
 
+  <!-- ── KRONOS AI FORECAST TAB ────────────────────────────────────────── -->
+  <div id="kronos-tab" class="tab-content">
+    <div style="padding:16px">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="color:var(--accent-g);font-size:11px;font-weight:700;letter-spacing:2px">🤖 KRONOS AI · 5-DAY PRICE FORECAST</div>
+        <span id="kronos-updated" style="font-size:11px;color:var(--text-dim)">—</span>
+      </div>
+
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:6px;border-left:3px solid var(--accent-g)">
+        Predictions from <b>Kronos-small</b> (24.7M params, trained on 45+ global exchanges).
+        Each prediction uses last 60 days OHLCV. Compare with <b>📡 SIGNALS</b> tab for confluence.
+        UP = predicted &gt;+1% · DOWN = predicted &lt;−1% · FLAT = within ±1%
+      </div>
+
+      <!-- Summary strip -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+        <div style="background:rgba(78,207,130,0.1);border:1px solid rgba(78,207,130,0.3);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PREDICTED UP</div>
+          <div id="kr-count-up" style="font-size:22px;font-weight:700;color:#4ecf82">—</div>
+        </div>
+        <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">PREDICTED DOWN</div>
+          <div id="kr-count-down" style="font-size:22px;font-weight:700;color:#f87171">—</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">FLAT</div>
+          <div id="kr-count-flat" style="font-size:22px;font-weight:700;color:var(--text-dim)">—</div>
+        </div>
+      </div>
+
+      <!-- Forecast table -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--bg3)">
+              <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px">TICKER</th>
+              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">CURRENT</th>
+              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">1D PRED</th>
+              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D PRED</th>
+              <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D CHANGE</th>
+              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">SIGNAL</th>
+              <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">vs SIGNALS</th>
+            </tr>
+          </thead>
+          <tbody id="kronos-table-body">
+            <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">Loading Kronos forecasts…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 5-day curve per ticker -->
+      <div id="kronos-curves" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
+
+    </div>
+  </div><!-- /kronos-tab -->
+
   </div><!-- /main-content -->
 </div><!-- /dashboard-container -->
 
@@ -1831,7 +1958,7 @@ const DASH = (() => {
   const S = {
     cost: null, prices: {}, demoPrices: {}, demoCost: null,
     indices: null, view: null, charts: {},
-    ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '', includeJDZGdayPL: (localStorage.getItem('include_jdzg_daypl') === '1') },
+    ui: { currency: 'USD', privacy: false, demo: false, status: 'ALL', market: 'ALL', search: '' },
     _realView: null
   };
 
@@ -2012,9 +2139,6 @@ const DASH = (() => {
   /* ── 2. BUILD VIEW MODEL ──────────────────────────────────────── */
   // SME tickers that may lack live prices — support manual LTP override
   const SME_TICKERS = ['PARAMATRIX', 'ASHALOG'];
-  // Tickers whose dayPL is noisy (halted/illiquid) — excluded from Day P&L SUMS
-  // (per-row dayPL still shown, just not aggregated into hero/tile totals).
-  const DAY_PL_EXCLUDE = new Set(['JDZG']);
 
   function priceFor(holding) {
     // Guard: tk can be undefined/null if a row was malformed
@@ -2157,7 +2281,7 @@ const DASH = (() => {
       etfsMV:       usOpen.filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0),
       mv:           usMV,
       unrealPL:     usOpen.reduce((s,p)=>s+p.uplNet,0),  // net of buy fees
-      dayPL:        usOpen.reduce((s,p)=>(p.dayPL!==null && (S.ui.includeJDZGdayPL || !DAY_PL_EXCLUDE.has(p.tk)))?s+p.dayPL:s, 0),
+      dayPL:        usOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
       exitCost:     usOpen.length * -5,                   // -$5 per position to close
     };
     us.totalValue     = us.mv + (us.cash||0);             // ACTIVE total
@@ -2168,6 +2292,14 @@ const DASH = (() => {
     // Otherwise comparing active-MV to total-deposits-incl-quarantine-cost shows a false loss.
     us.returnPct  = us.cashInfusion ? ((us.statementTotal - us.cashInfusion) / us.cashInfusion) * 100 : 0;
     us.realisedPL = us.closed.reduce((s,p)=>s+p.realised,0) + (us.writeoffLoss || 0);
+    // Broker split — realised is already net of charges; income (dividends) added
+    // on top per-entry since realised does not include dividends (verified against
+    // DBG ITD statement 2025-12-01→2026-07-31, ticker by ticker).
+    us.realisedByBroker = us.closed.reduce((acc,p) => {
+      const b = p.broker || 'Other';
+      acc[b] = (acc[b]||0) + (p.realised||0) + (p.income||0);
+      return acc;
+    }, {});
     us.dividends  = us.open.reduce((s,p)=>s+(p.income||0),0) + us.closed.reduce((s,p)=>s+(p.income||0),0);
     us.charges_total = us.charges.reduce((s,c)=>s+c.amt,0);
 
@@ -2196,7 +2328,7 @@ const DASH = (() => {
       closed:       (S.cost.india && S.cost.india.closed) || [],
       mv:           inMV,
       unrealPL:     inOpen.reduce((s,p)=>s+p.uplNet,0),
-      dayPL:        inOpen.reduce((s,p)=>(p.dayPL!==null && (S.ui.includeJDZGdayPL || !DAY_PL_EXCLUDE.has(p.tk)))?s+p.dayPL:s, 0),
+      dayPL:        inOpen.reduce((s,p)=>p.dayPL!==null?s+p.dayPL:s, 0),
     };
     india.realisedPL = india.closed.reduce((s,p)=>s+(p.rpnl||0),0);
     const _inDen = india.mv - india.dayPL;
@@ -2449,7 +2581,7 @@ const DASH = (() => {
         const brk = p.broker || 'DBG';
         if (!perBroker[brk]) perBroker[brk] = { mv:0, day:0, cash:0, invested:0 };
         perBroker[brk].mv += (p.mv || 0);
-        if (p.dayPL !== null && !DAY_PL_EXCLUDE.has(p.tk))
+        if (p.dayPL !== null)
           perBroker[brk].day += (p.dayPL || 0);
       }
       const fmtPct = v => (v>=0?'+':'') + v.toFixed(2) + '%';
@@ -2482,23 +2614,24 @@ const DASH = (() => {
       pnlRows  += totalRow('Total', `${fmtMon(tPnl)} / ${fmtPct(tPnlPct)}`, cls(tPnl));
       dayRows  += totalRow('Total', `${fmtMon(tDay)} / ${fmtPct(tDayPct)}`, cls(tDay));
 
+      // Realized P&L (net of charges, incl. dividends) — from closed lots, per broker
+      let realisedRows = '';
+      let tRealised = 0;
+      for (const name of Object.keys(_brokers)) {
+        const rv = us.realisedByBroker?.[name] || 0;
+        tRealised += rv;
+        realisedRows += row(name, fmtMon(rv), cls(rv));
+      }
+      realisedRows += totalRow('Total', fmtMon(tRealised), cls(tRealised));
+
       const set = (id, html) => { const el=document.getElementById(id); if(el) el.innerHTML=html; };
       set('us-bd-acct', acctRows);
       set('us-bd-invested', invRows);
       set('us-bd-pnl', pnlRows);
       set('us-bd-day', dayRows);
+      set('us-bd-realised', realisedRows);
     }
 
-    // JDZG drag tile
-    const _jdzg = (us.open || []).find(p => p.tk === 'JDZG');
-    if (_jdzg) {
-      const drag = _jdzg.uplNet || (_jdzg.mv - _jdzg.qty*_jdzg.avg);
-      const dragPct = _jdzg.avg ? ((_jdzg.ltp - _jdzg.avg) / _jdzg.avg * 100) : 0;
-      setText('us-jdzg-drag', `${drag>=0?'+':''}${usd(drag)} (${dragPct>=0?'+':''}${pct(dragPct)})`);
-      setClass('us-jdzg-drag', 'mval pv ' + pn(drag));
-    } else {
-      setText('us-jdzg-drag', '—');
-    }
     const _stmt = S.cost?.us?.account_value_statement;
     const _stmtDate = S.cost?.as_of;
     const _forceClosed = (us.closed || []).filter(p => p.user_force_closed);
@@ -2583,7 +2716,7 @@ const DASH = (() => {
     qty:    { label:'QTY',          sort:'qty',    renderCell: p => `<td>${p.qty}</td>` },
     avg:    { label:'AVG',          sort:'avg',    renderCell: p => `<td>${usd2(p.avg)}</td>` },
     ltp:    { label:'LTP',          sort:'ltp',    renderCell: p => `<td><strong>${usd2(p.ltp)}</strong></td>` },
-    dayPL:  { label:'DAY P&L',      sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk) && !S.ui.includeJDZGdayPL; const tip=ex?' title="Excluded from Day P&L total — toggle in tile"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${pn(p.dayPL)}"${tip}>${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}${tag}</td>`; } },
+    dayPL:  { label:'DAY P&L',      sort:'dayPL',  renderCell: p => `<td class="${pn(p.dayPL)}">${p.dayPL!==null?sign(p.dayPL)+usd2(p.dayPL):'—'}</td>` },
     dayPct: { label:'DAY %',        sort:'dayPct', renderCell: p => `<td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>` },
     mv:     { label:'MKT VALUE',    sort:'mv',     renderCell: p => `<td>${usd2(p.mv)}</td>` },
     fees:   { label:'FEES',         sort:'fees',   renderCell: p => `<td>${usd2(p.fees)}</td>` },
@@ -2601,7 +2734,7 @@ const DASH = (() => {
     avg:    { label:'AVG',        sort:'avg',    renderCell: p => `<td>${p.houseMoney?FREE_TAG:inr2(p.avg)}</td>` },
     ltp:    { label:'LTP',        sort:'ltp',    renderCell: p => { const isSME=SME_TICKERS.includes(p.tk); const pencil=isSME?` <span style="cursor:pointer;font-size:11px;opacity:0.7;" onclick="DASH.editSMELTP('${p.tk}',${p.ltp})" title="Set manual LTP">✏️</span>`:''; return `<td><strong>${inr2(p.ltp)}</strong>${pencil}</td>`; } },
     pc:     { label:'PREV CLOSE', sort:null,     renderCell: p => `<td><span class="preopen-tag">PC</span> ${inr2(p.pc)}</td>` },
-    dayPL:  { label:'DAY P&L',    sort:'dayPL',  renderCell: p => { const ex=DAY_PL_EXCLUDE.has(p.tk) && !S.ui.includeJDZGdayPL; const tip=ex?' title="Excluded from Day P&L total — toggle in tile"':''; const tag=ex?' <span style="color:var(--text-dim);font-size:9px;border:1px solid var(--border);border-radius:3px;padding:0 3px;">EXCL</span>':''; return `<td class="${p.dayPL!==null?pn(p.dayPL):''}"${tip}>${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}${tag}</td>`; } },
+    dayPL:  { label:'DAY P&L',    sort:'dayPL',  renderCell: p => `<td class="${p.dayPL!==null?pn(p.dayPL):''}">${p.dayPL!==null?sign(p.dayPL)+inr(p.dayPL):'—'}</td>` },
     dayPct: { label:'DAY %',      sort:'dayPct', renderCell: p => `<td class="${p.dayPct!==null?pn(p.dayPct):''}">${p.dayPct!==null?sign(p.dayPct)+pct(p.dayPct):'—'}</td>` },
     upl:    { label:'UNREAL P&L', sort:'upl',    renderCell: p => `<td class="${pn(p.uplNet)}">${sign(p.uplNet)}${inr(p.uplNet)}</td>` },
     mv:     { label:'MKT VAL',    sort:'mv',     renderCell: p => `<td>${inr(p.mv)}</td>` },
@@ -2794,6 +2927,14 @@ const DASH = (() => {
     setText('tx-realised', sign(us.realisedPL)+usd2(us.realisedPL));
     setClass('tx-realised', 'v ' + pn(us.realisedPL));
 
+    // Realised P&L by broker (net of charges)
+    const dbgRPNL  = us.realisedByBroker?.DBG  || 0;
+    const ibkrRPNL = us.realisedByBroker?.IBKR || 0;
+    setText('tx-realised-dbg',  sign(dbgRPNL)+usd2(dbgRPNL));
+    setClass('tx-realised-dbg', 'v ' + pn(dbgRPNL));
+    setText('tx-realised-ibkr', sign(ibkrRPNL)+usd2(ibkrRPNL));
+    setClass('tx-realised-ibkr', 'v ' + pn(ibkrRPNL));
+
     // India summary strip
     setText('in-tx-count',    ind.closed.length);
     setText('in-tx-invested', inr(ind.cashInfusion || 0));
@@ -2933,7 +3074,11 @@ const DASH = (() => {
     }).join('');
   }
   window.renderTxLedger = renderTxLedger;
+<<<<<<< Updated upstream
   window._S = S;  // expose for tabs/diagnostics outside IIFE
+=======
+  window._S = S;  // expose for Kronos tab (outside IIFE)
+>>>>>>> Stashed changes
 
   function renderTxCash() {
     const tbody = $('tx-cash-body');
@@ -3748,10 +3893,14 @@ const DASH = (() => {
     const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
     if (name === 'screener') DASH_SCR.init();
+<<<<<<< Updated upstream
     if (name === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
     if (name === 'research') { const sub = document.querySelector('.rsub-btn.active'); if (!sub || sub.dataset.rsub === 'screener') DASH_SCR.init(); else if (sub.dataset.rsub === 'watchlist') { loadWatchlist(); _wlStartPolling(); } else if (sub.dataset.rsub === 'signals') loadSignals(); }
     if (name === 'reco') RECO.load();
     document.body.dataset.activeTab = name;  // CSS hooks off this to compact hero on non-portfolio tabs
+=======
+    if (name === 'kronos') loadKronos();
+>>>>>>> Stashed changes
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
   }
@@ -5128,7 +5277,11 @@ const DASH = (() => {
     // Restore last active tab (refresh persistence)
     try {
       const _savedTab = localStorage.getItem('active_tab');
+<<<<<<< Updated upstream
       const _validTabs = ['portfolio','us','india','transactions','research','reco'];
+=======
+      const _validTabs = ['portfolio','us','india','transactions','signals','screener','kronos'];
+>>>>>>> Stashed changes
       if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
         switchTab(_savedTab);
         document.body.dataset.activeTab = _savedTab;
@@ -5311,6 +5464,153 @@ const DASH = (() => {
     if (saved !== 'ALL') setBrokerFilter(saved);
   });
 
+  /* ── Metric-tile drilldown: pie + table breakdown per ticker ── */
+  const DRILL_PALETTE = ['#4ade80','#60a5fa','#f59e0b','#f472b6','#a78bfa','#2dd4bf','#fb923c','#94a3b8'];
+  const DRILL_SIGNED = new Set(['pnl','unreal','day','realised','jdzg']);
+  let _drillChartInst = null;
+
+  function _drillData(key) {
+    const us = S.view && S.view.us;
+    if (!us) return null;
+    const mapOpen = fn => (us.open||[]).map(p => ({label:p.tk, sub:p.broker||'DBG', value:fn(p), raw:p}));
+    switch (key) {
+      case 'acct':
+        return {title:'ACCOUNT VALUE', subtitle:'Market value per position (both brokers)', rows:mapOpen(p=>p.mv)};
+      case 'invested':
+        return {title:'INVESTED', subtitle:'Cost basis (qty × avg) per position', rows:mapOpen(p=>p.cost)};
+      case 'pnl':
+      case 'unreal':
+        return {title:'UNREALIZED P&L', subtitle:'Live MTM vs avg cost, net of buy fees', rows:mapOpen(p=>p.uplNet)};
+      case 'day':
+        return {title:"TODAY'S P&L", subtitle:'Day change per position', rows:(us.open||[]).filter(p=>p.dayPL!==null).map(p=>({label:p.tk, sub:p.broker||'DBG', value:p.dayPL, raw:p}))};
+      case 'realised':
+        return {title:'REALIZED P&L', subtitle:'Net of charges, incl. dividends — closed positions', rows:(us.closed||[]).map(c=>({label:c.tk, sub:c.broker||'—', value:(c.realised||0)+(c.income||0), raw:c}))};
+      case 'inr':
+        return {title:'RETURN IN INR', subtitle:'Slice size = market value · color = USD unrealized P&L', rows:mapOpen(p=>p.mv), extraCol:{header:'INR Ret%', fn:p=>p.inrRet}};
+      case 'mix': {
+        const stocks = (us.open||[]).filter(p=>p.cls==='Stock').reduce((s,p)=>s+p.mv,0);
+        const etf    = (us.open||[]).filter(p=>p.cls==='ETF').reduce((s,p)=>s+p.mv,0);
+        const cash   = us.cash||0;
+        return {title:'STOCKS · ETF · CASH', subtitle:'Portfolio composition', rows:[
+          {label:'Stocks', sub:'', value:stocks}, {label:'ETF', sub:'', value:etf}, {label:'Cash', sub:'', value:cash}
+        ]};
+      }
+      case 'jdzg': {
+        const j = (us.open||[]).find(p=>p.tk==='JDZG');
+        if (!j) return {title:'JDZG DRAG', subtitle:'No JDZG position', rows:[]};
+        return {title:'JDZG DRAG', subtitle:`${j.qty} sh @ $${j.avg.toFixed(2)} → $${j.ltp.toFixed(2)} (halted, manual LTP)`, rows:[{label:'JDZG', sub:j.broker||'DBG', value:j.uplNet, raw:j}]};
+      }
+      default: return null;
+    }
+  }
+
+  let _drillState = null; // { rows, data, totalAbs, sortCol, sortDir }
+  const DRILL_COLS = [
+    { key:'label', label:'Ticker',  align:'left'  },
+    { key:'sub',   label:'Broker',  align:'left'  },
+    { key:'value', label:'Value',   align:'right' },
+    { key:'share', label:'Share',   align:'right' },
+  ];
+
+  function _drillSortVal(r, colKey, totalAbs) {
+    if (colKey === 'share') return Math.abs(r.value) / totalAbs;
+    if (colKey === 'extra') return _drillState.data.extraCol && r.raw ? (_drillState.data.extraCol.fn(r.raw) ?? -Infinity) : -Infinity;
+    return r[colKey] ?? '';
+  }
+
+  function sortDrilldown(colKey) {
+    if (!_drillState) return;
+    if (_drillState.sortCol === colKey) { _drillState.sortDir *= -1; }
+    else { _drillState.sortCol = colKey; _drillState.sortDir = (colKey === 'label' || colKey === 'sub') ? 1 : -1; }
+    _renderDrillTable();
+  }
+
+  function _renderDrillTable() {
+    const { rows, data, totalAbs, sortCol, sortDir } = _drillState;
+    const sorted = rows.slice().sort((a,b) => {
+      const av = _drillSortVal(a, sortCol, totalAbs), bv = _drillSortVal(b, sortCol, totalAbs);
+      if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+      return sortDir * ((av>bv)-(av<bv));
+    });
+
+    const cols = DRILL_COLS.concat(data.extraCol ? [{ key:'extra', label:data.extraCol.header, align:'right' }] : []);
+    document.getElementById('drill-modal-thead').innerHTML = cols.map(c => {
+      const arrow = sortCol === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '';
+      return `<th style="padding:6px 4px;text-align:${c.align};cursor:pointer;user-select:none" onclick="DASH.sortDrilldown('${c.key}')">${c.label}${arrow}</th>`;
+    }).join('');
+
+    document.getElementById('drill-modal-tbody').innerHTML = sorted.length ? sorted.map(r => {
+      const pct = (Math.abs(r.value)/totalAbs*100).toFixed(1);
+      const clr = r.value>=0 ? 'var(--gain,#4ade80)' : 'var(--loss,#ff5c5c)';
+      let extraCell = '';
+      if (data.extraCol) {
+        const v = r.raw ? data.extraCol.fn(r.raw) : null;
+        extraCell = `<td style="text-align:right;padding:6px 4px">${v!=null ? (v>=0?'+':'')+v.toFixed(2)+'%' : '—'}</td>`;
+      }
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 4px;font-weight:600">${r.label}</td>
+        <td style="padding:6px 4px;color:var(--text-dim)">${r.sub||'—'}</td>
+        <td style="text-align:right;padding:6px 4px;color:${clr}">${usd(r.value)}</td>
+        <td style="text-align:right;padding:6px 4px;color:var(--text-dim)">${pct}%</td>
+        ${extraCell}
+      </tr>`;
+    }).join('') : `<tr><td colspan="${cols.length}" style="padding:12px;color:var(--text-dim)">No data</td></tr>`;
+  }
+
+  function openDrilldown(key, evt) {
+    if (evt && evt.target.closest('#us-day-pl-toggle, button, a, input, select')) return;
+    const data = _drillData(key);
+    if (!data) return;
+    const rows = (data.rows||[]).slice();
+    const totalAbs = rows.reduce((s,r)=>s+Math.abs(r.value),0) || 1;
+    const netTotal = rows.reduce((s,r)=>s+r.value,0);
+    _drillState = { rows, data, totalAbs, sortCol:'value', sortDir:-1 };
+
+    document.getElementById('drill-modal-title').textContent = data.title;
+    document.getElementById('drill-modal-subtitle').textContent = `${data.subtitle}  ·  Total: ${usd(netTotal)}`;
+    _renderDrillTable();
+
+    // Chart order fixed by |value| desc regardless of table sort — keeps slice sizes readable
+    const chartRows = rows.slice().sort((a,b)=>Math.abs(b.value)-Math.abs(a.value));
+    const canvas = document.getElementById('drill-modal-canvas');
+    if (_drillChartInst) { _drillChartInst.destroy(); _drillChartInst = null; }
+    if (chartRows.length && typeof Chart !== 'undefined') {
+      const signed = DRILL_SIGNED.has(key);
+      _drillChartInst = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: chartRows.map(r=>r.label),
+          datasets: [{
+            data: chartRows.map(r=>Math.abs(r.value)),
+            backgroundColor: chartRows.map((r,i) => signed ? (r.value>=0?'#4ade80cc':'#ff5c5ccc') : DRILL_PALETTE[i % DRILL_PALETTE.length]),
+            borderColor: 'rgba(0,0,0,0.2)', borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins: {
+            legend: { display:false },
+            tooltip: { callbacks: { label: (ctx) => {
+              const r = chartRows[ctx.dataIndex];
+              return ` ${r.label}: ${usd(r.value)} (${(Math.abs(r.value)/totalAbs*100).toFixed(1)}%)`;
+            }}},
+            datalabels: { display:false }
+          }
+        }
+      });
+    }
+
+    document.getElementById('drill-modal-backdrop').classList.add('active');
+    document.addEventListener('keydown', _drillEsc);
+  }
+  function closeDrilldown() {
+    const bd = document.getElementById('drill-modal-backdrop');
+    if (bd) bd.classList.remove('active');
+    document.removeEventListener('keydown', _drillEsc);
+    _drillState = null;
+  }
+  function _drillEsc(e) { if (e.key === 'Escape') closeDrilldown(); }
+
   function toggleJDZGdayPL() {
     S.ui.includeJDZGdayPL = !S.ui.includeJDZGdayPL;
     localStorage.setItem('include_jdzg_daypl', S.ui.includeJDZGdayPL ? '1' : '0');
@@ -5329,7 +5629,195 @@ const DASH = (() => {
     else                { IN_COL_ORDER = [...IN_COLS_DEFAULT];  _saveColOrder('in_col_order', IN_COL_ORDER);  renderIndiaHoldings(); }
   }
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, toggleJDZGdayPL, setBrokerFilter };
+  /* ── Manage Positions — staged open/close, review before applying ── */
+  const MP_SAVE_URL = (location.host.includes('.nip.io') || location.host.includes('.duckdns.org'))
+    ? location.origin + '/save'
+    : 'https://ommoney.duckdns.org/save';
+  let _mpMode = 'open';
+
+  async function _mpSave(path, obj) {
+    const res = await fetch(MP_SAVE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, content: JSON.stringify(obj, null, 2) })
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error((data && data.error) || 'save failed');
+  }
+  async function _mpFetchJSON(relPath) {
+    const r = await fetch('./' + relPath + '?_=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('fetch failed: ' + relPath);
+    return r.json();
+  }
+
+  function mpSwitch(mode) {
+    _mpMode = mode;
+    document.getElementById('mp-open-form').style.display  = mode === 'open'  ? 'grid' : 'none';
+    document.getElementById('mp-close-form').style.display = mode === 'close' ? 'grid' : 'none';
+    const onBtn  = document.getElementById('mp-tab-' + mode);
+    const offBtn = document.getElementById('mp-tab-' + (mode === 'open' ? 'close' : 'open'));
+    onBtn.style.background  = 'var(--accent-b)'; onBtn.style.color  = '#fff';  onBtn.style.borderColor  = 'var(--accent-b)';
+    offBtn.style.background = 'var(--bg-card2)'; offBtn.style.color = 'var(--text-sec)'; offBtn.style.borderColor = 'var(--border)';
+    if (mode === 'close') _mpPopulatePositions();
+  }
+
+  function _mpOpenPositions() {
+    return (S.cost && S.cost.us && S.cost.us.open) || [];
+  }
+
+  function _mpPopulatePositions() {
+    const sel = document.getElementById('mp-c-pos');
+    const positions = _mpOpenPositions();
+    sel.innerHTML = positions.map((p,i) =>
+      `<option value="${i}">${p.tk} · ${p.broker||'DBG'} · ${p.qty}sh @ $${(+p.avg).toFixed(2)}${p.buy_date?' · '+p.buy_date:''}</option>`
+    ).join('') || '<option value="">No open positions</option>';
+    mpPosChange();
+  }
+  function mpPosChange() {
+    const sel = document.getElementById('mp-c-pos');
+    const positions = _mpOpenPositions();
+    const p = positions[+sel.value];
+    document.getElementById('mp-c-qty').value = p ? p.qty : '';
+  }
+
+  function _mpSetStatus(msg, isErr) {
+    const el = document.getElementById('mp-status');
+    el.textContent = msg;
+    el.style.color = isErr ? 'var(--loss)' : 'var(--gain)';
+  }
+
+  async function mpStage() {
+    try {
+      let entry;
+      if (_mpMode === 'open') {
+        const tk = document.getElementById('mp-o-tk').value.trim().toUpperCase();
+        const qty = parseFloat(document.getElementById('mp-o-qty').value);
+        const avg = parseFloat(document.getElementById('mp-o-avg').value);
+        if (!tk || !qty || !avg) { _mpSetStatus('Ticker, qty and buy price are required', true); return; }
+        entry = {
+          type: 'open',
+          tk, name: document.getElementById('mp-o-name').value.trim() || tk,
+          cls: document.getElementById('mp-o-cls').value,
+          broker: document.getElementById('mp-o-broker').value,
+          qty, avg,
+          fees: parseFloat(document.getElementById('mp-o-fees').value) || 0,
+          buy_date: document.getElementById('mp-o-date').value || null,
+        };
+      } else {
+        const positions = _mpOpenPositions();
+        const idx = +document.getElementById('mp-c-pos').value;
+        const pos = positions[idx];
+        const qty = parseFloat(document.getElementById('mp-c-qty').value);
+        const price = parseFloat(document.getElementById('mp-c-price').value);
+        if (!pos) { _mpSetStatus('Select a position', true); return; }
+        if (!qty || qty <= 0 || qty > pos.qty) { _mpSetStatus(`Qty must be > 0 and ≤ ${pos.qty}`, true); return; }
+        if (!price) { _mpSetStatus('Sell price is required', true); return; }
+        entry = {
+          type: 'close',
+          tk: pos.tk, broker: pos.broker || 'DBG', buy_date: pos.buy_date || null,
+          match_avg: pos.avg,
+          qty, sell_price: price,
+          sell_date: document.getElementById('mp-c-date').value || null,
+          fees: parseFloat(document.getElementById('mp-c-fees').value) || 0,
+        };
+      }
+      entry.id = 'p' + Date.now() + Math.random().toString(36).slice(2,6);
+      entry.staged_at = new Date().toISOString();
+      entry.status = 'pending';
+
+      let pending;
+      try { pending = await _mpFetchJSON('data/pending_trades.json'); } catch { pending = { pending: [] }; }
+      pending.pending = pending.pending || [];
+      pending.pending.push(entry);
+      await _mpSave('portfolio/data/pending_trades.json', pending);
+      _mpSetStatus(`Staged ${entry.type} — ${entry.tk} — awaiting review below`, false);
+      mpLoadPending();
+    } catch (e) {
+      _mpSetStatus('Stage failed: ' + e.message, true);
+    }
+  }
+
+  async function mpLoadPending() {
+    const list = document.getElementById('mp-pending-list');
+    if (!list) return;
+    let pending;
+    try { pending = await _mpFetchJSON('data/pending_trades.json'); } catch { pending = { pending: [] }; }
+    const items = (pending.pending || []).filter(p => p.status === 'pending');
+    if (!items.length) { list.innerHTML = '<span style="color:var(--text-dim)">Nothing pending</span>'; return; }
+    list.innerHTML = items.map(p => {
+      const desc = p.type === 'open'
+        ? `+ OPEN ${p.tk} · ${p.broker} · ${p.qty}sh @ $${(+p.avg).toFixed(2)}${p.buy_date?' · '+p.buy_date:''}`
+        : `− CLOSE ${p.tk} · ${p.broker} · ${p.qty}sh @ $${(+p.sell_price).toFixed(2)}${p.sell_date?' · '+p.sell_date:''}`;
+      const clr = p.type === 'open' ? 'var(--gain)' : 'var(--warn)';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="color:${clr}">${desc}</span>
+        <span style="display:flex;gap:6px">
+          <button onclick="DASH.mpApply('${p.id}')" style="padding:3px 10px;border:1px solid var(--accent-g);border-radius:4px;background:transparent;color:var(--accent-g);cursor:pointer;font-size:11px">Approve</button>
+          <button onclick="DASH.mpReject('${p.id}')" style="padding:3px 10px;border:1px solid var(--loss);border-radius:4px;background:transparent;color:var(--loss);cursor:pointer;font-size:11px">Reject</button>
+        </span>
+      </div>`;
+    }).join('');
+  }
+
+  async function mpReject(id) {
+    try {
+      const pending = await _mpFetchJSON('data/pending_trades.json');
+      const it = (pending.pending||[]).find(p => p.id === id);
+      if (it) it.status = 'rejected';
+      await _mpSave('portfolio/data/pending_trades.json', pending);
+      mpLoadPending();
+    } catch (e) { alert('Reject failed: ' + e.message); }
+  }
+
+  async function mpApply(id) {
+    try {
+      const pending = await _mpFetchJSON('data/pending_trades.json');
+      const entry = (pending.pending||[]).find(p => p.id === id);
+      if (!entry) { alert('Entry not found — refresh and retry'); return; }
+
+      const cost = await _mpFetchJSON('data/holdings_cost.json');
+      cost.us = cost.us || {}; cost.us.open = cost.us.open || []; cost.us.closed = cost.us.closed || [];
+
+      if (entry.type === 'open') {
+        cost.us.open.push({
+          tk: entry.tk, yf: entry.tk, name: entry.name, cls: entry.cls,
+          qty: entry.qty, avg: entry.avg, fees: entry.fees, income: 0,
+          buy_date: entry.buy_date, broker: entry.broker,
+        });
+      } else {
+        const idx = cost.us.open.findIndex(p =>
+          p.tk === entry.tk && (p.broker||'DBG') === entry.broker && (p.buy_date||null) === entry.buy_date
+        );
+        if (idx === -1) { alert(`Matching open position for ${entry.tk} not found — it may have changed since staging. Reject and re-stage.`); return; }
+        const pos = cost.us.open[idx];
+        const realised = (entry.sell_price - pos.avg) * entry.qty + entry.fees;
+        cost.us.closed.push({
+          tk: entry.tk, name: pos.name, cls: pos.cls, income: 0, costs: entry.fees,
+          realised: Math.round(realised * 100) / 100,
+          ret_pct: pos.avg ? Math.round(((entry.sell_price - pos.avg) / pos.avg) * 10000) / 100 : 0,
+          sell_date: entry.sell_date, broker: entry.broker, sell_price: entry.sell_price,
+          _costs_paid: entry.fees,
+          _note: `${entry.qty}sh (buy avg ${pos.avg} ${pos.buy_date||''}) closed via dashboard`,
+        });
+        if (entry.qty >= pos.qty) {
+          cost.us.open.splice(idx, 1);
+        } else {
+          pos.qty = Math.round((pos.qty - entry.qty) * 1e6) / 1e6;
+        }
+      }
+
+      await _mpSave('portfolio/data/holdings_cost.json', cost);
+      entry.status = 'applied';
+      await _mpSave('portfolio/data/pending_trades.json', pending);
+      _mpSetStatus(`Applied ${entry.type} for ${entry.tk} — reloading…`, false);
+      mpLoadPending();
+      setTimeout(() => { if (typeof refresh === 'function') refresh(); }, 500);
+    } catch (e) { alert('Apply failed: ' + e.message); }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => { mpLoadPending(); });
+
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, toggleJDZGdayPL, setBrokerFilter, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject };
 })();
 
 // Register service worker for PWA installability
@@ -5339,6 +5827,7 @@ if ('serviceWorker' in navigator) {
     .catch(() => {});
 }
 
+<<<<<<< Updated upstream
 // Kronos tab removed 2026-06-09 — daily backtest verdict: no edge (51% hit, naive baseline beats it).
 // Raw CSV: /tmp/kronos_bt_raw.csv on VM. Scripts kept on VM (kronos_predict.py + Kronos/).
 // VM cron entry "0 22 * * 1-5 ... kronos_predict.py" should be disabled separately.
@@ -6026,6 +6515,132 @@ const RECO = (() => {
   };
 })();
 
+=======
+// ── KRONOS AI FORECAST ────────────────────────────────────────────────────
+let _kronosData = null;
+
+async function loadKronos() {
+  const tbody = document.getElementById('kronos-table-body');
+  if (!tbody) return;
+  if (_kronosData) { renderKronos(_kronosData); return; }
+  try {
+    const res = await fetch(`./data/processed/kronos_signals.json?_=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    _kronosData = await res.json();
+    renderKronos(_kronosData);
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--warn)">Kronos data unavailable — runs daily at 22:00 UTC. ${e.message}</td></tr>`;
+  }
+}
+
+function renderKronos(data) {
+  const tbody   = document.getElementById('kronos-table-body');
+  const forecasts = data.forecasts || {};
+  const _kgen   = data.generated ? data.generated.replace(/\+00:00Z$/, 'Z').replace(/\+00:00$/, 'Z') : null;
+  const gen     = _kgen ? new Date(_kgen).toLocaleString() : '—';
+  const updEl   = document.getElementById('kronos-updated');
+  if (updEl) updEl.textContent = 'as of ' + gen;
+
+  // Load existing signals for comparison (S is inside IIFE — use window._S)
+  const sigMap  = {};
+  const _Sg = window._S;
+  if (_Sg && _Sg.signals && _Sg.signals.holdings) {
+    Object.entries(_Sg.signals.holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
+  }
+  if (_Sg && _Sg.signals && _Sg.signals.india_holdings) {
+    Object.entries(_Sg.signals.india_holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
+  }
+
+  const fmt2  = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : '—';
+  const fmtPx = v => v != null ? v.toLocaleString(undefined, {maximumFractionDigits:2}) : '—';
+
+  let up=0, down=0, flat=0;
+  const allRows = Object.entries(forecasts).sort((a,b) => (b[1].pred_pct_5d||0) - (a[1].pred_pct_5d||0));
+  const usRows  = allRows.filter(([,f]) => f.market === 'US');
+  const inRows  = allRows.filter(([,f]) => f.market === 'India');
+
+  function buildRows(rows) {
+    return rows.map(([tk, f], i) => {
+      const sig    = f.signal || 'FLAT';
+      const pct    = f.pred_pct_5d;
+      if (sig === 'UP')   up++;
+      else if (sig === 'DOWN') down++;
+      else flat++;
+      const sigColor = sig === 'UP' ? '#4ecf82' : sig === 'DOWN' ? '#f87171' : 'var(--text-dim)';
+      const sigIcon  = sig === 'UP' ? '▲' : sig === 'DOWN' ? '▼' : '●';
+      const pctColor = pct > 0 ? '#4ecf82' : pct < 0 ? '#f87171' : 'var(--text-dim)';
+      const existSig = sigMap[tk];
+      let confluence = '—';
+      if (existSig) {
+        const match = (sig==='UP'&&existSig==='BUY')||(sig==='DOWN'&&existSig==='REDUCE')||(sig==='FLAT'&&existSig==='HOLD');
+        confluence = match ? `<span style="color:#4ecf82;font-weight:600">✓ ${existSig}</span>`
+                           : `<span style="color:var(--warn)">${existSig} ≠</span>`;
+      }
+      return `<tr style="${i%2===0?'background:var(--bg3)':''}">
+        <td style="padding:9px 14px;font-weight:600">${tk}</td>
+        <td style="padding:9px 14px;text-align:right">${fmtPx(f.current_close)}</td>
+        <td style="padding:9px 14px;text-align:right;color:var(--text-sec)">${fmtPx(f.pred_1d)}</td>
+        <td style="padding:9px 14px;text-align:right;font-weight:600;color:${sigColor}">${fmtPx(f.pred_5d)}</td>
+        <td style="padding:9px 14px;text-align:right;font-weight:700;color:${pctColor}">${fmt2(pct)}</td>
+        <td style="padding:9px 14px;text-align:center;font-weight:700;color:${sigColor}">${sigIcon} ${sig}</td>
+        <td style="padding:9px 14px;text-align:center;font-size:12px">${confluence}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const thead = `<thead><tr style="background:var(--bg3)">
+    <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px">TICKER</th>
+    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">CURRENT</th>
+    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">1D PRED</th>
+    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D PRED</th>
+    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D CHANGE</th>
+    <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">SIGNAL</th>
+    <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">vs SIGNALS</th>
+  </tr></thead>`;
+
+  tbody.innerHTML = `
+    <tr><td colspan="7" style="padding:10px 14px;font-size:11px;font-weight:700;color:#60a5fa;letter-spacing:2px;background:rgba(96,165,250,0.08)">🇺🇸 US HOLDINGS (${usRows.length})</td></tr>
+    ${thead.replace('<thead>','').replace('</thead>','')}
+    ${buildRows(usRows) || '<tr><td colspan="7" style="padding:12px 14px;color:var(--text-dim)">No US forecasts available</td></tr>'}
+    <tr><td colspan="7" style="padding:10px 14px;font-size:11px;font-weight:700;color:#f97316;letter-spacing:2px;background:rgba(249,115,22,0.08)">🇮🇳 INDIA HOLDINGS (${inRows.length})</td></tr>
+    ${thead.replace('<thead>','').replace('</thead>','')}
+    ${buildRows(inRows) || '<tr><td colspan="7" style="padding:12px 14px;color:var(--text-dim)">No India forecasts available</td></tr>'}
+  `;
+
+  // Counters
+  const u = document.getElementById('kr-count-up');   if(u) u.textContent = up;
+  const d = document.getElementById('kr-count-down'); if(d) d.textContent = down;
+  const fl= document.getElementById('kr-count-flat'); if(fl) fl.textContent = flat;
+
+  // 5-day sparklines per ticker
+  const curves = document.getElementById('kronos-curves');
+  if (curves) {
+    curves.innerHTML = allRows.map(([tk, f]) => {
+      if (!f.pred_closes || !f.pred_closes.length) return '';
+      const sig    = f.signal;
+      const color  = sig === 'UP' ? '#4ecf82' : sig === 'DOWN' ? '#f87171' : '#9ca3af';
+      const allPx  = [f.current_close, ...f.pred_closes];
+      const minPx  = Math.min(...allPx), maxPx = Math.max(...allPx);
+      const range  = maxPx - minPx || 1;
+      const w = 180, h = 50, pad = 6;
+      const pts = allPx.map((v,i) => {
+        const x = pad + (i / (allPx.length-1)) * (w - pad*2);
+        const y = pad + (1 - (v-minPx)/range) * (h - pad*2);
+        return `${x},${y}`;
+      }).join(' ');
+      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px">
+        <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:6px">${tk} <span style="font-size:10px;font-weight:400;color:var(--text-dim)">${f.pred_pct_5d != null ? (f.pred_pct_5d>0?'+':'')+f.pred_pct_5d.toFixed(2)+'%' : ''}</span></div>
+        <svg width="${w}" height="${h}" style="overflow:visible">
+          <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="${pts.split(' ')[0].split(',')[0]}" cy="${pts.split(' ')[0].split(',')[1]}" r="3" fill="var(--text-dim)"/>
+          <circle cx="${pts.split(' ').slice(-1)[0].split(',')[0]}" cy="${pts.split(' ').slice(-1)[0].split(',')[1]}" r="3" fill="${color}"/>
+        </svg>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:4px">Today → ${f.pred_dates ? f.pred_dates[f.pred_dates.length-1] : ''}</div>
+      </div>`;
+    }).join('');
+  }
+}
+>>>>>>> Stashed changes
 </script>
 </body>
 </html>

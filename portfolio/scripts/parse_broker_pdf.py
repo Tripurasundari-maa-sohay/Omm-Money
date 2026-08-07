@@ -73,6 +73,9 @@ TICKER_MAP = {
     "intelcorporation":                    ("INTC",  "INTC",  "Stock"),
     "jiadeltd":                            ("JDZG",  "JDZG",  "Stock"),
     "jiadelimited":                        ("JDZG",  "JDZG",  "Stock"),
+    # Added 2026-08-07
+    "d-wavequantuminc.":                   ("QBTS",  "QBTS",  "Stock"),
+    "d-wavequantuminc":                    ("QBTS",  "QBTS",  "Stock"),
 }
 
 

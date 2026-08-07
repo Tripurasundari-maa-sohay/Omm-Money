@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-07T09:06:01.937864+00:00Z",
+  "generated": "2026-08-07T09:06:03.281622+00:00Z",
   "usa_market": {
     "status": "PREMARKET",
     "indices": {
@@ -16,25 +16,25 @@
         "change_pct": -0.06
       }
     },
-    "timestamp": "2026-08-07T09:06:03.882348+00:00Z"
+    "timestamp": "2026-08-07T09:04:59.026053+00:00Z"
   },
   "india_market": {
     "status": "OPEN",
     "indices": {
       "nifty_50": {
-        "current": 24546.5,
+        "current": 24544.1,
         "prev_close": 24636.0,
-        "change": -89.5,
-        "change_pct": -0.36
+        "change": -91.9,
+        "change_pct": -0.37
       },
       "sensex": {
-        "current": 78455.36,
+        "current": 78454.42,
         "prev_close": 78954.76,
-        "change": -499.4,
+        "change": -500.34,
         "change_pct": -0.63
       }
     },
-    "timestamp": "2026-08-07T09:04:03.525319+00:00Z"
+    "timestamp": "2026-08-07T09:06:04.809766+00:00Z"
   },
   "fx_rate": 95.27
 }

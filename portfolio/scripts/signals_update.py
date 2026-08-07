@@ -49,10 +49,10 @@ SECTOR_MAP: dict[str, str] = {
     "NOW":  "Technology",             "TTE":  "Energy",
     "EWY":  "ETF",                    "HUMN": "ETF",
     "VOOG": "ETF",
-    "NVDA": "Unknown",
     "JDZG": "Financial Services",
     "INTC": "Technology",
     "ORCL": "Technology",
+    "QBTS": "Technology",
     # India holdings
     "SBIN": "Financial Services",     "AVADHSUGAR": "Consumer Defensive",
     "IRBINVIT": "InvIT",              "JYOTISTRUC": "Industrials",
@@ -281,19 +281,17 @@ def score_ticker(
 # ── MAIN ─────────────────────────────────────────────────────────────────────
 
 def _load_cost() -> dict:
-    """Load holdings_cost.json — local file (GitHub Actions/dev) or GitHub API (VM mode)."""
+    """Load holdings_cost.json — repo path (dev) or VM-local docroot (VM mode).
+    PERSONAL → VM-local is source of truth; holdings_cost no longer on GitHub."""
     if COST_BASIS.exists():
         return json.loads(COST_BASIS.read_text())
-    if _GITHUB_TOKEN:
-        print("  Loading holdings_cost.json from GitHub (VM mode)…")
-        headers = {"Authorization": f"token {_GITHUB_TOKEN}",
-                   "Accept": "application/vnd.github.v3+json"}
-        import base64 as _b
-        r = requests.get(
-            f"https://api.github.com/repos/{_GITHUB_REPO}/contents/portfolio/data/holdings_cost.json?ref=main",
-            headers=headers, timeout=15)
-        if r.status_code == 200:
-            return json.loads(_b.b64decode(r.json()["content"]).decode())
+    import os as __os
+    web_cost = __os.path.join(__os.environ.get("WEB_ROOT", "/home/opc/web"),
+                              "portfolio/data/holdings_cost.json")
+    if __os.path.exists(web_cost):
+        print("  Loading holdings_cost.json from VM-local docroot…")
+        with open(web_cost) as f:
+            return json.load(f)
     return {}
 
 
@@ -408,11 +406,10 @@ def main() -> int:
         OUT_SIGNALS.write_text(out_json)
         print(f"  wrote {OUT_SIGNALS.relative_to(ROOT)}  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
 
-    # Commit to GitHub if token available (VM mode — no local repo)
+    # VM mode → PERSONAL: write to VM-local docroot ONLY (never GitHub).
     if _GITHUB_TOKEN:
-        _commit_to_github("portfolio/data/processed/stock_signals.json", out_json,
-                          f"data: signals {datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')} [skip ci]")
-        print(f"  wrote stock_signals.json → GitHub  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
+        _write_local("portfolio/data/processed/stock_signals.json", out_json)
+        print(f"  wrote stock_signals.json → VM-local (gated)  (US:{len(holdings_out)}  India:{len(india_out)} scored)")
 
     # ── Append to signals history CSV (for ML training) ──────────────────────
     today = datetime.utcnow().strftime("%Y-%m-%d")
@@ -433,7 +430,7 @@ def main() -> int:
 
     if csv_rows:
         if _GITHUB_TOKEN:
-            _append_signals_history(today, CSV_HEADER, csv_rows)
+            _append_signals_history_local(today, CSV_HEADER, csv_rows)
         else:
             hist_path = ROOT / "data" / "history" / "signals_history.csv"
             hist_path.parent.mkdir(parents=True, exist_ok=True)
@@ -452,29 +449,40 @@ import os as _os, base64 as _b64
 _GITHUB_TOKEN = _os.environ.get("GITHUB_TOKEN", "")
 _GITHUB_REPO  = "Tripurasundari-maa-sohay/Omm-Money"
 
+# ── VM-local data store (single source of truth, gated behind Google) ──
+# stock_signals.json + signals_history.csv reveal held tickers → PERSONAL.
+# Written to the VM docroot ONLY, never GitHub.
+WEB_ROOT = _os.environ.get("WEB_ROOT", "/home/opc/web")
 
-def _append_signals_history(today: str, header: str, new_rows: list) -> None:
-    """Read existing signals_history.csv from GitHub, strip today's rows (idempotent),
-    append new rows, commit back."""
-    import base64 as _b
-    path    = "portfolio/data/history/signals_history.csv"
-    headers = {"Authorization": f"token {_GITHUB_TOKEN}",
-               "Accept": "application/vnd.github.v3+json"}
-    url     = f"https://api.github.com/repos/{_GITHUB_REPO}/contents/{path}"
-    r       = requests.get(url, headers=headers, timeout=10)
-    if r.status_code == 200:
-        existing = _b.b64decode(r.json()["content"]).decode()
-        sha = r.json()["sha"]
-        # Strip header + today's rows (idempotent re-run)
+def _write_local(path: str, content: str) -> bool:
+    try:
+        full = _os.path.join(WEB_ROOT, path)
+        _os.makedirs(_os.path.dirname(full), exist_ok=True)
+        tmp = full + ".tmp"
+        with open(tmp, "w") as f:
+            f.write(content)
+        _os.replace(tmp, full)
+        return True
+    except Exception as e:
+        print(f"  write_local {path} FAIL: {e}", file=sys.stderr)
+        return False
+
+
+def _append_signals_history_local(today: str, header: str, new_rows: list) -> None:
+    """PERSONAL → read existing signals_history.csv from VM-local docroot, strip
+    today's rows (idempotent), append, write back local. Never GitHub."""
+    path = "portfolio/data/history/signals_history.csv"
+    full = _os.path.join(WEB_ROOT, path)
+    try:
+        with open(full) as f:
+            existing = f.read()
         lines = [l for l in existing.splitlines(keepends=True)
                  if not l.startswith(today) and not l.startswith("date,")]
-    else:
+    except Exception:
         lines = []
-        sha   = None
     content = header + "".join(lines) + "".join(new_rows)
-    _commit_to_github(path, content,
-        f"data: signals history {today} [skip ci]", sha)
-    print(f"  appended {len(new_rows)} rows → signals_history.csv")
+    if _write_local(path, content):
+        print(f"  appended {len(new_rows)} rows → signals_history.csv (VM-local, gated)")
 
 
 def _commit_to_github(path: str, content: str, message: str, sha: str = None) -> None:

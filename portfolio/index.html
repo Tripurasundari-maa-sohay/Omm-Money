@@ -719,14 +719,8 @@
         <button class="tab-button" data-tab="us"><span class="tl">US PORTFOLIO</span><span class="ts">US</span></button>
         <button class="tab-button" data-tab="india"><span class="tl">INDIA PORTFOLIO</span><span class="ts">INDIA</span></button>
         <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
-<<<<<<< Updated upstream
         <button class="tab-button" data-tab="research"><span class="tl">🔍 RESEARCH</span><span class="ts">RSRCH</span></button>
         <button class="tab-button" data-tab="reco"><span class="tl">💡 RECO</span><span class="ts">RECO</span></button>
-=======
-        <button class="tab-button" data-tab="signals"><span class="tl">📡 SIGNALS</span><span class="ts">SIGNALS</span></button>
-        <button class="tab-button" data-tab="screener"><span class="tl">🔍 SCREENER</span><span class="ts">SCREEN</span></button>
-        <button class="tab-button" data-tab="kronos"><span class="tl">🤖 KRONOS AI</span><span class="ts">AI</span></button>
->>>>>>> Stashed changes
       </div>
       <div class="banner-controls">
         <!-- FX Rates Display -->
@@ -754,7 +748,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v162</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v166</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -995,6 +989,12 @@
         <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('pnl',event)" title="Click for per-position breakdown"><label>PnL (USD / %)</label><div id="us-bd-pnl" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
         <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('day',event)" title="Click for per-position breakdown"><label id="us-day-pl-label">DAY Δ</label><div id="us-bd-day" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
         <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('realised',event)" title="Click for per-position breakdown"><label>REALIZED P&amp;L (net, incl. div)</label><div id="us-bd-realised" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('xirr',event)" title="Click for cash-flow breakdown"><label>XIRR · ABSOLUTE $</label>
+          <div style="margin-top:6px;font-size:12px;line-height:1.7">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">XIRR (annualized)</span><strong id="us-xirr-pct">—</strong></div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span style="color:var(--accent-b);font-weight:600">Absolute $</span><strong id="us-xirr-abs">—</strong></div>
+          </div>
+        </div>
       </div>
 
       <!-- 4 small tiles -->
@@ -1099,8 +1099,10 @@
       <div class="an-grid-2">
         <div class="an-card">
           <div class="an-card-title">Open Positions by Weight</div>
-          <div style="height:260px;position:relative;overflow:visible;display:flex;justify-content:center;"><canvas id="us-weight-chart"></canvas></div>
-          <div id="us-weight-legend" style="display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:8px;font-size:11px;"></div>
+          <div style="display:flex;align-items:center;gap:18px;">
+            <div style="width:180px;height:180px;flex-shrink:0;position:relative;"><canvas id="us-weight-chart"></canvas></div>
+            <div id="us-weight-legend" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;max-height:220px;overflow-y:auto;"></div>
+          </div>
         </div>
         <div class="an-card">
           <div class="an-card-title">Today's Gain / Loss %</div>
@@ -2266,8 +2268,13 @@ const DASH = (() => {
     const usWriteoffLoss = usQuar.filter(p=>p.write_off)
       .reduce((s,p)=>s+(p.write_off_loss !== undefined ? p.write_off_loss : -((p.cost||0)+10)),0);
     usOpen.forEach(p => p.wt = usMV ? (p.mv/usMV)*100 : 0);
+    const _brokersCost = S.cost.us.brokers || {};
+    const _brokerCashSum = Object.values(_brokersCost).reduce((s,b)=>s+(b?.cash||0),0);
     const us = {
-      cash:         S.cost.us.cash,
+      // Derived live from per-broker cash — never trust the top-level us.cash
+      // field alone, it drifts out of sync when brokers are corrected individually
+      // (confirmed 2026-08: stale at $1,904 while DBG+IBKR summed to $337.73).
+      cash:         Object.keys(_brokersCost).length ? _brokerCashSum : S.cost.us.cash,
       cashInfusion: S.cost.us.cash_infusion_itd,
       open:         usOpen,                    // active only — drives tables/charts/tiles
       quar:         usQuar,                    // quarantined — drives 🔒 strip + Lessons tab
@@ -2630,6 +2637,19 @@ const DASH = (() => {
       set('us-bd-pnl', pnlRows);
       set('us-bd-day', dayRows);
       set('us-bd-realised', realisedRows);
+
+      // XIRR + absolute $ return — every real cash flow (deposits negative,
+      // withdrawals positive) vs live terminal value today
+      const flows = S.cost?.us?.cash_flows || [];
+      if (flows.length) {
+        const todayISO = new Date().toISOString().slice(0,10);
+        const xirrPct = xirrJS(flows, todayISO, tMV);
+        const absReturn = tMV + flows.reduce((s,f)=>s+f.amount, 0);
+        setText('us-xirr-pct', (xirrPct!=null ? (xirrPct>=0?'+':'') + pct(xirrPct*100) : '—'));
+        setClass('us-xirr-pct', xirrPct!=null ? pn(xirrPct) : '');
+        setText('us-xirr-abs', sign(absReturn)+usd(absReturn));
+        setClass('us-xirr-abs', pn(absReturn));
+      }
     }
 
     const _stmt = S.cost?.us?.account_value_statement;
@@ -3074,11 +3094,7 @@ const DASH = (() => {
     }).join('');
   }
   window.renderTxLedger = renderTxLedger;
-<<<<<<< Updated upstream
   window._S = S;  // expose for tabs/diagnostics outside IIFE
-=======
-  window._S = S;  // expose for Kronos tab (outside IIFE)
->>>>>>> Stashed changes
 
   function renderTxCash() {
     const tbody = $('tx-cash-body');
@@ -3578,8 +3594,8 @@ const DASH = (() => {
     const _wRest = usSorted.filter(p => (p.mv/_wTot) <  _MIN_W);
     const _wData = _wMain.map(p => ({ tk: p.tk, mv: p.mv }));
     if (_wRest.length) _wData.push({ tk: 'OTHER', mv: _wRest.reduce((s,p)=>s+p.mv, 0) });
-    // Pastel palette — alternating mint, violet, lavender, soft-purple (Public.com style)
-    const _wPalette = ['#4be8c4','#a78bfa','#95efd0','#c4b5fd','#6ee7d0','#b8a4f5','#7fecd0','#d4c5fc'];
+    // Fixed categorical order — same palette used across the rest of the dashboard
+    const _wPalette = CHART_COLORS;
     // Cash % of total account value for center label
     const _wMvAll   = usOpen.reduce((s,p) => s + (p.mv || 0), 0);
     const _wCashAmt = us.cash || 0;
@@ -3617,27 +3633,27 @@ const DASH = (() => {
           hoverOffset: 8 }]
       },
       options: { responsive:true, maintainAspectRatio:false,
-        cutout: '68%',
-        layout: { padding: 20 },
+        cutout: '70%',
+        layout: { padding: 6 },
         plugins: {
           legend: { display: false },
           tooltip: { callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${usd(v)} (${pct(v/_wTot*100)})`; } } },
-          datalabels: { display: false }  // all labels in legend below chart
+          datalabels: { display: false }  // all labels in legend beside chart
         }
       },
       plugins: [_centerText]
     });
-    // Render weight legend below chart
+    // Render weight legend beside chart — plain list, sorted by weight (already sorted)
     const _wLegEl = document.getElementById('us-weight-legend');
     if (_wLegEl) {
       _wLegEl.innerHTML = _wData.map((p,i) => {
-        const pctV = _wTot ? (p.mv/_wTot*100).toFixed(0) : '0';
-        const col = _wPalette[i] || '#888';
-        return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:${col}22;border:1px solid ${col}66">
-          <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
-          <span style="color:var(--text-pri);font-weight:600">${p.tk}</span>
-          <span style="color:var(--text-sec)">${pctV}%</span>
-        </span>`;
+        const pctV = _wTot ? (p.mv/_wTot*100).toFixed(1) : '0.0';
+        const col = _wPalette[i] || _secC;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+          <span style="width:9px;height:9px;border-radius:2px;background:${col};flex-shrink:0"></span>
+          <span style="color:var(--text-pri);font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.tk}</span>
+          <span style="color:var(--text-sec);font-variant-numeric:tabular-nums;">${pctV}%</span>
+        </div>`;
       }).join('');
     }
 
@@ -3893,14 +3909,10 @@ const DASH = (() => {
     const tab = $(name+'-tab'); if (tab) tab.classList.add('active');
     const btn = document.querySelector(`[data-tab="${name}"]`); if (btn) btn.classList.add('active');
     if (name === 'screener') DASH_SCR.init();
-<<<<<<< Updated upstream
     if (name === 'watchlist') { loadWatchlist(); _wlStartPolling(); }
     if (name === 'research') { const sub = document.querySelector('.rsub-btn.active'); if (!sub || sub.dataset.rsub === 'screener') DASH_SCR.init(); else if (sub.dataset.rsub === 'watchlist') { loadWatchlist(); _wlStartPolling(); } else if (sub.dataset.rsub === 'signals') loadSignals(); }
     if (name === 'reco') RECO.load();
     document.body.dataset.activeTab = name;  // CSS hooks off this to compact hero on non-portfolio tabs
-=======
-    if (name === 'kronos') loadKronos();
->>>>>>> Stashed changes
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
   }
@@ -5277,11 +5289,7 @@ const DASH = (() => {
     // Restore last active tab (refresh persistence)
     try {
       const _savedTab = localStorage.getItem('active_tab');
-<<<<<<< Updated upstream
       const _validTabs = ['portfolio','us','india','transactions','research','reco'];
-=======
-      const _validTabs = ['portfolio','us','india','transactions','signals','screener','kronos'];
->>>>>>> Stashed changes
       if (_savedTab && _validTabs.includes(_savedTab) && _savedTab !== 'portfolio') {
         switchTab(_savedTab);
         document.body.dataset.activeTab = _savedTab;
@@ -5500,6 +5508,11 @@ const DASH = (() => {
         if (!j) return {title:'JDZG DRAG', subtitle:'No JDZG position', rows:[]};
         return {title:'JDZG DRAG', subtitle:`${j.qty} sh @ $${j.avg.toFixed(2)} → $${j.ltp.toFixed(2)} (halted, manual LTP)`, rows:[{label:'JDZG', sub:j.broker||'DBG', value:j.uplNet, raw:j}]};
       }
+      case 'xirr': {
+        const flowsList = (S.cost?.us?.cash_flows || []);
+        const rows = flowsList.map(f => ({ label: f.type==='deposit'?'Deposit':'Withdrawal', sub: f.broker + ' · ' + f.date, value: Math.abs(f.amount), raw:f }));
+        return {title:'XIRR CASH FLOWS', subtitle:'Every deposit (−) and withdrawal (+) used in the XIRR calc, oldest first', rows};
+      }
       default: return null;
     }
   }
@@ -5610,6 +5623,24 @@ const DASH = (() => {
     _drillState = null;
   }
   function _drillEsc(e) { if (e.key === 'Escape') closeDrilldown(); }
+
+  // XIRR — money-weighted annualized return via bisection on NPV=0.
+  // flows: [{date:'YYYY-MM-DD', amount}] deposits negative, withdrawals positive.
+  // terminalValue appended as a final positive flow at terminalDate (today, live MV+cash).
+  function xirrJS(flows, terminalDate, terminalValue) {
+    const all = flows.concat([{ date: terminalDate, amount: terminalValue }]);
+    const dates = all.map(f => new Date(f.date + 'T00:00:00Z').getTime());
+    const t0 = Math.min(...dates);
+    const dayFrac = (t) => (t - t0) / (1000*60*60*24) / 365;
+    const npv = r => all.reduce((s,f,i) => s + f.amount / Math.pow(1+r, dayFrac(dates[i])), 0);
+    let lo = -0.99, hi = 10;
+    if (npv(lo) * npv(hi) > 0) return null; // no sign change — can't solve
+    for (let i = 0; i < 200; i++) {
+      const mid = (lo+hi)/2;
+      if (npv(lo) * npv(mid) <= 0) hi = mid; else lo = mid;
+    }
+    return (lo+hi)/2;
+  }
 
   function toggleJDZGdayPL() {
     S.ui.includeJDZGdayPL = !S.ui.includeJDZGdayPL;
@@ -5779,11 +5810,27 @@ const DASH = (() => {
       cost.us = cost.us || {}; cost.us.open = cost.us.open || []; cost.us.closed = cost.us.closed || [];
 
       if (entry.type === 'open') {
-        cost.us.open.push({
-          tk: entry.tk, yf: entry.tk, name: entry.name, cls: entry.cls,
-          qty: entry.qty, avg: entry.avg, fees: entry.fees, income: 0,
-          buy_date: entry.buy_date, broker: entry.broker,
-        });
+        // Merge into an existing lot on the same ticker+broker (blended avg) —
+        // never create a second row for the same ticker+broker, matches how
+        // every multi-buy position in this dataset is modeled (one blended entry).
+        const existingIdx = cost.us.open.findIndex(p =>
+          p.tk === entry.tk && (p.broker||'DBG') === entry.broker
+        );
+        if (existingIdx === -1) {
+          cost.us.open.push({
+            tk: entry.tk, yf: entry.tk, name: entry.name, cls: entry.cls,
+            qty: entry.qty, avg: entry.avg, fees: entry.fees, income: 0,
+            buy_date: entry.buy_date, broker: entry.broker,
+          });
+        } else {
+          const pos = cost.us.open[existingIdx];
+          const oldQty = pos.qty, oldAvg = pos.avg, oldDate = pos.buy_date;
+          const newQty = oldQty + entry.qty;
+          pos.avg = Math.round(((oldQty*oldAvg + entry.qty*entry.avg) / newQty) * 1e6) / 1e6;
+          pos.qty = Math.round(newQty * 1e6) / 1e6;
+          pos.fees = Math.round(((pos.fees||0) + entry.fees) * 100) / 100;
+          pos.note = `${entry.broker} · ${oldQty}@${oldAvg} ${oldDate||''} + ${entry.qty}@${entry.avg} ${entry.buy_date||''}`.trim();
+        }
       } else {
         const idx = cost.us.open.findIndex(p =>
           p.tk === entry.tk && (p.broker||'DBG') === entry.broker && (p.buy_date||null) === entry.buy_date
@@ -5827,7 +5874,6 @@ if ('serviceWorker' in navigator) {
     .catch(() => {});
 }
 
-<<<<<<< Updated upstream
 // Kronos tab removed 2026-06-09 — daily backtest verdict: no edge (51% hit, naive baseline beats it).
 // Raw CSV: /tmp/kronos_bt_raw.csv on VM. Scripts kept on VM (kronos_predict.py + Kronos/).
 // VM cron entry "0 22 * * 1-5 ... kronos_predict.py" should be disabled separately.
@@ -6515,132 +6561,6 @@ const RECO = (() => {
   };
 })();
 
-=======
-// ── KRONOS AI FORECAST ────────────────────────────────────────────────────
-let _kronosData = null;
-
-async function loadKronos() {
-  const tbody = document.getElementById('kronos-table-body');
-  if (!tbody) return;
-  if (_kronosData) { renderKronos(_kronosData); return; }
-  try {
-    const res = await fetch(`./data/processed/kronos_signals.json?_=${Date.now()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    _kronosData = await res.json();
-    renderKronos(_kronosData);
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--warn)">Kronos data unavailable — runs daily at 22:00 UTC. ${e.message}</td></tr>`;
-  }
-}
-
-function renderKronos(data) {
-  const tbody   = document.getElementById('kronos-table-body');
-  const forecasts = data.forecasts || {};
-  const _kgen   = data.generated ? data.generated.replace(/\+00:00Z$/, 'Z').replace(/\+00:00$/, 'Z') : null;
-  const gen     = _kgen ? new Date(_kgen).toLocaleString() : '—';
-  const updEl   = document.getElementById('kronos-updated');
-  if (updEl) updEl.textContent = 'as of ' + gen;
-
-  // Load existing signals for comparison (S is inside IIFE — use window._S)
-  const sigMap  = {};
-  const _Sg = window._S;
-  if (_Sg && _Sg.signals && _Sg.signals.holdings) {
-    Object.entries(_Sg.signals.holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
-  }
-  if (_Sg && _Sg.signals && _Sg.signals.india_holdings) {
-    Object.entries(_Sg.signals.india_holdings).forEach(([tk,v]) => sigMap[tk] = v.action);
-  }
-
-  const fmt2  = v => v != null ? (v >= 0 ? '+' : '') + v.toFixed(2) + '%' : '—';
-  const fmtPx = v => v != null ? v.toLocaleString(undefined, {maximumFractionDigits:2}) : '—';
-
-  let up=0, down=0, flat=0;
-  const allRows = Object.entries(forecasts).sort((a,b) => (b[1].pred_pct_5d||0) - (a[1].pred_pct_5d||0));
-  const usRows  = allRows.filter(([,f]) => f.market === 'US');
-  const inRows  = allRows.filter(([,f]) => f.market === 'India');
-
-  function buildRows(rows) {
-    return rows.map(([tk, f], i) => {
-      const sig    = f.signal || 'FLAT';
-      const pct    = f.pred_pct_5d;
-      if (sig === 'UP')   up++;
-      else if (sig === 'DOWN') down++;
-      else flat++;
-      const sigColor = sig === 'UP' ? '#4ecf82' : sig === 'DOWN' ? '#f87171' : 'var(--text-dim)';
-      const sigIcon  = sig === 'UP' ? '▲' : sig === 'DOWN' ? '▼' : '●';
-      const pctColor = pct > 0 ? '#4ecf82' : pct < 0 ? '#f87171' : 'var(--text-dim)';
-      const existSig = sigMap[tk];
-      let confluence = '—';
-      if (existSig) {
-        const match = (sig==='UP'&&existSig==='BUY')||(sig==='DOWN'&&existSig==='REDUCE')||(sig==='FLAT'&&existSig==='HOLD');
-        confluence = match ? `<span style="color:#4ecf82;font-weight:600">✓ ${existSig}</span>`
-                           : `<span style="color:var(--warn)">${existSig} ≠</span>`;
-      }
-      return `<tr style="${i%2===0?'background:var(--bg3)':''}">
-        <td style="padding:9px 14px;font-weight:600">${tk}</td>
-        <td style="padding:9px 14px;text-align:right">${fmtPx(f.current_close)}</td>
-        <td style="padding:9px 14px;text-align:right;color:var(--text-sec)">${fmtPx(f.pred_1d)}</td>
-        <td style="padding:9px 14px;text-align:right;font-weight:600;color:${sigColor}">${fmtPx(f.pred_5d)}</td>
-        <td style="padding:9px 14px;text-align:right;font-weight:700;color:${pctColor}">${fmt2(pct)}</td>
-        <td style="padding:9px 14px;text-align:center;font-weight:700;color:${sigColor}">${sigIcon} ${sig}</td>
-        <td style="padding:9px 14px;text-align:center;font-size:12px">${confluence}</td>
-      </tr>`;
-    }).join('');
-  }
-
-  const thead = `<thead><tr style="background:var(--bg3)">
-    <th style="padding:10px 14px;text-align:left;color:var(--text-dim);font-weight:600;font-size:11px;letter-spacing:1px">TICKER</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">CURRENT</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">1D PRED</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D PRED</th>
-    <th style="padding:10px 14px;text-align:right;color:var(--text-dim);font-weight:600;font-size:11px">5D CHANGE</th>
-    <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">SIGNAL</th>
-    <th style="padding:10px 14px;text-align:center;color:var(--text-dim);font-weight:600;font-size:11px">vs SIGNALS</th>
-  </tr></thead>`;
-
-  tbody.innerHTML = `
-    <tr><td colspan="7" style="padding:10px 14px;font-size:11px;font-weight:700;color:#60a5fa;letter-spacing:2px;background:rgba(96,165,250,0.08)">🇺🇸 US HOLDINGS (${usRows.length})</td></tr>
-    ${thead.replace('<thead>','').replace('</thead>','')}
-    ${buildRows(usRows) || '<tr><td colspan="7" style="padding:12px 14px;color:var(--text-dim)">No US forecasts available</td></tr>'}
-    <tr><td colspan="7" style="padding:10px 14px;font-size:11px;font-weight:700;color:#f97316;letter-spacing:2px;background:rgba(249,115,22,0.08)">🇮🇳 INDIA HOLDINGS (${inRows.length})</td></tr>
-    ${thead.replace('<thead>','').replace('</thead>','')}
-    ${buildRows(inRows) || '<tr><td colspan="7" style="padding:12px 14px;color:var(--text-dim)">No India forecasts available</td></tr>'}
-  `;
-
-  // Counters
-  const u = document.getElementById('kr-count-up');   if(u) u.textContent = up;
-  const d = document.getElementById('kr-count-down'); if(d) d.textContent = down;
-  const fl= document.getElementById('kr-count-flat'); if(fl) fl.textContent = flat;
-
-  // 5-day sparklines per ticker
-  const curves = document.getElementById('kronos-curves');
-  if (curves) {
-    curves.innerHTML = allRows.map(([tk, f]) => {
-      if (!f.pred_closes || !f.pred_closes.length) return '';
-      const sig    = f.signal;
-      const color  = sig === 'UP' ? '#4ecf82' : sig === 'DOWN' ? '#f87171' : '#9ca3af';
-      const allPx  = [f.current_close, ...f.pred_closes];
-      const minPx  = Math.min(...allPx), maxPx = Math.max(...allPx);
-      const range  = maxPx - minPx || 1;
-      const w = 180, h = 50, pad = 6;
-      const pts = allPx.map((v,i) => {
-        const x = pad + (i / (allPx.length-1)) * (w - pad*2);
-        const y = pad + (1 - (v-minPx)/range) * (h - pad*2);
-        return `${x},${y}`;
-      }).join(' ');
-      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px">
-        <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:6px">${tk} <span style="font-size:10px;font-weight:400;color:var(--text-dim)">${f.pred_pct_5d != null ? (f.pred_pct_5d>0?'+':'')+f.pred_pct_5d.toFixed(2)+'%' : ''}</span></div>
-        <svg width="${w}" height="${h}" style="overflow:visible">
-          <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
-          <circle cx="${pts.split(' ')[0].split(',')[0]}" cy="${pts.split(' ')[0].split(',')[1]}" r="3" fill="var(--text-dim)"/>
-          <circle cx="${pts.split(' ').slice(-1)[0].split(',')[0]}" cy="${pts.split(' ').slice(-1)[0].split(',')[1]}" r="3" fill="${color}"/>
-        </svg>
-        <div style="font-size:9px;color:var(--text-dim);margin-top:4px">Today → ${f.pred_dates ? f.pred_dates[f.pred_dates.length-1] : ''}</div>
-      </div>`;
-    }).join('');
-  }
-}
->>>>>>> Stashed changes
 </script>
 </body>
 </html>

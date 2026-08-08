@@ -765,7 +765,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v190</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v191</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1855,10 +1855,11 @@
               <th onclick="RECO.sort('return_pct')">PF-RETURN ↕</th>
               <th onclick="RECO.sort('reco_return_pct')">RECO-RETURN ↕</th>
               <th style="text-align:center" onclick="RECO.sort('in_pf')">PF ↕</th>
+              <th style="text-align:center" onclick="RECO.sort('sell_reco')">SELL RECO ↕</th>
             </tr>
           </thead>
           <tbody id="reco-tbody">
-            <tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-dim)">Loading recommendations…</td></tr>
+            <tr><td colspan="11" style="padding:20px;text-align:center;color:var(--text-dim)">Loading recommendations…</td></tr>
           </tbody>
         </table>
       </div>
@@ -6574,13 +6575,16 @@ const RECO = (() => {
         // PF-RETURN: your ACTUAL holding return vs your own avg buy price
         // (open) or realised % (closed) — never the rec_date formula.
         row.return_pct = live.inPf ? live.returnPct : null;
+        // SELL RECO: held AND not a paid recommendation (MF/SA) — matches
+        // the criteria established for the sell-candidate list.
+        row.sell_reco = row.in_pf && row.src === 'own';
       });
       const meta = document.getElementById('reco-meta');
       if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
       render();  // render() now also updates the summary tiles
     } catch(e) {
       const el = document.getElementById('reco-tbody');
-      if (el) el.innerHTML = `<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
+      if (el) el.innerHTML = `<tr><td colspan="11" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
     }
   }
 
@@ -6658,7 +6662,7 @@ const RECO = (() => {
     const tbody = document.getElementById('reco-tbody');
     if (!tbody) return;
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
     } else {
       tbody.innerHTML = rows.map(r => {
         const pfTitle = r.in_pf ? 'Open position — return shown is live unrealised %' : '';
@@ -6673,6 +6677,7 @@ const RECO = (() => {
         <td>${r.in_pf ? _fmtReturn(r.return_pct) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td title="Live vs closing price on rec date">${_fmtReturn(r.reco_return_pct)}</td>
         <td style="text-align:center" title="${pfTitle}">${_pfBadge(r.in_pf)}</td>
+        <td style="text-align:center">${r.sell_reco ? '<span class="reco-badge sell" title="Held, not a paid MF/SA recommendation">SELL</span>' : ''}</td>
       </tr>`;
       }).join('');
     }
@@ -6692,6 +6697,7 @@ const RECO = (() => {
       row.was = live.was;
       row.reco_return_pct = _recoReturnPct(row);
       row.return_pct = live.inPf ? live.returnPct : null;
+      row.sell_reco = row.in_pf && row.src === 'own';
     });
     render();
   }

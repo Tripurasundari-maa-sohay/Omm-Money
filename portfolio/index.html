@@ -238,11 +238,10 @@
   #reco-tab .reco-pill.sa.active{background:#f0b429;border-color:#f0b429;color:#000}
   #reco-tab .reco-pill.own{border-color:#5cc8f0;color:#5cc8f0}
   #reco-tab .reco-pill.own.active{background:#5cc8f0;border-color:#5cc8f0;color:#000}
-  /* top must clear .top-banner (position:fixed, z-index:1000) or the sticky
-     header scrolls up and hides behind it instead of appearing to "freeze".
-     --banner-h is measured live in JS (actual rendered height), not guessed
-     per breakpoint — guessed pixel values kept landing wrong on real devices. */
-  #reco-table thead th{position:sticky;top:var(--banner-h, 98px);background:var(--bg-card2);z-index:10;box-shadow:0 1px 0 var(--border)}
+  /* The table wrapper is its own overflow:auto scroll box (max-height:70vh)
+     now, not the page — so top:0 is unambiguous: stick to the top of THIS
+     box's scrollport. No viewport/banner offset math needed. */
+  #reco-table thead th{position:sticky;top:0;background:var(--bg-card2);z-index:10;box-shadow:0 1px 0 var(--border)}
   #reco-tab .reco-pill.pf{border-color:#4ecf82;color:#4ecf82}
   #reco-tab .reco-pill.pf.active{background:#4ecf82;border-color:#4ecf82;color:#000}
   #reco-tab table{font-size:12px}
@@ -766,7 +765,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v188</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v189</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1774,7 +1773,10 @@
     <div class="analytics-section">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
         <h2 style="margin:0">💡 ADVISOR RECOMMENDATIONS</h2>
-        <div style="font-size:11px;color:var(--text-dim)" id="reco-meta"></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:11px;color:var(--text-dim)" id="reco-meta"></div>
+          <button onclick="RECO.exportCsv()" style="padding:5px 12px;border:1px solid var(--accent-g);border-radius:4px;background:transparent;color:var(--accent-g);cursor:pointer;font-size:11px;font-weight:700">⬇ EXPORT CSV</button>
+        </div>
       </div>
 
       <!-- Filter bar -->
@@ -1837,8 +1839,9 @@
         </div>
       </div>
 
-      <!-- Table -->
-      <div style="overflow-x:auto;overflow-y:visible;background:var(--bg-card2);border:1px solid var(--border);border-radius:8px">
+      <!-- Table — its own scroll box (not page scroll) so the header can
+           pin reliably with a plain top:0, no viewport/banner-offset math. -->
+      <div style="overflow:auto;max-height:70vh;background:var(--bg-card2);border:1px solid var(--border);border-radius:8px">
         <table id="reco-table" style="width:100%;border-collapse:separate;border-spacing:0;min-width:580px">
           <thead>
             <tr>
@@ -6694,9 +6697,46 @@ const RECO = (() => {
     render();
   }
 
+  // Export exactly what's currently visible in the table (respects every
+  // active filter/sort/search), not the full unfiltered dataset.
+  function exportCsv() {
+    const rows = _filtered();
+    rows.sort((a, b) => {
+      let av = a[_sortCol], bv = b[_sortCol];
+      if (av == null) av = _sortDir > 0 ? '￿' : '';
+      if (bv == null) bv = _sortDir > 0 ? '￿' : '';
+      return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
+    });
+    const cols = [
+      ['Ticker', r => r.symbol],
+      ['Company', r => r.company || ''],
+      ['Source', r => r.src.toUpperCase()],
+      ['Rating', r => r.rating || ''],
+      ['Quant Score', r => r.quant_score != null ? (+r.quant_score).toFixed(2) : ''],
+      ['Quant Reco', r => r.quant_rating || ''],
+      ['Rec Date', r => r.rec_date || ''],
+      ['PF-Return %', r => r.return_pct != null ? r.return_pct.toFixed(2) : ''],
+      ['Reco-Return %', r => r.reco_return_pct != null ? r.reco_return_pct.toFixed(2) : ''],
+      ['In PF', r => r.in_pf ? (r.was ? 'was' : 'yes') : 'no'],
+    ];
+    const esc = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const lines = [cols.map(c => esc(c[0])).join(',')];
+    rows.forEach(r => lines.push(cols.map(c => esc(c[1](r))).join(',')));
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `advisor_recommendations_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return {
     load,
     recomputeLive,
+    exportCsv,
     filter(v) {
       _fRating = v;
       document.querySelectorAll('[data-reco-filter]').forEach(b => b.classList.toggle('active', b.dataset.recoFilter === v));

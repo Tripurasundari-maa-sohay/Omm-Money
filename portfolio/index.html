@@ -765,7 +765,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v189</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v190</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6528,11 +6528,10 @@ const RECO = (() => {
         }
         return { inPf: true, returnPct: null, was: false };
       }
-      const closed = (_s && _s.cost && _s.cost.us && _s.cost.us.closed) || [];
-      const cp = closed.find(p => p.tk === symbol);
-      if (cp) {
-        return { inPf: true, returnPct: cp.ret_pct != null ? cp.ret_pct : null, was: true };
-      }
+      // Closed/sold positions do NOT count as "in my PF" — that badge means
+      // currently held, not "held at some point." (Was flagging closed
+      // lots as in_pf=true with a "(was)" tag; per feedback, "in my PF"
+      // should mean present tense only.)
     } catch (e) {}
     return { inPf: false, returnPct: null, was: false };
   }
@@ -6662,7 +6661,7 @@ const RECO = (() => {
       tbody.innerHTML = '<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
     } else {
       tbody.innerHTML = rows.map(r => {
-        const pfTitle = r.in_pf ? (r.was ? 'Closed position — return shown is realised %' : 'Open position — return shown is live unrealised %') : '';
+        const pfTitle = r.in_pf ? 'Open position — return shown is live unrealised %' : '';
         return `<tr class="${r.in_pf ? 'in-pf' : ''}">
         <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}</td>
         <td style="color:var(--text-sec)">${r.company || '—'}</td>
@@ -6673,7 +6672,7 @@ const RECO = (() => {
         <td style="color:var(--text-sec)">${r.rec_date || '—'}</td>
         <td>${r.in_pf ? _fmtReturn(r.return_pct) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td title="Live vs closing price on rec date">${_fmtReturn(r.reco_return_pct)}</td>
-        <td style="text-align:center" title="${pfTitle}">${_pfBadge(r.in_pf)}${r.was ? ' <span style="font-size:9px;color:var(--text-dim)">(was)</span>' : ''}</td>
+        <td style="text-align:center" title="${pfTitle}">${_pfBadge(r.in_pf)}</td>
       </tr>`;
       }).join('');
     }
@@ -6717,7 +6716,7 @@ const RECO = (() => {
       ['Rec Date', r => r.rec_date || ''],
       ['PF-Return %', r => r.return_pct != null ? r.return_pct.toFixed(2) : ''],
       ['Reco-Return %', r => r.reco_return_pct != null ? r.reco_return_pct.toFixed(2) : ''],
-      ['In PF', r => r.in_pf ? (r.was ? 'was' : 'yes') : 'no'],
+      ['In PF', r => r.in_pf ? 'yes' : 'no'],
     ];
     const esc = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const lines = [cols.map(c => esc(c[0])).join(',')];

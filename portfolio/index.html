@@ -751,7 +751,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v170</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v171</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6469,16 +6469,20 @@ const RECO = (() => {
   // (shouldn't happen, but open = more current than a stale closed lot).
   function _liveHold(symbol) {
     try {
-      const open = (S.cost && S.cost.us && S.cost.us.open) || [];
+      // RECO is a separate IIFE from DASH (where `S` is scoped) — window._S
+      // is the escape hatch DASH exposes for exactly this ("tabs/diagnostics
+      // outside IIFE", see window._S = S near the end of the DASH module).
+      const _s = window._S;
+      const open = (_s && _s.cost && _s.cost.us && _s.cost.us.open) || [];
       const op = open.find(p => p.tk === symbol);
       if (op) {
-        const ltp = S.prices && S.prices[symbol] && S.prices[symbol].ltp;
+        const ltp = _s.prices && _s.prices[symbol] && _s.prices[symbol].ltp;
         if (ltp != null && op.avg) {
           return { inPf: true, returnPct: ((ltp - op.avg) / op.avg) * 100, was: false };
         }
         return { inPf: true, returnPct: null, was: false };
       }
-      const closed = (S.cost && S.cost.us && S.cost.us.closed) || [];
+      const closed = (_s && _s.cost && _s.cost.us && _s.cost.us.closed) || [];
       const cp = closed.find(p => p.tk === symbol);
       if (cp) {
         return { inPf: true, returnPct: cp.ret_pct != null ? cp.ret_pct : null, was: true };

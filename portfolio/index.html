@@ -658,8 +658,14 @@
     }
 
     /* Analytics grids → single column on mobile */
-    .analytics-section > div[style*="grid-template-columns"] {
+    .analytics-section > div[style*="grid-template-columns"]:not(#reco-summary-strip) {
       grid-template-columns: 1fr !important;
+    }
+    /* RECO summary strip: keep a compact 3-column grid instead of collapsing
+       to 1 col — 6 tiles stacked full-width ate the whole screen before any
+       real data showed up. */
+    #reco-summary-strip {
+      grid-template-columns: repeat(3, 1fr) !important;
     }
 
     /* Index card — compact strip on mobile, no wasted space */
@@ -751,7 +757,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v171</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v172</div>
       </div>
     </div>
     <div class="banner-metrics">

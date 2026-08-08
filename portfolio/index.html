@@ -751,7 +751,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v168</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v169</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6463,6 +6463,29 @@ const RECO = (() => {
     return inPf ? '<span style="color:#4ecf82;font-size:13px" title="In your portfolio">💼</span>' : '';
   }
 
+  // Live is/was-held lookup — checked fresh on every render, not baked into
+  // the static recommendations.json. Open position wins if both exist
+  // (shouldn't happen, but open = more current than a stale closed lot).
+  function _liveHold(symbol) {
+    try {
+      const open = (S.cost && S.cost.us && S.cost.us.open) || [];
+      const op = open.find(p => p.tk === symbol);
+      if (op) {
+        const ltp = S.prices && S.prices[symbol] && S.prices[symbol].ltp;
+        if (ltp != null && op.avg) {
+          return { inPf: true, returnPct: ((ltp - op.avg) / op.avg) * 100, was: false };
+        }
+        return { inPf: true, returnPct: null, was: false };
+      }
+      const closed = (S.cost && S.cost.us && S.cost.us.closed) || [];
+      const cp = closed.find(p => p.tk === symbol);
+      if (cp) {
+        return { inPf: true, returnPct: cp.ret_pct != null ? cp.ret_pct : null, was: true };
+      }
+    } catch (e) {}
+    return { inPf: false, returnPct: null, was: false };
+  }
+
   async function load() {
     try {
       const r = await fetch('./data/recommendations.json?_=' + Date.now(), {cache:'no-store'});
@@ -6472,6 +6495,16 @@ const RECO = (() => {
       (d.motley_fool || []).forEach(row => _data.push({...row, src:'mf'}));
       (d.seeking_alpha || []).forEach(row => _data.push({...row, src:'sa'}));
       (d.own || []).forEach(row => _data.push({...row, src:'own'}));
+      // Live is/was-held + return% — computed fresh every load from current
+      // holdings + prices, overrides whatever static value shipped in the JSON.
+      _data.forEach(row => {
+        const live = _liveHold(row.symbol);
+        if (live.inPf) {
+          row.in_pf = true;
+          row.return_pct = live.returnPct;
+          row.was = live.was;
+        }
+      });
       const meta = document.getElementById('reco-meta');
       if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
       _updateSummary();
@@ -6522,7 +6555,9 @@ const RECO = (() => {
     if (!rows.length) {
       tbody.innerHTML = '<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
     } else {
-      tbody.innerHTML = rows.map(r => `<tr class="${r.in_pf ? 'in-pf' : ''}">
+      tbody.innerHTML = rows.map(r => {
+        const pfTitle = r.in_pf ? (r.was ? 'Closed position — return shown is realised %' : 'Open position — return shown is live unrealised %') : '';
+        return `<tr class="${r.in_pf ? 'in-pf' : ''}">
         <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}</td>
         <td style="color:var(--text-sec)">${r.company || '—'}</td>
         <td><span class="reco-src-${r.src}">${r.src.toUpperCase()}</span></td>
@@ -6530,8 +6565,9 @@ const RECO = (() => {
         <td>${r.quant_rating ? _ratingBadge(r.quant_rating) + (r.quant_score!=null?` <span style="color:var(--text-dim);font-size:10px">${(+r.quant_score).toFixed(2)}</span>`:'') : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td style="color:var(--text-sec)">${r.rec_date || '—'}</td>
         <td>${_fmtReturn(r.return_pct)}</td>
-        <td style="text-align:center">${_pfBadge(r.in_pf)}</td>
-      </tr>`).join('');
+        <td style="text-align:center" title="${pfTitle}">${_pfBadge(r.in_pf)}${r.was ? ' <span style="font-size:9px;color:var(--text-dim)">(was)</span>' : ''}</td>
+      </tr>`;
+      }).join('');
     }
     const cl = document.getElementById('reco-count-line');
     if (cl) cl.textContent = `${rows.length} rows shown`;

@@ -61,6 +61,7 @@ SECTOR_MAP: dict[str, str] = {
     "WAAREEENER": "Industrials",      "DIACABS": "Industrials",
     "FILATFASH": "Consumer Cyclical", "NBCC": "Industrials",
     "ASHALOG": "Industrials",         "PARAMATRIX": "Technology",
+    "CUPID": "Consumer Defensive",
 }
 
 

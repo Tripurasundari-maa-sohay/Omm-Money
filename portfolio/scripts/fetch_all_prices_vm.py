@@ -77,6 +77,7 @@ ANGEL_TOKEN_MAP = {
     "DIACABS":    "18543",
     "NBCC":       "31415",
     "JYOTISTRUC": "1802",
+    "CUPID":       "18520",
     "GOLDBEES_M": "14428",
     "GOLDBEES_U": "14428",
     "WAAREEENER": "25907",

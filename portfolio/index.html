@@ -236,6 +236,8 @@
   #reco-tab .reco-pill.mf.active{background:#9b8cf5;border-color:#9b8cf5;color:#000}
   #reco-tab .reco-pill.sa{border-color:#f0b429;color:#f0b429}
   #reco-tab .reco-pill.sa.active{background:#f0b429;border-color:#f0b429;color:#000}
+  #reco-tab .reco-pill.own{border-color:#5cc8f0;color:#5cc8f0}
+  #reco-tab .reco-pill.own.active{background:#5cc8f0;border-color:#5cc8f0;color:#000}
   #reco-tab .reco-pill.pf{border-color:#4ecf82;color:#4ecf82}
   #reco-tab .reco-pill.pf.active{background:#4ecf82;border-color:#4ecf82;color:#000}
   #reco-tab table{font-size:12px}
@@ -252,6 +254,7 @@
   .reco-badge.other{background:rgba(148,163,184,.18);color:var(--text-sec)}
   .reco-src-mf{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(155,140,245,.18);color:#9b8cf5;letter-spacing:.5px}
   .reco-src-sa{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(240,180,41,.18);color:#f0b429;letter-spacing:.5px}
+  .reco-src-own{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(92,200,240,.18);color:#5cc8f0;letter-spacing:.5px}
   /* ── RESEARCH SUB-TABS ── */
   .rsub-bar{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
   .rsub-btn{padding:8px 20px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-sec);cursor:pointer;font-size:12px;font-weight:700;letter-spacing:1px;transition:color .15s,border-color .15s}
@@ -748,7 +751,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v166</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v167</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1771,6 +1774,7 @@
         <button class="reco-pill active" data-reco-src="all" onclick="RECO.src('all')">ALL</button>
         <button class="reco-pill mf"     data-reco-src="mf"  onclick="RECO.src('mf')">🟣 MF</button>
         <button class="reco-pill sa"     data-reco-src="sa"  onclick="RECO.src('sa')">🟡 SA</button>
+        <button class="reco-pill own"    data-reco-src="own" onclick="RECO.src('own')">⚪ OWN</button>
         <span style="width:1px;background:var(--border);height:20px;margin:0 6px"></span>
         <span style="font-size:10px;color:var(--text-dim);margin-right:2px">VIEW:</span>
         <button class="reco-pill active" data-reco-view="latest"  onclick="RECO.view('latest')">LATEST ONLY</button>
@@ -1819,13 +1823,14 @@
               <th onclick="RECO.sort('company')">COMPANY ↕</th>
               <th>SOURCE</th>
               <th onclick="RECO.sort('rating')">RATING ↕</th>
+              <th onclick="RECO.sort('quant_rating')">QUANT ↕</th>
               <th onclick="RECO.sort('rec_date')">REC DATE ↕</th>
               <th onclick="RECO.sort('return_pct')">RETURN ↕</th>
               <th style="text-align:center">PF</th>
             </tr>
           </thead>
           <tbody id="reco-tbody">
-            <tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">Loading recommendations…</td></tr>
+            <tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Loading recommendations…</td></tr>
           </tbody>
         </table>
       </div>
@@ -6466,13 +6471,14 @@ const RECO = (() => {
       _data = [];
       (d.motley_fool || []).forEach(row => _data.push({...row, src:'mf'}));
       (d.seeking_alpha || []).forEach(row => _data.push({...row, src:'sa'}));
+      (d.own || []).forEach(row => _data.push({...row, src:'own'}));
       const meta = document.getElementById('reco-meta');
-      if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA picks`;
+      if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
       _updateSummary();
       render();
     } catch(e) {
       const el = document.getElementById('reco-tbody');
-      if (el) el.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
+      if (el) el.innerHTML = `<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
     }
   }
 
@@ -6514,13 +6520,14 @@ const RECO = (() => {
     const tbody = document.getElementById('reco-tbody');
     if (!tbody) return;
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text-dim)">No results</td></tr>';
     } else {
       tbody.innerHTML = rows.map(r => `<tr class="${r.in_pf ? 'in-pf' : ''}">
         <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}</td>
         <td style="color:var(--text-sec)">${r.company || '—'}</td>
         <td><span class="reco-src-${r.src}">${r.src.toUpperCase()}</span></td>
         <td>${_ratingBadge(r.rating)}</td>
+        <td>${r.quant_rating ? _ratingBadge(r.quant_rating) + (r.quant_score!=null?` <span style="color:var(--text-dim);font-size:10px">${(+r.quant_score).toFixed(2)}</span>`:'') : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td style="color:var(--text-sec)">${r.rec_date || '—'}</td>
         <td>${_fmtReturn(r.return_pct)}</td>
         <td style="text-align:center">${_pfBadge(r.in_pf)}</td>

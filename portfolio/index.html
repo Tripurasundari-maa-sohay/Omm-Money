@@ -751,7 +751,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v169</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v170</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -4471,6 +4471,7 @@ const DASH = (() => {
     await load();
     render();
     await refreshSignals();   // pick up new stock_signals.json if Actions pushed one
+    if (typeof RECO !== 'undefined') RECO.recomputeLive();
   }
 
   /* ══ SIGNALS ENGINE ═════════════════════════════════════════════ */
@@ -6573,8 +6574,26 @@ const RECO = (() => {
     if (cl) cl.textContent = `${rows.length} rows shown`;
   }
 
+  function recomputeLive() {
+    // Called after every main refresh() completes — S.cost/S.prices may not
+    // have been ready yet the first time the RECO tab was opened (race with
+    // the initial async load), so redo the live overlay whenever fresh
+    // holdings/price data lands, not just once at tab-open time.
+    if (!_data.length) return;
+    _data.forEach(row => {
+      const live = _liveHold(row.symbol);
+      if (live.inPf) {
+        row.in_pf = true;
+        row.return_pct = live.returnPct;
+        row.was = live.was;
+      }
+    });
+    render();
+  }
+
   return {
     load,
+    recomputeLive,
     filter(v) {
       _fRating = v;
       document.querySelectorAll('[data-reco-filter]').forEach(b => b.classList.toggle('active', b.dataset.recoFilter === v));

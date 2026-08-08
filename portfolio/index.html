@@ -238,7 +238,12 @@
   #reco-tab .reco-pill.sa.active{background:#f0b429;border-color:#f0b429;color:#000}
   #reco-tab .reco-pill.own{border-color:#5cc8f0;color:#5cc8f0}
   #reco-tab .reco-pill.own.active{background:#5cc8f0;border-color:#5cc8f0;color:#000}
-  #reco-table thead th{position:sticky;top:0;background:var(--bg-card2);z-index:2;box-shadow:0 1px 0 var(--border)}
+  /* top must clear .top-banner (position:fixed, z-index:1000) or the sticky
+     header scrolls up and hides behind it instead of appearing to "freeze" —
+     matches the same breakpoints .dashboard-container uses for padding-top. */
+  #reco-table thead th{position:sticky;top:98px;background:var(--bg-card2);z-index:10;box-shadow:0 1px 0 var(--border)}
+  @media (max-width:900px){ #reco-table thead th{top:140px} }
+  @media (max-width:640px){ #reco-table thead th{top:150px} }
   #reco-tab .reco-pill.pf{border-color:#4ecf82;color:#4ecf82}
   #reco-tab .reco-pill.pf.active{background:#4ecf82;border-color:#4ecf82;color:#000}
   #reco-tab table{font-size:12px}
@@ -758,7 +763,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v181</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v183</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1795,13 +1800,13 @@
 
       <!-- Summary strip -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;margin-bottom:12px" id="reco-summary-strip">
-        <div style="background:rgba(78,207,130,.08);border:1px solid rgba(78,207,130,.3);border-radius:5px;padding:6px 4px;text-align:center">
-          <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟢 BUY</div>
-          <div id="reco-cnt-buy" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
-        </div>
         <div style="background:rgba(78,207,130,.15);border:1px solid rgba(78,207,130,.5);border-radius:5px;padding:6px 4px;text-align:center">
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟢🟢 STRONG BUY</div>
           <div id="reco-cnt-strongbuy" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
+        </div>
+        <div style="background:rgba(78,207,130,.08);border:1px solid rgba(78,207,130,.3);border-radius:5px;padding:6px 4px;text-align:center">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟢 BUY</div>
+          <div id="reco-cnt-buy" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
         </div>
         <div style="background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.3);border-radius:5px;padding:6px 4px;text-align:center">
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟡 HOLD</div>

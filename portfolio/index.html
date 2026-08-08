@@ -762,7 +762,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v186</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v187</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6605,14 +6605,35 @@ const RECO = (() => {
 
   // Live summary tiles — recomputed on every render() call (filter/sort/
   // search/view change), not just once at load time.
+  // One representative rating per unique ticker — a ticker can have rows in
+  // multiple source buckets (e.g. a genuine MF rec that ALSO shows up in our
+  // own Quant screening) and each was being tallied separately, so the tile
+  // sum exceeded the ticker count. 'own' (Quant-driven) wins on conflict,
+  // matching the guiding-metric preference established this session;
+  // otherwise whichever row is found first.
+  function _dedupeBySymbol(rows) {
+    const bySymbol = new Map();
+    const priority = { own: 0, sa: 1, mf: 2 };
+    for (const r of rows) {
+      const existing = bySymbol.get(r.symbol);
+      if (!existing || priority[r.src] < priority[existing.src]) bySymbol.set(r.symbol, r);
+    }
+    return [...bySymbol.values()];
+  }
+
   function _updateSummary() {
-    const breakdownRows = _filteredExceptRating();
-    _set('reco-cnt-buy',        breakdownRows.filter(r => _ratingKey(r.rating) === 'buy').length);
-    _set('reco-cnt-strongbuy',  breakdownRows.filter(r => (r.rating||'').toLowerCase() === 'strong buy').length);
-    _set('reco-cnt-hold',       breakdownRows.filter(r => _ratingKey(r.rating) === 'hold').length);
-    _set('reco-cnt-sell',       breakdownRows.filter(r => _ratingKey(r.rating) === 'sell').length);
-    _set('reco-cnt-strongsell', breakdownRows.filter(r => (r.rating||'').toLowerCase() === 'strong sell').length);
-    _set('reco-cnt-reduce',     breakdownRows.filter(r => _ratingKey(r.rating) === 'reduce').length);
+    // Mutually exclusive buckets by exact rating text — _ratingKey() folds
+    // Strong Buy/Sell into buy/sell for the FILTER pills (so clicking "BUY"
+    // shows both), but that would double-count a ticker across two tiles
+    // here. Every row must land in exactly one tile so the six sum to TICKERS.
+    const breakdownRows = _dedupeBySymbol(_filteredExceptRating());
+    const exact = v => (r) => (r.rating || '').toLowerCase() === v;
+    _set('reco-cnt-strongbuy',  breakdownRows.filter(exact('strong buy')).length);
+    _set('reco-cnt-buy',        breakdownRows.filter(exact('buy')).length);
+    _set('reco-cnt-hold',       breakdownRows.filter(exact('hold')).length);
+    _set('reco-cnt-sell',       breakdownRows.filter(exact('sell')).length);
+    _set('reco-cnt-strongsell', breakdownRows.filter(exact('strong sell')).length);
+    _set('reco-cnt-reduce',     breakdownRows.filter(exact('reduce')).length);
     const allFilteredRows = _filtered();
     _set('reco-cnt-total',  new Set(allFilteredRows.map(r => r.symbol)).size);
     _set('reco-cnt-inpf',   new Set(allFilteredRows.filter(r => r.in_pf).map(r => r.symbol)).size);

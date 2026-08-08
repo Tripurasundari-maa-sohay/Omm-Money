@@ -596,12 +596,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.48,
       "quant_rating": "Buy",
-      "reco_close": 164.12
+      "reco_close": 164.12,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "BTSG",
       "company": "BrightSpring Health Services",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-08-07",
       "return_pct": null,
       "in_pf": true,
@@ -609,7 +610,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 4.92,
       "quant_rating": "Strong Buy",
-      "reco_close": 60.6
+      "reco_close": 60.6,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "DLTH",
@@ -622,7 +624,8 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.12
+      "reco_close": 4.12,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHAZ",
@@ -635,12 +638,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 2.99,
       "quant_rating": "Hold",
-      "reco_close": 57.02
+      "reco_close": 57.02,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHAZ",
       "company": "Sharonai Holdings Inc.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-08-05",
       "return_pct": null,
       "in_pf": true,
@@ -648,12 +652,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 2.99,
       "quant_rating": "Hold",
-      "reco_close": 55.52
+      "reco_close": 55.52,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "GLW",
       "company": "Corning Inc.",
-      "rating": "Strong Buy",
+      "rating": "Hold",
       "rec_date": "2026-08-03",
       "return_pct": null,
       "in_pf": true,
@@ -661,12 +666,13 @@
       "note": "Wall St. rating change (Upgrade)",
       "quant_score": 3.42,
       "quant_rating": "Hold",
-      "reco_close": 146.64
+      "reco_close": 146.64,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "DLTH",
       "company": "Duluth Holdings Inc Class B",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-08-03",
       "return_pct": null,
       "in_pf": true,
@@ -674,12 +680,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.17
+      "reco_close": 4.17,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "EWY",
       "company": "iShares MSCI South Korea ETF",
-      "rating": "Strong Buy",
+      "rating": "Buy",
       "rec_date": "2026-07-31",
       "return_pct": null,
       "in_pf": true,
@@ -687,7 +694,8 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.48,
       "quant_rating": "Buy",
-      "reco_close": 161.21
+      "reco_close": 161.21,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHAZ",
@@ -700,12 +708,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 2.99,
       "quant_rating": "Hold",
-      "reco_close": 40.09
+      "reco_close": 40.09,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
       "company": "Oracle Corp.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-29",
       "return_pct": null,
       "in_pf": true,
@@ -713,7 +722,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 119.96
+      "reco_close": 119.96,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "IOT",
@@ -726,7 +736,8 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.71,
       "quant_rating": "Strong Buy",
-      "reco_close": 37.5
+      "reco_close": 37.5,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "CRCL",
@@ -739,7 +750,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 1.52,
       "quant_rating": "Sell",
-      "reco_close": 64.32
+      "reco_close": 64.32,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "EWY",
@@ -752,12 +764,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.48,
       "quant_rating": "Buy",
-      "reco_close": 151.45
+      "reco_close": 151.45,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
       "company": "Oracle Corp.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-29",
       "return_pct": null,
       "in_pf": true,
@@ -765,12 +778,13 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 119.96
+      "reco_close": 119.96,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHAZ",
       "company": "Sharonai Holdings Inc.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-28",
       "return_pct": null,
       "in_pf": true,
@@ -778,12 +792,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 2.99,
       "quant_rating": "Hold",
-      "reco_close": 58.79
+      "reco_close": 58.79,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "MU",
       "company": "Micron Technology Inc.",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-28",
       "return_pct": null,
       "in_pf": true,
@@ -791,12 +806,13 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 4.99,
       "quant_rating": "Strong Buy",
-      "reco_close": 900.2
+      "reco_close": 900.2,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "VOOG",
       "company": "Vanguard S&P 500 Growth ETF",
-      "rating": "Sell",
+      "rating": "Buy",
       "rec_date": "2026-07-27",
       "return_pct": null,
       "in_pf": true,
@@ -804,12 +820,13 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 4.31,
       "quant_rating": "Buy",
-      "reco_close": 79.52
+      "reco_close": 79.52,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "RKLB",
       "company": "Rocket Lab Corp.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-27",
       "return_pct": null,
       "in_pf": true,
@@ -817,7 +834,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 2.88,
       "quant_rating": "Hold",
-      "reco_close": 66.94
+      "reco_close": 66.94,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "TTE",
@@ -830,7 +848,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.18,
       "quant_rating": "Buy",
-      "reco_close": 84.16
+      "reco_close": 84.16,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SPCX",
@@ -848,7 +867,7 @@
     {
       "symbol": "MU",
       "company": "Micron Technology Inc.",
-      "rating": "Hold",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-24",
       "return_pct": null,
       "in_pf": true,
@@ -856,7 +875,8 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 4.99,
       "quant_rating": "Strong Buy",
-      "reco_close": 990.21
+      "reco_close": 990.21,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
@@ -869,12 +889,13 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 120.04
+      "reco_close": 120.04,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "TTE",
       "company": "TotalEnergies SE",
-      "rating": "Strong Buy",
+      "rating": "Buy",
       "rec_date": "2026-07-24",
       "return_pct": null,
       "in_pf": false,
@@ -882,7 +903,8 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.18,
       "quant_rating": "Buy",
-      "reco_close": 86.23
+      "reco_close": 86.23,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
@@ -895,7 +917,8 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 120.04
+      "reco_close": 120.04,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "DLTH",
@@ -908,12 +931,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.41
+      "reco_close": 4.41,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "DLTH",
       "company": "Duluth Holdings Inc Class B",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-22",
       "return_pct": null,
       "in_pf": true,
@@ -921,7 +945,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.43
+      "reco_close": 4.43,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SPCX",
@@ -947,12 +972,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.92,
       "quant_rating": "Strong Buy",
-      "reco_close": 95.85
+      "reco_close": 95.85,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHAZ",
       "company": "Sharonai Holdings Inc.",
-      "rating": "Strong Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-22",
       "return_pct": null,
       "in_pf": true,
@@ -960,12 +986,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 2.99,
       "quant_rating": "Hold",
-      "reco_close": 71.0
+      "reco_close": 71.0,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "IOT",
       "company": "Samsara Inc. Class A",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-22",
       "return_pct": null,
       "in_pf": true,
@@ -973,12 +1000,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.71,
       "quant_rating": "Strong Buy",
-      "reco_close": 36.07
+      "reco_close": 36.07,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SNEX",
       "company": "StoneX Group Inc.",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-21",
       "return_pct": null,
       "in_pf": true,
@@ -986,7 +1014,8 @@
       "note": "Wall St. rating change (Downgrade)",
       "quant_score": 4.73,
       "quant_rating": "Strong Buy",
-      "reco_close": 70.71
+      "reco_close": 70.71,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "DLTH",
@@ -999,12 +1028,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.2
+      "reco_close": 4.2,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ICHR",
       "company": "Ichor Holdings Ltd.",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-21",
       "return_pct": null,
       "in_pf": true,
@@ -1012,12 +1042,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.92,
       "quant_rating": "Strong Buy",
-      "reco_close": 83.69
+      "reco_close": 83.69,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHAZ",
       "company": "Sharonai Holdings Inc.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-21",
       "return_pct": null,
       "in_pf": true,
@@ -1025,7 +1056,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 2.99,
       "quant_rating": "Hold",
-      "reco_close": 62.34
+      "reco_close": 62.34,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "IOT",
@@ -1038,12 +1070,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.71,
       "quant_rating": "Strong Buy",
-      "reco_close": 38.55
+      "reco_close": 38.55,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "CRCL",
       "company": "Circle Internet Group Inc.",
-      "rating": "Hold",
+      "rating": "Sell",
       "rec_date": "2026-07-21",
       "return_pct": null,
       "in_pf": true,
@@ -1051,12 +1084,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 1.52,
       "quant_rating": "Sell",
-      "reco_close": 65.45
+      "reco_close": 65.45,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
       "company": "Oracle Corp.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-20",
       "return_pct": null,
       "in_pf": true,
@@ -1064,7 +1098,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 121.38
+      "reco_close": 121.38,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SPCX",
@@ -1090,12 +1125,13 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 2.88,
       "quant_rating": "Hold",
-      "reco_close": 65.74
+      "reco_close": 65.74,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
       "company": "Oracle Corp.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-07-20",
       "return_pct": null,
       "in_pf": true,
@@ -1103,12 +1139,13 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 121.38
+      "reco_close": 121.38,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "TTE",
       "company": "TotalEnergies SE",
-      "rating": "Hold",
+      "rating": "Buy",
       "rec_date": "2026-07-20",
       "return_pct": null,
       "in_pf": false,
@@ -1116,12 +1153,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.18,
       "quant_rating": "Buy",
-      "reco_close": 80.8
+      "reco_close": 80.8,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "DLTH",
       "company": "Duluth Holdings Inc Class B",
-      "rating": "Buy",
+      "rating": "Strong Buy",
       "rec_date": "2026-07-17",
       "return_pct": null,
       "in_pf": true,
@@ -1129,7 +1167,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.33
+      "reco_close": 4.33,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
@@ -1142,7 +1181,8 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 132.49
+      "reco_close": 132.49,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
@@ -1155,7 +1195,8 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 132.49
+      "reco_close": 132.49,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SPCX",
@@ -1181,7 +1222,8 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.81,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.05
+      "reco_close": 4.05,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "TTE",
@@ -1194,7 +1236,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 4.18,
       "quant_rating": "Buy",
-      "reco_close": 81.21
+      "reco_close": 81.21,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "TTE",
@@ -1207,7 +1250,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 4.18,
       "quant_rating": "Buy",
-      "reco_close": 77.96
+      "reco_close": 77.96,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
@@ -1220,12 +1264,13 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 147.76
+      "reco_close": 147.76,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "ORCL",
       "company": "Oracle Corp.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-06-15",
       "return_pct": null,
       "in_pf": true,
@@ -1233,12 +1278,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 3.18,
       "quant_rating": "Hold",
-      "reco_close": 192.64
+      "reco_close": 192.64,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "TTE",
       "company": "TotalEnergies SE",
-      "rating": "Hold",
+      "rating": "Buy",
       "rec_date": "2026-06-05",
       "return_pct": null,
       "in_pf": false,
@@ -1246,7 +1292,8 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 4.18,
       "quant_rating": "Buy",
-      "reco_close": 90.17
+      "reco_close": 90.17,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "AMZN",
@@ -1259,12 +1306,13 @@
       "note": "Quant rating change (Upgrade)",
       "quant_score": 4.95,
       "quant_rating": "Strong Buy",
-      "reco_close": 261.26
+      "reco_close": 261.26,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "NOW",
       "company": "ServiceNow Inc.",
-      "rating": "Buy",
+      "rating": "Hold",
       "rec_date": "2026-05-28",
       "return_pct": null,
       "in_pf": true,
@@ -1272,12 +1320,13 @@
       "note": "SA Analysts rating change (Downgrade)",
       "quant_score": 3.09,
       "quant_rating": "Hold",
-      "reco_close": 102.12
+      "reco_close": 102.12,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "NOW",
       "company": "ServiceNow Inc.",
-      "rating": "Strong Buy",
+      "rating": "Hold",
       "rec_date": "2026-05-26",
       "return_pct": null,
       "in_pf": true,
@@ -1285,7 +1334,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 3.09,
       "quant_rating": "Hold",
-      "reco_close": 99.92
+      "reco_close": 99.92,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "SHIP",
@@ -1298,7 +1348,8 @@
       "note": "SA Analysts rating change (Upgrade)",
       "quant_score": 4.86,
       "quant_rating": "Strong Buy",
-      "reco_close": 15.17
+      "reco_close": 15.17,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "MSFT",
@@ -1311,7 +1362,8 @@
       "note": "Quant rating change (Downgrade)",
       "quant_score": 3.47,
       "quant_rating": "Hold",
-      "reco_close": 405.21
+      "reco_close": 405.21,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "AAOI",
@@ -1324,7 +1376,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 3.46,
       "quant_rating": "Hold",
-      "reco_close": 124.22
+      "reco_close": 124.22,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "AVGO",
@@ -1337,7 +1390,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 3.46,
       "quant_rating": "Hold",
-      "reco_close": 420.57
+      "reco_close": 420.57,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "FPS",
@@ -1363,7 +1417,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 4.26,
       "quant_rating": "Buy",
-      "reco_close": 84.03
+      "reco_close": 84.03,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "GOOG",
@@ -1376,7 +1431,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 3.49,
       "quant_rating": "Hold",
-      "reco_close": 356.62
+      "reco_close": 356.62,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "HPE",
@@ -1389,7 +1445,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 4.98,
       "quant_rating": "Strong Buy",
-      "reco_close": 52.43
+      "reco_close": 52.43,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "INTC",
@@ -1402,7 +1459,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 4.99,
       "quant_rating": "Strong Buy",
-      "reco_close": 99.81
+      "reco_close": 99.81,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "IREN",
@@ -1415,7 +1473,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 2.7,
       "quant_rating": "Hold",
-      "reco_close": 37.93
+      "reco_close": 37.93,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "JPM",
@@ -1428,7 +1487,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 3.44,
       "quant_rating": "Hold",
-      "reco_close": 356.3
+      "reco_close": 356.3,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "NBIS",
@@ -1441,7 +1501,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 4.91,
       "quant_rating": "Strong Buy",
-      "reco_close": 189.88
+      "reco_close": 189.88,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "Q",
@@ -1467,7 +1528,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 4.99,
       "quant_rating": "Strong Buy",
-      "reco_close": 4.82
+      "reco_close": 4.82,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "NVDA",
@@ -1480,7 +1542,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 3.49,
       "quant_rating": "Hold",
-      "reco_close": 218.99
+      "reco_close": 218.99,
+      "rating_source": "Quant score (guiding metric)"
     },
     {
       "symbol": "QBTS",
@@ -1493,7 +1556,8 @@
       "note": "Quant score bucket (no rating-change event captured) — Quant is the guiding metric per user preference",
       "quant_score": 2.84,
       "quant_rating": "Hold",
-      "reco_close": 19.405
+      "reco_close": 19.405,
+      "rating_source": "Quant score (guiding metric)"
     }
   ]
 }

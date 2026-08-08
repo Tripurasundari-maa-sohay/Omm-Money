@@ -662,11 +662,11 @@
     .analytics-section > div[style*="grid-template-columns"]:not(#reco-summary-strip) {
       grid-template-columns: 1fr !important;
     }
-    /* RECO summary strip: keep a compact 3-column grid instead of collapsing
-       to 1 col — 6 tiles stacked full-width ate the whole screen before any
+    /* RECO summary strip: keep a compact 4-column grid instead of collapsing
+       to 1 col — tiles stacked full-width ate the whole screen before any
        real data showed up. */
     #reco-summary-strip {
-      grid-template-columns: repeat(3, 1fr) !important;
+      grid-template-columns: repeat(4, 1fr) !important;
     }
 
     /* Index card — compact strip on mobile, no wasted space */
@@ -758,7 +758,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v180</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v181</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1799,6 +1799,10 @@
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟢 BUY</div>
           <div id="reco-cnt-buy" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
         </div>
+        <div style="background:rgba(78,207,130,.15);border:1px solid rgba(78,207,130,.5);border-radius:5px;padding:6px 4px;text-align:center">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟢🟢 STRONG BUY</div>
+          <div id="reco-cnt-strongbuy" style="font-size:15px;font-weight:700;color:#4ecf82">—</div>
+        </div>
         <div style="background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.3);border-radius:5px;padding:6px 4px;text-align:center">
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟡 HOLD</div>
           <div id="reco-cnt-hold" style="font-size:15px;font-weight:700;color:#f0b429">—</div>
@@ -1806,6 +1810,10 @@
         <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:5px;padding:6px 4px;text-align:center">
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🔴 SELL</div>
           <div id="reco-cnt-sell" style="font-size:15px;font-weight:700;color:#f87171">—</div>
+        </div>
+        <div style="background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.5);border-radius:5px;padding:6px 4px;text-align:center">
+          <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🔴🔴 STRONG SELL</div>
+          <div id="reco-cnt-strongsell" style="font-size:15px;font-weight:700;color:#f87171">—</div>
         </div>
         <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.3);border-radius:5px;padding:6px 4px;text-align:center">
           <div style="font-size:9px;color:var(--text-dim);letter-spacing:.5px;margin-bottom:1px">🟠 REDUCE</div>
@@ -6450,10 +6458,13 @@ const RECO = (() => {
   function _set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
   function _ratingKey(r) {
+    // "Strong Buy"/"Strong Sell" collapse into buy/sell here so filter pills
+    // and badge coloring treat them correctly — the STRONG BUY/STRONG SELL
+    // tiles below track the granular split separately.
     const v = (r || '').toLowerCase();
-    if (v === 'buy') return 'buy';
+    if (v === 'buy' || v === 'strong buy') return 'buy';
     if (v === 'hold') return 'hold';
-    if (v === 'sell') return 'sell';
+    if (v === 'sell' || v === 'strong sell') return 'sell';
     if (v === 'reduce') return 'reduce';
     return 'other';
   }
@@ -6577,10 +6588,12 @@ const RECO = (() => {
   // search/view change), not just once at load time.
   function _updateSummary() {
     const breakdownRows = _filteredExceptRating();
-    _set('reco-cnt-buy',    breakdownRows.filter(r => _ratingKey(r.rating) === 'buy').length);
-    _set('reco-cnt-hold',   breakdownRows.filter(r => _ratingKey(r.rating) === 'hold').length);
-    _set('reco-cnt-sell',   breakdownRows.filter(r => _ratingKey(r.rating) === 'sell').length);
-    _set('reco-cnt-reduce', breakdownRows.filter(r => _ratingKey(r.rating) === 'reduce').length);
+    _set('reco-cnt-buy',        breakdownRows.filter(r => _ratingKey(r.rating) === 'buy').length);
+    _set('reco-cnt-strongbuy',  breakdownRows.filter(r => (r.rating||'').toLowerCase() === 'strong buy').length);
+    _set('reco-cnt-hold',       breakdownRows.filter(r => _ratingKey(r.rating) === 'hold').length);
+    _set('reco-cnt-sell',       breakdownRows.filter(r => _ratingKey(r.rating) === 'sell').length);
+    _set('reco-cnt-strongsell', breakdownRows.filter(r => (r.rating||'').toLowerCase() === 'strong sell').length);
+    _set('reco-cnt-reduce',     breakdownRows.filter(r => _ratingKey(r.rating) === 'reduce').length);
     const allFilteredRows = _filtered();
     _set('reco-cnt-total',  new Set(allFilteredRows.map(r => r.symbol)).size);
     _set('reco-cnt-inpf',   new Set(allFilteredRows.filter(r => r.in_pf).map(r => r.symbol)).size);

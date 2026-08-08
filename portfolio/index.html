@@ -758,7 +758,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v179</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v180</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6541,8 +6541,7 @@ const RECO = (() => {
       });
       const meta = document.getElementById('reco-meta');
       if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
-      _updateSummary();
-      render();
+      render();  // render() now also updates the summary tiles
     } catch(e) {
       const el = document.getElementById('reco-tbody');
       if (el) el.innerHTML = `<tr><td colspan="10" style="padding:20px;text-align:center;color:var(--text-dim)">Failed to load: ${e.message}</td></tr>`;
@@ -6551,31 +6550,44 @@ const RECO = (() => {
 
   function _latestRows() { return _data.filter(r => r.is_latest); }
 
-  function _updateSummary() {
-    const rows = _latestRows();
-    _set('reco-cnt-buy',    rows.filter(r => _ratingKey(r.rating) === 'buy').length);
-    _set('reco-cnt-hold',   rows.filter(r => _ratingKey(r.rating) === 'hold').length);
-    _set('reco-cnt-sell',   rows.filter(r => _ratingKey(r.rating) === 'sell').length);
-    _set('reco-cnt-reduce', rows.filter(r => _ratingKey(r.rating) === 'reduce').length);
-    _set('reco-cnt-total',  new Set(rows.map(r => r.symbol)).size);
-    _set('reco-cnt-inpf',   new Set(rows.filter(r => r.in_pf).map(r => r.symbol)).size);
-  }
-
-  function _filtered() {
+  // Everything except the rating filter — so the BUY/HOLD/SELL/REDUCE tiles
+  // stay a meaningful breakdown of the current source/view/pf/search
+  // selection, instead of collapsing to one non-zero tile whenever a rating
+  // pill is active.
+  function _filteredExceptRating() {
     let rows = _fView === 'latest' ? _latestRows() : [..._data];
-    if (_fRating !== 'all') {
-      rows = rows.filter(r => {
-        const k = _ratingKey(r.rating);
-        return _fRating === 'sell' ? (k === 'sell' || k === 'reduce') : k === _fRating;
-      });
-    }
     if (_fSrc !== 'all') rows = rows.filter(r => r.src === _fSrc);
     if (_fPf) rows = rows.filter(r => r.in_pf);
     if (_fSearch) rows = rows.filter(r => (r.symbol || '').toUpperCase().includes(_fSearch));
     return rows;
   }
 
+  function _filtered() {
+    let rows = _filteredExceptRating();
+    if (_fRating !== 'all') {
+      rows = rows.filter(r => {
+        const k = _ratingKey(r.rating);
+        return _fRating === 'sell' ? (k === 'sell' || k === 'reduce') : k === _fRating;
+      });
+    }
+    return rows;
+  }
+
+  // Live summary tiles — recomputed on every render() call (filter/sort/
+  // search/view change), not just once at load time.
+  function _updateSummary() {
+    const breakdownRows = _filteredExceptRating();
+    _set('reco-cnt-buy',    breakdownRows.filter(r => _ratingKey(r.rating) === 'buy').length);
+    _set('reco-cnt-hold',   breakdownRows.filter(r => _ratingKey(r.rating) === 'hold').length);
+    _set('reco-cnt-sell',   breakdownRows.filter(r => _ratingKey(r.rating) === 'sell').length);
+    _set('reco-cnt-reduce', breakdownRows.filter(r => _ratingKey(r.rating) === 'reduce').length);
+    const allFilteredRows = _filtered();
+    _set('reco-cnt-total',  new Set(allFilteredRows.map(r => r.symbol)).size);
+    _set('reco-cnt-inpf',   new Set(allFilteredRows.filter(r => r.in_pf).map(r => r.symbol)).size);
+  }
+
   function render() {
+    _updateSummary();
     const rows = _filtered();
     rows.sort((a, b) => {
       let av = a[_sortCol], bv = b[_sortCol];

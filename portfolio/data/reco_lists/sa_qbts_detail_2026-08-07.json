@@ -1,0 +1,22 @@
+{
+  "captured_date": "2026-08-07",
+  "source": "Seeking Alpha",
+  "symbol": "QBTS",
+  "company": "D-Wave Quantum Inc.",
+  "price": 20.76,
+  "change": 1.36,
+  "change_pct": "+6.98%",
+  "quant_rating": "HOLD",
+  "quant_score": 2.84,
+  "sa_analysts_rating": "BUY",
+  "sa_analysts_score": 3.66,
+  "wall_street_rating": "STRONG BUY",
+  "wall_street_score": 4.81,
+  "factor_grades": {
+    "valuation":     {"now": "D", "3m_ago": "C-", "6m_ago": "D"},
+    "growth":        {"now": "B", "3m_ago": "A-", "6m_ago": "A+"},
+    "profitability": {"now": "D", "3m_ago": "F",  "6m_ago": "F"},
+    "momentum":      {"now": "D", "3m_ago": "B-", "6m_ago": "A-"},
+    "revisions":     {"now": "C+","3m_ago": "F",  "6m_ago": "B-"}
+  }
+}

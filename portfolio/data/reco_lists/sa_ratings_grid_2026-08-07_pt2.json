@@ -1,0 +1,15 @@
+{
+  "captured_date": "2026-08-07",
+  "source": "Seeking Alpha",
+  "source_note": "SA ratings grid, second capture — covers AMZN/MSFT/NVDA/ORCL/SHIP/NOW/TTE (fills NVDA + SHIP gaps from first capture).",
+  "columns": ["symbol","quant_score","sa_analysts_score","wall_st_score","valuation_grade","growth_grade","profitability_grade","momentum_grade","eps_revision_grade"],
+  "rows": [
+    {"symbol":"AMZN","quant_score":4.95,"sa_analysts_score":4.16,"wall_st_score":4.68,"valuation_grade":"D","growth_grade":"A-","profitability_grade":"A+","momentum_grade":"B","eps_revision_grade":"B+"},
+    {"symbol":"MSFT","quant_score":3.47,"sa_analysts_score":4.17,"wall_st_score":4.64,"valuation_grade":"F","growth_grade":"C-","profitability_grade":"A+","momentum_grade":"B-","eps_revision_grade":"C+"},
+    {"symbol":"NVDA","quant_score":3.49,"sa_analysts_score":3.89,"wall_st_score":4.70,"valuation_grade":"D-","growth_grade":"A+","profitability_grade":"A+","momentum_grade":"B-","eps_revision_grade":"B-"},
+    {"symbol":"ORCL","quant_score":3.18,"sa_analysts_score":3.57,"wall_st_score":4.45,"valuation_grade":"C-","growth_grade":"B+","profitability_grade":"A+","momentum_grade":"D-","eps_revision_grade":"C"},
+    {"symbol":"SHIP","quant_score":4.86,"sa_analysts_score":4.50,"wall_st_score":4.75,"valuation_grade":"A","growth_grade":"A-","profitability_grade":"B+","momentum_grade":"A+","eps_revision_grade":"A+"},
+    {"symbol":"NOW","quant_score":3.09,"sa_analysts_score":4.30,"wall_st_score":4.53,"valuation_grade":"C-","growth_grade":"B-","profitability_grade":"A+","momentum_grade":"C+","eps_revision_grade":"D"},
+    {"symbol":"TTE","quant_score":4.18,"sa_analysts_score":3.66,"wall_st_score":3.90,"valuation_grade":"B+","growth_grade":"C-","profitability_grade":"A+","momentum_grade":"B","eps_revision_grade":"C-"}
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "captured_date": "2026-08-07",
+  "source": "Seeking Alpha",
+  "source_note": "SA rating-change log, second capture — covers ORCL/TTE/AMZN/NOW/SHIP/MSFT history further back than first capture.",
+  "columns": ["symbol","change_type","rating_type","new_rating","previous_rating","date"],
+  "rows": [
+    {"symbol":"ORCL","change_type":"Upgrade","rating_type":"SA Analysts","new_rating":"BUY","previous_rating":"Hold","date":"2026-07-29"},
+    {"symbol":"TTE","change_type":"Downgrade","rating_type":"Quant","new_rating":"BUY","previous_rating":"Strong Buy","date":"2026-07-27"},
+    {"symbol":"TTE","change_type":"Upgrade","rating_type":"Quant","new_rating":"STRONG BUY","previous_rating":"Hold","date":"2026-07-24"},
+    {"symbol":"ORCL","change_type":"Downgrade","rating_type":"SA Analysts","new_rating":"HOLD","previous_rating":"Buy","date":"2026-07-24"},
+    {"symbol":"ORCL","change_type":"Upgrade","rating_type":"SA Analysts","new_rating":"BUY","previous_rating":"Hold","date":"2026-07-20"},
+    {"symbol":"TTE","change_type":"Downgrade","rating_type":"Quant","new_rating":"HOLD","previous_rating":"Buy","date":"2026-07-20"},
+    {"symbol":"ORCL","change_type":"Downgrade","rating_type":"SA Analysts","new_rating":"HOLD","previous_rating":"Buy","date":"2026-07-16"},
+    {"symbol":"TTE","change_type":"Upgrade","rating_type":"SA Analysts","new_rating":"BUY","previous_rating":"Hold","date":"2026-07-13"},
+    {"symbol":"TTE","change_type":"Downgrade","rating_type":"Quant","new_rating":"BUY","previous_rating":"Strong Buy","date":"2026-07-08"},
+    {"symbol":"ORCL","change_type":"Downgrade","rating_type":"Quant","new_rating":"HOLD","previous_rating":"Buy","date":"2026-06-29"},
+    {"symbol":"ORCL","change_type":"Upgrade","rating_type":"Quant","new_rating":"BUY","previous_rating":"Hold","date":"2026-06-15"},
+    {"symbol":"TTE","change_type":"Downgrade","rating_type":"SA Analysts","new_rating":"HOLD","previous_rating":"Buy","date":"2026-06-05"},
+    {"symbol":"AMZN","change_type":"Upgrade","rating_type":"Quant","new_rating":"STRONG BUY","previous_rating":"Hold","date":"2026-06-01"},
+    {"symbol":"NOW","change_type":"Downgrade","rating_type":"SA Analysts","new_rating":"BUY","previous_rating":"Strong Buy","date":"2026-05-28"},
+    {"symbol":"NOW","change_type":"Upgrade","rating_type":"SA Analysts","new_rating":"STRONG BUY","previous_rating":"Buy","date":"2026-05-26"},
+    {"symbol":"SHIP","change_type":"Upgrade","rating_type":"SA Analysts","new_rating":"STRONG BUY","previous_rating":"Buy","date":"2026-05-20"},
+    {"symbol":"MSFT","change_type":"Downgrade","rating_type":"Quant","new_rating":"HOLD","previous_rating":"Strong Buy","date":"2026-05-14"}
+  ]
+}

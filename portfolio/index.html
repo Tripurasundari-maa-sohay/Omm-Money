@@ -758,7 +758,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v177</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v178</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6532,12 +6532,11 @@ const RECO = (() => {
         const live = _liveHold(row.symbol);
         row.in_pf = live.inPf;
         row.was = live.was;
-        // Both return columns use the same live (P(now)-P(reco_close))/P(reco_close)
-        // formula — never a static/screenshot value. RECO-RETURN shows it for
-        // every row; PF-RETURN shows the identical number gated to rows you
-        // currently or once held.
+        // RECO-RETURN: live (P(now)-P(reco_close))/P(reco_close) — every row.
         row.reco_return_pct = _recoReturnPct(row);
-        row.return_pct = row.in_pf ? row.reco_return_pct : null;
+        // PF-RETURN: your ACTUAL holding return vs your own avg buy price
+        // (open) or realised % (closed) — never the rec_date formula.
+        row.return_pct = live.inPf ? live.returnPct : null;
       });
       const meta = document.getElementById('reco-meta');
       if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
@@ -6619,7 +6618,7 @@ const RECO = (() => {
       row.in_pf = live.inPf;
       row.was = live.was;
       row.reco_return_pct = _recoReturnPct(row);
-      row.return_pct = row.in_pf ? row.reco_return_pct : null;
+      row.return_pct = live.inPf ? live.returnPct : null;
     });
     render();
   }

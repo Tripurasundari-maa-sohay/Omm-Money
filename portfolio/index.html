@@ -757,7 +757,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v175</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v176</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6498,14 +6498,22 @@ const RECO = (() => {
     return { inPf: false, returnPct: null, was: false };
   }
 
-  // Live LTP for ANY symbol we currently fetch prices for — not just held
-  // ones. Powers RECO-RETURN (return since rec_date's close, regardless of
-  // whether you ever bought it), separate from PF-RETURN (your own avg buy).
+  // Live LTP for ANY symbol we currently fetch prices for.
   function _liveLtp(symbol) {
     try {
       const _s = window._S;
       return (_s && _s.prices && _s.prices[symbol] && _s.prices[symbol].ltp) ?? null;
     } catch (e) { return null; }
+  }
+
+  // (P(now) − P(reco_date close)) / P(reco_date close) — the one live
+  // formula behind both return columns. RECO-RETURN shows it for every row;
+  // PF-RETURN shows the same number but only for rows you currently or
+  // once held (row.in_pf) — no static/screenshot value is ever used here.
+  function _recoReturnPct(row) {
+    const ltp = _liveLtp(row.symbol);
+    if (ltp == null || !row.reco_close) return null;
+    return ((ltp - row.reco_close) / row.reco_close) * 100;
   }
 
   async function load() {
@@ -6522,17 +6530,13 @@ const RECO = (() => {
       _data.forEach(row => {
         const live = _liveHold(row.symbol);
         row.in_pf = live.inPf;
-        // PF-RETURN is YOUR position's return — must be null (not the
-        // advisor-reported figure the row shipped with) whenever you never
-        // actually held this ticker, or sorting/display would show a
-        // "portfolio return" for stocks never bought.
-        row.return_pct = live.inPf ? live.returnPct : null;
         row.was = live.was;
-        // RECO-RETURN: live LTP vs the closing price on rec_date, independent
-        // of whether we ever held it. Needs both a live price feed for this
-        // symbol AND a captured rec_date close — "—" when either is missing.
-        const ltp = _liveLtp(row.symbol);
-        row.reco_return_pct = (ltp != null && row.reco_close) ? ((ltp - row.reco_close) / row.reco_close) * 100 : null;
+        // Both return columns use the same live (P(now)-P(reco_close))/P(reco_close)
+        // formula — never a static/screenshot value. RECO-RETURN shows it for
+        // every row; PF-RETURN shows the identical number gated to rows you
+        // currently or once held.
+        row.reco_return_pct = _recoReturnPct(row);
+        row.return_pct = row.in_pf ? row.reco_return_pct : null;
       });
       const meta = document.getElementById('reco-meta');
       if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
@@ -6611,11 +6615,10 @@ const RECO = (() => {
     if (!_data.length) return;
     _data.forEach(row => {
       const live = _liveHold(row.symbol);
-      const ltp = _liveLtp(row.symbol);
-      row.reco_return_pct = (ltp != null && row.reco_close) ? ((ltp - row.reco_close) / row.reco_close) * 100 : null;
       row.in_pf = live.inPf;
-      row.return_pct = live.inPf ? live.returnPct : null;
       row.was = live.was;
+      row.reco_return_pct = _recoReturnPct(row);
+      row.return_pct = row.in_pf ? row.reco_return_pct : null;
     });
     render();
   }

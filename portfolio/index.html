@@ -757,7 +757,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v173</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v174</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6521,11 +6521,13 @@ const RECO = (() => {
       // holdings + prices, overrides whatever static value shipped in the JSON.
       _data.forEach(row => {
         const live = _liveHold(row.symbol);
-        if (live.inPf) {
-          row.in_pf = true;
-          row.return_pct = live.returnPct;
-          row.was = live.was;
-        }
+        row.in_pf = live.inPf;
+        // PF-RETURN is YOUR position's return — must be null (not the
+        // advisor-reported figure the row shipped with) whenever you never
+        // actually held this ticker, or sorting/display would show a
+        // "portfolio return" for stocks never bought.
+        row.return_pct = live.inPf ? live.returnPct : null;
+        row.was = live.was;
         // RECO-RETURN: live LTP vs the closing price on rec_date, independent
         // of whether we ever held it. Needs both a live price feed for this
         // symbol AND a captured rec_date close — "—" when either is missing.
@@ -6591,7 +6593,7 @@ const RECO = (() => {
         <td>${_ratingBadge(r.rating)}</td>
         <td>${r.quant_rating ? _ratingBadge(r.quant_rating) + (r.quant_score!=null?` <span style="color:var(--text-dim);font-size:10px">${(+r.quant_score).toFixed(2)}</span>`:'') : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td style="color:var(--text-sec)">${r.rec_date || '—'}</td>
-        <td>${_fmtReturn(r.return_pct)}</td>
+        <td>${r.in_pf ? _fmtReturn(r.return_pct) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td title="Live vs closing price on rec date">${_fmtReturn(r.reco_return_pct)}</td>
         <td style="text-align:center" title="${pfTitle}">${_pfBadge(r.in_pf)}${r.was ? ' <span style="font-size:9px;color:var(--text-dim)">(was)</span>' : ''}</td>
       </tr>`;
@@ -6611,11 +6613,9 @@ const RECO = (() => {
       const live = _liveHold(row.symbol);
       const ltp = _liveLtp(row.symbol);
       row.reco_return_pct = (ltp != null && row.reco_close) ? ((ltp - row.reco_close) / row.reco_close) * 100 : null;
-      if (live.inPf) {
-        row.in_pf = true;
-        row.return_pct = live.returnPct;
-        row.was = live.was;
-      }
+      row.in_pf = live.inPf;
+      row.return_pct = live.inPf ? live.returnPct : null;
+      row.was = live.was;
     });
     render();
   }

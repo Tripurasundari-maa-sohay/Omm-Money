@@ -239,11 +239,10 @@
   #reco-tab .reco-pill.own{border-color:#5cc8f0;color:#5cc8f0}
   #reco-tab .reco-pill.own.active{background:#5cc8f0;border-color:#5cc8f0;color:#000}
   /* top must clear .top-banner (position:fixed, z-index:1000) or the sticky
-     header scrolls up and hides behind it instead of appearing to "freeze" —
-     matches the same breakpoints .dashboard-container uses for padding-top. */
-  #reco-table thead th{position:sticky;top:98px;background:var(--bg-card2);z-index:10;box-shadow:0 1px 0 var(--border)}
-  @media (max-width:900px){ #reco-table thead th{top:140px} }
-  @media (max-width:640px){ #reco-table thead th{top:150px} }
+     header scrolls up and hides behind it instead of appearing to "freeze".
+     --banner-h is measured live in JS (actual rendered height), not guessed
+     per breakpoint — guessed pixel values kept landing wrong on real devices. */
+  #reco-table thead th{position:sticky;top:var(--banner-h, 98px);background:var(--bg-card2);z-index:10;box-shadow:0 1px 0 var(--border)}
   #reco-tab .reco-pill.pf{border-color:#4ecf82;color:#4ecf82}
   #reco-tab .reco-pill.pf.active{background:#4ecf82;border-color:#4ecf82;color:#000}
   #reco-tab table{font-size:12px}
@@ -763,7 +762,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v184</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v186</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1836,7 +1835,7 @@
 
       <!-- Table -->
       <div style="overflow-x:auto;overflow-y:visible;background:var(--bg-card2);border:1px solid var(--border);border-radius:8px">
-        <table id="reco-table" style="width:100%;border-collapse:collapse;min-width:580px">
+        <table id="reco-table" style="width:100%;border-collapse:separate;border-spacing:0;min-width:580px">
           <thead>
             <tr>
               <th onclick="RECO.sort('symbol')">TICKER ↕</th>
@@ -3942,6 +3941,9 @@ const DASH = (() => {
     document.body.dataset.activeTab = name;  // CSS hooks off this to compact hero on non-portfolio tabs
     // Persist active tab — refresh returns to same view
     try { localStorage.setItem('active_tab', name); } catch(e) {}
+    // Banner height changes per tab (banner-metrics row hidden outside
+    // portfolio) — remeasure after the CSS display:none takes effect.
+    setTimeout(_updateBannerHeightVar, 0);
   }
   function switchResearchSub(sub) {
     document.querySelectorAll('.rsub-btn').forEach(b => b.classList.toggle('active', b.dataset.rsub === sub));
@@ -5387,6 +5389,18 @@ const DASH = (() => {
     }, { passive: true });
   }
   document.addEventListener('DOMContentLoaded', init);
+
+  // Measure the real .top-banner height (position:fixed) and expose it as a
+  // CSS var so sticky elements below it (e.g. #reco-table thead) can clear
+  // it exactly, instead of guessing pixel values per breakpoint that drift
+  // whenever the banner's own content/wrapping changes.
+  function _updateBannerHeightVar() {
+    const banner = document.querySelector('.top-banner');
+    if (banner) document.documentElement.style.setProperty('--banner-h', banner.offsetHeight + 'px');
+  }
+  document.addEventListener('DOMContentLoaded', _updateBannerHeightVar);
+  window.addEventListener('resize', _updateBannerHeightVar);
+  window.addEventListener('load', _updateBannerHeightVar);
 
   // public surface for inline handlers
   fsApply();     // restore saved font size on load

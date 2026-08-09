@@ -258,7 +258,6 @@
   .reco-badge.other{background:rgba(148,163,184,.18);color:var(--text-sec)}
   .reco-src-mf{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(155,140,245,.18);color:#9b8cf5;letter-spacing:.5px}
   .reco-src-sa{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(240,180,41,.18);color:#f0b429;letter-spacing:.5px}
-  .reco-src-own{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;background:rgba(92,200,240,.18);color:#5cc8f0;letter-spacing:.5px}
   /* ── RESEARCH SUB-TABS ── */
   .rsub-bar{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
   .rsub-btn{padding:8px 20px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-sec);cursor:pointer;font-size:12px;font-weight:700;letter-spacing:1px;transition:color .15s,border-color .15s}
@@ -765,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v191</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v192</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1791,7 +1790,6 @@
         <button class="reco-pill active" data-reco-src="all" onclick="RECO.src('all')">ALL</button>
         <button class="reco-pill mf"     data-reco-src="mf"  onclick="RECO.src('mf')">🟣 MF</button>
         <button class="reco-pill sa"     data-reco-src="sa"  onclick="RECO.src('sa')">🟡 SA</button>
-        <button class="reco-pill own"    data-reco-src="own" onclick="RECO.src('own')">⚪ OWN</button>
         <span style="width:1px;background:var(--border);height:20px;margin:0 6px"></span>
         <span style="font-size:10px;color:var(--text-dim);margin-right:2px">VIEW:</span>
         <button class="reco-pill active" data-reco-view="latest"  onclick="RECO.view('latest')">LATEST ONLY</button>
@@ -6481,6 +6479,20 @@ const RECO = (() => {
   let _data = [];
   let _fRating = 'all', _fSrc = 'all', _fView = 'latest', _fPf = false, _fSearch = '';
   let _sortCol = 'rec_date', _sortDir = -1;
+  const _NUMERIC_COLS = new Set(['quant_score', 'return_pct', 'reco_return_pct']);
+
+  // Null placeholder must match the column's type — a string placeholder
+  // (e.g. '￿') compared against a real number coerces to NaN, which
+  // makes every comparison involving a null row silently return false and
+  // corrupts the whole sort order instead of just misplacing the nulls.
+  function _recoCompare(a, b) {
+    let av = a[_sortCol], bv = b[_sortCol];
+    const numeric = _NUMERIC_COLS.has(_sortCol);
+    const nullVal = numeric ? (_sortDir > 0 ? Infinity : -Infinity) : (_sortDir > 0 ? '￿' : '');
+    if (av == null) av = nullVal;
+    if (bv == null) bv = nullVal;
+    return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
+  }
 
   function _set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
@@ -6563,6 +6575,9 @@ const RECO = (() => {
       _data = [];
       (d.motley_fool || []).forEach(row => _data.push({...row, src:'mf'}));
       (d.seeking_alpha || []).forEach(row => _data.push({...row, src:'sa'}));
+      // 'own' rows are NOT a displayed source (no filter pill, no source
+      // badge — Source column shows blank for them) — kept loaded only so
+      // held-but-unrecommended tickers have a row to compute SELL RECO on.
       (d.own || []).forEach(row => _data.push({...row, src:'own'}));
       // Live is/was-held + return% — computed fresh every load from current
       // holdings + prices, overrides whatever static value shipped in the JSON.
@@ -6575,12 +6590,12 @@ const RECO = (() => {
         // PF-RETURN: your ACTUAL holding return vs your own avg buy price
         // (open) or realised % (closed) — never the rec_date formula.
         row.return_pct = live.inPf ? live.returnPct : null;
-        // SELL RECO: held AND not a paid recommendation (MF/SA) — matches
-        // the criteria established for the sell-candidate list.
-        row.sell_reco = row.in_pf && row.src === 'own';
+        // SELL RECO: held, not an MF/SA pick, and Quant score below 4.
+        row.sell_reco = row.in_pf && row.src !== 'mf' && row.src !== 'sa'
+          && row.quant_score != null && row.quant_score < 4;
       });
       const meta = document.getElementById('reco-meta');
-      if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks · ${(d.own||[]).length} own (not a paid recommendation)`;
+      if (meta) meta.textContent = `as of ${d.as_of || '—'} · ${(d.motley_fool||[]).length} MF recs · ${(d.seeking_alpha||[]).length} SA Alpha Picks`;
       render();  // render() now also updates the summary tiles
     } catch(e) {
       const el = document.getElementById('reco-tbody');
@@ -6652,12 +6667,7 @@ const RECO = (() => {
   function render() {
     _updateSummary();
     const rows = _filtered();
-    rows.sort((a, b) => {
-      let av = a[_sortCol], bv = b[_sortCol];
-      if (av == null) av = _sortDir > 0 ? '\uffff' : '';
-      if (bv == null) bv = _sortDir > 0 ? '\uffff' : '';
-      return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
-    });
+    rows.sort(_recoCompare);
 
     const tbody = document.getElementById('reco-tbody');
     if (!tbody) return;
@@ -6669,7 +6679,7 @@ const RECO = (() => {
         return `<tr class="${r.in_pf ? 'in-pf' : ''}">
         <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}</td>
         <td style="color:var(--text-sec)">${r.company || '—'}</td>
-        <td><span class="reco-src-${r.src}">${r.src.toUpperCase()}</span></td>
+        <td>${r.src === 'sa' ? '<span class="reco-src-sa">SA PICKS</span>' : r.src === 'mf' ? '<span class="reco-src-mf">MF</span>' : ''}</td>
         <td>${_ratingBadge(r.rating)}</td>
         <td>${r.quant_score!=null ? (+r.quant_score).toFixed(2) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td>${r.quant_rating ? _ratingBadge(r.quant_rating) : '<span style="color:var(--text-dim)">—</span>'}</td>
@@ -6697,7 +6707,8 @@ const RECO = (() => {
       row.was = live.was;
       row.reco_return_pct = _recoReturnPct(row);
       row.return_pct = live.inPf ? live.returnPct : null;
-      row.sell_reco = row.in_pf && row.src === 'own';
+      row.sell_reco = row.in_pf && row.src !== 'mf' && row.src !== 'sa'
+        && row.quant_score != null && row.quant_score < 4;
     });
     render();
   }
@@ -6706,16 +6717,11 @@ const RECO = (() => {
   // active filter/sort/search), not the full unfiltered dataset.
   function exportCsv() {
     const rows = _filtered();
-    rows.sort((a, b) => {
-      let av = a[_sortCol], bv = b[_sortCol];
-      if (av == null) av = _sortDir > 0 ? '￿' : '';
-      if (bv == null) bv = _sortDir > 0 ? '￿' : '';
-      return av < bv ? -_sortDir : av > bv ? _sortDir : 0;
-    });
+    rows.sort(_recoCompare);
     const cols = [
       ['Ticker', r => r.symbol],
       ['Company', r => r.company || ''],
-      ['Source', r => r.src.toUpperCase()],
+      ['Source', r => r.src === 'sa' ? 'SA PICKS' : r.src === 'mf' ? 'MF' : ''],
       ['Rating', r => r.rating || ''],
       ['Quant Score', r => r.quant_score != null ? (+r.quant_score).toFixed(2) : ''],
       ['Quant Reco', r => r.quant_rating || ''],

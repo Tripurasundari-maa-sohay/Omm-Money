@@ -764,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v192</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v193</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6578,7 +6578,10 @@ const RECO = (() => {
       // 'own' rows are NOT a displayed source (no filter pill, no source
       // badge — Source column shows blank for them) — kept loaded only so
       // held-but-unrecommended tickers have a row to compute SELL RECO on.
-      (d.own || []).forEach(row => _data.push({...row, src:'own'}));
+      // Skip any symbol already covered by MF/SA — else it renders as a
+      // literal duplicate row (e.g. FPS/Q/IOT showing up twice).
+      const _mfSaSymbols = new Set(_data.map(r => r.symbol));
+      (d.own || []).forEach(row => { if (!_mfSaSymbols.has(row.symbol)) _data.push({...row, src:'own'}); });
       // Live is/was-held + return% — computed fresh every load from current
       // holdings + prices, overrides whatever static value shipped in the JSON.
       _data.forEach(row => {

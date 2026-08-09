@@ -764,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v193</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v194</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -6567,6 +6567,31 @@ const RECO = (() => {
     return ((ltp - row.reco_close) / row.reco_close) * 100;
   }
 
+  // Merge multiple rows for the same ticker (e.g. MF + SA both recommend it)
+  // into a single line: most recent rec_date wins for rating/quant_rating/
+  // rec_date/reco_close, quant_score averaged across the merged rows,
+  // srcList carries every source so the badge column can show all of them.
+  function _mergeDuplicateSymbols(rows) {
+    const bySymbol = new Map();
+    rows.forEach(r => {
+      if (!bySymbol.has(r.symbol)) bySymbol.set(r.symbol, []);
+      bySymbol.get(r.symbol).push(r);
+    });
+    const merged = [];
+    bySymbol.forEach(group => {
+      if (group.length === 1) { merged.push({...group[0], srcList:[group[0].src]}); return; }
+      const newest = group.reduce((a, b) => (b.rec_date || '') > (a.rec_date || '') ? b : a);
+      const scores = group.map(r => r.quant_score).filter(v => v != null);
+      const avgScore = scores.length ? scores.reduce((a,b) => a+b, 0) / scores.length : null;
+      merged.push({
+        ...newest,
+        quant_score: avgScore,
+        srcList: [...new Set(group.map(r => r.src))],
+      });
+    });
+    return merged;
+  }
+
   async function load() {
     try {
       const r = await fetch('./data/recommendations.json?_=' + Date.now(), {cache:'no-store'});
@@ -6582,6 +6607,10 @@ const RECO = (() => {
       // literal duplicate row (e.g. FPS/Q/IOT showing up twice).
       const _mfSaSymbols = new Set(_data.map(r => r.symbol));
       (d.own || []).forEach(row => { if (!_mfSaSymbols.has(row.symbol)) _data.push({...row, src:'own'}); });
+      // NOTE: same-symbol merge (e.g. STRL picked by both MF and SA) happens
+      // at render time in LATEST ONLY view only — see _latestRows(). Doing
+      // it here at _data level would also flatten FULL HISTORY, which is
+      // supposed to keep every historical entry as its own row.
       // Live is/was-held + return% — computed fresh every load from current
       // holdings + prices, overrides whatever static value shipped in the JSON.
       _data.forEach(row => {
@@ -6606,7 +6635,10 @@ const RECO = (() => {
     }
   }
 
-  function _latestRows() { return _data.filter(r => r.is_latest); }
+  // Same-symbol merge (e.g. STRL picked by both MF and SA) only makes sense
+  // in LATEST ONLY view — FULL HISTORY deliberately shows every historical
+  // entry as its own row.
+  function _latestRows() { return _mergeDuplicateSymbols(_data.filter(r => r.is_latest)); }
 
   // Everything except the rating filter — so the BUY/HOLD/SELL/REDUCE tiles
   // stay a meaningful breakdown of the current source/view/pf/search
@@ -6614,7 +6646,7 @@ const RECO = (() => {
   // pill is active.
   function _filteredExceptRating() {
     let rows = _fView === 'latest' ? _latestRows() : [..._data];
-    if (_fSrc !== 'all') rows = rows.filter(r => r.src === _fSrc);
+    if (_fSrc !== 'all') rows = rows.filter(r => (r.srcList || [r.src]).includes(_fSrc));
     if (_fPf) rows = rows.filter(r => r.in_pf);
     if (_fSearch) rows = rows.filter(r => (r.symbol || '').toUpperCase().includes(_fSearch));
     return rows;
@@ -6682,7 +6714,7 @@ const RECO = (() => {
         return `<tr class="${r.in_pf ? 'in-pf' : ''}">
         <td style="font-family:monospace;font-weight:700;color:var(--text-pri)">${r.symbol}</td>
         <td style="color:var(--text-sec)">${r.company || '—'}</td>
-        <td>${r.src === 'sa' ? '<span class="reco-src-sa">SA PICKS</span>' : r.src === 'mf' ? '<span class="reco-src-mf">MF</span>' : ''}</td>
+        <td>${(r.srcList || [r.src]).map(s => s === 'sa' ? '<span class="reco-src-sa">SA PICKS</span>' : s === 'mf' ? '<span class="reco-src-mf">MF</span>' : '').join(' ')}</td>
         <td>${_ratingBadge(r.rating)}</td>
         <td>${r.quant_score!=null ? (+r.quant_score).toFixed(2) : '<span style="color:var(--text-dim)">—</span>'}</td>
         <td>${r.quant_rating ? _ratingBadge(r.quant_rating) : '<span style="color:var(--text-dim)">—</span>'}</td>
@@ -6724,7 +6756,7 @@ const RECO = (() => {
     const cols = [
       ['Ticker', r => r.symbol],
       ['Company', r => r.company || ''],
-      ['Source', r => r.src === 'sa' ? 'SA PICKS' : r.src === 'mf' ? 'MF' : ''],
+      ['Source', r => (r.srcList || [r.src]).map(s => s === 'sa' ? 'SA PICKS' : s === 'mf' ? 'MF' : '').filter(Boolean).join('+')],
       ['Rating', r => r.rating || ''],
       ['Quant Score', r => r.quant_score != null ? (+r.quant_score).toFixed(2) : ''],
       ['Quant Reco', r => r.quant_rating || ''],

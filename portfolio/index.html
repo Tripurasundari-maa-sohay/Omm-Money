@@ -764,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v194</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v195</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -917,12 +917,16 @@
       </div>
     </div>
 
-    <!-- Allocation + Cash vs Value -->
+    <!-- Allocation + Realized/Unrealized + Cash vs Value -->
     <div class="analytics-section">
-      <div class="analytics-two-col">
+      <div class="analytics-two-col" style="grid-template-columns:1fr 1fr 1fr">
         <div>
           <h2>ALLOCATION · BY ASSET CLASS &amp; PORTFOLIO</h2>
           <div class="chart-container chart-square"><canvas id="alloc-chart"></canvas></div>
+        </div>
+        <div>
+          <h2>REALIZED vs UNREALIZED P&amp;L · US (month-end, ITD)</h2>
+          <div class="chart-container chart-square"><canvas id="realized-unrealized-chart"></canvas></div>
         </div>
         <div>
           <h2>CASH DEPLOYED vs ACCOUNT VALUE · US</h2>
@@ -3428,6 +3432,23 @@ const DASH = (() => {
         ]},
         options: lineOpts()
       });
+
+      // Realized vs Unrealized P&L — cumulative ITD as of each month-end, US (DBG).
+      // Stacked bars so the top of the stack == total P&L (matches cash-value chart's
+      // account_value - cash_deployed reconciliation).
+      if (m.realized_cum_pl && m.unrealized_cum_pl) {
+        mkChart('realized-unrealized-chart', { type:'bar',
+          data: { labels: m.labels, datasets: [
+            { label:'Realized (ITD)',   data:m.realized_cum_pl,   backgroundColor:_gainBar+'cc', borderColor:_gainBar, borderWidth:1, stack:'pl' },
+            { label:'Unrealized (ITD)', data:m.unrealized_cum_pl, backgroundColor:_thc.getPropertyValue('--accent-b').trim()+'cc'||'#4f8ef7cc', borderColor:_thc.getPropertyValue('--accent-b').trim()||'#4f8ef7', borderWidth:1, stack:'pl' }
+          ]},
+          options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{ position:'bottom', labels:{ color:_priC, boxWidth:12, font:{size:10} } },
+              tooltip:{ callbacks:{ label: ctx=>`${ctx.dataset.label}: ${sign(ctx.parsed.y)}${usd(Math.abs(ctx.parsed.y))}` } } },
+            scales:{ x:{ stacked:true, grid:{display:false}, ticks:{color:_tickC,font:{size:9}} },
+                     y:{ stacked:true, grid:{color:_gridC}, ticks:{color:_tickC, callback:v=>sign(v)+usd(Math.abs(v))} } } }
+        });
+      }
 
       // Monthly breakdown body
       const mb = $('us-monthly-body');

@@ -1,0 +1,808 @@
+//@version=6
+indicator("My Trades", overlay=true, max_labels_count=500, max_boxes_count=100)
+
+tk = syminfo.ticker
+
+isDate(y, m, d) => year == y and month == m and dayofmonth == d
+
+closedBox(x1, buy_p, x2, sell_p, qty) =>
+    pl     = (sell_p - buy_p) * qty
+    profit = pl >= 0
+    clr    = profit ? color.new(color.green, 60) : color.new(color.red, 60)
+    bclr   = profit ? color.new(color.green, 10) : color.new(color.red, 10)
+    lclr   = profit ? color.green : color.red
+    top    = math.max(buy_p, sell_p)
+    bot    = math.min(buy_p, sell_p)
+    if math.abs(sell_p - buy_p) > 0.001
+        box.new(x1, top, x2, bot, bgcolor=clr, border_color=bclr, border_width=1)
+    label.new(x1, buy_p,  "▲", color=color.blue, textcolor=color.white, style=label.style_label_up,   size=size.small)
+    label.new(x2, sell_p, "▼", color=lclr,       textcolor=color.white, style=label.style_label_down, size=size.small)
+
+openBox(x1, buy_p, qty, ylevel = 0) =>
+    if barstate.islast
+        pl     = (close - buy_p) * qty
+        profit = pl >= 0
+        clr    = profit ? color.new(color.green, 60) : color.new(color.red, 60)
+        top    = math.max(buy_p, close)
+        bot    = math.min(buy_p, close)
+        if math.abs(close - buy_p) > 0.001
+            box.new(x1, top, bar_index, bot, bgcolor=clr, border_color=color.new(color.blue, 0), border_width=2)
+        label.new(x1, buy_p, "▲", color=color.blue, textcolor=color.white, style=label.style_label_up, size=size.small)
+
+// ── VAR DECLARATIONS ──────────────────────────────────────────────────────────
+var int avgo1_x = na
+var int avgo2_x = na
+var int gev_x   = na
+var int glw_x   = na
+var int goog_x  = na
+var int humn_x  = na
+var int intc_x  = na
+var int mp_x    = na
+var int voog_x  = na
+var int ewy1_x  = na
+var int ewy2_x  = na
+var int ewy3_x  = na
+var int mu1_x   = na
+var int mu2_x   = na
+var int mu3_x   = na
+var int rklb1_x = na
+var int rklb2_x = na
+var int rklb3_x = na
+var int rklb4_x = na
+var int rklb5_x = na
+var int dlth_x  = na
+var int amzn0_x = na
+var int amzn1_x = na
+var int amzn2_x = na
+var int jdzg_x  = na
+var int msft1_x = na
+var int msft2_x = na
+var int msft3_x = na
+var int msft4_x = na
+var int nvda0_x = na
+var int nvda1_x = na
+var int orcl_x  = na
+var int ship_x  = na
+var int now_x   = na
+var int tte_x   = na
+var int rxt_x   = na
+var int elpc_x  = na
+var int hpe_x   = na
+var int glw2_x  = na
+var int mu4_x   = na
+var int ewy_ibkr_x = na  // IBKR Jul-08
+var int fps_x   = na     // IBKR Jul-08
+var int ichr_x  = na     // IBKR Jul-08
+var int snex_x  = na     // IBKR Jul-08
+var int dlth2_x    = na  // IBKR Jul-09 re-buy
+var int rxt2_x     = na  // IBKR Jul-09 new lot
+var int amzn_ibkr_x = na // IBKR Jul-10
+var int bset_x     = na  // IBKR Jul-10
+var int lite_x     = na  // IBKR Jul-10
+var int shaz_x     = na  // IBKR Jul-14
+var int avgo_ibkr_x = na // IBKR Jul-16
+var int intc_ibkr_x = na // IBKR Jul-21
+var int btsg_x     = na  // IBKR Jul-22
+var int goog_ibkr_x = na // IBKR Jul-22
+var int iot_x      = na  // IBKR Jul-22
+var int q_x        = na  // IBKR Jul-22
+var int glw3_x     = na  // IBKR Jul-23 (add-on)
+var int rklb6_x    = na  // IBKR Jul-23 (reopen)
+var int amzn3_x    = na  // IBKR Jul-24 (reopen)
+var int mu5_x      = na  // IBKR Jul-24 (reopen)
+var int ichr2_x    = na  // IBKR Jul-24 (reopen)
+var int ewy4_x     = na  // IBKR Jul-24 (add-on)
+var int rxt3_x     = na  // IBKR Jul-24 (add-on)
+var int shaz2_x    = na  // IBKR Jul-24 (add-on)
+var int gldm_x     = na  // IBKR Jul-24
+var int voog2_x    = na  // IBKR Jul-24
+var int glw4_x     = na  // IBKR Jul-28 (add-on)
+var int aaoi_x     = na  // IBKR Jul-27
+var int crcl_x     = na  // IBKR Jul-27
+var int iren_x     = na  // IBKR Jul-27
+var int nbis_x     = na  // IBKR Jul-27
+var int orcl_ibkr_x = na // IBKR Jul-27
+var int amzn4_x    = na  // IBKR Jul-31 (sell marker)
+var int egth_x     = na  // DBG closed
+var int cost_x     = na  // DBG closed
+var int docn1_x    = na  // DBG closed cycle1
+var int docn2_x    = na  // DBG closed cycle2
+var int docn3_x    = na  // DBG closed cycle3
+var int inod1_x    = na  // DBG closed cycle1
+var int inod2_x    = na  // DBG closed cycle2
+var int irs_x      = na  // DBG closed
+var int keel_x     = na  // DBG closed
+var int meta_x     = na  // DBG closed
+var int tol_x      = na  // DBG closed
+var int sivr1_x    = na  // DBG closed cycle1
+var int sivr2_x    = na  // DBG closed cycle2
+var int muu_x      = na  // DBG closed
+var int dax_x      = na  // DBG closed
+var int goog2_x    = na  // IBKR Aug-04 (reopen)
+var int ichr3_x    = na  // IBKR Aug-04 (add-on, merged into ichr2_x total)
+var int jpm_x      = na  // IBKR Aug-04 (new)
+var int rklb7_x    = na  // IBKR Aug-04 (reopen)
+var int spcx_x     = na  // IBKR Aug-04 (new)
+var int jdzg_close_x = na // DBG Aug-03 (sell marker — fully closed)
+var int tte_close_x  = na // DBG Aug-06 (sell marker — fully closed)
+var int qbts_x        = na // DBG Aug-06 (new)
+var int btsg2_x    = na  // IBKR Aug-11 (add-on)
+var int crcl_sell_x = na // IBKR Aug-10 (sell marker — fully closed)
+
+// ── CAPTURE BUY BAR INDICES ───────────────────────────────────────────────────
+if tk == "AVGO"
+    if isDate(2025,12,16)
+        avgo1_x := bar_index
+    if isDate(2026,1,8)
+        avgo2_x := bar_index
+if tk == "GEV" and isDate(2026,4,27)
+    gev_x := bar_index
+if tk == "GLW" and isDate(2026,5,6)
+    glw_x := bar_index
+if tk == "GOOG" and isDate(2025,12,16)
+    goog_x := bar_index
+if tk == "HUMN" and isDate(2026,5,14)
+    humn_x := bar_index
+if tk == "INTC" and isDate(2026,6,5)
+    intc_x := bar_index
+if tk == "MP" and isDate(2025,12,17)
+    mp_x := bar_index
+if tk == "VOOG" and isDate(2026,4,21)
+    voog_x := bar_index
+if tk == "EWY"
+    if isDate(2026,2,26)
+        ewy1_x := bar_index
+    if isDate(2026,3,3)
+        ewy2_x := bar_index
+    if isDate(2026,5,13)
+        ewy3_x := bar_index
+if tk == "MU"
+    if isDate(2026,2,27)
+        mu1_x := bar_index
+    if isDate(2026,3,3)
+        mu2_x := bar_index
+    if isDate(2026,4,28)
+        mu3_x := bar_index
+if tk == "RKLB"
+    if isDate(2025,12,15)
+        rklb1_x := bar_index
+    if isDate(2026,1,12)
+        rklb2_x := bar_index
+    if isDate(2026,1,26)
+        rklb3_x := bar_index
+    if isDate(2026,1,30)
+        rklb4_x := bar_index
+    if isDate(2026,5,11)
+        rklb5_x := bar_index
+if tk == "DLTH" and isDate(2026,6,22)
+    dlth_x := bar_index
+if tk == "AMZN"
+    if isDate(2025,12,26)
+        amzn0_x := bar_index
+    if isDate(2026,4,14)
+        amzn1_x := bar_index
+    if isDate(2026,4,27)
+        amzn2_x := bar_index
+if tk == "JDZG"
+    if isDate(2026,6,3)
+        jdzg_x := bar_index
+    if isDate(2026,8,3)
+        jdzg_close_x := bar_index
+if tk == "MSFT"
+    if isDate(2025,12,26)
+        msft1_x := bar_index
+    if isDate(2026,1,29)
+        msft2_x := bar_index
+    if isDate(2026,3,31)
+        msft3_x := bar_index
+    if isDate(2026,6,18)
+        msft4_x := bar_index
+if tk == "NVDA"
+    if isDate(2025,12,26)
+        nvda0_x := bar_index
+    if isDate(2026,6,15)
+        nvda1_x := bar_index
+if tk == "ORCL" and isDate(2026,6,1)
+    orcl_x := bar_index
+if tk == "SHIP" and isDate(2026,5,27)
+    ship_x := bar_index
+if tk == "NOW" and isDate(2026,5,27)
+    now_x := bar_index
+if tk == "TTE"
+    if isDate(2026,3,13)
+        tte_x := bar_index
+    if isDate(2026,8,6)
+        tte_close_x := bar_index
+if tk == "QBTS" and isDate(2026,8,6)
+    qbts_x := bar_index
+if tk == "RXT" and isDate(2026,6,22)
+    rxt_x := bar_index
+if tk == "ELPC" and isDate(2026,6,30)
+    elpc_x := bar_index
+if tk == "HPE" and isDate(2026,6,29)
+    hpe_x := bar_index
+if tk == "GLW" and isDate(2026,7,6)
+    glw2_x := bar_index
+if tk == "MU" and isDate(2026,7,6)
+    mu4_x := bar_index
+if tk == "EWY" and isDate(2026,7,8)
+    ewy_ibkr_x := bar_index
+if tk == "FPS" and isDate(2026,7,8)
+    fps_x := bar_index
+if tk == "ICHR" and isDate(2026,7,8)
+    ichr_x := bar_index
+if tk == "SNEX" and isDate(2026,7,8)
+    snex_x := bar_index
+if tk == "DLTH" and isDate(2026,7,9)
+    dlth2_x := bar_index
+if tk == "RXT" and isDate(2026,7,9)
+    rxt2_x := bar_index
+if tk == "AMZN" and isDate(2026,7,10)
+    amzn_ibkr_x := bar_index
+if tk == "BSET" and isDate(2026,7,10)
+    bset_x := bar_index
+if tk == "LITE" and isDate(2026,7,10)
+    lite_x := bar_index
+if tk == "SHAZ" and isDate(2026,7,14)
+    shaz_x := bar_index
+if tk == "AVGO" and isDate(2026,7,16)
+    avgo_ibkr_x := bar_index
+if tk == "INTC" and isDate(2026,7,21)
+    intc_ibkr_x := bar_index
+if tk == "BTSG" and isDate(2026,7,22)
+    btsg_x := bar_index
+if tk == "GOOG" and isDate(2026,7,22)
+    goog_ibkr_x := bar_index
+if tk == "IOT" and isDate(2026,7,22)
+    iot_x := bar_index
+if tk == "Q" and isDate(2026,7,22)
+    q_x := bar_index
+if tk == "GLW" and isDate(2026,7,23)
+    glw3_x := bar_index
+if tk == "RKLB" and isDate(2026,7,23)
+    rklb6_x := bar_index
+if tk == "AMZN" and isDate(2026,7,24)
+    amzn3_x := bar_index
+if tk == "MU" and isDate(2026,7,24)
+    mu5_x := bar_index
+if tk == "ICHR" and isDate(2026,7,24)
+    ichr2_x := bar_index
+if tk == "EWY" and isDate(2026,7,24)
+    ewy4_x := bar_index
+if tk == "RXT" and isDate(2026,7,24)
+    rxt3_x := bar_index
+if tk == "SHAZ" and isDate(2026,7,24)
+    shaz2_x := bar_index
+if tk == "GLDM" and isDate(2026,7,24)
+    gldm_x := bar_index
+if tk == "VOOG" and isDate(2026,7,24)
+    voog2_x := bar_index
+if tk == "GLW" and isDate(2026,7,28)
+    glw4_x := bar_index
+if tk == "AAOI" and isDate(2026,7,27)
+    aaoi_x := bar_index
+if tk == "CRCL" and isDate(2026,7,27)
+    crcl_x := bar_index
+if tk == "IREN" and isDate(2026,7,27)
+    iren_x := bar_index
+if tk == "NBIS" and isDate(2026,7,27)
+    nbis_x := bar_index
+if tk == "ORCL" and isDate(2026,7,27)
+    orcl_ibkr_x := bar_index
+if tk == "AMZN" and isDate(2026,7,31)
+    amzn4_x := bar_index
+if tk == "CRCL" and isDate(2026,8,10)
+    crcl_sell_x := bar_index
+if tk == "BTSG" and isDate(2026,8,11)
+    btsg2_x := bar_index
+if tk == "EGHT" and isDate(2025,12,26)
+    egth_x := bar_index
+if tk == "COST" and isDate(2025,12,19)
+    cost_x := bar_index
+if tk == "DOCN"
+    if isDate(2025,12,17)
+        docn1_x := bar_index
+    if isDate(2026,2,23)
+        docn2_x := bar_index
+    if isDate(2026,4,14)
+        docn3_x := bar_index
+if tk == "INOD"
+    if isDate(2025,12,16)
+        inod1_x := bar_index
+    if isDate(2026,1,6)
+        inod2_x := bar_index
+if tk == "IRS" and isDate(2026,3,3)
+    irs_x := bar_index
+if tk == "KEEL" and isDate(2026,5,12)
+    keel_x := bar_index
+if tk == "META" and isDate(2025,12,19)
+    meta_x := bar_index
+if tk == "TOL" and isDate(2025,12,16)
+    tol_x := bar_index
+if tk == "SIVR"
+    if isDate(2025,12,24)
+        sivr1_x := bar_index
+    if isDate(2026,4,14)
+        sivr2_x := bar_index
+if tk == "MUU" and isDate(2026,3,20)
+    muu_x := bar_index
+if tk == "DAX" and isDate(2026,4,17)
+    dax_x := bar_index
+if tk == "GOOG" and isDate(2026,8,4)
+    goog2_x := bar_index
+if tk == "ICHR" and isDate(2026,8,4)
+    ichr3_x := bar_index
+if tk == "JPM" and isDate(2026,8,4)
+    jpm_x := bar_index
+if tk == "RKLB" and isDate(2026,8,4)
+    rklb7_x := bar_index
+if tk == "SPCX" and isDate(2026,8,4)
+    spcx_x := bar_index
+
+// ── CLOSED BOXES (one box per position, net P&L) ──────────────────────────────
+// AVGO: 3sh@$345 + 1sh@$331.78 → Jun-30 @$375.97  (weighted avg buy $341.70)
+if tk == "AVGO" and isDate(2026,6,30) and not na(avgo1_x)
+    closedBox(avgo1_x, 341.70, bar_index, 375.97, 4)
+if tk == "GEV" and isDate(2026,6,30) and not na(gev_x)
+    closedBox(gev_x, 1097.14, bar_index, 1161.96, 1)
+if tk == "GLW" and isDate(2026,6,30) and not na(glw_x)
+    closedBox(glw_x, 182.17, bar_index, 261.82, 6)
+if tk == "GOOG" and isDate(2026,6,30) and not na(goog_x)
+    closedBox(goog_x, 310.19, bar_index, 353.00, 3)
+if tk == "HUMN" and isDate(2026,6,30) and not na(humn_x)
+    closedBox(humn_x, 38.10, bar_index, 35.28, 25)
+if tk == "INTC" and isDate(2026,6,30) and not na(intc_x)
+    closedBox(intc_x, 101.00, bar_index, 140.95, 5)
+if tk == "MP" and isDate(2026,6,30) and not na(mp_x)
+    closedBox(mp_x, 53.00, bar_index, 55.59, 10)
+if tk == "VOOG" and isDate(2026,6,30) and not na(voog_x)
+    closedBox(voog_x, 73.58, bar_index, 82.49, 18)
+// EWY cycle 1: 5sh@$150.49 + 6sh@$128 → May-12 @$178.62 (weighted avg $138.22)
+if tk == "EWY" and isDate(2026,5,12) and not na(ewy1_x)
+    closedBox(ewy1_x, 138.22, bar_index, 178.62, 11)
+// EWY cycle 2: 9sh → Jun-30
+if tk == "EWY" and isDate(2026,6,30) and not na(ewy3_x)
+    closedBox(ewy3_x, 187.51, bar_index, 202.00, 9)
+// MU all lots combined: 5sh avg buy $411.72, avg sell $617.24 → net +$1027.6
+if tk == "MU" and isDate(2026,6,30) and not na(mu1_x)
+    closedBox(mu1_x, 411.72, bar_index, 617.24, 5)
+// RKLB group 1 (Feb-20): 15sh weighted avg buy $67.21 → $70.15 → net +$44.1
+if tk == "RKLB" and isDate(2026,2,20) and not na(rklb1_x)
+    closedBox(rklb1_x, 67.21, bar_index, 70.15, 15)
+// RKLB group 2 (May-08): 15sh weighted avg buy $80.91 → $102 → net +$316.4
+if tk == "RKLB" and isDate(2026,5,8) and not na(rklb3_x)
+    closedBox(rklb3_x, 80.91, bar_index, 102.00, 15)
+// RKLB group 3 (Jun-30): 5sh → tiny loss
+if tk == "RKLB" and isDate(2026,6,30) and not na(rklb5_x)
+    closedBox(rklb5_x, 104.50, bar_index, 104.05, 5)
+if tk == "DLTH" and isDate(2026,6,29) and not na(dlth_x)
+    closedBox(dlth_x, 3.955, bar_index, 4.492, 100)
+// RXT: 100sh FIFO-closed Jul-09 (80sh@6.725 Jun-22 + 20sh@6.45 Jul-08 → avg $6.67 → sold $4.5005)
+if tk == "RXT" and isDate(2026,7,9) and not na(rxt_x)
+    closedBox(rxt_x, 6.67, bar_index, 4.5005, 100)
+if tk == "AMZN" and isDate(2026,3,13) and not na(amzn0_x)
+    closedBox(amzn0_x, 232.01, bar_index, 207.21, 5)
+if tk == "NVDA" and isDate(2026,2,24) and not na(nvda0_x)
+    closedBox(nvda0_x, 190.51, bar_index, 192.33, 3)
+// EGHT: 185sh Dec26 @2.00 -> Jan8 @1.89
+if tk == "EGHT" and isDate(2026,1,8) and not na(egth_x)
+    closedBox(egth_x, 2.00, bar_index, 1.89, 185)
+// COST: 1sh Dec19 @851.00 -> Feb27 @1000.00
+if tk == "COST" and isDate(2026,2,27) and not na(cost_x)
+    closedBox(cost_x, 851.00, bar_index, 1000.00, 1)
+// DOCN cycle1: 10sh Dec17 @44.62 -> Feb18 @67.79
+if tk == "DOCN" and isDate(2026,2,18) and not na(docn1_x)
+    closedBox(docn1_x, 44.62, bar_index, 67.79, 10)
+// DOCN cycle2: 5sh@57.92 + 11sh@60.79 (wavg 59.89) -> Mar3 @56.13
+if tk == "DOCN" and isDate(2026,3,3) and not na(docn2_x)
+    closedBox(docn2_x, 59.89, bar_index, 56.13, 16)
+// DOCN cycle3: 6sh Apr14 @80.78 -> Apr17 @92.00
+if tk == "DOCN" and isDate(2026,4,17) and not na(docn3_x)
+    closedBox(docn3_x, 80.78, bar_index, 92.00, 6)
+// INOD cycle1: 10sh Dec16 @49.75 -> Jan5 @62.62
+if tk == "INOD" and isDate(2026,1,5) and not na(inod1_x)
+    closedBox(inod1_x, 49.75, bar_index, 62.62, 10)
+// INOD cycle2: 11sh Jan6 @64.88 -> Feb26 @47.57
+if tk == "INOD" and isDate(2026,2,26) and not na(inod2_x)
+    closedBox(inod2_x, 64.88, bar_index, 47.57, 11)
+// IRS: 50sh Mar3 @15.00 -> Apr27 @14.69
+if tk == "IRS" and isDate(2026,4,27) and not na(irs_x)
+    closedBox(irs_x, 15.00, bar_index, 14.69, 50)
+// KEEL: 200sh May12 @4.02 -> May22 @4.68
+if tk == "KEEL" and isDate(2026,5,22) and not na(keel_x)
+    closedBox(keel_x, 4.02, bar_index, 4.68, 200)
+// META: 1sh@666.30 + 2sh@672.62 (wavg 670.51) -> Mar13 @616.00
+if tk == "META" and isDate(2026,3,13) and not na(meta_x)
+    closedBox(meta_x, 670.51, bar_index, 616.00, 3)
+// TOL: 4sh Dec16 @138.53 -> Apr27 @146.06
+if tk == "TOL" and isDate(2026,4,27) and not na(tol_x)
+    closedBox(tol_x, 138.53, bar_index, 146.06, 4)
+// SIVR cycle1: 12sh (of 15 Dec24 lot) @67.70 -> Jan30 @79.16
+if tk == "SIVR" and isDate(2026,1,30) and not na(sivr1_x)
+    closedBox(sivr1_x, 67.70, bar_index, 79.16, 12)
+// SIVR cycle2: 3sh@67.70 remainder + 9sh@73.86 (wavg 72.32) -> May6 @73.63
+if tk == "SIVR" and isDate(2026,5,6) and not na(sivr2_x)
+    closedBox(sivr2_x, 72.32, bar_index, 73.63, 12)
+// MUU: 3sh@193.72 + 5sh@144.21 (wavg 162.78) -> Apr9 @176.31
+if tk == "MUU" and isDate(2026,4,9) and not na(muu_x)
+    closedBox(muu_x, 162.78, bar_index, 176.31, 8)
+// DAX: 13sh Apr17 @46.03 -> Apr27 @45.00
+if tk == "DAX" and isDate(2026,4,27) and not na(dax_x)
+    closedBox(dax_x, 46.03, bar_index, 45.00, 13)
+// JDZG: 30sh @58.90 (Jun-3) fully closed Aug-3 @4.1583 (net incl. all fees, -$1657.26)
+if tk == "JDZG" and isDate(2026,8,3) and not na(jdzg_x)
+    closedBox(jdzg_x, 58.90, bar_index, 4.1583, 30)
+// TTE: 8sh @82.84 (Mar-13) fully closed Aug-06 @85.6375 (net incl. div+fees, +$25.48)
+if tk == "TTE" and isDate(2026,8,6) and not na(tte_x)
+    closedBox(tte_x, 82.84, bar_index, 85.6375, 8)
+
+// ── OPEN BOXES (blue border, live P&L vs current price) ───────────────────────
+// AMZN: 6sh@$242.09 + 4sh@$261.18 = 10sh, weighted avg $249.73
+if tk == "AMZN" and not na(amzn1_x)
+    openBox(amzn1_x, 249.73, 10)
+// MSFT DBG: 2sh@$486.72(Dec26) + 1sh@$423(Jan29) + 3sh@$366.65(Mar31) = 6sh, weighted avg $416.065
+if tk == "MSFT" and not na(msft1_x)
+    openBox(msft1_x, 416.065, 6)
+if tk == "MSFT" and not na(msft4_x)
+    openBox(msft4_x, 377.70, 1, 1)
+if tk == "NVDA" and not na(nvda1_x)
+    openBox(nvda1_x, 211.76, 4)
+if tk == "ORCL" and not na(orcl_x)
+    openBox(orcl_x, 230.00, 4)
+if tk == "SHIP" and not na(ship_x)
+    openBox(ship_x, 14.86, 50)
+if tk == "NOW" and not na(now_x)
+    openBox(now_x, 102.78, 10)
+if tk == "QBTS" and not na(qbts_x)
+    openBox(qbts_x, 19.885, 47)
+if tk == "RXT" and not na(rxt2_x)
+    openBox(rxt2_x, 4.6164, 160)
+// ELPC: loss-booked Jul-21 (59sh 11.6215 → 11.51, −$9.61 net)
+if tk == "ELPC" and isDate(2026,7,21) and not na(elpc_x)
+    closedBox(elpc_x, 11.6215, bar_index, 11.51, 59)
+if tk == "HPE" and not na(hpe_x)
+    openBox(hpe_x, 44.44, 10)
+if tk == "GLW" and not na(glw2_x)
+    openBox(glw2_x, 154.028, 9)
+// MU: 3 fractional lots (avg 977.965) closed Jul-24, reopened same day
+if tk == "MU" and isDate(2026,7,24) and not na(mu4_x)
+    closedBox(mu4_x, 977.965, bar_index, 931.82, 1)
+if tk == "MU" and not na(mu5_x)
+    openBox(mu5_x, 930.00, 1)
+if tk == "EWY" and not na(ewy_ibkr_x)
+    openBox(ewy_ibkr_x, 173.050, 4.5)
+if tk == "FPS" and not na(fps_x)
+    openBox(fps_x, 44.82, 10)
+// ICHR: 10sh (avg 82.715) closed Jul-24, reopened 5sh same day, +3sh Aug-04 → 8sh @ 82.5463
+if tk == "ICHR" and isDate(2026,7,24) and not na(ichr_x)
+    closedBox(ichr_x, 82.715, bar_index, 87.09, 10)
+if tk == "ICHR" and not na(ichr2_x)
+    openBox(ichr2_x, 82.5463, 8)
+if tk == "SNEX" and not na(snex_x)
+    openBox(snex_x, 77.853, 9)
+if tk == "DLTH" and not na(dlth2_x)
+    openBox(dlth2_x, 4.19, 100)
+// AMZN: trailing-stop sold Jul-23 (3sh 245.57 → 236.41, −$29.50 net)
+if tk == "AMZN" and isDate(2026,7,23) and not na(amzn_ibkr_x)
+    closedBox(amzn_ibkr_x, 245.57, bar_index, 236.41, 3)
+// AMZN: IBKR 4sh closed Jul-31 (233.75 → 273.00, +$155.98 net)
+if tk == "AMZN" and isDate(2026,7,31) and not na(amzn3_x)
+    closedBox(amzn3_x, 233.75, bar_index, 273.00, 4)
+// BSET: loss-booked Jul-22 (15sh 20.54 → 20.50, −$2.61 net)
+if tk == "BSET" and isDate(2026,7,22) and not na(bset_x)
+    closedBox(bset_x, 20.54, bar_index, 20.50, 15)
+if tk == "LITE" and not na(lite_x)
+    openBox(lite_x, 796.34, 1)
+if tk == "SHAZ" and not na(shaz_x)
+    openBox(shaz_x, 68.653, 6)
+if tk == "GLDM" and not na(gldm_x)
+    openBox(gldm_x, 80.205, 5)
+if tk == "VOOG" and not na(voog2_x)
+    openBox(voog2_x, 80.00, 5)
+if tk == "AAOI" and not na(aaoi_x)
+    openBox(aaoi_x, 100.00, 6)
+// CRCL: 8sh closed Aug-10 (63.89 → 64.69, +$4.39 net)
+if tk == "CRCL" and isDate(2026,8,10) and not na(crcl_x)
+    closedBox(crcl_x, 63.89, bar_index, 64.69, 8)
+if tk == "IREN" and not na(iren_x)
+    openBox(iren_x, 37.90, 20)
+if tk == "NBIS" and not na(nbis_x)
+    openBox(nbis_x, 197.81, 3)
+if tk == "ORCL" and not na(orcl_ibkr_x)
+    openBox(orcl_ibkr_x, 121.113, 4, 1)
+if tk == "AVGO" and not na(avgo_ibkr_x)
+    openBox(avgo_ibkr_x, 389.27, 3)
+if tk == "BTSG" and not na(btsg2_x)
+    openBox(btsg2_x, 61.8198, 15)
+// GOOG: loss-booked Jul-23 (2sh 344.40 → 318.70, −$53.41 net). Reopened Aug-04
+if tk == "GOOG" and isDate(2026,7,23) and not na(goog_ibkr_x)
+    closedBox(goog_ibkr_x, 344.40, bar_index, 318.70, 2)
+if tk == "GOOG" and not na(goog2_x)
+    openBox(goog2_x, 367.33, 1)
+if tk == "INTC" and not na(intc_ibkr_x)
+    openBox(intc_ibkr_x, 102.62, 3)
+if tk == "IOT" and not na(iot_x)
+    openBox(iot_x, 33.34, 10)
+if tk == "Q" and not na(q_x)
+    openBox(q_x, 138.09, 2)
+// RKLB: reopened Jul-23, closed again Jul-24 (6sh 69.52 → 65.28, −$27.45 net). Reopened Aug-04
+if tk == "RKLB" and isDate(2026,7,24) and not na(rklb6_x)
+    closedBox(rklb6_x, 69.52, bar_index, 65.28, 6)
+if tk == "RKLB" and not na(rklb7_x)
+    openBox(rklb7_x, 72.8729, 7)
+if tk == "JPM" and not na(jpm_x)
+    openBox(jpm_x, 362.185, 1)
+if tk == "SPCX" and not na(spcx_x)
+    openBox(spcx_x, 121.84, 2)
+
+// ── PORTFOLIO DAILY P&L (DBG + IBKR) ─────────────────────────────────────────
+amzn_d = request.security("AMZN",  "D", close - close[1])
+msft_d = request.security("MSFT",  "D", close - close[1])
+nvda_d = request.security("NVDA",  "D", close - close[1])
+orcl_d = request.security("ORCL",  "D", close - close[1])
+ship_d = request.security("SHIP",  "D", close - close[1])
+now_d  = request.security("NOW",   "D", close - close[1])
+qbts_d = request.security("QBTS",  "D", close - close[1])
+rxt_d  = request.security("RXT",   "D", close - close[1])
+hpe_d  = request.security("HPE",   "D", close - close[1])
+glw_d  = request.security("GLW",   "D", close - close[1])
+mu_d   = request.security("MU",    "D", close - close[1])
+ewy_d  = request.security("EWY",   "D", close - close[1])
+fps_d  = request.security("FPS",   "D", close - close[1])
+ichr_d = request.security("ICHR",  "D", close - close[1])
+snex_d = request.security("SNEX",  "D", close - close[1])
+dlth_d = request.security("DLTH",  "D", close - close[1])
+lite_d = request.security("LITE",  "D", close - close[1])
+shaz_d = request.security("SHAZ",  "D", close - close[1])
+avgo_d = request.security("AVGO",  "D", close - close[1])
+btsg_d = request.security("BTSG",  "D", close - close[1])
+goog_d = request.security("GOOG",  "D", close - close[1])
+intc_d = request.security("INTC",  "D", close - close[1])
+iot_d  = request.security("IOT",   "D", close - close[1])
+q_d    = request.security("Q",     "D", close - close[1])
+rklb_d = request.security("RKLB",  "D", close - close[1])
+gldm_d = request.security("GLDM",  "D", close - close[1])
+voog_d = request.security("VOOG",  "D", close - close[1])
+aaoi_d = request.security("AAOI",  "D", close - close[1])
+crcl_d = request.security("CRCL",  "D", close - close[1])
+iren_d = request.security("IREN",  "D", close - close[1])
+nbis_d = request.security("NBIS",  "D", close - close[1])
+jpm_d  = request.security("JPM",   "D", close - close[1])
+spcx_d = request.security("SPCX",  "D", close - close[1])
+
+dbg_day_pl  = nz(amzn_d) * 10  +
+              nz(msft_d) * 6   +
+              nz(nvda_d) * 4   +
+              nz(orcl_d) * 4   +
+              nz(ship_d) * 50  +
+              nz(now_d)  * 10  +
+              nz(qbts_d) * 47
+
+ibkr_day_pl = nz(msft_d) * 1    +
+              nz(rxt_d)  * 160  +
+              nz(hpe_d)  * 10   +
+              nz(glw_d)  * 9    +
+              nz(mu_d)   * 1    +
+              nz(ewy_d)  * 4.5  +
+              nz(fps_d)  * 10   +
+              nz(ichr_d) * 8    +
+              nz(snex_d) * 9    +
+              nz(dlth_d) * 100  +
+              nz(lite_d) * 1    +
+              nz(shaz_d) * 6    +
+              nz(avgo_d) * 3    +
+              nz(btsg_d) * 15   +
+              nz(intc_d) * 3    +
+              nz(iot_d)  * 10   +
+              nz(q_d)    * 2    +
+              nz(gldm_d) * 5    +
+              nz(voog_d) * 5    +
+              nz(aaoi_d) * 6    +
+              nz(iren_d) * 20   +
+              nz(nbis_d) * 3    +
+              nz(orcl_d) * 4    +
+              nz(goog_d) * 1    +
+              nz(rklb_d) * 7    +
+              nz(jpm_d)  * 1    +
+              nz(spcx_d) * 2
+
+total_day_pl = dbg_day_pl + ibkr_day_pl
+
+_fmt(v) =>
+    (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#.0")
+_clr(v) => v >= 0 ? color.green : color.red
+
+// ── CUMULATIVE LIFETIME P&L (per ticker, realised + live unrealized) ──────────
+// cum_realised includes dividends received ITD (income field), matches dashboard
+// "Realized P&L (net, incl. div)" convention. MSFT/ORCL/SHIP have no closed
+// cycles — their entry here is dividends only.
+cum_realised = tk == "AMZN" ? -7.52 :
+              tk == "AVGO" ? 129.21 :
+              tk == "BSET" ? -2.61 :
+              tk == "COST" ? 139.91 :
+              tk == "CRCL" ? 4.39 :
+              tk == "DAX" ? -23.41 :
+              tk == "DLTH" ? 51.67 :
+              tk == "DOCN" ? 203.79 :
+              tk == "EGHT" ? -42.29 :
+              tk == "ELPC" ? -9.61 :
+              tk == "EWY" ? 549.7 :
+              tk == "GEV" ? 55.29 :
+              tk == "GLW" ? 469.54 :
+              tk == "GOOG" ? 66.28 :
+              tk == "HUMN" ? -80.56 :
+              tk == "ICHR" ? 40.73 :
+              tk == "INOD" ? -81.71 :
+              tk == "INTC" ? 189.73 :
+              tk == "IRS" ? -25.29 :
+              tk == "JDZG" ? -1657.26 :
+              tk == "KEEL" ? 107.98 :
+              tk == "META" ? -178.54 :
+              tk == "MP" ? 15.88 :
+              tk == "MSFT" ? 8.19 :
+              tk == "MU" ? 947.56 :
+              tk == "MUU" ? 94.6 :
+              tk == "NVDA" ? -4.54 :
+              tk == "ORCL" ? 2.0 :
+              tk == "RKLB" ? 290.64 :
+              tk == "RXT" ? -219.65 :
+              tk == "SHIP" ? 10.0 :
+              tk == "SIVR" ? 133.11 :
+              tk == "TOL" ? 21.53 :
+              tk == "TTE" ? 25.48 :
+              tk == "VOOG" ? 155.54 :
+              0.0
+
+cum_open_qty = tk == "AMZN" ? 10.0 :
+               tk == "AVGO" ? 3.0 :
+               tk == "BTSG" ? 15.0 :
+               tk == "DLTH" ? 100.0 :
+               tk == "EWY" ? 4.5 :
+               tk == "FPS" ? 10.0 :
+               tk == "GLDM" ? 5.0 :
+               tk == "GLW" ? 9.0 :
+               tk == "HPE" ? 10.0 :
+               tk == "ICHR" ? 8.0 :
+               tk == "INTC" ? 3.0 :
+               tk == "IOT" ? 10.0 :
+               tk == "LITE" ? 1.0 :
+               tk == "MSFT" ? 7.0 :
+               tk == "MU" ? 1.0 :
+               tk == "NOW" ? 10.0 :
+               tk == "NVDA" ? 4.0 :
+               tk == "ORCL" ? 8.0 :
+               tk == "Q" ? 2.0 :
+               tk == "RXT" ? 160.0 :
+               tk == "SHAZ" ? 6.0 :
+               tk == "SHIP" ? 50.0 :
+               tk == "SNEX" ? 9.0 :
+               tk == "QBTS" ? 47.0 :
+               tk == "VOOG" ? 5.0 :
+               tk == "AAOI" ? 6.0 :
+               tk == "IREN" ? 20.0 :
+               tk == "NBIS" ? 3.0 :
+               tk == "GOOG" ? 1.0 :
+               tk == "RKLB" ? 7.0 :
+               tk == "JPM"  ? 1.0 :
+               tk == "SPCX" ? 2.0 :
+               0.0
+
+cum_open_avg = tk == "AMZN" ? 249.73 :
+               tk == "AVGO" ? 389.939833 :
+               tk == "BTSG" ? 61.8198 :
+               tk == "DLTH" ? 4.200003 :
+               tk == "EWY" ? 173.050067 :
+               tk == "FPS" ? 44.92 :
+               tk == "GLDM" ? 80.405 :
+               tk == "GLW" ? 154.361667 :
+               tk == "HPE" ? 44.54 :
+               tk == "ICHR" ? 82.54625 :
+               tk == "INTC" ? 102.953333 :
+               tk == "IOT" ? 33.44 :
+               tk == "LITE" ? 797.34 :
+               tk == "MSFT" ? 410.5843 :
+               tk == "MU" ? 931.0 :
+               tk == "NOW" ? 102.78 :
+               tk == "NVDA" ? 211.76 :
+               tk == "ORCL" ? 175.5565 :
+               tk == "Q" ? 138.59 :
+               tk == "RXT" ? 4.616433 :
+               tk == "SHAZ" ? 68.653333 :
+               tk == "SHIP" ? 14.8589 :
+               tk == "SNEX" ? 78.075556 :
+               tk == "QBTS" ? 19.885 :
+               tk == "VOOG" ? 80.2 :
+               tk == "AAOI" ? 100.166667 :
+               tk == "IREN" ? 37.950005 :
+               tk == "NBIS" ? 198.143333 :
+               tk == "GOOG" ? 367.33 :
+               tk == "RKLB" ? 72.872857 :
+               tk == "JPM"  ? 362.185 :
+               tk == "SPCX" ? 121.84 :
+               0.0
+
+cum_unreal = cum_open_qty > 0 ? (close - cum_open_avg) * cum_open_qty : 0.0
+cum_pnl    = cum_realised + cum_unreal
+
+pos_status = tk == "AMZN"  ? "OPEN"   :
+             tk == "MSFT"  ? "OPEN"   :
+             tk == "NVDA"  ? "OPEN"   :
+             tk == "ORCL"  ? "OPEN"   :
+             tk == "SHIP"  ? "OPEN"   :
+             tk == "NOW"   ? "OPEN"   :
+             tk == "QBTS"  ? "OPEN"   :
+             tk == "RXT"   ? "OPEN"   :
+             tk == "BTSG"  ? "OPEN"   :
+             tk == "HPE"   ? "OPEN"   :
+             tk == "GLW"   ? "OPEN"   :
+             tk == "MU"    ? "OPEN"   :
+             tk == "EWY"   ? "OPEN"   :
+             tk == "FPS"   ? "OPEN"   :
+             tk == "ICHR"  ? "OPEN"   :
+             tk == "SNEX"  ? "OPEN"   :
+             tk == "DLTH"  ? "OPEN"   :
+             tk == "IOT"   ? "OPEN"   :
+             tk == "LITE"  ? "OPEN"   :
+             tk == "SHAZ"  ? "OPEN"   :
+             tk == "Q"     ? "OPEN"   :
+             tk == "AVGO"  ? "OPEN"   :
+             tk == "VOOG"  ? "OPEN"   :
+             tk == "GLDM"  ? "OPEN"   :
+             tk == "AAOI"  ? "OPEN"   :
+             tk == "CRCL"  ? "CLOSED" :
+             tk == "IREN"  ? "OPEN"   :
+             tk == "NBIS"  ? "OPEN"   :
+             tk == "GOOG"  ? "OPEN"   :
+             tk == "RKLB"  ? "OPEN"   :
+             tk == "JPM"   ? "OPEN"   :
+             tk == "SPCX"  ? "OPEN"   :
+             tk == "GEV"   ? "CLOSED" :
+             tk == "HUMN"  ? "CLOSED" :
+             tk == "INTC"  ? "OPEN"   :
+             tk == "MP"    ? "CLOSED" :
+             tk == "ELPC"  ? "CLOSED" :
+             tk == "BSET"  ? "CLOSED" :
+             tk == "JDZG"  ? "CLOSED" :
+             tk == "TTE"   ? "CLOSED" :
+             tk == "COST"  ? "CLOSED" :
+             tk == "DAX"   ? "CLOSED" :
+             tk == "DOCN"  ? "CLOSED" :
+             tk == "EGHT"  ? "CLOSED" :
+             tk == "INOD"  ? "CLOSED" :
+             tk == "IRS"   ? "CLOSED" :
+             tk == "KEEL"  ? "CLOSED" :
+             tk == "META"  ? "CLOSED" :
+             tk == "MUU"   ? "CLOSED" :
+             tk == "SIVR"  ? "CLOSED" :
+             tk == "TOL"   ? "CLOSED" : ""
+
+pos_clr = pos_status == "OPEN" ? color.lime : pos_status == "CLOSED" ? color.orange : color.gray
+pos_rows = pos_status == "OPEN" ? 6 : pos_status == "CLOSED" ? 5 : 3
+
+if barstate.islast
+    t = table.new(position.top_right, 2, pos_rows,
+                  bgcolor=color.new(color.black, 60),
+                  border_color=color.new(color.gray, 50), border_width=1,
+                  frame_color=color.new(color.gray, 30), frame_width=1)
+    table.cell(t, 0, 0, "DBG  DAY", text_color=color.gray,        text_size=size.normal)
+    table.cell(t, 1, 0, _fmt(dbg_day_pl),  text_color=_clr(dbg_day_pl),  text_size=size.normal, text_halign=text.align_right)
+    table.cell(t, 0, 1, "IBKR DAY", text_color=color.gray,        text_size=size.normal)
+    table.cell(t, 1, 1, _fmt(ibkr_day_pl), text_color=_clr(ibkr_day_pl), text_size=size.normal, text_halign=text.align_right)
+    table.cell(t, 0, 2, "TOTAL DAY", text_color=color.white,       text_size=size.normal)
+    table.cell(t, 1, 2, _fmt(total_day_pl), text_color=_clr(total_day_pl), text_size=size.normal, text_halign=text.align_right)
+
+    if pos_status == "OPEN"
+        // QTY + Avg together, one row — no longer printed on the chart labels
+        table.cell(t, 0, 3, str.tostring(cum_open_qty, "#.##") + " @ $" + str.tostring(cum_open_avg, "#.00"), text_color=color.white, text_size=size.normal, text_halign=text.align_left)
+        table.cell(t, 1, 3, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 4, "CUM P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 4, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 5, "OPEN P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 5, _fmt(cum_unreal), text_color=_clr(cum_unreal), text_size=size.normal, text_halign=text.align_right)
+    else if pos_status == "CLOSED"
+        // Keep CLOSED status centered across both columns — no qty (position is gone)
+        table.cell(t, 0, 3, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_center)
+        table.cell(t, 1, 3, "")
+        table.merge_cells(t, 0, 3, 1, 3)
+        table.cell(t, 0, 4, "CUM P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 4, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)

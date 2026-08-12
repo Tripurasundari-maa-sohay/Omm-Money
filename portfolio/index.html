@@ -764,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v195</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v196</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -3362,11 +3362,15 @@ const DASH = (() => {
       const _dates    = wc ? wc.dates    : null;
       const snpLabel  = 'S&P 500 (^GSPC)';
 
-      // Monthly fallback: compute INR line from inr_fx_monthly
+      // Monthly fallback: compute INR line from inr_fx_monthly. Tolerate a
+      // length mismatch (e.g. one side updated before the other) instead of
+      // silently dropping the whole line — plot whatever prefix overlaps.
       const _fxBase = (!wc && S.inrFxMon && S.inrFxMon[0]) ? S.inrFxMon[0] : null;
-      const inrLine = _inrData || (_fxBase && S.inrFxMon && S.inrFxMon.length === m.labels.length
+      const inrLine = _inrData || (_fxBase && S.inrFxMon && S.inrFxMon.length > 0
         ? m.port_return_cum_pct.map((v, i) =>
-            +((((1 + v/100) * (S.inrFxMon[i] / _fxBase)) - 1) * 100).toFixed(2))
+            i < S.inrFxMon.length
+              ? +((((1 + v/100) * (S.inrFxMon[i] / _fxBase)) - 1) * 100).toFixed(2)
+              : null)
         : null);
 
       const _chartCallback = ctx => {

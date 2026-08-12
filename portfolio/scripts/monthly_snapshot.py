@@ -41,7 +41,8 @@ GITHUB_REPO  = os.environ.get("GITHUB_REPO", "Tripurasundari-maa-sohay/Omm-Money
 DATA_DIR     = "/home/opc/web/portfolio/data"
 COST_PATH    = f"{DATA_DIR}/holdings_cost.json"
 PRICES_PATH  = f"{DATA_DIR}/processed/holdings_prices.json"
-REPO_COST_PATH = "portfolio/data/holdings_cost.json"
+REPO_COST_PATH   = "portfolio/data/holdings_cost.json"
+REPO_PRICES_PATH = "portfolio/data/processed/holdings_prices.json"
 
 _YF_UA = {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}
 
@@ -182,6 +183,20 @@ def main():
     prev_bench_cum = m["snp_return_cum_pct"][-1]
     bench_cum = round(((1 + prev_bench_cum / 100) * (1 + bench_return / 100) - 1) * 100, 2)
 
+    # Realized vs unrealized P&L (feeds the Realized/Unrealized chart) — realized
+    # cumulative bumps by any DBG position closed since the last snapshot;
+    # unrealized is the residual against the (grounded) cumulative P&L total.
+    dbg_closed = [h for h in cost["us"]["closed"] if h.get("broker", "DBG") != "IBKR"]
+    prev_label_date = m["label_dates"][-1]
+    new_realized = sum(
+        (h.get("realised", 0) + h.get("income", 0))
+        for h in dbg_closed
+        if h.get("sell_date") and prev_label_date < h["sell_date"] <= today_iso
+    )
+    realized_cum = round((m.get("realized_cum_pl", [0.0])[-1] if m.get("realized_cum_pl") else 0.0) + new_realized, 2)
+    total_pl_cum = round(sum(m["monthly_pl"]) + monthly_pl, 2)
+    unrealized_cum = round(total_pl_cum - realized_cum, 2)
+
     m["labels"].append(month_label(today))
     m["label_dates"].append(today_iso)
     m["cash_balance"].append(dbg_cash)
@@ -193,12 +208,29 @@ def main():
     m["port_return_cum_pct"].append(port_cum)
     m["snp_return_cum_pct"].append(bench_cum)
     m["cash_deployed"].append(round(account_value - sum(m["monthly_pl"]), 2))
+    m.setdefault("realized_cum_pl", []).append(realized_cum)
+    m.setdefault("unrealized_cum_pl", []).append(unrealized_cum)
     m["_last_cash_infusion_itd"] = cash_infusion_now
 
     json.dump(cost, open(COST_PATH, "w"), indent=2)
     print(f"Appended {month_label(today)} ({today_iso}): account_value={account_value}, "
           f"monthly_pl={monthly_pl}, pct_return={pct_return}%, port_cum={port_cum}%, "
-          f"bench_cum={bench_cum}%")
+          f"bench_cum={bench_cum}%, realized_cum={realized_cum}, unrealized_cum={unrealized_cum}")
+
+    # INR/USD monthly overlay — was previously only built by the retired
+    # market_data.py (GH Actions), which nothing calls anymore, so it was
+    # frozen at a stale length forever. Keep it in lockstep with monthly.labels.
+    inr_rate = fetch_yahoo_live("INR=X")
+    prices_full = json.load(open(PRICES_PATH))
+    fx_list = prices_full.get("inr_fx_monthly") or []
+    if inr_rate:
+        fx_list.append(round(inr_rate, 4))
+        prices_full["inr_fx_monthly"] = fx_list
+        json.dump(prices_full, open(PRICES_PATH, "w"), indent=2)
+        print(f"  inr_fx_monthly appended: {inr_rate:.4f} (len={len(fx_list)})")
+    else:
+        print("  WARN: could not fetch INR=X — inr_fx_monthly NOT appended this cycle "
+              "(will be short 1 entry vs monthly.labels until next successful fetch)", file=sys.stderr)
 
     # Fetch, patch just the us.monthly block on the remote copy, and commit —
     # avoids clobbering any other field GitHub Actions/other writers touched.
@@ -210,6 +242,15 @@ def main():
         commit_json_to_github(REPO_COST_PATH, remote_cost, f"monthly snapshot {month_label(today)}")
     except Exception as e:
         print(f"  Remote commit skipped: {e}", file=sys.stderr)
+
+    if inr_rate:
+        try:
+            r = requests.get(f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REPO_PRICES_PATH}", headers=headers, timeout=10)
+            remote_prices = json.loads(base64.b64decode(r.json()["content"]).decode()) if r.status_code == 200 else prices_full
+            remote_prices["inr_fx_monthly"] = fx_list
+            commit_json_to_github(REPO_PRICES_PATH, remote_prices, f"inr_fx_monthly {month_label(today)}")
+        except Exception as e:
+            print(f"  Remote inr_fx_monthly commit skipped: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

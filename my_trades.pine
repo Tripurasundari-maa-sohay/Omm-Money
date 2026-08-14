@@ -799,7 +799,7 @@ if barstate.islast
 
     if pos_status == "OPEN"
         // QTY + Avg together, one row — no longer printed on the chart labels
-        table.cell(t, 0, 1, str.tostring(cum_open_qty, "#.##") + " @ $" + str.tostring(cum_open_avg, "#.00"), text_color=color.white, text_size=size.normal, text_halign=text.align_left)
+        table.cell(t, 0, 1, "AVG:$" + str.tostring(cum_open_avg, "#.00") + " (" + str.tostring(cum_open_qty, "#.##") + ")", text_color=color.white, text_size=size.normal, text_halign=text.align_left)
         table.cell(t, 1, 1, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_right)
         table.cell(t, 0, 2, "CUM P&L", text_color=color.gray, text_size=size.normal)
         table.cell(t, 1, 2, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)

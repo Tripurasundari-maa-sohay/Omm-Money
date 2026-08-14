@@ -764,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v197</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v198</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1048,10 +1048,6 @@
       <div class="table-meta">
         <span class="live-badge" id="us-live-badge">● LIVE</span>
         <button onclick="DASH.resetColOrder('us')" title="Reset column order" style="background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:10px;margin-left:6px">↺ cols</button>
-        <span id="us-broker-filter" style="margin-left:10px;display:inline-flex;gap:2px">
-          <button data-bf="ALL"  onclick="DASH.setBrokerFilter('ALL')"  style="padding:2px 8px;border:1px solid var(--accent-b);background:var(--accent-b);color:#fff;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">ALL</button>
-          <button data-bf="IBKR" onclick="DASH.setBrokerFilter('IBKR')" style="padding:2px 8px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">IBKR</button>
-        </span>
         <span id="us-asof">--</span>
       </div>
       <table id="us-holdings-table">
@@ -2867,9 +2863,7 @@ const DASH = (() => {
     const tbody = $('us-holdings-body');
     const us = S.view.us;
 
-    // Apply broker filter
-    const _bf = localStorage.getItem('us_broker_filter') || 'ALL';
-    let rows = us.open.filter(p => _bf === 'ALL' || (p.broker || 'DBG') === _bf);
+    let rows = [...us.open];
     if (US_SORT.col && US_SORT_KEY[US_SORT.col]) {
       const fn = US_SORT_KEY[US_SORT.col];
       rows.sort((a, b) => {
@@ -5529,24 +5523,6 @@ const DASH = (() => {
     _wireChartExpand();
   }
 
-  function setBrokerFilter(brk) {
-    localStorage.setItem('us_broker_filter', brk);
-    document.querySelectorAll('#us-broker-filter button').forEach(b => {
-      const on = b.dataset.bf === brk;
-      b.style.background   = on ? 'var(--accent-b)' : 'var(--bg-card2)';
-      b.style.color        = on ? '#fff' : 'var(--text-sec)';
-      b.style.borderColor  = on ? 'var(--accent-b)' : 'var(--border)';
-    });
-    if (typeof renderUSHoldings === 'function') renderUSHoldings();
-  }
-  document.addEventListener('DOMContentLoaded', () => {
-    // DBG fully liquidated 2026-08-13 — filter button removed. Any saved
-    // 'DBG' selection from before would silently render an empty table.
-    let saved = localStorage.getItem('us_broker_filter') || 'ALL';
-    if (saved === 'DBG') { saved = 'ALL'; localStorage.setItem('us_broker_filter', 'ALL'); }
-    if (saved !== 'ALL') setBrokerFilter(saved);
-  });
-
   /* ── Metric-tile drilldown: pie + table breakdown per ticker ── */
   const DRILL_PALETTE = ['#4ade80','#60a5fa','#f59e0b','#f472b6','#a78bfa','#2dd4bf','#fb923c','#94a3b8'];
   const DRILL_SIGNED = new Set(['pnl','unreal','day','realised','jdzg']);
@@ -5939,7 +5915,7 @@ const DASH = (() => {
 
   document.addEventListener('DOMContentLoaded', () => { mpLoadPending(); });
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, toggleJDZGdayPL, setBrokerFilter, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, toggleJDZGdayPL, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject };
 })();
 
 // Register service worker for PWA installability

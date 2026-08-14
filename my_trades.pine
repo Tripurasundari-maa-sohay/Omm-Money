@@ -785,32 +785,30 @@ pos_status = tk == "AMZN"  ? "CLOSED" :
              tk == "TOL"   ? "CLOSED" : ""
 
 pos_clr = pos_status == "OPEN" ? color.lime : pos_status == "CLOSED" ? color.orange : color.gray
-pos_rows = pos_status == "OPEN" ? 6 : pos_status == "CLOSED" ? 5 : 3
+// DBG fully liquidated — only one broker (IBKR) left, so the DBG/IBKR/TOTAL
+// split row is gone, collapsed into a single DAY P&L row.
+pos_rows = pos_status == "OPEN" ? 4 : pos_status == "CLOSED" ? 3 : 1
 
 if barstate.islast
     t = table.new(position.top_right, 2, pos_rows,
                   bgcolor=color.new(color.black, 60),
                   border_color=color.new(color.gray, 50), border_width=1,
                   frame_color=color.new(color.gray, 30), frame_width=1)
-    table.cell(t, 0, 0, "DBG  DAY", text_color=color.gray,        text_size=size.normal)
-    table.cell(t, 1, 0, _fmt(dbg_day_pl),  text_color=_clr(dbg_day_pl),  text_size=size.normal, text_halign=text.align_right)
-    table.cell(t, 0, 1, "IBKR DAY", text_color=color.gray,        text_size=size.normal)
-    table.cell(t, 1, 1, _fmt(ibkr_day_pl), text_color=_clr(ibkr_day_pl), text_size=size.normal, text_halign=text.align_right)
-    table.cell(t, 0, 2, "TOTAL DAY", text_color=color.white,       text_size=size.normal)
-    table.cell(t, 1, 2, _fmt(total_day_pl), text_color=_clr(total_day_pl), text_size=size.normal, text_halign=text.align_right)
+    table.cell(t, 0, 0, "DAY P&L", text_color=color.gray,        text_size=size.normal)
+    table.cell(t, 1, 0, _fmt(total_day_pl), text_color=_clr(total_day_pl), text_size=size.normal, text_halign=text.align_right)
 
     if pos_status == "OPEN"
         // QTY + Avg together, one row — no longer printed on the chart labels
-        table.cell(t, 0, 3, str.tostring(cum_open_qty, "#.##") + " @ $" + str.tostring(cum_open_avg, "#.00"), text_color=color.white, text_size=size.normal, text_halign=text.align_left)
-        table.cell(t, 1, 3, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_right)
-        table.cell(t, 0, 4, "CUM P&L", text_color=color.gray, text_size=size.normal)
-        table.cell(t, 1, 4, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
-        table.cell(t, 0, 5, "OPEN P&L", text_color=color.gray, text_size=size.normal)
-        table.cell(t, 1, 5, _fmt(cum_unreal), text_color=_clr(cum_unreal), text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 1, str.tostring(cum_open_qty, "#.##") + " @ $" + str.tostring(cum_open_avg, "#.00"), text_color=color.white, text_size=size.normal, text_halign=text.align_left)
+        table.cell(t, 1, 1, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 2, "CUM P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 2, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 3, "OPEN P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 3, _fmt(cum_unreal), text_color=_clr(cum_unreal), text_size=size.normal, text_halign=text.align_right)
     else if pos_status == "CLOSED"
         // Keep CLOSED status centered across both columns — no qty (position is gone)
-        table.cell(t, 0, 3, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_center)
-        table.cell(t, 1, 3, "")
-        table.merge_cells(t, 0, 3, 1, 3)
-        table.cell(t, 0, 4, "CUM P&L", text_color=color.gray, text_size=size.normal)
-        table.cell(t, 1, 4, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 1, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_center)
+        table.cell(t, 1, 1, "")
+        table.merge_cells(t, 0, 1, 1, 1)
+        table.cell(t, 0, 2, "CUM P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 2, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)

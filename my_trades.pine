@@ -8,15 +8,17 @@ isDate(y, m, d) => year == y and month == m and dayofmonth == d
 closedBox(x1, buy_p, x2, sell_p, qty) =>
     pl     = (sell_p - buy_p) * qty
     profit = pl >= 0
-    // 2 shades lighter than openBox (60/10) so closed cycles visually recede
-    // behind the live open position on charts with both (MSFT, EWY, ORCL etc).
+    // 2 shades lighter fill than openBox (60->80) so closed cycles visually
+    // recede behind the live open position on charts with both (MSFT, EWY,
+    // ORCL etc). Border is always blue (was profit/loss colored) — one unit
+    // wider than the old value so closed boxes stay identifiable now that
+    // openBox carries no border at all.
     clr    = profit ? color.new(color.green, 80) : color.new(color.red, 80)
-    bclr   = profit ? color.new(color.green, 30) : color.new(color.red, 30)
     lclr   = profit ? color.green : color.red
     top    = math.max(buy_p, sell_p)
     bot    = math.min(buy_p, sell_p)
     if math.abs(sell_p - buy_p) > 0.001
-        box.new(x1, top, x2, bot, bgcolor=clr, border_color=bclr, border_width=1)
+        box.new(x1, top, x2, bot, bgcolor=clr, border_color=color.blue, border_width=2)
     label.new(x1, buy_p,  "▲", color=color.blue, textcolor=color.white, style=label.style_label_up,   size=size.small)
     label.new(x2, sell_p, "▼", color=lclr,       textcolor=color.white, style=label.style_label_down, size=size.small)
 
@@ -28,7 +30,7 @@ openBox(x1, buy_p, qty, ylevel = 0) =>
         top    = math.max(buy_p, close)
         bot    = math.min(buy_p, close)
         if math.abs(close - buy_p) > 0.001
-            box.new(x1, top, bar_index, bot, bgcolor=clr, border_color=color.new(color.blue, 0), border_width=2)
+            box.new(x1, top, bar_index, bot, bgcolor=clr, border_width=0)
         label.new(x1, buy_p, "▲", color=color.blue, textcolor=color.white, style=label.style_label_up, size=size.small)
 
 // ── VAR DECLARATIONS ──────────────────────────────────────────────────────────

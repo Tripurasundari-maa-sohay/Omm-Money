@@ -129,6 +129,8 @@ var int qbts_x        = na // DBG Aug-06 (new)
 var int btsg2_x    = na  // IBKR Aug-11 (add-on)
 var int crcl_sell_x = na // IBKR Aug-10 (sell marker — fully closed)
 var int dbg_close_x = na // DBG Aug-13 (sell marker — full account liquidation: AMZN/MSFT/NVDA/ORCL/SHIP/NOW/QBTS)
+var int ibkr_close2_x = na // IBKR Aug-13 (sell marker — MSFT(IBKR leg)/JPM closed)
+var int apld_x = na      // IBKR Aug-13 (new)
 
 // ── CAPTURE BUY BAR INDICES ───────────────────────────────────────────────────
 if tk == "AVGO"
@@ -298,6 +300,10 @@ if tk == "BTSG" and isDate(2026,8,11)
     btsg2_x := bar_index
 if (tk == "AMZN" or tk == "MSFT" or tk == "NVDA" or tk == "ORCL" or tk == "SHIP" or tk == "NOW" or tk == "QBTS") and isDate(2026,8,13)
     dbg_close_x := bar_index
+if (tk == "MSFT" or tk == "JPM") and isDate(2026,8,13)
+    ibkr_close2_x := bar_index
+if tk == "APLD" and isDate(2026,8,13)
+    apld_x := bar_index
 if tk == "EGHT" and isDate(2025,12,26)
     egth_x := bar_index
 if tk == "COST" and isDate(2025,12,19)
@@ -446,8 +452,9 @@ if tk == "AMZN" and not na(amzn1_x) and not na(dbg_close_x)
 // MSFT DBG: 2sh@$486.72(Dec26) + 1sh@$423(Jan29) + 3sh@$366.65(Mar31) = 6sh, weighted avg $416.065 -> closed @498.41 (+$474.00)
 if tk == "MSFT" and not na(msft1_x) and not na(dbg_close_x)
     closedBox(msft1_x, 416.065, dbg_close_x, 498.41, 6)
-if tk == "MSFT" and not na(msft4_x)
-    openBox(msft4_x, 377.70, 1, 1)
+// MSFT IBKR leg: 1sh@377.70 closed Aug-13 @496.88 (+$115.29)
+if tk == "MSFT" and not na(msft4_x) and not na(ibkr_close2_x)
+    closedBox(msft4_x, 377.70, ibkr_close2_x, 496.88, 1)
 if tk == "NVDA" and not na(nvda1_x) and not na(dbg_close_x)
     closedBox(nvda1_x, 211.76, dbg_close_x, 225.75, 4)
 if tk == "ORCL" and not na(orcl_x) and not na(dbg_close_x)
@@ -533,10 +540,13 @@ if tk == "RKLB" and isDate(2026,7,24) and not na(rklb6_x)
     closedBox(rklb6_x, 69.52, bar_index, 65.28, 6)
 if tk == "RKLB" and not na(rklb7_x)
     openBox(rklb7_x, 72.8729, 7)
-if tk == "JPM" and not na(jpm_x)
-    openBox(jpm_x, 362.185, 1)
+// JPM: 1sh@362.185 closed Aug-13 @363.11 (-$1.27)
+if tk == "JPM" and not na(jpm_x) and not na(ibkr_close2_x)
+    closedBox(jpm_x, 362.185, ibkr_close2_x, 363.11, 1)
 if tk == "SPCX" and not na(spcx_x)
     openBox(spcx_x, 121.84, 2)
+if tk == "APLD" and not na(apld_x)
+    openBox(apld_x, 31.52704, 27)
 
 // ── PORTFOLIO DAILY P&L (DBG + IBKR) ─────────────────────────────────────────
 amzn_d = request.security("AMZN",  "D", close - close[1])
@@ -570,14 +580,14 @@ aaoi_d = request.security("AAOI",  "D", close - close[1])
 crcl_d = request.security("CRCL",  "D", close - close[1])
 iren_d = request.security("IREN",  "D", close - close[1])
 nbis_d = request.security("NBIS",  "D", close - close[1])
-jpm_d  = request.security("JPM",   "D", close - close[1])
 spcx_d = request.security("SPCX",  "D", close - close[1])
+apld_d = request.security("APLD",  "D", close - close[1])
 
 // DBG fully liquidated 2026-08-13 (100% cash) — no open DBG positions left.
 dbg_day_pl  = 0.0
 
-ibkr_day_pl = nz(msft_d) * 1    +
-              nz(rxt_d)  * 160  +
+// MSFT + JPM both fully closed Aug-13 — dropped from ibkr_day_pl.
+ibkr_day_pl = nz(rxt_d)  * 160  +
               nz(hpe_d)  * 10   +
               nz(glw_d)  * 9    +
               nz(mu_d)   * 1    +
@@ -601,8 +611,8 @@ ibkr_day_pl = nz(msft_d) * 1    +
               nz(orcl_d) * 4    +
               nz(goog_d) * 1    +
               nz(rklb_d) * 7    +
-              nz(jpm_d)  * 1    +
-              nz(spcx_d) * 2
+              nz(spcx_d) * 2    +
+              nz(apld_d) * 27
 
 total_day_pl = dbg_day_pl + ibkr_day_pl
 
@@ -638,10 +648,11 @@ cum_realised = tk == "AMZN" ? 7.28 :
               tk == "INTC" ? 189.73 :
               tk == "IRS" ? -25.29 :
               tk == "JDZG" ? -1657.26 :
+              tk == "JPM" ? -1.27 :
               tk == "KEEL" ? 107.98 :
               tk == "META" ? -178.54 :
               tk == "MP" ? 15.88 :
-              tk == "MSFT" ? 482.19 :
+              tk == "MSFT" ? 597.48 :
               tk == "MU" ? 997.81 :
               tk == "MUU" ? 95.21 :
               tk == "NVDA" ? 41.40 :
@@ -669,7 +680,6 @@ cum_open_qty = tk == "AVGO" ? 3.0 :
                tk == "INTC" ? 3.0 :
                tk == "IOT" ? 10.0 :
                tk == "LITE" ? 1.0 :
-               tk == "MSFT" ? 1.0 :
                tk == "MU" ? 1.0 :
                tk == "ORCL" ? 4.0 :
                tk == "Q" ? 2.0 :
@@ -682,8 +692,8 @@ cum_open_qty = tk == "AVGO" ? 3.0 :
                tk == "NBIS" ? 3.0 :
                tk == "GOOG" ? 1.0 :
                tk == "RKLB" ? 7.0 :
-               tk == "JPM"  ? 1.0 :
                tk == "SPCX" ? 2.0 :
+               tk == "APLD" ? 27.0 :
                0.0
 
 cum_open_avg = tk == "AVGO" ? 389.939833 :
@@ -698,7 +708,6 @@ cum_open_avg = tk == "AVGO" ? 389.939833 :
                tk == "INTC" ? 102.953333 :
                tk == "IOT" ? 33.44 :
                tk == "LITE" ? 797.34 :
-               tk == "MSFT" ? 377.70 :
                tk == "MU" ? 931.0 :
                tk == "ORCL" ? 121.113 :
                tk == "Q" ? 138.59 :
@@ -711,15 +720,15 @@ cum_open_avg = tk == "AVGO" ? 389.939833 :
                tk == "NBIS" ? 198.143333 :
                tk == "GOOG" ? 367.33 :
                tk == "RKLB" ? 72.872857 :
-               tk == "JPM"  ? 362.185 :
                tk == "SPCX" ? 121.84 :
+               tk == "APLD" ? 31.527040037 :
                0.0
 
 cum_unreal = cum_open_qty > 0 ? (close - cum_open_avg) * cum_open_qty : 0.0
 cum_pnl    = cum_realised + cum_unreal
 
 pos_status = tk == "AMZN"  ? "CLOSED" :
-             tk == "MSFT"  ? "OPEN"   :
+             tk == "MSFT"  ? "CLOSED" :
              tk == "NVDA"  ? "CLOSED" :
              tk == "ORCL"  ? "OPEN"   :
              tk == "SHIP"  ? "CLOSED" :
@@ -748,8 +757,9 @@ pos_status = tk == "AMZN"  ? "CLOSED" :
              tk == "NBIS"  ? "OPEN"   :
              tk == "GOOG"  ? "OPEN"   :
              tk == "RKLB"  ? "OPEN"   :
-             tk == "JPM"   ? "OPEN"   :
+             tk == "JPM"   ? "CLOSED" :
              tk == "SPCX"  ? "OPEN"   :
+             tk == "APLD"  ? "OPEN"   :
              tk == "GEV"   ? "CLOSED" :
              tk == "HUMN"  ? "CLOSED" :
              tk == "INTC"  ? "OPEN"   :

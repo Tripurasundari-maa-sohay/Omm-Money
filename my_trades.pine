@@ -8,8 +8,10 @@ isDate(y, m, d) => year == y and month == m and dayofmonth == d
 closedBox(x1, buy_p, x2, sell_p, qty) =>
     pl     = (sell_p - buy_p) * qty
     profit = pl >= 0
-    clr    = profit ? color.new(color.green, 60) : color.new(color.red, 60)
-    bclr   = profit ? color.new(color.green, 10) : color.new(color.red, 10)
+    // 2 shades lighter than openBox (60/10) so closed cycles visually recede
+    // behind the live open position on charts with both (MSFT, EWY, ORCL etc).
+    clr    = profit ? color.new(color.green, 80) : color.new(color.red, 80)
+    bclr   = profit ? color.new(color.green, 30) : color.new(color.red, 30)
     lclr   = profit ? color.green : color.red
     top    = math.max(buy_p, sell_p)
     bot    = math.min(buy_p, sell_p)

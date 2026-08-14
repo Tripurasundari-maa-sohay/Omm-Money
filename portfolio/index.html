@@ -764,7 +764,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v196</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v197</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1050,7 +1050,6 @@
         <button onclick="DASH.resetColOrder('us')" title="Reset column order" style="background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:10px;margin-left:6px">↺ cols</button>
         <span id="us-broker-filter" style="margin-left:10px;display:inline-flex;gap:2px">
           <button data-bf="ALL"  onclick="DASH.setBrokerFilter('ALL')"  style="padding:2px 8px;border:1px solid var(--accent-b);background:var(--accent-b);color:#fff;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">ALL</button>
-          <button data-bf="DBG"  onclick="DASH.setBrokerFilter('DBG')"  style="padding:2px 8px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">DBG</button>
           <button data-bf="IBKR" onclick="DASH.setBrokerFilter('IBKR')" style="padding:2px 8px;border:1px solid var(--border);background:var(--bg-card2);color:var(--text-sec);border-radius:4px;cursor:pointer;font-size:10px;font-weight:700">IBKR</button>
         </span>
         <span id="us-asof">--</span>
@@ -5541,7 +5540,10 @@ const DASH = (() => {
     if (typeof renderUSHoldings === 'function') renderUSHoldings();
   }
   document.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem('us_broker_filter') || 'ALL';
+    // DBG fully liquidated 2026-08-13 — filter button removed. Any saved
+    // 'DBG' selection from before would silently render an empty table.
+    let saved = localStorage.getItem('us_broker_filter') || 'ALL';
+    if (saved === 'DBG') { saved = 'ALL'; localStorage.setItem('us_broker_filter', 'ALL'); }
     if (saved !== 'ALL') setBrokerFilter(saved);
   });
 

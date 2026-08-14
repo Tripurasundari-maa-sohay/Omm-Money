@@ -103,6 +103,7 @@ US_HOLDINGS = [
     "SNEX","DLTH","LITE","SHAZ",
     "AVGO","BTSG","GOOG","INTC","IOT","Q","RKLB",
     "GLDM","VOOG","AAOI","CRCL","IREN","NBIS","QBTS","SPCX","JPM",
+    "APLD",
 ]
 # Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
 # each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.

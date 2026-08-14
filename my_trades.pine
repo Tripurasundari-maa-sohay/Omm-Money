@@ -128,6 +128,7 @@ var int tte_close_x  = na // DBG Aug-06 (sell marker — fully closed)
 var int qbts_x        = na // DBG Aug-06 (new)
 var int btsg2_x    = na  // IBKR Aug-11 (add-on)
 var int crcl_sell_x = na // IBKR Aug-10 (sell marker — fully closed)
+var int dbg_close_x = na // DBG Aug-13 (sell marker — full account liquidation: AMZN/MSFT/NVDA/ORCL/SHIP/NOW/QBTS)
 
 // ── CAPTURE BUY BAR INDICES ───────────────────────────────────────────────────
 if tk == "AVGO"
@@ -295,6 +296,8 @@ if tk == "CRCL" and isDate(2026,8,10)
     crcl_sell_x := bar_index
 if tk == "BTSG" and isDate(2026,8,11)
     btsg2_x := bar_index
+if (tk == "AMZN" or tk == "MSFT" or tk == "NVDA" or tk == "ORCL" or tk == "SHIP" or tk == "NOW" or tk == "QBTS") and isDate(2026,8,13)
+    dbg_close_x := bar_index
 if tk == "EGHT" and isDate(2025,12,26)
     egth_x := bar_index
 if tk == "COST" and isDate(2025,12,19)
@@ -436,25 +439,25 @@ if tk == "JDZG" and isDate(2026,8,3) and not na(jdzg_x)
 if tk == "TTE" and isDate(2026,8,6) and not na(tte_x)
     closedBox(tte_x, 82.84, bar_index, 85.6375, 8)
 
-// ── OPEN BOXES (blue border, live P&L vs current price) ───────────────────────
-// AMZN: 6sh@$242.09 + 4sh@$261.18 = 10sh, weighted avg $249.73
-if tk == "AMZN" and not na(amzn1_x)
-    openBox(amzn1_x, 249.73, 10)
-// MSFT DBG: 2sh@$486.72(Dec26) + 1sh@$423(Jan29) + 3sh@$366.65(Mar31) = 6sh, weighted avg $416.065
-if tk == "MSFT" and not na(msft1_x)
-    openBox(msft1_x, 416.065, 6)
+// ── DBG FULL LIQUIDATION Aug-13 (AMZN/MSFT/NVDA/ORCL/SHIP/NOW/QBTS all closed) ─
+// AMZN: 6sh@$242.09 + 4sh@$261.18 = 10sh, weighted avg $249.73 -> closed @265.36 (+$141.28)
+if tk == "AMZN" and not na(amzn1_x) and not na(dbg_close_x)
+    closedBox(amzn1_x, 249.73, dbg_close_x, 265.36, 10)
+// MSFT DBG: 2sh@$486.72(Dec26) + 1sh@$423(Jan29) + 3sh@$366.65(Mar31) = 6sh, weighted avg $416.065 -> closed @498.41 (+$474.00)
+if tk == "MSFT" and not na(msft1_x) and not na(dbg_close_x)
+    closedBox(msft1_x, 416.065, dbg_close_x, 498.41, 6)
 if tk == "MSFT" and not na(msft4_x)
     openBox(msft4_x, 377.70, 1, 1)
-if tk == "NVDA" and not na(nvda1_x)
-    openBox(nvda1_x, 211.76, 4)
-if tk == "ORCL" and not na(orcl_x)
-    openBox(orcl_x, 230.00, 4)
-if tk == "SHIP" and not na(ship_x)
-    openBox(ship_x, 14.86, 50)
-if tk == "NOW" and not na(now_x)
-    openBox(now_x, 102.78, 10)
-if tk == "QBTS" and not na(qbts_x)
-    openBox(qbts_x, 19.885, 47)
+if tk == "NVDA" and not na(nvda1_x) and not na(dbg_close_x)
+    closedBox(nvda1_x, 211.76, dbg_close_x, 225.75, 4)
+if tk == "ORCL" and not na(orcl_x) and not na(dbg_close_x)
+    closedBox(orcl_x, 230.00, dbg_close_x, 156.36, 4)
+if tk == "SHIP" and not na(ship_x) and not na(dbg_close_x)
+    closedBox(ship_x, 14.8589, dbg_close_x, 16.6785, 50)
+if tk == "NOW" and not na(now_x) and not na(dbg_close_x)
+    closedBox(now_x, 102.78, dbg_close_x, 128.35, 10)
+if tk == "QBTS" and not na(qbts_x) and not na(dbg_close_x)
+    closedBox(qbts_x, 19.885, dbg_close_x, 21.0125, 47)
 if tk == "RXT" and not na(rxt2_x)
     openBox(rxt2_x, 4.6164, 160)
 // ELPC: loss-booked Jul-21 (59sh 11.6215 → 11.51, −$9.61 net)
@@ -570,13 +573,8 @@ nbis_d = request.security("NBIS",  "D", close - close[1])
 jpm_d  = request.security("JPM",   "D", close - close[1])
 spcx_d = request.security("SPCX",  "D", close - close[1])
 
-dbg_day_pl  = nz(amzn_d) * 10  +
-              nz(msft_d) * 6   +
-              nz(nvda_d) * 4   +
-              nz(orcl_d) * 4   +
-              nz(ship_d) * 50  +
-              nz(now_d)  * 10  +
-              nz(qbts_d) * 47
+// DBG fully liquidated 2026-08-13 (100% cash) — no open DBG positions left.
+dbg_day_pl  = 0.0
 
 ibkr_day_pl = nz(msft_d) * 1    +
               nz(rxt_d)  * 160  +
@@ -616,10 +614,14 @@ _clr(v) => v >= 0 ? color.green : color.red
 // cum_realised includes dividends received ITD (income field), matches dashboard
 // "Realized P&L (net, incl. div)" convention. MSFT/ORCL/SHIP have no closed
 // cycles — their entry here is dividends only.
-cum_realised = tk == "AMZN" ? -7.52 :
+// cum_realised rebuilt 2026-08-14 from Doha Bank's full-lifetime closed-positions
+// ledger (exact reconciliation to $2,193.92 DBG ITD realized P/L) — fixes latent
+// drift in RKLB/MU/MUU/TOL/TTE/GOOG/COST that had accumulated from earlier
+// session hand-entries, and adds the Aug-13 full-account-liquidation closes.
+cum_realised = tk == "AMZN" ? 7.28 :
               tk == "AVGO" ? 129.21 :
               tk == "BSET" ? -2.61 :
-              tk == "COST" ? 139.91 :
+              tk == "COST" ? 140.30 :
               tk == "CRCL" ? 4.39 :
               tk == "DAX" ? -23.41 :
               tk == "DLTH" ? 51.67 :
@@ -629,7 +631,7 @@ cum_realised = tk == "AMZN" ? -7.52 :
               tk == "EWY" ? 549.7 :
               tk == "GEV" ? 55.29 :
               tk == "GLW" ? 469.54 :
-              tk == "GOOG" ? 66.28 :
+              tk == "GOOG" ? 119.69 :
               tk == "HUMN" ? -80.56 :
               tk == "ICHR" ? 40.73 :
               tk == "INOD" ? -81.71 :
@@ -639,22 +641,23 @@ cum_realised = tk == "AMZN" ? -7.52 :
               tk == "KEEL" ? 107.98 :
               tk == "META" ? -178.54 :
               tk == "MP" ? 15.88 :
-              tk == "MSFT" ? 8.19 :
-              tk == "MU" ? 947.56 :
-              tk == "MUU" ? 94.6 :
-              tk == "NVDA" ? -4.54 :
-              tk == "ORCL" ? 2.0 :
-              tk == "RKLB" ? 290.64 :
+              tk == "MSFT" ? 482.19 :
+              tk == "MU" ? 997.81 :
+              tk == "MUU" ? 95.21 :
+              tk == "NVDA" ? 41.40 :
+              tk == "NOW" ? 245.67 :
+              tk == "ORCL" ? -302.58 :
+              tk == "QBTS" ? 42.96 :
+              tk == "RKLB" ? 318.09 :
               tk == "RXT" ? -219.65 :
-              tk == "SHIP" ? 10.0 :
+              tk == "SHIP" ? 90.96 :
               tk == "SIVR" ? 133.11 :
-              tk == "TOL" ? 21.53 :
-              tk == "TTE" ? 25.48 :
+              tk == "TOL" ? 22.14 :
+              tk == "TTE" ? 29.42 :
               tk == "VOOG" ? 155.54 :
               0.0
 
-cum_open_qty = tk == "AMZN" ? 10.0 :
-               tk == "AVGO" ? 3.0 :
+cum_open_qty = tk == "AVGO" ? 3.0 :
                tk == "BTSG" ? 15.0 :
                tk == "DLTH" ? 100.0 :
                tk == "EWY" ? 4.5 :
@@ -666,17 +669,13 @@ cum_open_qty = tk == "AMZN" ? 10.0 :
                tk == "INTC" ? 3.0 :
                tk == "IOT" ? 10.0 :
                tk == "LITE" ? 1.0 :
-               tk == "MSFT" ? 7.0 :
+               tk == "MSFT" ? 1.0 :
                tk == "MU" ? 1.0 :
-               tk == "NOW" ? 10.0 :
-               tk == "NVDA" ? 4.0 :
-               tk == "ORCL" ? 8.0 :
+               tk == "ORCL" ? 4.0 :
                tk == "Q" ? 2.0 :
                tk == "RXT" ? 160.0 :
                tk == "SHAZ" ? 6.0 :
-               tk == "SHIP" ? 50.0 :
                tk == "SNEX" ? 9.0 :
-               tk == "QBTS" ? 47.0 :
                tk == "VOOG" ? 5.0 :
                tk == "AAOI" ? 6.0 :
                tk == "IREN" ? 20.0 :
@@ -687,8 +686,7 @@ cum_open_qty = tk == "AMZN" ? 10.0 :
                tk == "SPCX" ? 2.0 :
                0.0
 
-cum_open_avg = tk == "AMZN" ? 249.73 :
-               tk == "AVGO" ? 389.939833 :
+cum_open_avg = tk == "AVGO" ? 389.939833 :
                tk == "BTSG" ? 61.8198 :
                tk == "DLTH" ? 4.200003 :
                tk == "EWY" ? 173.050067 :
@@ -700,17 +698,13 @@ cum_open_avg = tk == "AMZN" ? 249.73 :
                tk == "INTC" ? 102.953333 :
                tk == "IOT" ? 33.44 :
                tk == "LITE" ? 797.34 :
-               tk == "MSFT" ? 410.5843 :
+               tk == "MSFT" ? 377.70 :
                tk == "MU" ? 931.0 :
-               tk == "NOW" ? 102.78 :
-               tk == "NVDA" ? 211.76 :
-               tk == "ORCL" ? 175.5565 :
+               tk == "ORCL" ? 121.113 :
                tk == "Q" ? 138.59 :
                tk == "RXT" ? 4.616433 :
                tk == "SHAZ" ? 68.653333 :
-               tk == "SHIP" ? 14.8589 :
                tk == "SNEX" ? 78.075556 :
-               tk == "QBTS" ? 19.885 :
                tk == "VOOG" ? 80.2 :
                tk == "AAOI" ? 100.166667 :
                tk == "IREN" ? 37.950005 :
@@ -724,13 +718,13 @@ cum_open_avg = tk == "AMZN" ? 249.73 :
 cum_unreal = cum_open_qty > 0 ? (close - cum_open_avg) * cum_open_qty : 0.0
 cum_pnl    = cum_realised + cum_unreal
 
-pos_status = tk == "AMZN"  ? "OPEN"   :
+pos_status = tk == "AMZN"  ? "CLOSED" :
              tk == "MSFT"  ? "OPEN"   :
-             tk == "NVDA"  ? "OPEN"   :
+             tk == "NVDA"  ? "CLOSED" :
              tk == "ORCL"  ? "OPEN"   :
-             tk == "SHIP"  ? "OPEN"   :
-             tk == "NOW"   ? "OPEN"   :
-             tk == "QBTS"  ? "OPEN"   :
+             tk == "SHIP"  ? "CLOSED" :
+             tk == "NOW"   ? "CLOSED" :
+             tk == "QBTS"  ? "CLOSED" :
              tk == "RXT"   ? "OPEN"   :
              tk == "BTSG"  ? "OPEN"   :
              tk == "HPE"   ? "OPEN"   :

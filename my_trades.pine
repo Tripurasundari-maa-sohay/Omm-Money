@@ -577,14 +577,11 @@ if tk == "SPCX" and not na(spcx_x)
 if tk == "APLD" and not na(apld_x)
     openBox(apld_x, 31.52704, 27)
 
-// ── PORTFOLIO DAILY P&L (DBG + IBKR) ─────────────────────────────────────────
-amzn_d = request.security("AMZN",  "D", close - close[1])
-msft_d = request.security("MSFT",  "D", close - close[1])
-nvda_d = request.security("NVDA",  "D", close - close[1])
+// ── PORTFOLIO DAILY P&L (IBKR only — DBG fully liquidated, dbg_day_pl hardcoded 0) ─
+// AMZN/MSFT/NVDA/SHIP/NOW/QBTS request.security calls removed 2026-08-18 — they
+// were only ever summed into dbg_day_pl, which is now a hardcoded 0.0 constant.
+// ORCL kept (still open at IBKR).
 orcl_d = request.security("ORCL",  "D", close - close[1])
-ship_d = request.security("SHIP",  "D", close - close[1])
-now_d  = request.security("NOW",   "D", close - close[1])
-qbts_d = request.security("QBTS",  "D", close - close[1])
 rxt_d  = request.security("RXT",   "D", close - close[1])
 hpe_d  = request.security("HPE",   "D", close - close[1])
 glw_d  = request.security("GLW",   "D", close - close[1])

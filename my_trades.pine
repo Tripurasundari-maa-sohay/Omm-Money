@@ -1,5 +1,13 @@
 //@version=6
-indicator("My Trades", overlay=true, max_labels_count=500, max_boxes_count=100)
+indicator("My Trades — Boxes", overlay=true, max_labels_count=500, max_boxes_count=100)
+
+// Split 2026-08-18: was one script with 27 request.security() calls for the
+// portfolio-wide DAY P&L widget + all box/label drawing sharing one 20s
+// runtime budget (TradingView flagged it "heavy, close to plan limit").
+// This half has ZERO security() calls — pure box/label drawing off the
+// current chart's own price series, loads instantly. DAY P&L table (which
+// needs cross-symbol data) lives in the companion "My Trades — Day P&L"
+// script so it gets its own separate runtime budget.
 
 tk = syminfo.ticker
 
@@ -577,75 +585,6 @@ if tk == "SPCX" and not na(spcx_x)
 if tk == "APLD" and not na(apld_x)
     openBox(apld_x, 31.52704, 27)
 
-// ── PORTFOLIO DAILY P&L (IBKR only — DBG fully liquidated, dbg_day_pl hardcoded 0) ─
-// AMZN/MSFT/NVDA/SHIP/NOW/QBTS request.security calls removed 2026-08-18 — they
-// were only ever summed into dbg_day_pl, which is now a hardcoded 0.0 constant.
-// ORCL kept (still open at IBKR).
-orcl_d = request.security("ORCL",  "D", close - close[1])
-rxt_d  = request.security("RXT",   "D", close - close[1])
-hpe_d  = request.security("HPE",   "D", close - close[1])
-glw_d  = request.security("GLW",   "D", close - close[1])
-mu_d   = request.security("MU",    "D", close - close[1])
-ewy_d  = request.security("EWY",   "D", close - close[1])
-fps_d  = request.security("FPS",   "D", close - close[1])
-ichr_d = request.security("ICHR",  "D", close - close[1])
-snex_d = request.security("SNEX",  "D", close - close[1])
-dlth_d = request.security("DLTH",  "D", close - close[1])
-lite_d = request.security("LITE",  "D", close - close[1])
-avgo_d = request.security("AVGO",  "D", close - close[1])
-btsg_d = request.security("BTSG",  "D", close - close[1])
-goog_d = request.security("GOOG",  "D", close - close[1])
-intc_d = request.security("INTC",  "D", close - close[1])
-iot_d  = request.security("IOT",   "D", close - close[1])
-q_d    = request.security("Q",     "D", close - close[1])
-rklb_d = request.security("RKLB",  "D", close - close[1])
-gldm_d = request.security("GLDM",  "D", close - close[1])
-voog_d = request.security("VOOG",  "D", close - close[1])
-crcl_d = request.security("CRCL",  "D", close - close[1])
-iren_d = request.security("IREN",  "D", close - close[1])
-nbis_d = request.security("NBIS",  "D", close - close[1])
-spcx_d = request.security("SPCX",  "D", close - close[1])
-apld_d = request.security("APLD",  "D", close - close[1])
-cnc_d  = request.security("CNC",   "D", close - close[1])
-lscc_d = request.security("LSCC",  "D", close - close[1])
-
-// DBG fully liquidated 2026-08-13 (100% cash) — no open DBG positions left.
-dbg_day_pl  = 0.0
-
-// MSFT + JPM both fully closed Aug-13 — dropped from ibkr_day_pl.
-ibkr_day_pl = nz(rxt_d)  * 160  +
-              nz(hpe_d)  * 10   +
-              nz(glw_d)  * 9    +
-              nz(mu_d)   * 1    +
-              nz(ewy_d)  * 4.5  +
-              nz(fps_d)  * 10   +
-              nz(ichr_d) * 8    +
-              nz(snex_d) * 9    +
-              nz(dlth_d) * 100  +
-              nz(lite_d) * 1    +
-              nz(avgo_d) * 3    +
-              nz(btsg_d) * 15   +
-              nz(intc_d) * 3    +
-              nz(iot_d)  * 10   +
-              nz(q_d)    * 2    +
-              nz(gldm_d) * 5    +
-              nz(voog_d) * 5    +
-              nz(iren_d) * 20   +
-              nz(nbis_d) * 3    +
-              nz(orcl_d) * 4    +
-              nz(goog_d) * 1    +
-              nz(rklb_d) * 7    +
-              nz(spcx_d) * 2    +
-              nz(apld_d) * 27   +
-              nz(cnc_d)  * 7    +
-              nz(lscc_d) * 2
-
-total_day_pl = dbg_day_pl + ibkr_day_pl
-
-_fmt(v) =>
-    (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#.0")
-_clr(v) => v >= 0 ? color.green : color.red
-
 // ── CUMULATIVE LIFETIME P&L (per ticker, realised + live unrealized) ──────────
 // cum_realised includes dividends received ITD (income field), matches dashboard
 // "Realized P&L (net, incl. div)" convention. MSFT/ORCL/SHIP have no closed
@@ -811,30 +750,26 @@ pos_status = tk == "AMZN"  ? "CLOSED" :
              tk == "TOL"   ? "CLOSED" : ""
 
 pos_clr = pos_status == "OPEN" ? color.lime : pos_status == "CLOSED" ? color.orange : color.gray
-// DBG fully liquidated — only one broker (IBKR) left, so the DBG/IBKR/TOTAL
-// split row is gone, collapsed into a single DAY P&L row.
-pos_rows = pos_status == "OPEN" ? 4 : pos_status == "CLOSED" ? 3 : 1
+_fmt(v) =>
+    (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#.0")
+_clr(v) => v >= 0 ? color.green : color.red
 
-if barstate.islast
+// No DAY P&L row here anymore — that's the companion "My Trades — Day P&L" script.
+pos_rows = pos_status == "OPEN" ? 2 : pos_status == "CLOSED" ? 1 : 0
+
+if barstate.islast and pos_rows > 0
     t = table.new(position.top_right, 2, pos_rows,
                   bgcolor=color.new(color.black, 60),
                   border_color=color.new(color.gray, 50), border_width=1,
                   frame_color=color.new(color.gray, 30), frame_width=1)
-    table.cell(t, 0, 0, "DAY P&L", text_color=color.gray,        text_size=size.normal)
-    table.cell(t, 1, 0, _fmt(total_day_pl), text_color=_clr(total_day_pl), text_size=size.normal, text_halign=text.align_right)
 
     if pos_status == "OPEN"
         // QTY + Avg together, one row — no longer printed on the chart labels
-        table.cell(t, 0, 1, "AVG:$" + str.tostring(cum_open_avg, "#.00") + " (" + str.tostring(cum_open_qty, "#.##") + ")", text_color=color.white, text_size=size.normal, text_halign=text.align_left)
-        table.cell(t, 1, 1, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_right)
-        table.cell(t, 0, 2, "CUM P&L", text_color=color.gray, text_size=size.normal)
-        table.cell(t, 1, 2, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
-        table.cell(t, 0, 3, "OPEN P&L", text_color=color.gray, text_size=size.normal)
-        table.cell(t, 1, 3, _fmt(cum_unreal), text_color=_clr(cum_unreal), text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 0, "AVG:$" + str.tostring(cum_open_avg, "#.00") + " (" + str.tostring(cum_open_qty, "#.##") + ")", text_color=color.white, text_size=size.normal, text_halign=text.align_left)
+        table.cell(t, 1, 0, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 1, "CUM P&L", text_color=color.gray, text_size=size.normal)
+        table.cell(t, 1, 1, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
     else if pos_status == "CLOSED"
         // Keep CLOSED status centered across both columns — no qty (position is gone)
-        table.cell(t, 0, 1, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_center)
-        table.cell(t, 1, 1, "")
-        table.merge_cells(t, 0, 1, 1, 1)
-        table.cell(t, 0, 2, "CUM P&L", text_color=color.gray, text_size=size.normal)
-        table.cell(t, 1, 2, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)
+        table.cell(t, 0, 0, pos_status, text_color=pos_clr, text_size=size.normal, text_halign=text.align_center)
+        table.cell(t, 1, 0, _fmt(cum_pnl), text_color=_clr(cum_pnl), text_size=size.normal, text_halign=text.align_right)

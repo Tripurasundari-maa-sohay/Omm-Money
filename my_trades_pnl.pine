@@ -1,0 +1,82 @@
+//@version=6
+indicator("My Trades — Day P&L", overlay=true)
+
+// Split 2026-08-18 from "My Trades — Boxes" — this half holds ALL 27
+// request.security() calls (one per currently-open IBKR position) needed
+// for the portfolio-wide DAY P&L widget. Splitting out of the box-drawing
+// script means each gets its own separate TradingView runtime budget
+// instead of sharing one 20s limit (TradingView flagged the combined
+// script "heavy, close to plan limit"). Add this as a second indicator on
+// the same chart alongside "My Trades — Boxes".
+
+// DBG fully liquidated 2026-08-13 (100% cash) — no open DBG positions left,
+// so dbg_day_pl is a hardcoded 0.0 constant, no security() calls needed for it.
+orcl_d = request.security("ORCL",  "D", close - close[1])
+rxt_d  = request.security("RXT",   "D", close - close[1])
+hpe_d  = request.security("HPE",   "D", close - close[1])
+glw_d  = request.security("GLW",   "D", close - close[1])
+mu_d   = request.security("MU",    "D", close - close[1])
+ewy_d  = request.security("EWY",   "D", close - close[1])
+fps_d  = request.security("FPS",   "D", close - close[1])
+ichr_d = request.security("ICHR",  "D", close - close[1])
+snex_d = request.security("SNEX",  "D", close - close[1])
+dlth_d = request.security("DLTH",  "D", close - close[1])
+lite_d = request.security("LITE",  "D", close - close[1])
+avgo_d = request.security("AVGO",  "D", close - close[1])
+btsg_d = request.security("BTSG",  "D", close - close[1])
+goog_d = request.security("GOOG",  "D", close - close[1])
+intc_d = request.security("INTC",  "D", close - close[1])
+iot_d  = request.security("IOT",   "D", close - close[1])
+q_d    = request.security("Q",     "D", close - close[1])
+rklb_d = request.security("RKLB",  "D", close - close[1])
+gldm_d = request.security("GLDM",  "D", close - close[1])
+voog_d = request.security("VOOG",  "D", close - close[1])
+iren_d = request.security("IREN",  "D", close - close[1])
+nbis_d = request.security("NBIS",  "D", close - close[1])
+spcx_d = request.security("SPCX",  "D", close - close[1])
+apld_d = request.security("APLD",  "D", close - close[1])
+cnc_d  = request.security("CNC",   "D", close - close[1])
+lscc_d = request.security("LSCC",  "D", close - close[1])
+
+dbg_day_pl  = 0.0
+
+ibkr_day_pl = nz(rxt_d)  * 160  +
+              nz(hpe_d)  * 10   +
+              nz(glw_d)  * 9    +
+              nz(mu_d)   * 1    +
+              nz(ewy_d)  * 4.5  +
+              nz(fps_d)  * 10   +
+              nz(ichr_d) * 8    +
+              nz(snex_d) * 9    +
+              nz(dlth_d) * 100  +
+              nz(lite_d) * 1    +
+              nz(avgo_d) * 3    +
+              nz(btsg_d) * 15   +
+              nz(intc_d) * 3    +
+              nz(iot_d)  * 10   +
+              nz(q_d)    * 2    +
+              nz(gldm_d) * 5    +
+              nz(voog_d) * 5    +
+              nz(iren_d) * 20   +
+              nz(nbis_d) * 3    +
+              nz(orcl_d) * 4    +
+              nz(goog_d) * 1    +
+              nz(rklb_d) * 7    +
+              nz(spcx_d) * 2    +
+              nz(apld_d) * 27   +
+              nz(cnc_d)  * 7    +
+              nz(lscc_d) * 2
+
+total_day_pl = dbg_day_pl + ibkr_day_pl
+
+_fmt(v) =>
+    (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#.0")
+_clr(v) => v >= 0 ? color.green : color.red
+
+if barstate.islast
+    t = table.new(position.bottom_right, 2, 1,
+                  bgcolor=color.new(color.black, 60),
+                  border_color=color.new(color.gray, 50), border_width=1,
+                  frame_color=color.new(color.gray, 30), frame_width=1)
+    table.cell(t, 0, 0, "DAY P&L", text_color=color.gray,        text_size=size.normal)
+    table.cell(t, 1, 0, _fmt(total_day_pl), text_color=_clr(total_day_pl), text_size=size.normal, text_halign=text.align_right)

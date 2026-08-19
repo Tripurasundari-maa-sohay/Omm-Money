@@ -2,12 +2,55 @@
 
 ---
 
+# ⚠️ BROKER MIGRATION (2026-08-19) — READ THIS FIRST, EVERY SESSION
+
+The US broker changed. This supersedes anything below that says otherwise.
+
+- **DBG (Doha Bank Global Markets)** — the ORIGINAL US broker, PDF+xlsx statements,
+  account ref `[DBG-BROKER-ACCT]`. Last DBG trade: **2026-06-15**. All DBG positions were
+  **fully liquidated at migration** — DBG contributes ZERO entries to `us.open[]`,
+  only historical `us.closed[]` entries (74 of the ledger's 152 trades, Dec-2025
+  through 2026-06-15). Do not expect any more DBG statements.
+- **IBKR (Interactive Brokers)** — the CURRENT/live US broker, replacing DBG.
+  Account `[US-BROKER-ACCT]` ([ACCOUNT-HOLDER], Individual, USD base). First IBKR trade:
+  **2026-06-18** (weekend gap after DBG's last trade — clean cutover, no overlap).
+  IBKR is reachable two ways: (a) raw Activity Statement CSV export (`Trades`,
+  `Open Positions`, `Deposits & Withdrawals`, etc. sections — parsed by
+  `scripts/parse_broker_csv.py`, written 2026-08-19), or (b) the connected
+  **Interactive Brokers (IBKR) MCP connector** (`get_account_trades`,
+  `get_account_positions` — live, no file export needed). The daily automated
+  routine ("Daily Portfolio Update from IBKR", claude.ai/code/routines) uses (b).
+- **VOOG — re-read this before ever touching VOOG.** There are TWO separate,
+  unrelated VOOG lots and both are correct simultaneously:
+  1. The OLD DBG-era lot: 3 shares × ~$441 → 6:1 split → 18 shares × ~$73.576.
+     This was **closed/liquidated at the broker migration** and lives in
+     `us.closed[]` as a historical record. Do NOT resurrect it, do NOT treat its
+     absence from `open[]` as a parser bug — closure is correct and permanent.
+  2. The NEW IBKR-era lot: opened fresh 2026-07-24 (5 shares @ $80), fully
+     unrelated to the old split lot, tracked as a normal `open[]` position that
+     grows/shrinks with ordinary IBKR buys/sells like any other ticker. Its share
+     count is NOT fixed at any particular number — unlike the old lot, there is
+     no "permanent" quantity to defend here going forward.
+  A same-session or fresh-context agent seeing "VOOG isn't 18 shares" should
+  conclude the account migrated, NOT that data is corrupted — this doc drifting
+  out of date after the migration caused exactly that false alarm on 2026-08-19
+  (an automated routine correctly aborted rather than push on the mismatch — good
+  behavior, but avoidable next time by this note existing).
+- Full migration reconciliation work (FIFO fee re-attribution across all 152
+  trades, `fee_attribution_drift` audit alert closed from $392 diff to $0) was
+  done 2026-08-19 — see that date's session log further down for detail.
+
+---
+
 # US BROKER ACCOUNT — PERMANENT FACTS (read every PDF parse session)
 
 ## Account facts
 - **Account opened: 16-Dec-2025** (no activity before this date)
-- Broker: US broker (PDF + xlsx statements)
+- Broker: **IBKR (Interactive Brokers)**, current as of 2026-08-19 — see migration
+  note above. (Historical DBG-era facts below still apply to `closed[]` entries
+  from before 2026-06-15; don't apply them to new IBKR activity.)
 - Statement PDF + Transactions xlsx always arrive together in `portfolio/inbox/`
+  (DBG-era flow — for IBKR, CSV export or the MCP connector are current; see above)
 
 ## PDF parse checklist — run EVERY time a new statement arrives
 
@@ -39,11 +82,13 @@ Fix: look up buy date in `transactions_us.json`, fetch FX from frankfurter.app.
 https://api.frankfurter.app/YYYY-MM-DD?from=USD&to=INR
 ```
 
-### 5. VOOG stock split (6:1, happened before account open)
-VOOG was originally 3 shares × ~$441 → split 6:1 → now 18 shares × ~$73.
-Parser may re-create phantom VOOG closed entry on each parse.
-**Always remove phantom VOOG from closed if it appears** — VOOG is NOT closed.
-Split attracted ZERO fees.
+### 5. VOOG — see the BROKER MIGRATION note at the top of this file (2026-08-19)
+Two separate VOOG lots, both correct: the OLD DBG-era 6:1-split lot (3→18
+shares) is **correctly closed** as of the 2026-08-19 broker migration — do not
+un-close it. The NEW IBKR-era lot (opened 2026-07-24, started at 5 shares) is
+a normal, currently-open, ordinary position. Don't apply pre-2026-08-19
+assumptions ("VOOG must always be open," "VOOG must be 18 shares") to current
+IBKR activity — those only ever applied to the old DBG lot.
 
 ### 6. Known tickers with no Yahoo data (use Angel One)
 ASHALOG (token 24711, NSE SME), PARAMATRIX (token 25069, NSE SME).

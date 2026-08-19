@@ -104,6 +104,7 @@ US_HOLDINGS = [
     "AVGO","BTSG","GOOG","INTC","IOT","Q","RKLB",
     "GLDM","VOOG","AAOI","CRCL","IREN","NBIS","QBTS","SPCX","JPM",
     "APLD","CNC","LSCC",
+    "AMD","CSCO","QQQM",
 ]
 # Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
 # each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.
@@ -118,6 +119,19 @@ def load_watchlist_tickers():
         return [e["tk"] for e in (d.get("us") or []) if e.get("tk")]
     except Exception as e:
         print(f"  WARN watchlist load: {e}", file=sys.stderr)
+        return []
+
+def load_holdings_tickers():
+    """Read portfolio/data/holdings_cost.json us.open[] from VM-local docroot.
+    Merges into US_HOLDINGS at fetch time so a freshly-opened position (new
+    ticker never seen before) gets live prices on the very next cycle, with
+    no code edit — closes the gap that let CSCO/QQQM sit priceless (2026-08-19)."""
+    try:
+        d = read_local_json("portfolio/data/holdings_cost.json", default={})
+        us = (d.get("us") or {})
+        return [e["tk"] for e in (us.get("open") or []) if e.get("tk")]
+    except Exception as e:
+        print(f"  WARN holdings load: {e}", file=sys.stderr)
         return []
 
 # ── Angel One ─────────────────────────────────────────────────────────────
@@ -565,12 +579,16 @@ def main():
         print(f"  India: {len(angel_p)} Angel One + {len(yahoo_p)} Yahoo = {len(india_p)} total")
 
     if MODE in ("us", "all"):
-        # Merge watchlist tickers dynamically (dedup) — picks up UI-added tickers
+        # Merge watchlist + current-holdings tickers dynamically (dedup) —
+        # picks up UI-added tickers AND freshly-opened positions with no code edit.
         wl_tickers = load_watchlist_tickers()
-        added = [t for t in wl_tickers if t not in US_HOLDINGS]
+        hold_tickers = load_holdings_tickers()
+        added = [t for t in (wl_tickers + hold_tickers) if t not in US_HOLDINGS]
+        # de-dup added itself (a ticker could be in both lists)
+        seen = set(); added = [t for t in added if not (t in seen or seen.add(t))]
         if added:
             US_HOLDINGS.extend(added)
-            print(f"\n  watchlist merge: +{len(added)} tickers ({','.join(added[:10])}{'…' if len(added)>10 else ''})")
+            print(f"\n  watchlist/holdings merge: +{len(added)} tickers ({','.join(added[:10])}{'…' if len(added)>10 else ''})")
         print("\n── US (Finnhub)")
         us_p = fetch_us_finnhub()
         # Stamp fx_buy + buy_date from holdings_cost.json into each US price entry.

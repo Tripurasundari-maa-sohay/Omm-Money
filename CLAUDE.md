@@ -6,13 +6,13 @@
 
 The US broker changed. This supersedes anything below that says otherwise.
 
-- **DBG (Doha Bank Global Markets)** — the ORIGINAL US broker, PDF+xlsx statements,
-  account ref `[DBG-BROKER-ACCT]`. Last DBG trade: **2026-06-15**. All DBG positions were
-  **fully liquidated at migration** — DBG contributes ZERO entries to `us.open[]`,
-  only historical `us.closed[]` entries (74 of the ledger's 152 trades, Dec-2025
-  through 2026-06-15). Do not expect any more DBG statements.
-- **IBKR (Interactive Brokers)** — the CURRENT/live US broker, replacing DBG.
-  Account `[US-BROKER-ACCT]` ([ACCOUNT-HOLDER], Individual, USD base). First IBKR trade:
+- **DBG (Doha Bank Global Markets)** — the ORIGINAL US broker, PDF+xlsx statements
+  (account ref: see local notes, not repeated here). Last DBG trade: **2026-06-15**.
+  All DBG positions were **fully liquidated at migration** — DBG contributes ZERO
+  entries to `us.open[]`, only historical `us.closed[]` entries (74 of the ledger's
+  152 trades, Dec-2025 through 2026-06-15). Do not expect any more DBG statements.
+- **IBKR (Interactive Brokers)** — the CURRENT/live US broker, replacing DBG
+  (account: see local notes, not repeated here). First IBKR trade:
   **2026-06-18** (weekend gap after DBG's last trade — clean cutover, no overlap).
   IBKR is reachable two ways: (a) raw Activity Statement CSV export (`Trades`,
   `Open Positions`, `Deposits & Withdrawals`, etc. sections — parsed by

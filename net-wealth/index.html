@@ -514,6 +514,7 @@
     <div class="kpi-tile"><div class="lbl">LAST MONTH</div><div class="val" id="kpi-last">—</div><div class="delta" id="kpi-mom">—</div></div>
     <div class="kpi-tile"><div class="lbl">CONSERVATIVE EST</div><div class="val" id="kpi-est">—</div><div class="delta" id="kpi-vs-est">—</div></div>
     <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
+    <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div></div>
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -1653,7 +1654,7 @@ const ODIN = (() => {
     }
 
     // KPI
-    renderKPI(v.netWorth);
+    renderKPI(v.netWorth, v);
 
     // Reconciliation per tab
     renderAssetReconciliation(v);
@@ -1750,7 +1751,7 @@ const ODIN = (() => {
   }
 
   // ── KPI ─────────────────────────────────────────────────────────
-  function renderKPI(currentNW) {
+  function renderKPI(currentNW, v) {
     document.getElementById('kpi-now').textContent = fmtINR(currentNW);
     const hist = S.history.slice();   // sorted ascending by date
     const last = hist[hist.length - 1];
@@ -1776,6 +1777,21 @@ const ODIN = (() => {
     const last12 = hist.slice(-12);
     const hi12 = last12.length ? Math.max(...last12.map(h => h.net_worth), currentNW) : currentNW;
     document.getElementById('kpi-12hi').textContent = fmtINR(hi12);
+
+    // US stocks vs LC (Land Cruiser) loan — home loan excluded, covered from India portfolio instead
+    const usStocksInr = v.us_stocks_inr || 0;
+    const lcLoanInr = v.lc_loan_qar_inr || 0;
+    document.getElementById('kpi-us-lc').textContent = fmtINR(usStocksInr);
+    const lcGapEl = document.getElementById('kpi-us-lc-delta');
+    if (lcLoanInr > 0) {
+      const gap = usStocksInr - lcLoanInr;
+      const pct = usStocksInr / lcLoanInr * 100;
+      lcGapEl.textContent = pct.toFixed(0) + '% of ' + fmtINR(lcLoanInr) + (gap >= 0 ? ' · +' + fmtINR(gap) : ' · −' + fmtINR(-gap));
+      lcGapEl.className = 'delta ' + (gap >= 0 ? 'pos' : 'neg');
+    } else {
+      lcGapEl.textContent = 'LC loan cleared';
+      lcGapEl.className = 'delta pos';
+    }
 
     drawKPIChart(currentNW);
   }

@@ -233,7 +233,7 @@ const {useState,useEffect,useRef,useMemo,useCallback}=React;
 const CLIENT_ID='1000939411703-1otcqistn1cfeuu46rr3i8era80cqffa.apps.googleusercontent.com';
 const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
 const FILE_NAME='expense-planner-data.json';
-const SALARY=25623,HOUSE_RENT=4300,DOMESTIC_HELP=1250,LC_LOAN_EMI=6851,LULU_LIMIT=14000,QA_LIMIT=20000;
+const SALARY=25623,HOUSE_RENT=4300,DOMESTIC_HELP=1250,LC_LOAN_EMI=6851,LC_LOAN_INS=283,LULU_LIMIT=14000,QA_LIMIT=20000;
 
 // ── Token cache (localStorage, 50-min TTL) ───────────────────
 const TokenCache={
@@ -382,11 +382,11 @@ function calcTotals(d){
   const oi=(d.outstandingInflow||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0);
   const totalInflow=SALARY+eb+oi;
   // Scenario A: pay only 7th-cycle due (minimum this salary)
-  const totalOutflow=carEMI+homeLoanEMI+HOUSE_RENT+DOMESTIC_HELP+LC_LOAN_EMI+malabar+luluAmt+qaAmt+otherExp;
+  const totalOutflow=carEMI+homeLoanEMI+HOUSE_RENT+DOMESTIC_HELP+(LC_LOAN_EMI+LC_LOAN_INS)+malabar+luluAmt+qaAmt+otherExp;
   const net=totalInflow-totalOutflow;
   const savingsPct=totalInflow>0?net/totalInflow*100:0;
   // Scenario B: clear ALL outstanding today
-  const totalOutflowFull=carEMI+homeLoanEMI+HOUSE_RENT+DOMESTIC_HELP+LC_LOAN_EMI+malabar+luluAmtFull+qaAmtFull+otherExp;
+  const totalOutflowFull=carEMI+homeLoanEMI+HOUSE_RENT+DOMESTIC_HELP+(LC_LOAN_EMI+LC_LOAN_INS)+malabar+luluAmtFull+qaAmtFull+otherExp;
   const netFull=totalInflow-totalOutflowFull;
   const savingsPctFull=totalInflow>0?netFull/totalInflow*100:0;
   return{totalInflow,eb,oi,totalOutflow,totalOutflowFull,carEMI,homeLoanEMI,malabar,lulu,qa,otherExp,net,netFull,savingsPct,savingsPctFull};
@@ -595,7 +595,10 @@ function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
           </div>
           <div className="row">
             <div className="rl lock">LC Loan 🔒</div>
-            <div className="rv-locked">{qar(LC_LOAN_EMI)}</div>
+            <div className="rv">
+              <div className="rv-locked">{qar(LC_LOAN_EMI+LC_LOAN_INS)}</div>
+              <div style={{fontSize:10,color:'var(--muted)',paddingLeft:4}}>EMI {qar(LC_LOAN_EMI,0)} + Ins {qar(LC_LOAN_INS,0)}</div>
+            </div>
           </div>
           <div className="row">
             <div className="rl" style={{opacity:day.malabar_x?.45:1}}>Malabar</div>
@@ -694,7 +697,7 @@ function NextMonthProjection({entry,dateKey}){
   const totals=useMemo(()=>calcTotals(entry),[entry]);
   const carryLulu=totals.lulu.nextMonth||0;
   const carryQA=totals.qa.nextMonth||0;
-  const fixedOut=HOUSE_RENT+DOMESTIC_HELP+LC_LOAN_EMI+evalExpr(entry.malabar)+evalExpr(entry.carEMI)+evalExpr(entry.homeLoanEMI);
+  const fixedOut=HOUSE_RENT+DOMESTIC_HELP+(LC_LOAN_EMI+LC_LOAN_INS)+evalExpr(entry.malabar)+evalExpr(entry.carEMI)+evalExpr(entry.homeLoanEMI);
   const totalOut=fixedOut+carryLulu+carryQA;
   const net=SALARY-totalOut;
   const savPct=SALARY>0?net/SALARY*100:0;
@@ -723,7 +726,7 @@ function NextMonthProjection({entry,dateKey}){
         {evalExpr(entry.homeLoanEMI)>0&&<PRow lbl="Home Loan EMI" val={evalExpr(entry.homeLoanEMI)}/>}
         <PRow lbl="House Rent 🔒" val={HOUSE_RENT}/>
         <PRow lbl="Domestic Help 🔒" val={DOMESTIC_HELP}/>
-        <PRow lbl="LC Loan EMI 🔒" val={LC_LOAN_EMI}/>
+        <PRow lbl="LC Loan (EMI+Ins) 🔒" val={LC_LOAN_EMI+LC_LOAN_INS}/>
         {evalExpr(entry.malabar)>0&&<PRow lbl="Malabar" val={evalExpr(entry.malabar)}/>}
         {carryLulu>0&&<PRow lbl="🟡 Lulu carry-forward" val={carryLulu} color="var(--gold)"/>}
         {carryQA>0&&<PRow lbl="🟡 QA carry-forward" val={carryQA} color="var(--gold)"/>}
@@ -778,7 +781,7 @@ function HistoryDetailCompact({entry,dateKey}){
       <RowIf label="Home Loan EMI" value={totals.homeLoanEMI||null}/>
       <div className="ro-row"><span className="ro-lbl">House Rent 🔒</span><span className="ro-val">{qar(HOUSE_RENT)}</span></div>
       <div className="ro-row"><span className="ro-lbl">Domestic Help 🔒</span><span className="ro-val">{qar(DOMESTIC_HELP)}</span></div>
-      <div className="ro-row"><span className="ro-lbl">LC Loan EMI 🔒</span><span className="ro-val">{qar(LC_LOAN_EMI)}</span></div>
+      <div className="ro-row"><span className="ro-lbl">LC Loan (EMI+Ins) 🔒</span><span className="ro-val">{qar(LC_LOAN_EMI+LC_LOAN_INS)}</span></div>
       <RowIf label="Malabar" value={totals.malabar||null}/>
       {totals.lulu.total!=null&&totals.lulu.total>0&&(
         <>{totals.lulu.paidAmt>0&&<RowIf label="Lulu paid (7th→)" value={totals.lulu.paidAmt} color="var(--green)"/>}
@@ -823,7 +826,12 @@ function HistoryDetailFull({entry}){
           <div className="row"><div className="rl">Home EMI</div><ExprField value={entry.homeLoanEMI} disabled/></div>
           <div className="row"><div className="rl lock">Rent 🔒</div><div className="rv-locked">{qar(HOUSE_RENT)}</div></div>
           <div className="row"><div className="rl lock">Help 🔒</div><div className="rv-locked">{qar(DOMESTIC_HELP)}</div></div>
-          <div className="row"><div className="rl lock">LC Loan 🔒</div><div className="rv-locked">{qar(LC_LOAN_EMI)}</div></div>
+          <div className="row"><div className="rl lock">LC Loan 🔒</div>
+            <div className="rv">
+              <div className="rv-locked">{qar(LC_LOAN_EMI+LC_LOAN_INS)}</div>
+              <div style={{fontSize:10,color:'var(--muted)',paddingLeft:4}}>EMI {qar(LC_LOAN_EMI,0)} + Ins {qar(LC_LOAN_INS,0)}</div>
+            </div>
+          </div>
           <div className="row"><div className="rl">Malabar</div><ExprField value={entry.malabar} disabled/></div>
           {totals.lulu.total!=null&&(
             <div className="row"><div className="rl">Lulu Card</div>

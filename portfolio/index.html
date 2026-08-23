@@ -1002,17 +1002,22 @@
         </div>
       </div>
 
-      <!-- 4 broker breakdown tiles -->
+      <!-- 2 combined tiles — DBG retired 2026-08-23, per-broker split dropped
+           (its "invested" went negative once capital moved to IBKR, which made
+           its %-return figure meaningless — dividing by a negative denominator).
+           Totals already include DBG's historical contribution, just not split out. -->
       <div class="metrics-grid" style="margin-bottom:10px">
-        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('acct',event)" title="Click for per-position breakdown"><label>ACCT VALUE</label><div id="us-bd-acct" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('invested',event)" title="Click for per-position breakdown"><label>INVESTED</label><div id="us-bd-invested" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('pnl',event)" title="Click for per-position breakdown"><label>PnL (USD / %)</label><div id="us-bd-pnl" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('day',event)" title="Click for per-position breakdown"><label id="us-day-pl-label">DAY Δ</label><div id="us-bd-day" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('realised',event)" title="Click for per-position breakdown"><label>REALIZED P&amp;L (net, incl. div)</label><div id="us-bd-realised" style="margin-top:6px;font-size:12px;line-height:1.7">…</div></div>
-        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('xirr',event)" title="Click for cash-flow breakdown"><label>XIRR · ABSOLUTE $</label>
-          <div style="margin-top:6px;font-size:12px;line-height:1.7">
-            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">XIRR (annualized)</span><strong id="us-xirr-pct">—</strong></div>
-            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span style="color:var(--accent-b);font-weight:600">Absolute $</span><strong id="us-xirr-abs">—</strong></div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('invested',event)" title="Click for per-position breakdown"><label>INVESTED · <span id="us-day-pl-label">DAY Δ</span></label>
+          <div style="margin-top:6px;font-size:12px;line-height:1.8">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Invested</span><strong id="us-inv-total">…</strong></div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span style="color:var(--accent-b);font-weight:600">Day P&amp;L</span><strong id="us-day-total">…</strong></div>
+          </div>
+        </div>
+        <div class="metric-card" style="cursor:pointer" onclick="DASH.openDrilldown('realised',event)" title="Click for per-position breakdown"><label>REALIZED P&amp;L · XIRR</label>
+          <div style="margin-top:6px;font-size:12px;line-height:1.8">
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Realized (net, incl. div)</span><strong id="us-realised-total">…</strong></div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span style="color:var(--accent-b);font-weight:600">XIRR (annualized)</span><strong id="us-xirr-pct">—</strong></div>
+            <div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">Absolute $</span><strong id="us-xirr-abs">—</strong></div>
           </div>
         </div>
       </div>
@@ -1039,6 +1044,13 @@
             <span style="color:var(--text-dim)">Cash</span><strong style="text-align:right" id="us-cash-value">…</strong>
           </div>
           <div class="mdesc" style="margin-top:4px"><span id="us-stocks-count">--</span> · <span id="us-etf-count">--</span></div>
+        </div>
+        <div class="metric-card" title="Net unrealized % blended by advisor source, weighted by market value"><label>ADVISOR SOURCE · NET UNREAL %</label>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-top:6px;line-height:1.6">
+            <span style="color:var(--text-dim)">Seeking Alpha</span><strong style="text-align:right" id="us-src-sa">…</strong>
+            <span style="color:var(--text-dim)">Motley Fool</span><strong style="text-align:right" id="us-src-mf">…</strong>
+            <span style="color:var(--text-dim)">Own</span><strong style="text-align:right" id="us-src-own">…</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -2575,6 +2587,21 @@ const DASH = (() => {
     const _uplPct   = _openCost > 0 ? (us.unrealPL / _openCost * 100) : 0;
     setText('us-unreal-pl', `${sign(us.unrealPL)}${usd(us.unrealPL)} (${sign(_uplPct)}${pct(_uplPct)})`);
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
+
+    // Advisor-source blended unrealized % — Seeking Alpha / Motley Fool / Own,
+    // weighted by market value. 'both' positions count toward both sleeves.
+    const _srcGroups = { seeking_alpha: [], motley_fool: [], own: [] };
+    us.open.forEach(p => {
+      const src = p.source || 'own';
+      if (src === 'both') { _srcGroups.seeking_alpha.push(p); _srcGroups.motley_fool.push(p); }
+      else if (_srcGroups[src]) _srcGroups[src].push(p);
+      else _srcGroups.own.push(p);
+    });
+    const _srcPct = g => { const cost=g.reduce((s,p)=>s+(p.cost||0),0); const upl=g.reduce((s,p)=>s+(p.uplNet||0),0); return cost ? (upl/cost*100) : 0; };
+    const _saPct = _srcPct(_srcGroups.seeking_alpha), _mfPct = _srcPct(_srcGroups.motley_fool), _ownPct = _srcPct(_srcGroups.own);
+    setText('us-src-sa',  `${sign(_saPct)}${pct(_saPct)}`);  setClass('us-src-sa',  'mval ' + pn(_saPct));
+    setText('us-src-mf',  `${sign(_mfPct)}${pct(_mfPct)}`);  setClass('us-src-mf',  'mval ' + pn(_mfPct));
+    setText('us-src-own', `${sign(_ownPct)}${pct(_ownPct)}`);setClass('us-src-own', 'mval ' + pn(_ownPct));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
     const lbl = $('us-day-pl-label');
     if (lbl) {
@@ -2607,7 +2634,9 @@ const DASH = (() => {
     setText('us-hero-pnl-pct', (_pnlPct>=0?'+':'') + pct(_pnlPct));
     setClass('us-hero-pnl-pct', 'mchg pv ' + pn(_pnlPct));
 
-    // Per-broker breakdown — 4 separate tiles
+    // Combined totals only — DBG retired, per-broker split dropped (see comment
+    // on the tile HTML for why: DBG's invested went negative, making its % undefined).
+    // Totals still include DBG's historical mv/cash/invested/realised contribution.
     const _brokers = S.cost?.us?.brokers || {};
     if (Object.keys(_brokers).length) {
       const perBroker = {};
@@ -2625,49 +2654,20 @@ const DASH = (() => {
       const fmtPct = v => (v>=0?'+':'') + v.toFixed(2) + '%';
       const fmtMon = v => (v>=0?'+':'') + usd(v);
       const cls    = v => v>0 ? 'mval positive' : (v<0 ? 'mval negative' : '');
-      const row    = (label, val, valCls='') =>
-        `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-dim)">${label}</span><strong class="${valCls}">${val}</strong></div>`;
-      const totalRow = (label, val, valCls='') =>
-        `<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;margin-top:4px"><span style="color:var(--accent-b);font-weight:600">${label}</span><strong class="${valCls}">${val}</strong></div>`;
 
-      let acctRows='', invRows='', pnlRows='', dayRows='';
       let tMV=0, tInv=0, tDay=0, tDayBase=0;
-      for (const [name, b] of Object.entries(perBroker)) {
-        const av = b.mv + b.cash;
-        const pn_ = av - b.invested;
-        const pp = b.invested ? (pn_/b.invested*100) : 0;
-        const dBase = b.mv - b.day;
-        const dPct = dBase ? (b.day/dBase*100) : 0;
-        tMV += av; tInv += b.invested; tDay += b.day; tDayBase += dBase;
-        acctRows += row(name, usd(av));
-        invRows  += row(name, usd(b.invested));
-        pnlRows  += row(name, `${fmtMon(pn_)} / ${fmtPct(pp)}`, cls(pn_));
-        dayRows  += row(name, b.day!==0 ? `${fmtMon(b.day)} / ${fmtPct(dPct)}` : '—', cls(b.day));
+      for (const b of Object.values(perBroker)) {
+        tMV += (b.mv + b.cash); tInv += b.invested; tDay += b.day; tDayBase += (b.mv - b.day);
       }
-      const tPnl = tMV - tInv;
-      const tPnlPct = tInv ? (tPnl/tInv*100) : 0;
       const tDayPct = tDayBase ? (tDay/tDayBase*100) : 0;
-      acctRows += totalRow('Total', usd(tMV));
-      invRows  += totalRow('Total', usd(tInv));
-      pnlRows  += totalRow('Total', `${fmtMon(tPnl)} / ${fmtPct(tPnlPct)}`, cls(tPnl));
-      dayRows  += totalRow('Total', `${fmtMon(tDay)} / ${fmtPct(tDayPct)}`, cls(tDay));
 
-      // Realized P&L (net of charges, incl. dividends) — from closed lots, per broker
-      let realisedRows = '';
       let tRealised = 0;
-      for (const name of Object.keys(_brokers)) {
-        const rv = us.realisedByBroker?.[name] || 0;
-        tRealised += rv;
-        realisedRows += row(name, fmtMon(rv), cls(rv));
-      }
-      realisedRows += totalRow('Total', fmtMon(tRealised), cls(tRealised));
+      for (const name of Object.keys(_brokers)) tRealised += (us.realisedByBroker?.[name] || 0);
 
-      const set = (id, html) => { const el=document.getElementById(id); if(el) el.innerHTML=html; };
-      set('us-bd-acct', acctRows);
-      set('us-bd-invested', invRows);
-      set('us-bd-pnl', pnlRows);
-      set('us-bd-day', dayRows);
-      set('us-bd-realised', realisedRows);
+      const set = (id, html, cls_) => { const el=document.getElementById(id); if(el){ el.innerHTML=html; if(cls_) el.className=cls_; } };
+      set('us-inv-total', usd(tInv));
+      set('us-day-total', tDay!==0 ? `${fmtMon(tDay)} / ${fmtPct(tDayPct)}` : '—', cls(tDay));
+      set('us-realised-total', fmtMon(tRealised), cls(tRealised));
 
       // XIRR + absolute $ return — every real cash flow (deposits negative,
       // withdrawals positive) vs live terminal value today
@@ -2764,6 +2764,7 @@ const DASH = (() => {
   // Each col: { id, label, sort (data-sc / data-incol), renderCell(p) }
   const US_COL_DEFS = {
     tk:     { label:'TICKER',       sort:'tk',     renderCell: p => `<td><strong>${p.tk}</strong><br><span style="color:var(--text-dim);font-size:12px">${p.name}</span>${p.live?'':' <span class="preopen-tag" style="color:var(--warn)">STALE</span>'}</td>` },
+    source: { label:'SOURCE',       sort:'source', renderCell: p => { const s=p.source||'own'; const m={seeking_alpha:['SA','#7f77dd'],motley_fool:['MF','#eda100'],both:['SA+MF','#d4537e'],own:['OWN','var(--text-dim)']}; const [txt,c]=m[s]||m.own; return `<td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;border:1px solid ${c};color:${c};white-space:nowrap">${txt}</span></td>`; } },
     qty:    { label:'QTY',          sort:'qty',    renderCell: p => `<td>${p.qty}</td>` },
     avg:    { label:'AVG',          sort:'avg',    renderCell: p => `<td>${usd2(p.avg)}</td>` },
     ltp:    { label:'LTP',          sort:'ltp',    renderCell: p => `<td><strong>${usd2(p.ltp)}</strong></td>` },
@@ -2793,7 +2794,7 @@ const DASH = (() => {
     fm:     { label:'FM',         sort:null,     renderCell: p => `<td><span class="badge ${fmBadge(p.fm)}">${p.fm}</span></td>` },
   };
 
-  const US_COLS_DEFAULT  = ['tk','qty','avg','ltp','mv','dayPL','dayPct','fees','upl','ret','inrRet','signal'];
+  const US_COLS_DEFAULT  = ['tk','source','qty','avg','ltp','mv','dayPL','dayPct','fees','upl','ret','inrRet','signal'];
   const IN_COLS_DEFAULT  = ['tk','name','broker','exch','qty','avg','ltp','pc','dayPL','dayPct','upl','mv','wt','fm'];
 
   function _loadColOrder(key, defaults) {
@@ -2856,6 +2857,7 @@ const DASH = (() => {
     upl: p => p.uplNet, ret: p => p.ret,
     inrRet: p => p.inrRet ?? -Infinity,
     signal: p => SIG.results[p.tk]?.score ?? -1,
+    source: p => p.source || 'own',
   };
 
   function renderUSHoldings() {

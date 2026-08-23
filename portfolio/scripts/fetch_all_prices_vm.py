@@ -244,6 +244,41 @@ def fetch_india_yahoo_fallback():
         print(f"  {tk:15s} → {q['ltp']:.2f}  pc={q.get('pc')}  [Yahoo fallback]")
     return results
 
+def load_india_yf_map():
+    """tk -> yf symbol, read from VM-local holdings_cost.json india.open[]."""
+    try:
+        d = read_local_json("portfolio/data/holdings_cost.json", default={})
+        return {e["tk"]: e["yf"] for e in (d.get("india", {}).get("open") or []) if e.get("tk") and e.get("yf")}
+    except Exception as e:
+        print(f"  WARN india yf map load: {e}", file=sys.stderr)
+        return {}
+
+def fetch_india_dynamic_fallback(missing_tickers):
+    """Yahoo fallback for whatever Angel One actually failed on THIS run —
+    dynamic, not a hardcoded list. Covers Angel One AB4030-style errors
+    (e.g. a delisted/relisted small-cap whose token stopped resolving)
+    without needing a code change per ticker. Uses each holding's own yf
+    symbol from holdings_cost.json."""
+    if not missing_tickers:
+        return {}
+    yf_map = load_india_yf_map()
+    results = {}
+    for tk in missing_tickers:
+        yf_sym = yf_map.get(tk)
+        if not yf_sym:
+            continue
+        q = fetch_yahoo_meta(yf_sym)
+        if q is None or not q.get("ltp"):
+            continue
+        results[tk] = {
+            "ltp": round(float(q["ltp"]), 4),
+            "pc":  round(float(q["pc"]), 4) if q.get("pc") else None,
+            "source": "yahoo",
+            "as_of":  datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        print(f"  {tk:15s} → {q['ltp']:.2f}  pc={q.get('pc')}  [Yahoo fallback — Angel One failed]")
+    return results
+
 def fetch_us_finnhub():
     if not FINNHUB_KEY:
         return {}
@@ -573,10 +608,15 @@ def main():
     if MODE in ("india", "all"):
         print("\n── India (Angel One + Yahoo fallback)")
         angel_p = fetch_india_angel()
+        _angel_requested = set(ANGEL_TOKEN_MAP) | set(ANGEL_BSE_TOKEN_MAP)
+        _angel_missing = _angel_requested - set(angel_p.keys())
         yahoo_p = fetch_india_yahoo_fallback()
-        india_p = {**yahoo_p, **angel_p}  # Angel One wins over Yahoo for same ticker
+        angel_fallback_p = fetch_india_dynamic_fallback(_angel_missing)
+        if _angel_missing:
+            print(f"  Angel One failed for {len(_angel_missing)} ({','.join(sorted(_angel_missing))}) — {len(angel_fallback_p)} recovered via Yahoo fallback")
+        india_p = {**yahoo_p, **angel_fallback_p, **angel_p}  # Angel One wins; dynamic Yahoo fallback fills Angel's gaps
         new_prices.update(india_p)
-        print(f"  India: {len(angel_p)} Angel One + {len(yahoo_p)} Yahoo = {len(india_p)} total")
+        print(f"  India: {len(angel_p)} Angel One + {len(yahoo_p)+len(angel_fallback_p)} Yahoo = {len(india_p)} total")
 
     if MODE in ("us", "all"):
         # Merge watchlist + current-holdings tickers dynamically (dedup) —

@@ -1049,7 +1049,8 @@
           <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;margin-top:6px;line-height:1.6">
             <span style="color:var(--text-dim)">Seeking Alpha</span><strong style="text-align:right" id="us-src-sa">…</strong>
             <span style="color:var(--text-dim)">Motley Fool</span><strong style="text-align:right" id="us-src-mf">…</strong>
-            <span style="color:var(--text-dim)">Own</span><strong style="text-align:right" id="us-src-own">…</strong>
+            <span style="color:var(--text-dim)">Own SA</span><strong style="text-align:right" id="us-src-own_sa">…</strong>
+            <span style="color:var(--text-dim)">Social Media</span><strong style="text-align:right" id="us-src-social_media">…</strong>
           </div>
         </div>
       </div>
@@ -2588,20 +2589,21 @@ const DASH = (() => {
     setText('us-unreal-pl', `${sign(us.unrealPL)}${usd(us.unrealPL)} (${sign(_uplPct)}${pct(_uplPct)})`);
     setClass('us-unreal-pl', 'mval ' + pn(us.unrealPL));
 
-    // Advisor-source blended unrealized % — Seeking Alpha / Motley Fool / Own,
+    // Advisor-source blended unrealized % — Seeking Alpha / Motley Fool / Own SA / Social Media,
     // weighted by market value. 'both' positions count toward both sleeves.
-    const _srcGroups = { seeking_alpha: [], motley_fool: [], own: [] };
+    const _srcGroups = { seeking_alpha: [], motley_fool: [], own_sa: [], social_media: [] };
     us.open.forEach(p => {
-      const src = p.source || 'own';
+      const src = p.source || 'social_media';
       if (src === 'both') { _srcGroups.seeking_alpha.push(p); _srcGroups.motley_fool.push(p); }
       else if (_srcGroups[src]) _srcGroups[src].push(p);
-      else _srcGroups.own.push(p);
+      else _srcGroups.social_media.push(p);
     });
     const _srcPct = g => { const cost=g.reduce((s,p)=>s+(p.cost||0),0); const upl=g.reduce((s,p)=>s+(p.uplNet||0),0); return cost ? (upl/cost*100) : 0; };
-    const _saPct = _srcPct(_srcGroups.seeking_alpha), _mfPct = _srcPct(_srcGroups.motley_fool), _ownPct = _srcPct(_srcGroups.own);
+    const _saPct = _srcPct(_srcGroups.seeking_alpha), _mfPct = _srcPct(_srcGroups.motley_fool), _ownSaPct = _srcPct(_srcGroups.own_sa), _socialPct = _srcPct(_srcGroups.social_media);
     setText('us-src-sa',  `${sign(_saPct)}${pct(_saPct)}`);  setClass('us-src-sa',  'mval ' + pn(_saPct));
     setText('us-src-mf',  `${sign(_mfPct)}${pct(_mfPct)}`);  setClass('us-src-mf',  'mval ' + pn(_mfPct));
-    setText('us-src-own', `${sign(_ownPct)}${pct(_ownPct)}`);setClass('us-src-own', 'mval ' + pn(_ownPct));
+    setText('us-src-own_sa', `${sign(_ownSaPct)}${pct(_ownSaPct)}`);setClass('us-src-own_sa', 'mval ' + pn(_ownSaPct));
+    setText('us-src-social_media', `${sign(_socialPct)}${pct(_socialPct)}`);setClass('us-src-social_media', 'mval ' + pn(_socialPct));
     const usaStatus = S.indices?.usa_market?.status || 'CLOSED';
     const lbl = $('us-day-pl-label');
     if (lbl) {
@@ -2665,7 +2667,9 @@ const DASH = (() => {
       for (const name of Object.keys(_brokers)) tRealised += (us.realisedByBroker?.[name] || 0);
 
       const set = (id, html, cls_) => { const el=document.getElementById(id); if(el){ el.innerHTML=html; if(cls_) el.className=cls_; } };
-      set('us-inv-total', usd(tInv));
+      // Same figure the hero tile uses (us.cashInfusion) — DBG is closed, its
+      // residual -$2,132 net-flow isn't netted into "Invested" going forward.
+      set('us-inv-total', usd(us.cashInfusion || 0));
       set('us-day-total', tDay!==0 ? `${fmtMon(tDay)} / ${fmtPct(tDayPct)}` : '—', cls(tDay));
       set('us-realised-total', fmtMon(tRealised), cls(tRealised));
 
@@ -2764,7 +2768,7 @@ const DASH = (() => {
   // Each col: { id, label, sort (data-sc / data-incol), renderCell(p) }
   const US_COL_DEFS = {
     tk:     { label:'TICKER',       sort:'tk',     renderCell: p => `<td><strong>${p.tk}</strong><br><span style="color:var(--text-dim);font-size:12px">${p.name}</span>${p.live?'':' <span class="preopen-tag" style="color:var(--warn)">STALE</span>'}</td>` },
-    source: { label:'SOURCE',       sort:'source', renderCell: p => { const s=p.source||'own'; const m={seeking_alpha:['SA','#7f77dd'],motley_fool:['MF','#eda100'],both:['SA+MF','#d4537e'],own:['OWN','var(--text-dim)']}; const [txt,c]=m[s]||m.own; return `<td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;border:1px solid ${c};color:${c};white-space:nowrap">${txt}</span></td>`; } },
+    source: { label:'SOURCE',       sort:'source', renderCell: p => { const s=p.source||'social_media'; const m={seeking_alpha:['SA','#7f77dd'],motley_fool:['MF','#eda100'],both:['SA+MF','#d4537e'],own_sa:['OWN-SA','#4caf82'],social_media:['SOC','var(--text-dim)']}; const [txt,c]=m[s]||m.social_media; return `<td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;border:1px solid ${c};color:${c};white-space:nowrap">${txt}</span></td>`; } },
     qty:    { label:'QTY',          sort:'qty',    renderCell: p => `<td>${p.qty}</td>` },
     avg:    { label:'AVG',          sort:'avg',    renderCell: p => `<td>${usd2(p.avg)}</td>` },
     ltp:    { label:'LTP',          sort:'ltp',    renderCell: p => `<td><strong>${usd2(p.ltp)}</strong></td>` },
@@ -2857,7 +2861,7 @@ const DASH = (() => {
     upl: p => p.uplNet, ret: p => p.ret,
     inrRet: p => p.inrRet ?? -Infinity,
     signal: p => SIG.results[p.tk]?.score ?? -1,
-    source: p => p.source || 'own',
+    source: p => p.source || 'social_media',
   };
 
   function renderUSHoldings() {

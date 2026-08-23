@@ -515,6 +515,7 @@
     <div class="kpi-tile"><div class="lbl">CONSERVATIVE EST</div><div class="val" id="kpi-est">—</div><div class="delta" id="kpi-vs-est">—</div></div>
     <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
     <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div></div>
+    <div class="kpi-tile"><div class="lbl">INDIA STOCKS vs APT LOAN</div><div class="val" id="kpi-in-apt">—</div><div class="delta" id="kpi-in-apt-delta">—</div></div>
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -1791,6 +1792,21 @@ const ODIN = (() => {
     } else {
       lcGapEl.textContent = 'LC loan cleared';
       lcGapEl.className = 'delta pos';
+    }
+
+    // India stocks vs apartment (home) loan
+    const inStocksInr = v.india_stocks_inr || 0;
+    const aptLoanInr = v.apt_loan || 0;
+    document.getElementById('kpi-in-apt').textContent = fmtINR(inStocksInr);
+    const aptGapEl = document.getElementById('kpi-in-apt-delta');
+    if (aptLoanInr > 0) {
+      const gap2 = inStocksInr - aptLoanInr;
+      const pct2 = inStocksInr / aptLoanInr * 100;
+      aptGapEl.textContent = pct2.toFixed(0) + '% of ' + fmtINR(aptLoanInr) + (gap2 >= 0 ? ' · +' + fmtINR(gap2) : ' · −' + fmtINR(-gap2));
+      aptGapEl.className = 'delta ' + (gap2 >= 0 ? 'pos' : 'neg');
+    } else {
+      aptGapEl.textContent = 'Apt loan cleared';
+      aptGapEl.className = 'delta pos';
     }
 
     drawKPIChart(currentNW);

@@ -2433,7 +2433,11 @@ const ODIN = (() => {
       assets: v.assetsTot,
       liab: v.liabTot,
       india_stocks_inr: v.india_stocks_inr,
-      us_stocks_inr: v.us_stocks_inr
+      us_stocks_inr: v.us_stocks_inr,
+      breakdown: {
+        us_vs_lc_pct:     v.lc_loan_qar_inr > 0 ? Math.round(v.us_stocks_inr / v.lc_loan_qar_inr * 10000) / 100 : null,
+        india_vs_apt_pct: v.apt_loan > 0        ? Math.round(v.india_stocks_inr / v.apt_loan * 10000) / 100    : null,
+      }
     };
     // Replace today's snapshot if exists
     const today = entry.date;
@@ -2714,6 +2718,10 @@ const ODIN = (() => {
     'breakdown.cash_qatar_total':'Cash · Qatar Total',
     'breakdown.cash_india_total':'Cash · India Total',
     'breakdown.rate_gold_inr_g': 'Rate · Gold ₹/g',
+    'breakdown.loan_lc':         'Loan · Land Cruiser (LC)',
+    'breakdown.loan_apartment':  'Loan · Apartment',
+    'breakdown.us_vs_lc_pct':    'Coverage % · US Stocks vs LC Loan',
+    'breakdown.india_vs_apt_pct':'Coverage % · India Stocks vs Apt Loan',
   };
   const TREND_COLORS = ['#ffd700','#4cd2c0','#ff6b6b','#a78bfa','#60a5fa','#f59e0b','#ec4899','#10b981','#f97316','#8b5cf6'];
   S.trendGran = 'daily';

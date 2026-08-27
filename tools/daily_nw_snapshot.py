@@ -38,6 +38,30 @@ PATHS = {
 
 QAR_PER_USD = 3.64  # fixed peg
 
+# ── VM-local data store (single source of truth, served gated behind Google) ──
+# All personal data lives here; history.json is written here ONLY (never GitHub).
+WEB_ROOT = os.environ.get("WEB_ROOT", "/home/opc/web")
+
+def read_local_json(path, default=None):
+    try:
+        with open(os.path.join(WEB_ROOT, path)) as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+def write_local_json(path, payload) -> bool:
+    try:
+        full = os.path.join(WEB_ROOT, path)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        tmp = full + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(payload, f, indent=2)
+        os.replace(tmp, full)
+        return True
+    except Exception as e:
+        print(f"  write_local {path} FAIL: {e}", file=sys.stderr)
+        return False
+
 
 def gh_get(path: str):
     """Fetch + decode a JSON file from GitHub (authenticated, uncached)."""
@@ -208,6 +232,13 @@ def compute_nw(seed, prices_data, cost, fx_rate_live):
         inr = out * usd_to_inr if ccy == "USD" else out * qar_to_inr if ccy == "QAR" else out
         breakdown[f"loan_{lid}"] = round(inr, 2)
 
+    # Coverage % — stock holdings vs the loan they're implicitly earmarked
+    # against (US stocks vs the QAR car loan, India stocks vs the home loan).
+    lc_loan_inr = breakdown.get("loan_lc") or 0
+    apt_loan_inr = breakdown.get("loan_apartment") or 0
+    breakdown["us_vs_lc_pct"] = round(breakdown["eq_us_stocks"] / lc_loan_inr * 100, 2) if lc_loan_inr > 0 else None
+    breakdown["india_vs_apt_pct"] = round(breakdown["eq_india_stocks"] / apt_loan_inr * 100, 2) if apt_loan_inr > 0 else None
+
     return {
         "net_worth":       round(net_worth, 2),
         "assets":          round(assets_tot, 2),
@@ -230,17 +261,20 @@ def main():
     today   = now_utc.strftime("%Y-%m-%d")
     print(f"\n{now_utc.strftime('%Y-%m-%dT%H:%M:%SZ')} daily_nw_snapshot [{today}]")
 
-    # Load all data
-    print("  Loading seed.json...")
-    seed,   _    = gh_get(PATHS["seed"])
-    print("  Loading history.json...")
-    history, hist_sha = gh_get(PATHS["history"])
-    print("  Loading holdings_prices.json...")
-    prices_data, _ = gh_get(PATHS["prices"])
-    print("  Loading holdings_cost.json...")
-    cost, _      = gh_get(PATHS["cost"])
-    print("  Loading market_indices.json...")
-    indices, _   = gh_get(PATHS["indices"])
+    # Load all data from VM-local docroot (source of truth, gated).
+    print("  Loading seed.json (local)...")
+    seed         = read_local_json(PATHS["seed"], {})
+    print("  Loading history.json (local)...")
+    history      = read_local_json(PATHS["history"], [])
+    print("  Loading holdings_prices.json (local)...")
+    prices_data  = read_local_json(PATHS["prices"], {})
+    print("  Loading holdings_cost.json (local)...")
+    cost         = read_local_json(PATHS["cost"], {})
+    print("  Loading market_indices.json (local)...")
+    indices      = read_local_json(PATHS["indices"], {})
+    if not seed or not isinstance(history, list):
+        print("  ERROR: seed/history missing in VM docroot — aborting.", file=sys.stderr)
+        sys.exit(1)
 
     fx_live = indices.get("fx_rate")
     print(f"  FX live: {fx_live}")
@@ -287,14 +321,12 @@ def main():
     else:
         history = [entry]
 
-    ok = gh_put(
-        PATHS["history"], hist_sha, history,
-        f"data: nw snapshot {today} ₹{nw['net_worth']/1e5:.1f}L [skip ci]"
-    )
+    # PERSONAL → write to VM-local docroot ONLY (never GitHub).
+    ok = write_local_json(PATHS["history"], history)
     if ok:
-        print(f"  Committed history.json → GitHub OK")
+        print(f"  Wrote history.json → VM-local (gated, not GitHub)")
     else:
-        print(f"  FAILED to commit history.json", file=sys.stderr)
+        print(f"  FAILED to write history.json", file=sys.stderr)
         sys.exit(1)
 
 

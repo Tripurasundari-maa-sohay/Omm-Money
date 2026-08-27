@@ -1787,7 +1787,7 @@ const ODIN = (() => {
     vsEstEl.textContent = (vsEst >= 0 ? '+' : '') + fmtINR(vsEst) + ' vs est';
     vsEstEl.className = 'delta ' + (vsEst >= 0 ? 'pos' : 'neg');
 
-    const last12 = hist.slice(-12);
+    const last12 = last12MonthsSnapshots(hist);
     const hi12 = last12.length ? Math.max(...last12.map(h => h.net_worth), currentNW) : currentNW;
     document.getElementById('kpi-12hi').textContent = fmtINR(hi12);
 
@@ -1833,7 +1833,7 @@ const ODIN = (() => {
     const hist = S.history;
     const lastMo = lastMonthSnapshot(hist);
     const first  = hist[0];
-    const last12 = hist.slice(-12);
+    const last12 = last12MonthsSnapshots(hist);
 
     document.getElementById('a-recon-total').textContent = fmtINR(total);
     document.getElementById('a-recon-last').textContent  = lastMo ? fmtINR(lastMo.assets) : '—';
@@ -1880,7 +1880,7 @@ const ODIN = (() => {
     const hist = S.history;
     const lastMo = lastMonthSnapshot(hist);
     const first = hist[0];
-    const last12 = hist.slice(-12);
+    const last12 = last12MonthsSnapshots(hist);
 
     document.getElementById('l-recon-total').textContent = fmtINR(total);
     document.getElementById('l-recon-last').textContent  = lastMo ? fmtINR(lastMo.liab) : '—';
@@ -1927,6 +1927,14 @@ const ODIN = (() => {
       if (new Date(hist[i].date).getTime() <= thirtyDaysAgo) return hist[i];
     }
     return hist[0];
+  }
+
+  // History snapshots are near-daily, not monthly — "last 12" by array index
+  // was really "last ~12 trading days". Filter by actual calendar date instead.
+  function last12MonthsSnapshots(hist) {
+    const yearAgo = Date.now() - 365 * 24 * 3600 * 1000;
+    const inWindow = hist.filter(h => new Date(h.date).getTime() >= yearAgo);
+    return inWindow.length ? inWindow : hist.slice(-1);
   }
 
   function drawKPIChart(currentNW) {

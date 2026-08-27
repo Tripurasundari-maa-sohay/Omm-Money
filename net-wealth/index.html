@@ -450,6 +450,7 @@
   <button class="tab-btn" data-tab="fire">🔥 FIRE</button>
   <button class="tab-btn" data-tab="forecast">📈 FORECAST</button>
   <button class="tab-btn" data-tab="trends">📉 TRENDS</button>
+  <button class="tab-btn" id="ccy-toggle" onclick="ODIN.toggleCcy()" title="Switch display currency (INR / USD / QAR)" style="padding:8px 12px">INR</button>
   <button class="tab-btn" id="theme-toggle" onclick="ODIN.toggleTheme()" title="Toggle theme" style="padding:8px 12px">🌙</button>
 </div>
 
@@ -1026,7 +1027,8 @@ const ODIN = (() => {
     portfolio: { india_stocks_inr: 0, us_stocks_usd: 0, india_tickers: 0, us_tickers: 0, prices_asof: null },
     history: [],         // [{date, net_worth, assets, liab}]
     todos: [],
-    charts: {}
+    charts: {},
+    displayCcy: localStorage.getItem('odin_display_ccy') || 'INR'   // 'INR' | 'USD' | 'QAR' — global display toggle
   };
   const LS_STATE   = 'odin_state_v2';   // whole seed snapshot with user edits
   const LS_HISTORY = 'odin_history_v1';
@@ -1079,19 +1081,27 @@ const ODIN = (() => {
   }
 
   // ── Formatting ──────────────────────────────────────────────────
+  // All values in S.seed / view() are stored in INR internally. Every
+  // display formatter below converts to S.displayCcy at render time —
+  // the toggle changes what every number on the dashboard reads as,
+  // without touching how anything is computed or stored.
   const fmtINR = v => {
     if (!Number.isFinite(v)) return '—';
+    if (S.displayCcy === 'USD') {
+      const usd = v / (S.fx.usd_to_inr || 85.5);
+      return '$' + usd.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    if (S.displayCcy === 'QAR') {
+      const qar = v / (S.fx.qar_to_inr || 23.5);
+      return 'QAR ' + qar.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
     const abs = Math.abs(v);
     if (abs >= 1e7) return '₹' + (v/1e7).toFixed(2) + ' Cr';
     if (abs >= 1e5) return '₹' + (v/1e5).toFixed(2) + ' L';
     return '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
   const fmtINRfull = v => Number.isFinite(v) ? '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
-  const fmtCrOnly = v => {
-    if (!Number.isFinite(v)) return '—';
-    const crVal = (v / 1e7).toFixed(2);
-    return `₹${crVal} Cr`;
-  };
+  const fmtCrOnly = v => fmtINR(v);
   const fmtINRwithCr = v => {
     if (!Number.isFinite(v)) return '—';
     const fullNum = v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -2616,6 +2626,19 @@ const ODIN = (() => {
     applyTheme(t);
   }
 
+  // ── Display currency (INR/USD/QAR) — pure display-layer, no reload needed ──
+  function _applyCcyButton() {
+    const btn = document.getElementById('ccy-toggle');
+    if (btn) btn.textContent = S.displayCcy;
+  }
+  function toggleCcy() {
+    const order = ['INR', 'USD', 'QAR'];
+    S.displayCcy = order[(order.indexOf(S.displayCcy) + 1) % order.length];
+    localStorage.setItem('odin_display_ccy', S.displayCcy);
+    _applyCcyButton();
+    render();
+  }
+
   // ── Tab switching ───────────────────────────────────────────────
   function switchTab(name) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -2809,6 +2832,7 @@ const ODIN = (() => {
   // when async sources (FX, portfolio prices, repo history, Firebase) arrive.
   async function init() {
     _loadTheme();
+    _applyCcyButton();
     _wireTabs();
 
     // Synchronous-ish bootstrap from local sources first
@@ -3527,7 +3551,7 @@ const ODIN = (() => {
     }).join('');
   }
 
-  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, syncAptExtra, openLCModal, closeLCModal, updateLCSim, buildLCSched, syncLCExtra, updateForecast, setTrendGran, toggleTrendItem, renderTrends };
+  return { init, saveInputs, snapshot, evalField, exportHistory, importHistory, exportExcel, importExcel, exportToGitHub, refreshAll, toggleTheme, toggleCcy, addTodo, toggleTodo, deleteTodo, saveJewelRateOverride, saveMalabarRateOverride, updateFireSlider, openLoanModal, closeLoanModal, updateLoanSim, buildAptSched, syncAptExtra, openLCModal, closeLCModal, updateLCSim, buildLCSched, syncLCExtra, updateForecast, setTrendGran, toggleTrendItem, renderTrends };
 })();
 
 document.addEventListener('DOMContentLoaded', () => ODIN.init());

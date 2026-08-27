@@ -1,5 +1,5 @@
 // Service Worker — ODIN Net Worth PWA
-const CACHE = 'odin-v27';
+const CACHE = 'odin-v28';
 const BASE = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/'));
 
 const SHELL = [

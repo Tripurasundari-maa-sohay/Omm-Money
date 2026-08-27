@@ -2652,7 +2652,9 @@ const ODIN = (() => {
     if (name === 'trends')   setTimeout(initTrendsTab, 50);
   }
   function _wireTabs() {
-    document.querySelectorAll('.tab-btn').forEach(b => {
+    // Scoped to [data-tab] only — theme/currency toggle buttons share the
+    // .tab-btn class purely for matching visual style, they aren't tabs.
+    document.querySelectorAll('.tab-btn[data-tab]').forEach(b => {
       b.addEventListener('click', () => switchTab(b.dataset.tab));
     });
     try {

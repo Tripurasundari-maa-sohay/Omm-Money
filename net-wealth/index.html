@@ -1102,6 +1102,16 @@ const ODIN = (() => {
   };
   const fmtINRfull = v => Number.isFinite(v) ? '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '—';
   const fmtCrOnly = v => fmtINR(v);
+  // Always INR, ignores the display-currency toggle — for the Currency
+  // Exposure table, whose whole point is comparing native-currency rows
+  // side by side (an INR row that "converts" to USD would be nonsensical).
+  const fmtINRraw = v => {
+    if (!Number.isFinite(v)) return '—';
+    const abs = Math.abs(v);
+    if (abs >= 1e7) return '₹' + (v/1e7).toFixed(2) + ' Cr';
+    if (abs >= 1e5) return '₹' + (v/1e5).toFixed(2) + ' L';
+    return '₹' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
   const fmtINRwithCr = v => {
     if (!Number.isFinite(v)) return '—';
     const fullNum = v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -1715,10 +1725,10 @@ const ODIN = (() => {
     host.innerHTML = items.map(it => {
       const pctAssets = (it.inr / totAssets) * 100;
       const pctNet    = v.netWorth > 0 ? (it.net_inr / v.netWorth) * 100 : 0;
-      const nativeFmt = it.ccy === 'INR' ? fmtINR(it.native)
+      const nativeFmt = it.ccy === 'INR' ? fmtINRraw(it.native)
                       : it.ccy === 'USD' ? '$' + Math.round(it.native).toLocaleString('en-US')
                       : 'QAR ' + Math.round(it.native).toLocaleString('en-US');
-      const liabBadge = it.liab_inr > 0 ? `<div style="font-size:10px;color:var(--loss);margin-top:2px">−${fmtINR(it.liab_inr)} loans</div>` : '';
+      const liabBadge = it.liab_inr > 0 ? `<div style="font-size:10px;color:var(--loss);margin-top:2px">−${fmtINRraw(it.liab_inr)} loans</div>` : '';
       return `<div class="exp-row">
         <span class="flag">${it.flag}</span>
         <span class="ccy">${it.ccy}</span>
@@ -1733,7 +1743,7 @@ const ODIN = (() => {
     const netRow = document.createElement('div');
     netRow.style.cssText = 'font-size:11px;color:var(--text-dim);margin-top:10px;border-top:1px dotted var(--border);padding-top:8px;line-height:1.6';
     netRow.innerHTML = `<b style="color:var(--gold-dim)">NET (after liabilities):</b><br>` +
-      items.map(it => `${it.flag} ${it.ccy}: ${fmtINR(it.net_inr)} (${v.netWorth > 0 ? (it.net_inr/v.netWorth*100).toFixed(1) : '0'}% of net worth)`).join(' · ');
+      items.map(it => `${it.flag} ${it.ccy}: ${fmtINRraw(it.net_inr)} (${v.netWorth > 0 ? (it.net_inr/v.netWorth*100).toFixed(1) : '0'}% of net worth)`).join(' · ');
     host.appendChild(netRow);
 
     // Pie chart

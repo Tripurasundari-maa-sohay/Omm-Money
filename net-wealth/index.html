@@ -155,6 +155,8 @@
   .kpi-tile .delta { font-size: 11px; margin-top: 2px; }
   .kpi-tile .delta.pos { color: var(--gain); }
   .kpi-tile .delta.neg { color: var(--loss); }
+  .cov-bar { height: 5px; background: var(--bg-card); border-radius: 3px; margin-top: 7px; overflow: hidden; }
+  .cov-fill { height: 100%; border-radius: 3px; transition: width .4s ease, background-color .4s ease; }
 
   /* MILESTONE */
   .milestone { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card2); margin-bottom: 8px; }
@@ -515,8 +517,8 @@
     <div class="kpi-tile"><div class="lbl">LAST MONTH</div><div class="val" id="kpi-last">—</div><div class="delta" id="kpi-mom">—</div></div>
     <div class="kpi-tile"><div class="lbl">CONSERVATIVE EST</div><div class="val" id="kpi-est">—</div><div class="delta" id="kpi-vs-est">—</div></div>
     <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
-    <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div></div>
-    <div class="kpi-tile"><div class="lbl">INDIA STOCKS vs APT LOAN</div><div class="val" id="kpi-in-apt">—</div><div class="delta" id="kpi-in-apt-delta">—</div></div>
+    <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-us-lc-bar" style="width:0%"></div></div></div>
+    <div class="kpi-tile"><div class="lbl">INDIA STOCKS vs APT LOAN</div><div class="val" id="kpi-in-apt">—</div><div class="delta" id="kpi-in-apt-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-in-apt-bar" style="width:0%"></div></div></div>
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -1783,6 +1785,20 @@ const ODIN = (() => {
     return num('monthly_emi_inr', 0);
   }
 
+  // Red (0% covered) -> green (100%+ covered) gradient for coverage bars.
+  function covColor(pct) {
+    const p = Math.min(100, Math.max(0, pct)) / 100;
+    const hue = p * 120; // 0=red, 120=green
+    return `hsl(${hue.toFixed(0)}, 72%, 45%)`;
+  }
+  function setCoverageBar(barId, pct) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+    const clamped = Math.min(100, Math.max(0, pct));
+    bar.style.width = clamped.toFixed(1) + '%';
+    bar.style.background = covColor(pct);
+  }
+
   // ── KPI ─────────────────────────────────────────────────────────
   function renderKPI(currentNW, v) {
     document.getElementById('kpi-now').textContent = fmtINR(currentNW);
@@ -1821,9 +1837,11 @@ const ODIN = (() => {
       const pct = usStocksInr / lcLoanInr * 100;
       lcGapEl.textContent = pct.toFixed(0) + '% of ' + fmtINR(lcLoanInr) + (gap >= 0 ? ' · +' + fmtINR(gap) : ' · −' + fmtINR(-gap));
       lcGapEl.className = 'delta ' + (gap >= 0 ? 'pos' : 'neg');
+      setCoverageBar('kpi-us-lc-bar', pct);
     } else {
       lcGapEl.textContent = 'LC loan cleared';
       lcGapEl.className = 'delta pos';
+      setCoverageBar('kpi-us-lc-bar', 100);
     }
 
     // India stocks vs apartment (home) loan
@@ -1836,9 +1854,11 @@ const ODIN = (() => {
       const pct2 = inStocksInr / aptLoanInr * 100;
       aptGapEl.textContent = pct2.toFixed(0) + '% of ' + fmtINR(aptLoanInr) + (gap2 >= 0 ? ' · +' + fmtINR(gap2) : ' · −' + fmtINR(-gap2));
       aptGapEl.className = 'delta ' + (gap2 >= 0 ? 'pos' : 'neg');
+      setCoverageBar('kpi-in-apt-bar', pct2);
     } else {
       aptGapEl.textContent = 'Apt loan cleared';
       aptGapEl.className = 'delta pos';
+      setCoverageBar('kpi-in-apt-bar', 100);
     }
 
     drawKPIChart(currentNW);

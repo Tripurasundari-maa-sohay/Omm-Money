@@ -19,7 +19,10 @@ from datetime import datetime
 ROOT        = Path(__file__).resolve().parent.parent
 COST_FILE   = ROOT / "data" / "holdings_cost.json"
 TXNS_FILE   = ROOT / "data" / "transactions_us.json"
-VM_SCRIPT   = Path(__file__).parent / "fetch_all_prices_vm.py"
+# Cron runs the standalone copy at /home/opc/fetch_all_prices_vm.py, not the
+# docroot copy under scripts/ — patch whichever one actually gets executed.
+_VM_STANDALONE = Path("/home/opc/fetch_all_prices_vm.py")
+VM_SCRIPT   = _VM_STANDALONE if _VM_STANDALONE.exists() else Path(__file__).parent / "fetch_all_prices_vm.py"
 SIG_SCRIPT  = Path(__file__).parent / "signals_update.py"
 PDF_SCRIPT  = Path(__file__).parent / "parse_broker_pdf.py"
 

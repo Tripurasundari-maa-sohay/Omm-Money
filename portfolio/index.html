@@ -4530,24 +4530,29 @@ const DASH = (() => {
 
   /* ══ SIGNALS ENGINE ═════════════════════════════════════════════ */
   const SIG = { generatedAt: null, fetching: false, spy: null, results: {} };
-  const SIG_CORS = [
-    s => `https://api.allorigins.win/raw?url=${encodeURIComponent(s)}`,
-    s => `https://corsproxy.io/?${encodeURIComponent(s)}`
-  ];
+  // Browser CORS blocks a direct fetch to Yahoo's chart API from this origin.
+  // save_api.py's /yahoo-chart does the fetch server-side (no CORS involved)
+  // and hands back Yahoo's JSON verbatim — replaces two third-party CORS
+  // proxies (allorigins.win, corsproxy.io) that both went dead 2026-08
+  // (service down / anonymous access discontinued).
+  const SAVE_API_BASE = (location.host.includes('.nip.io') || location.host.includes('.duckdns.org'))
+    ? location.origin : 'https://ommoney.duckdns.org';
 
   async function sigFetch(sym) {
-    for (const base of ['https://query1.finance.yahoo.com','https://query2.finance.yahoo.com']) {
-      const url = `${base}/v8/finance/chart/${sym}?interval=1d&range=2y`;
-      for (const wrap of [s=>s, ...SIG_CORS]) {
-        const ctrl = new AbortController();
-        const tid  = setTimeout(() => ctrl.abort(), 10000);
-        try {
-          const r = await fetch(wrap(url), { signal: ctrl.signal });
-          clearTimeout(tid);
-          if (!r.ok) continue;
-          const d = sigParse(await r.json()); if (d) return d;
-        } catch { clearTimeout(tid); }
-      }
+    const urls = [
+      `${SAVE_API_BASE}/yahoo-chart?tk=${encodeURIComponent(sym)}`,
+      `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2y`,
+      `https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=2y`,
+    ];
+    for (const url of urls) {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        const r = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(tid);
+        if (!r.ok) continue;
+        const d = sigParse(await r.json()); if (d) return d;
+      } catch { clearTimeout(tid); }
     }
     return null;
   }
@@ -5531,7 +5536,7 @@ const DASH = (() => {
 
   /* ── Metric-tile drilldown: pie + table breakdown per ticker ── */
   const DRILL_PALETTE = ['#4ade80','#60a5fa','#f59e0b','#f472b6','#a78bfa','#2dd4bf','#fb923c','#94a3b8'];
-  const DRILL_SIGNED = new Set(['pnl','unreal','day','realised','jdzg']);
+  const DRILL_SIGNED = new Set(['pnl','unreal','day','realised']);
   let _drillChartInst = null;
 
   function _drillData(key) {
@@ -5559,11 +5564,6 @@ const DASH = (() => {
         return {title:'STOCKS · ETF · CASH', subtitle:'Portfolio composition', rows:[
           {label:'Stocks', sub:'', value:stocks}, {label:'ETF', sub:'', value:etf}, {label:'Cash', sub:'', value:cash}
         ]};
-      }
-      case 'jdzg': {
-        const j = (us.open||[]).find(p=>p.tk==='JDZG');
-        if (!j) return {title:'JDZG DRAG', subtitle:'No JDZG position', rows:[]};
-        return {title:'JDZG DRAG', subtitle:`${j.qty} sh @ $${j.avg.toFixed(2)} → $${j.ltp.toFixed(2)} (halted, manual LTP)`, rows:[{label:'JDZG', sub:j.broker||'DBG', value:j.uplNet, raw:j}]};
       }
       case 'xirr': {
         const flowsList = (S.cost?.us?.cash_flows || []);
@@ -5699,18 +5699,6 @@ const DASH = (() => {
     return (lo+hi)/2;
   }
 
-  function toggleJDZGdayPL() {
-    S.ui.includeJDZGdayPL = !S.ui.includeJDZGdayPL;
-    localStorage.setItem('include_jdzg_daypl', S.ui.includeJDZGdayPL ? '1' : '0');
-    const lbl = document.getElementById('us-day-pl-jdzg-state');
-    if (lbl) lbl.textContent = S.ui.includeJDZGdayPL ? 'included' : 'excluded';
-    if (typeof refresh === 'function') refresh();
-  }
-  // Sync label on load
-  document.addEventListener('DOMContentLoaded', () => {
-    const lbl = document.getElementById('us-day-pl-jdzg-state');
-    if (lbl) lbl.textContent = S.ui.includeJDZGdayPL ? 'included' : 'excluded';
-  });
 
   function resetColOrder(table) {
     if (table === 'us') { US_COL_ORDER = [...US_COLS_DEFAULT]; _saveColOrder('us_col_order', US_COL_ORDER); renderUSHoldings(); }
@@ -5921,7 +5909,7 @@ const DASH = (() => {
 
   document.addEventListener('DOMContentLoaded', () => { mpLoadPending(); });
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, toggleJDZGdayPL, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject };
 })();
 
 // Register service worker for PWA installability

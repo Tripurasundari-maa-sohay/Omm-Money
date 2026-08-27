@@ -378,6 +378,29 @@ def fetch_yahoo_meta(yf_sym: str):
         print(f"  Yahoo meta {yf_sym}: {e}", file=sys.stderr)
     return None
 
+def fetch_malabar_gold_qatar():
+    """Live 22K/24K QAR/g retail rate from Malabar Gold & Diamonds' own
+    public rate API (no auth). Qatar rides under their 'Kerala' state
+    label — a quirk of their own site's JS, the rates returned are Qatar's."""
+    try:
+        r = requests.post(
+            "https://www.malabargoldanddiamonds.com/ae/malabarprice/index/getrates/",
+            params={"country": "QA", "state": "Kerala"}, timeout=10
+        )
+        if r.status_code != 200:
+            return None
+        j = r.json()
+        rate_22k = float(str(j["22kt"]).split()[0])
+        rate_24k = float(str(j["24kt"]).split()[0])
+        return {
+            "rate_22k_qar_per_g": rate_22k,
+            "rate_24k_qar_per_g": rate_24k,
+            "source_updated_time": j.get("updated_time"),
+        }
+    except Exception as e:
+        print(f"  Malabar gold rate: {e}", file=sys.stderr)
+        return None
+
 def build_indices_payload(existing: dict) -> dict:
     """Build market_indices.json payload. Refreshes the markets relevant to
     MODE; preserves the other market block + keys from existing file."""
@@ -416,6 +439,19 @@ def build_indices_payload(existing: dict) -> dict:
         print(f"  INR=X    → {fx['ltp']:.4f}  [fx]")
     elif "fx_rate" not in out:
         out["fx_rate"] = None
+
+    # Malabar Gold & Diamonds Qatar retail rate (22K/24K, QAR/g) — only on
+    # the india cycle (every 2 min); gold rates don't move minute-to-minute.
+    if MODE in ("india", "all"):
+        malabar = fetch_malabar_gold_qatar()
+        if malabar:
+            out["malabar_gold_qatar"] = {
+                **malabar,
+                "fetched": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            }
+            print(f"  Malabar QA → 22K {malabar['rate_22k_qar_per_g']} QAR/g  [gold]")
+        elif "malabar_gold_qatar" not in out:
+            out["malabar_gold_qatar"] = None
 
     return out
 

@@ -1271,8 +1271,17 @@ const ODIN = (() => {
         S.fx.source = 'portfolio/market_indices.json';
         console.log(`💱 FX rates: USD/INR=${usdInr.toFixed(2)}, QAR/INR=${S.fx.qar_to_inr.toFixed(2)}`);
       }
+      const malabarQar = j.malabar_gold_qatar?.rate_22k_qar_per_g;
+      if (malabarQar && malabarQar > 0) {
+        S.portfolio.malabar_qar_live = malabarQar;
+        localStorage.setItem('portfolio_malabar_qar_live', malabarQar);
+      }
     } catch (e) {
       console.warn('Portfolio FX load failed, using seed', e);
+    }
+    if (!S.portfolio.malabar_qar_live) {
+      const cached = parseFloat(localStorage.getItem('portfolio_malabar_qar_live'));
+      if (Number.isFinite(cached)) S.portfolio.malabar_qar_live = cached;
     }
   }
 
@@ -1374,7 +1383,10 @@ const ODIN = (() => {
     const jewelManualRate = num('jewel_22k_rate_inr_per_g', 0);
     const jewel22kRate = jewelManualRate > 0 ? jewelManualRate : indiaGoldRate * 0.9167 * 1.05;
     const malabarManualRate = num('malabar_rate_inr_per_g', 0);
-    const malabarRate = malabarManualRate > 0 ? malabarManualRate : indiaGoldRate * 0.9167 * 1.05;
+    const malabarLiveInr = S.portfolio.malabar_qar_live ? S.portfolio.malabar_qar_live * fx.qar_to_inr : null;
+    const malabarRate = malabarManualRate > 0 ? malabarManualRate
+                       : malabarLiveInr ? malabarLiveInr
+                       : indiaGoldRate * 0.9167 * 1.05;
 
     const jewel_inr        = jewel_g * jewel22kRate;         // jewellery valued at 22K India rate
     const malabar_inr      = malabar_g * malabarRate;        // Malabar scheme valued at 22K India retail
@@ -1563,7 +1575,7 @@ const ODIN = (() => {
     const jSrc = num('jewel_22k_rate_inr_per_g', 0) > 0 ? 'manual' : 'est';
     document.getElementById('jewel-22k-rate-box').textContent = `₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g (${jSrc})`;
     document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 22K ₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g · ${jSrc})`;
-    const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual' : 'est';
+    const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual' : (S.portfolio.malabar_qar_live ? 'live' : 'est');
     document.getElementById('malabar-rate').textContent  = `(${v.malabar_g.toFixed(2)}g · 22K ₹${Math.round(v.malabarRate).toLocaleString('en-IN')}/g · ${mSrc})`;
     document.getElementById('a-jewel').textContent       = fmtINR(v.jewel_inr);
     document.getElementById('a-malabar').textContent     = fmtINR(v.malabar_inr);
@@ -2854,7 +2866,9 @@ const ODIN = (() => {
     const getMalabarRate = () => {
       const v = view();
       const mRate = v.malabarRate / S.fx.qar_to_inr;
-      const src = num('malabar_rate_inr_per_g', 0) > 0 ? '(manual)' : '(est)';
+      const src = num('malabar_rate_inr_per_g', 0) > 0 ? '(manual)'
+                : S.portfolio.malabar_qar_live ? '(live · Malabar QA)'
+                : '(est)';
       return `QAR ${mRate.toFixed(2)}/g ${src}`;
     };
 

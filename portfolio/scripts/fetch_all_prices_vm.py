@@ -214,7 +214,7 @@ def fetch_india_angel():
                         "ltp": round(float(ltp), 4),
                         "pc":  pc_val,
                         "source": "angelone",
-                        "as_of":  datetime.now(timezone.utc).isoformat() + "Z"
+                        "as_of":  datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                     }
                     for tk in key_to_tickers.get((exch, token), []):
                         results[tk] = entry
@@ -239,7 +239,7 @@ def fetch_india_yahoo_fallback():
             "ltp": round(float(q["ltp"]), 4),
             "pc":  round(float(q["pc"]), 4) if q.get("pc") else None,
             "source": "yahoo",
-            "as_of":  datetime.now(timezone.utc).isoformat() + "Z",
+            "as_of":  datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
         print(f"  {tk:15s} → {q['ltp']:.2f}  pc={q.get('pc')}  [Yahoo fallback]")
     return results
@@ -274,7 +274,7 @@ def fetch_india_dynamic_fallback(missing_tickers):
             "ltp": round(float(q["ltp"]), 4),
             "pc":  round(float(q["pc"]), 4) if q.get("pc") else None,
             "source": "yahoo",
-            "as_of":  datetime.now(timezone.utc).isoformat() + "Z",
+            "as_of":  datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
         print(f"  {tk:15s} → {q['ltp']:.2f}  pc={q.get('pc')}  [Yahoo fallback — Angel One failed]")
     return results
@@ -299,7 +299,7 @@ def fetch_us_finnhub():
                         "pc":  round(float(pc), 4) if pc and float(pc) > 0 else None,
                         "source": "finnhub",
                         "finnhub_t": d.get("t") or 0,
-                        "as_of":  datetime.now(timezone.utc).isoformat() + "Z"
+                        "as_of":  datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
                     }
                     chg_pct = ((ltp - pc) / pc * 100) if pc else 0
                     print(f"  {tk:8s} → {ltp:.2f}  {chg_pct:+.2f}%  [Finnhub]")
@@ -382,7 +382,7 @@ def build_indices_payload(existing: dict) -> dict:
     """Build market_indices.json payload. Refreshes the markets relevant to
     MODE; preserves the other market block + keys from existing file."""
     out = dict(existing) if isinstance(existing, dict) else {}
-    out["generated"] = datetime.now(timezone.utc).isoformat() + "Z"
+    out["generated"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     markets = []
     if MODE in ("us", "all"):    markets.append("usa")
@@ -406,7 +406,7 @@ def build_indices_payload(existing: dict) -> dict:
         out[market + "_market"] = {
             "status":    market_status(market),
             "indices":   idx_block,
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
 
     # FX (INR per USD) — keep within sanity bounds 70..120
@@ -538,7 +538,7 @@ def commit_prices_to_github(new_prices: dict, existing_data: dict):
     """
     merged_prices = {**existing_data.get("prices", {}), **new_prices}
     payload = {**existing_data, "prices": merged_prices,
-               "generated": datetime.now(timezone.utc).isoformat() + "Z"}
+               "generated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")}
     if write_local_json(PRICES_PATH, payload):
         print(f"  Wrote {len(new_prices)} prices → VM-local (gated, not GitHub)")
         return True

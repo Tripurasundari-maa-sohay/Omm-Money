@@ -3021,7 +3021,7 @@ const DASH = (() => {
         rows.push({ owner: o.label, broker: bk.replace(/_/g,' '), stcg: b.stcg ?? 0, ltcg: b.ltcg ?? 0, note: b.note || b.source || '' });
       });
     });
-    detailEl.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;">
+    let html = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;margin-bottom:16px;">
       <div style="color:var(--text-dim);font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">BY BROKER</div>
       <table><thead><tr><th>OWNER</th><th>BROKER</th><th style="text-align:right">STCG</th><th style="text-align:right">LTCG</th><th>NOTE</th></tr></thead>
       <tbody>${rows.map(r => `<tr>
@@ -3031,6 +3031,35 @@ const DASH = (() => {
         <td style="color:var(--text-dim);font-size:12px">${r.note}</td>
       </tr>`).join('')}</tbody></table>
     </div>`;
+
+    // Lot-level transaction breakdown — only shown for brokers where we
+    // actually have per-lot data (Upstox/m.Stock so far are verbal totals
+    // only, no lot detail to show).
+    ownerOrder.filter(k => t.owners[k]).forEach(key => {
+      const o = t.owners[key];
+      Object.entries(o.brokers || {}).forEach(([bk, b]) => {
+        const lots = b.lot_detail;
+        if (!lots || !lots.length) return;
+        html += `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;margin-bottom:16px;">
+          <div style="color:var(--text-dim);font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">${o.label.toUpperCase()} · ${bk.replace(/_/g,' ').toUpperCase()} · ${lots.length} LOTS</div>
+          <table><thead><tr>
+            <th>SCRIP</th><th style="text-align:right">QTY</th><th>BUY DATE</th><th>SELL DATE</th>
+            <th style="text-align:right">BUY RATE</th><th style="text-align:right">SELL RATE</th>
+            <th style="text-align:right">HOLD (DAYS)</th><th>TYPE</th><th style="text-align:right">GAIN/LOSS</th>
+          </tr></thead>
+          <tbody>${lots.map(l => `<tr>
+            <td>${l.scrip}</td><td style="text-align:right">${l.qty}</td>
+            <td>${l.buy_date}</td><td>${l.sell_date}</td>
+            <td style="text-align:right">${inr2(l.buy_rate)}</td><td style="text-align:right">${inr2(l.sell_rate)}</td>
+            <td style="text-align:right">${l.holding_days}</td>
+            <td><span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;border:1px solid ${l.type==='LTCG'?'var(--accent-g)':'var(--accent-b)'};color:${l.type==='LTCG'?'var(--accent-g)':'var(--accent-b)'}">${l.type}</span></td>
+            <td style="text-align:right" class="${pn(l.gain_loss)}">${sign(l.gain_loss)}${inr2(l.gain_loss)}</td>
+          </tr>`).join('')}</tbody></table>
+        </div>`;
+      });
+    });
+
+    detailEl.innerHTML = html;
   }
 
   function renderTransactionsTab() {

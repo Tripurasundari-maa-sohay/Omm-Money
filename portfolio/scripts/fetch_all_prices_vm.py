@@ -644,7 +644,12 @@ def main():
     if MODE in ("india", "all"):
         print("\n── India (Angel One + Yahoo fallback)")
         angel_p = fetch_india_angel()
-        _angel_requested = set(ANGEL_TOKEN_MAP) | set(ANGEL_BSE_TOKEN_MAP)
+        # Union with every ticker actually held (not just ones with an Angel
+        # token registered) — a brand-new India position with no Angel token
+        # yet (e.g. added straight from a broker statement) would otherwise
+        # never be "requested", so it'd never be counted as missing either,
+        # and fall through both Angel AND the Yahoo fallback silently.
+        _angel_requested = set(ANGEL_TOKEN_MAP) | set(ANGEL_BSE_TOKEN_MAP) | set(load_india_yf_map())
         _angel_missing = _angel_requested - set(angel_p.keys())
         yahoo_p = fetch_india_yahoo_fallback()
         angel_fallback_p = fetch_india_dynamic_fallback(_angel_missing)

@@ -735,6 +735,7 @@
         <button class="tab-button" data-tab="us"><span class="tl">US PORTFOLIO</span><span class="ts">US</span></button>
         <button class="tab-button" data-tab="india"><span class="tl">INDIA PORTFOLIO</span><span class="ts">INDIA</span></button>
         <button class="tab-button" data-tab="transactions"><span class="tl">TRANSACTIONS</span><span class="ts">TXNS</span></button>
+        <button class="tab-button" data-tab="tax"><span class="tl">TAX P&amp;L</span><span class="ts">TAX</span></button>
         <button class="tab-button" data-tab="research"><span class="tl">🔍 RESEARCH</span><span class="ts">RSRCH</span></button>
         <button class="tab-button" data-tab="reco"><span class="tl">💡 RECO</span><span class="ts">RECO</span></button>
       </div>
@@ -1515,6 +1516,16 @@
 
   </div><!-- /transactions-tab -->
 
+  <!-- ══════════ TAB · TAX P&L (INDIA, PER PAN) ══════════ -->
+  <div id="tax-tab" class="tab-content">
+    <h2 style="margin-bottom:6px;">TAX P&amp;L · INDIA · <span id="tax-fy-label">--</span></h2>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:16px;">
+      🇮🇳 Motilal Oswal (Son's PAN) · Upstox &amp; m.Stock/Mirae (Father's PAN) — captured from broker tax P&amp;L exports as they're shared, not auto-pulled.
+      <span id="tax-updated" style="color:var(--text-dim)"></span>
+    </div>
+    <div id="tax-owner-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;"></div>
+    <div id="tax-broker-detail"></div>
+  </div><!-- /tax-tab -->
 
 
   <!-- ══════════ TAB 6 · RESEARCH (SCREENER + WATCHLIST) ══════════ -->
@@ -2108,14 +2119,16 @@ const DASH = (() => {
   };
 
   async function load() {
-    const [cost, prices, indices, audit, txUs] = await Promise.all([
+    const [cost, prices, indices, audit, txUs, taxPnl] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
       fetchJSON('data/processed/market_indices.json'),
       fetchJSON('data/processed/audit.json'),
       fetchJSON('data/transactions_us.json'),
+      fetchJSON('data/india_tax_pnl.json'),
     ]);
     if (txUs)    S.txUs = txUs;
+    if (taxPnl)  S.taxPnl = taxPnl;
     if (cost)    S.cost = cost;
     if (prices)  {
       S.prices    = prices.prices || {};
@@ -2967,6 +2980,57 @@ const DASH = (() => {
       <td class="${pn(p.ret)}">${p.houseMoney ? FREE_TAG : sign(p.ret)+pct(p.ret)}</td>
       <td class="${pn(p.dayPct)}">${sign(p.dayPct)}${pct(p.dayPct)}</td>
     </tr>`).join('');
+  }
+
+  function renderTaxPNL() {
+    const t = S.taxPnl;
+    const cardsEl = $('tax-owner-cards'), detailEl = $('tax-broker-detail');
+    if (!cardsEl || !detailEl) return;
+    if (!t || !t.owners) {
+      cardsEl.innerHTML = '';
+      detailEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px 0">No tax P&L data captured yet.</div>';
+      return;
+    }
+    setText('tax-fy-label', t.fy_label || '--');
+    const updated = $('tax-updated');
+    if (updated) updated.textContent = t.generated ? `· last updated ${t.generated}` : '';
+
+    const rate = t.tax_rates || {};
+    const ownerOrder = ['son', 'father'];
+    const colors = { son: 'var(--accent-b)', father: '#ffaa00' };
+
+    cardsEl.innerHTML = ownerOrder.filter(k => t.owners[k]).map(key => {
+      const o = t.owners[key];
+      const stcg = o.totals?.stcg ?? 0, ltcg = o.totals?.ltcg ?? 0;
+      const tax  = o.tax?.total ?? 0;
+      const c = colors[key] || 'var(--accent-b)';
+      return `<div style="background:var(--bg-card);border:1px solid ${c};border-radius:8px;padding:14px;">
+        <div style="color:${c};font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">${o.label.toUpperCase()}</div>
+        <div class="txn-summary-strip" style="grid-template-columns:repeat(3,1fr);">
+          <div class="txn-stat-card"><label>STCG (${rate.stcg_pct ?? '--'}%)</label><span class="v ${pn(stcg)}">${sign(stcg)}${inr(stcg)}</span></div>
+          <div class="txn-stat-card"><label>LTCG (${rate.ltcg_pct ?? '--'}%)</label><span class="v ${pn(ltcg)}">${sign(ltcg)}${inr(ltcg)}</span></div>
+          <div class="txn-stat-card"><label>TAX DUE</label><span class="v">${inr(tax)}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const rows = [];
+    ownerOrder.filter(k => t.owners[k]).forEach(key => {
+      const o = t.owners[key];
+      Object.entries(o.brokers || {}).forEach(([bk, b]) => {
+        rows.push({ owner: o.label, broker: bk.replace(/_/g,' '), stcg: b.stcg ?? 0, ltcg: b.ltcg ?? 0, note: b.note || b.source || '' });
+      });
+    });
+    detailEl.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;">
+      <div style="color:var(--text-dim);font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:10px;">BY BROKER</div>
+      <table><thead><tr><th>OWNER</th><th>BROKER</th><th style="text-align:right">STCG</th><th style="text-align:right">LTCG</th><th>NOTE</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td>${r.owner}</td><td style="text-transform:capitalize">${r.broker}</td>
+        <td style="text-align:right" class="${pn(r.stcg)}">${sign(r.stcg)}${inr(r.stcg)}</td>
+        <td style="text-align:right" class="${pn(r.ltcg)}">${sign(r.ltcg)}${inr(r.ltcg)}</td>
+        <td style="color:var(--text-dim);font-size:12px">${r.note}</td>
+      </tr>`).join('')}</tbody></table>
+    </div>`;
   }
 
   function renderTransactionsTab() {
@@ -4514,6 +4578,7 @@ const DASH = (() => {
     safe(renderIndiaCharts,  'india-charts');
     safe(renderTopHoldings,  'top-holdings');
     safe(renderTransactionsTab, 'tx-tab');
+    safe(renderTaxPNL,          'tax-tab');
     safe(renderTxLedger,        'tx-ledger');
     safe(renderTxCash,          'tx-cash');
     safe(renderIndices,      'indices');
@@ -5384,7 +5449,7 @@ const DASH = (() => {
     // Targets inside any of SWIPE_BLOCK_SELECTOR don't trigger tab swap —
     // tables (horizontal scrolling), canvases (chart pan), .scroll-x, and
     // any element explicitly opted out with data-no-swipe.
-    const TAB_ORDER          = ['portfolio','us','india','transactions','research','reco'];
+    const TAB_ORDER          = ['portfolio','us','india','transactions','tax','research','reco'];
     const SWIPE_MIN_DX       = 120;   // bumped 60→120: column scroll on wide tables won't trigger
     const SWIPE_MAX_DY_RATIO = 0.35;  // tighter 0.5→0.35: stricter horizontal-only
     const SWIPE_MAX_MS       = 300;   // 350→300: only fast flicks

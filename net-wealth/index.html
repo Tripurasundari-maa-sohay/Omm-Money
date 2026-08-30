@@ -569,11 +569,7 @@
   <div class="kpi-strip">
     <div class="kpi-tile"><div class="lbl">CURRENT NET WORTH</div><div class="val" id="kpi-now">—</div></div>
     <div class="kpi-tile"><div class="lbl">LAST MONTH</div><div class="val" id="kpi-last">—</div><div class="delta" id="kpi-mom">—</div></div>
-    <div class="kpi-tile"><div class="lbl">CONSERVATIVE EST</div><div class="val" id="kpi-est">—</div><div class="delta" id="kpi-vs-est">—</div></div>
     <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
-    <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-us-lc-bar" style="width:0%"></div></div></div>
-    <div class="kpi-tile"><div class="lbl">INDIA STOCKS vs APT LOAN</div><div class="val" id="kpi-in-apt">—</div><div class="delta" id="kpi-in-apt-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-in-apt-bar" style="width:0%"></div></div></div>
-    <div class="kpi-tile"><div class="lbl">US STOCKS + GRATUITY vs LC LOAN</div><div class="val" id="kpi-usgrat-lc">—</div><div class="delta" id="kpi-usgrat-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-usgrat-lc-bar" style="width:0%"></div></div></div>
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -591,17 +587,16 @@
   </p>
 </div>
 
-<!-- TODO LIST (Overall) -->
+<!-- LOAN COVERAGE (Overall) -->
 <div class="card">
-  <h2>📋 NET WORTH TO-DO</h2>
+  <h2>🎯 LOAN COVERAGE</h2>
   <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
-    Pre-seeded action items. Check off when done. Add custom items below.
+    How much of each loan your linked assets could cover — liquid stocks alone, and stocks plus gratuity as a total buffer.
   </p>
-  <div id="todo-host"></div>
-  <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-    <input type="text" id="todo-new-title" placeholder="New item title" style="flex:2;min-width:160px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px" />
-    <input type="text" id="todo-new-note" placeholder="Optional note" style="flex:2;min-width:160px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px" />
-    <button class="snapshot-btn" onclick="ODIN.addTodo()">+ Add</button>
+  <div class="kpi-strip">
+    <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-us-lc-bar" style="width:0%"></div></div></div>
+    <div class="kpi-tile"><div class="lbl">INDIA STOCKS vs APT LOAN</div><div class="val" id="kpi-in-apt">—</div><div class="delta" id="kpi-in-apt-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-in-apt-bar" style="width:0%"></div></div></div>
+    <div class="kpi-tile"><div class="lbl">US STOCKS + GRATUITY vs LC LOAN</div><div class="val" id="kpi-usgrat-lc">—</div><div class="delta" id="kpi-usgrat-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-usgrat-lc-bar" style="width:0%"></div></div></div>
   </div>
 </div>
 
@@ -765,7 +760,6 @@
   <div class="card">
     <h2>📊 FIRE PROJECTIONS</h2>
     <div class="kpi-strip">
-      <div class="kpi-tile"><div class="lbl">CURRENT NW</div><div class="val" id="fire-current">—</div></div>
       <div class="kpi-tile"><div class="lbl">YEARS TO FIRE</div><div class="val" id="fire-years">—</div><div class="delta" id="fire-age-at-fire">—</div></div>
       <div class="kpi-tile"><div class="lbl">MONTHLY INVEST NEEDED</div><div class="val" id="fire-monthly-need">—</div><div class="delta" id="fire-monthly-cur">—</div></div>
       <div class="kpi-tile"><div class="lbl">SHORTFALL / SURPLUS</div><div class="val" id="fire-gap">—</div><div class="delta" id="fire-gap-pct">—</div></div>
@@ -886,6 +880,20 @@
         </thead>
         <tbody id="fire-table-body"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- TODO LIST (relocated from Overall — financial-planning tasks fit here) -->
+  <div class="card">
+    <h2>📋 NET WORTH TO-DO</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+      Pre-seeded action items. Check off when done. Add custom items below.
+    </p>
+    <div id="todo-host"></div>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+      <input type="text" id="todo-new-title" placeholder="New item title" style="flex:2;min-width:160px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px" />
+      <input type="text" id="todo-new-note" placeholder="Optional note" style="flex:2;min-width:160px;background:var(--bg-card2);border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px" />
+      <button class="snapshot-btn" onclick="ODIN.addTodo()">+ Add</button>
     </div>
   </div>
 
@@ -2090,14 +2098,6 @@ const ODIN = (() => {
     } else {
       document.getElementById('kpi-mom').textContent = 'no prior snapshot';
     }
-    // Conservative estimate: last snapshot + 1.5%/month growth
-    const est = last30 ? last30.net_worth * 1.015 : currentNW;
-    document.getElementById('kpi-est').textContent = fmtINR(est);
-    const vsEst = currentNW - est;
-    const vsEstEl = document.getElementById('kpi-vs-est');
-    vsEstEl.textContent = (vsEst >= 0 ? '+' : '') + fmtINR(vsEst) + ' vs est';
-    vsEstEl.className = 'delta ' + (vsEst >= 0 ? 'pos' : 'neg');
-
     const last12 = last12MonthsSnapshots(hist);
     const hi12 = last12.length ? Math.max(...last12.map(h => h.net_worth), currentNW) : currentNW;
     document.getElementById('kpi-12hi').textContent = fmtINR(hi12);
@@ -2481,7 +2481,6 @@ const ODIN = (() => {
     document.getElementById('fire-progress').innerHTML  =
       `<span><b>Real return</b> ${(realRet*100).toFixed(2)}%/yr</span>` +
       `<span><b>Monthly withdraw at FIRE</b> ${fmtINR(annExp/12)}</span>`;
-    document.getElementById('fire-current').textContent = fmtINR(currentNW);
     document.getElementById('fire-years').textContent = yrsToFireAtCur >= 0 ? yrsToFireAtCur.toFixed(1) + ' yrs' : '—';
     document.getElementById('fire-age-at-fire').textContent = yrsToFireAtCur >= 0 ? `Age ${(curAge + yrsToFireAtCur).toFixed(0)} (no further SIP)` : '—';
     document.getElementById('fire-age-at-fire').className = 'delta';
@@ -2535,10 +2534,14 @@ const ODIN = (() => {
     }
 
     // ── Savings Rate ──
-    const monthlyIncome  = num('fire_monthly_income_inr', f.monthly_income_inr || 600000);
+    // No fallback default — a fabricated income (e.g. an arbitrary ₹6L/mo
+    // guess) would produce a savings rate and "rating" that look like real
+    // data but aren't. Show "not set" honestly instead of a fake number.
+    const monthlyIncome  = num('fire_monthly_income_inr', f.monthly_income_inr || 0);
+    const hasIncome      = monthlyIncome > 0;
     const monthlyExpense = annExp / 12;
     const monthlySavings = monthlyIncome - monthlyExpense;
-    const savingsRate    = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
+    const savingsRate    = hasIncome ? (monthlySavings / monthlyIncome) * 100 : 0;
     const runway         = annExp > 0 ? currentNW / annExp : 0;
 
     const srEl = document.getElementById('fire-income-val');
@@ -2546,19 +2549,30 @@ const ODIN = (() => {
     const sRateEl = document.getElementById('fire-savings-rate');
     const sRatingEl = document.getElementById('fire-savings-rating');
     const runwayEl  = document.getElementById('fire-runway');
-    if (srEl) srEl.textContent = fmtINR(monthlyIncome);
+    if (srEl) srEl.textContent = hasIncome ? fmtINR(monthlyIncome) : 'Not set';
     if (seEl) seEl.textContent = fmtINR(monthlyExpense);
     if (sRateEl) {
-      sRateEl.textContent = savingsRate.toFixed(1) + '%';
-      sRateEl.style.color = savingsRate >= 50 ? 'var(--gain)' : savingsRate >= 30 ? 'var(--gold)' : 'var(--loss)';
+      if (hasIncome) {
+        sRateEl.textContent = savingsRate.toFixed(1) + '%';
+        sRateEl.style.color = savingsRate >= 50 ? 'var(--gain)' : savingsRate >= 30 ? 'var(--gold)' : 'var(--loss)';
+      } else {
+        sRateEl.textContent = '—';
+        sRateEl.style.color = 'var(--text-dim)';
+      }
     }
     if (sRatingEl) {
-      const rating = savingsRate >= 60 ? '🔥 Exceptional (FIRE in <15 yrs)' :
-                     savingsRate >= 50 ? '✅ Excellent (FIRE in ~17 yrs)' :
-                     savingsRate >= 40 ? '👍 Good (FIRE in ~22 yrs)' :
-                     savingsRate >= 30 ? '⚠ Moderate (FIRE in ~28 yrs)' : '❌ Low — increase savings';
-      sRatingEl.textContent = rating;
-      sRatingEl.className = 'delta';
+      if (hasIncome) {
+        const rating = savingsRate >= 60 ? '🔥 Exceptional (FIRE in <15 yrs)' :
+                       savingsRate >= 50 ? '✅ Excellent (FIRE in ~17 yrs)' :
+                       savingsRate >= 40 ? '👍 Good (FIRE in ~22 yrs)' :
+                       savingsRate >= 30 ? '⚠ Moderate (FIRE in ~28 yrs)' : '❌ Low — increase savings';
+        sRatingEl.textContent = rating;
+        sRatingEl.className = 'delta';
+      } else {
+        sRatingEl.textContent = 'Add income in FIRE Inputs below';
+        sRatingEl.className = 'delta';
+        sRatingEl.style.color = 'var(--text-dim)';
+      }
     }
     if (runwayEl) runwayEl.textContent = runway.toFixed(1) + ' yrs';
 

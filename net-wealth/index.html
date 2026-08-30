@@ -125,7 +125,7 @@
   @keyframes mtxPopIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
   /* CURRENCY EXPOSURE */
-  .exp-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: center; }
+  .exp-grid { display: grid; grid-template-columns: 1fr 260px; gap: 16px; align-items: center; }
   @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
   .exp-row { display: grid; grid-template-columns: 40px 60px 1fr 110px; gap: 8px; align-items: center; padding: 6px 0; font-size: 12px; }
   .exp-row .flag { font-size: 18px; }
@@ -137,7 +137,7 @@
   .exp-row .bar-fill.qar { background: linear-gradient(90deg, #a78bfa, #6d28d9); }
   .exp-row .amt { text-align: right; color: var(--text); font-weight: 600; }
   .exp-row .amt .pct { color: var(--text-dim); font-size: 10px; margin-left: 4px; }
-  .exp-pie-wrap { height: 220px; position: relative; }
+  .exp-pie-wrap { height: 190px; position: relative; cursor: pointer; }
 
   /* PROGRESS BARS */
   .progress { margin-top: 14px; }
@@ -547,14 +547,18 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" style="position:relative">
     <h2>🌍 CURRENCY EXPOSURE</h2>
     <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
-      Net worth split by the currency each asset is <em>natively denominated in</em> — shows your real FX risk.
+      Net worth split by the currency each asset is <em>natively denominated in</em> — shows your real FX risk. Click a slice for details.
     </p>
     <div class="exp-grid">
       <div id="exp-rows"></div>
       <div class="exp-pie-wrap"><canvas id="exp-pie"></canvas></div>
+    </div>
+    <div class="mtx-popup" id="exp-expand" style="display:none">
+      <button class="mtx-popup-close" id="exp-popup-close" type="button" title="Close">✕</button>
+      <div id="exp-popup-body"></div>
     </div>
   </div>
 </div>
@@ -1954,13 +1958,66 @@ const ODIN = (() => {
       items.map(it => `${it.flag} ${it.ccy}: ${fmtINRraw(it.net_inr)} (${v.netWorth > 0 ? (it.net_inr/v.netWorth*100).toFixed(1) : '0'}% of net worth)`).join(' · ');
     host.appendChild(netRow);
 
+    // Detail rows behind each currency, for the click-to-expand popup.
+    const expCatLabels = { USD: '🇺🇸 USD', INR: '🇮🇳 INR', QAR: '🇶🇦 QAR' };
+    const expDetail = {
+      USD: [
+        { label: 'US Stocks', val: v.us_stocks_inr },
+        ...(v.customAssets || []).filter(a => a.ccy === 'USD').map(a => ({ label: a.label, val: a.value_inr })),
+      ],
+      INR: [
+        { label: 'India Stocks', val: v.india_stocks_inr },
+        { label: 'F&O Corpus', val: v.fo_inr },
+        { label: 'India Mutual Fund', val: v.india_mutual_fund_inr },
+        { label: 'Gold — Jewellery', val: v.jewel_inr },
+        { label: 'Gold — Malabar', val: v.malabar_inr },
+        { label: 'Apartment', val: v.apt_mkt },
+        { label: 'India Banks (cash)', val: v.cash_in_inr },
+        ...(v.customAssets || []).filter(a => a.ccy === 'INR' || !a.ccy).map(a => ({ label: a.label, val: a.value_inr })),
+      ],
+      QAR: [
+        { label: 'Qatar Banks', val: v.cash_qa_inr },
+        { label: 'Land Cruiser (resale)', val: v.lc_qar_inr },
+        { label: 'Gratuity', val: v.grat_inr },
+        ...(v.customAssets || []).filter(a => a.ccy === 'QAR').map(a => ({ label: a.label, val: a.value_inr })),
+      ],
+    };
+
+    function showExpDetail(ccy) {
+      const panel = document.getElementById('exp-expand');
+      if (!panel) return;
+      if (panel.dataset.key === ccy && panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        panel.dataset.key = '';
+        return;
+      }
+      const it = items.find(i => i.ccy === ccy);
+      const rows = (expDetail[ccy] || []).filter(r => r.val > 0);
+      panel.dataset.key = ccy;
+      document.getElementById('exp-popup-body').innerHTML =
+        `<div class="mtx-expand-title">${expCatLabels[ccy]} — ${fmtINRraw(it.inr)}</div>` +
+        rows.map(r => `<div class="row-line"><span class="name">${r.label}</span><span class="val">${fmtINRraw(r.val)} <span class="sub">${(r.val/it.inr*100).toFixed(1)}%</span></span></div>`).join('');
+      panel.style.display = 'block';
+    }
+    const expCloseBtn = document.getElementById('exp-popup-close');
+    if (expCloseBtn && !expCloseBtn.dataset.wired) {
+      expCloseBtn.dataset.wired = '1';
+      expCloseBtn.addEventListener('click', () => {
+        const panel = document.getElementById('exp-expand');
+        panel.style.display = 'none';
+        panel.dataset.key = '';
+      });
+    }
+
     // Pie chart
     const ctx = document.getElementById('exp-pie');
     if (S.charts.exp) S.charts.exp.destroy();
+    const expDlPlugin = (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : [];
     S.charts.exp = new Chart(ctx, {
       type: 'doughnut',
+      plugins: expDlPlugin,
       data: {
-        labels: items.map(i => `${i.ccy} (${(i.inr/totAssets*100).toFixed(1)}%)`),
+        labels: items.map(i => `${i.ccy}: ${fmtINR(i.inr)}`),
         datasets: [{
           data: items.map(i => Math.round(i.inr)),
           backgroundColor: ['#16a34a','#c2410c','#6d28d9'],
@@ -1970,9 +2027,20 @@ const ODIN = (() => {
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '60%',
+        onClick: (evt, elements) => {
+          if (elements.length) showExpDetail(items[elements[0].index].ccy);
+        },
         plugins: {
-          legend: { position: 'bottom', labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73', font: { size: 11 }, padding: 8 } },
-          tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmtINR(ctx.parsed)}` } }
+          legend: {
+            display: true, position: 'right', align: 'center',
+            labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73', font: { size: 10 }, padding: 8, boxWidth: 10, boxHeight: 10 }
+          },
+          tooltip: { callbacks: { label: ctx => `${ctx.label.split(':')[0]}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/totAssets*100).toFixed(1)}%)` } },
+          datalabels: {
+            color: '#fff', font: { weight: '700', size: 11 },
+            textStrokeColor: 'rgba(0,0,0,.45)', textStrokeWidth: 2,
+            formatter: (value) => totAssets > 0 ? (value / totAssets * 100).toFixed(0) + '%' : ''
+          }
         }
       }
     });

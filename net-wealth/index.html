@@ -1181,6 +1181,19 @@ const ODIN = (() => {
     S.seed = (local && typeof local === 'object') ? local : baseline;
     console.log(local ? '✅ Loaded local state-v2' : '✅ Loaded baseline seed.json');
 
+    // One-time migration: a manual gold rate set before the 24h-expiry
+    // feature existed has no *_set_at timestamp. Treating "missing" as
+    // "expired" would silently wipe a rate the user is actively relying on
+    // the moment this ships — so grandfather it in with a fresh 24h window
+    // instead of resetting it to Auto on the spot.
+    (S.seed.assets ||= {});
+    if (S.seed.assets.jewel_22k_rate_inr_per_g > 0 && !S.seed.assets.jewel_22k_rate_set_at) {
+      S.seed.assets.jewel_22k_rate_set_at = Date.now();
+    }
+    if (S.seed.assets.malabar_rate_inr_per_g > 0 && !S.seed.assets.malabar_rate_set_at) {
+      S.seed.assets.malabar_rate_set_at = Date.now();
+    }
+
     // Restore cached portfolio scalars
     const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));
     if (Number.isFinite(cachedIndiaStocks)) S.portfolio.india_stocks_inr = cachedIndiaStocks;
@@ -1448,10 +1461,10 @@ const ODIN = (() => {
     const intlGoldRate = S.portfolio.intl_gold_usd_oz
       ? (S.portfolio.intl_gold_usd_oz * fx.usd_to_inr) / 31.1035
       : indiaGoldRate;
-    // 22K rate: manual override, else estimate from 24K spot × purity × retail premium.
-    const jewelManualRate = num('jewel_22k_rate_inr_per_g', 0);
+    // 22K rate: manual override (max 24h old), else estimate from 24K spot × purity × retail premium.
+    const jewelManualRate = manualRateFresh('jewel_22k_rate_set_at') ? num('jewel_22k_rate_inr_per_g', 0) : 0;
     const jewel22kRate = jewelManualRate > 0 ? jewelManualRate : indiaGoldRate * 0.9167 * 1.05;
-    const malabarManualRate = num('malabar_rate_inr_per_g', 0);
+    const malabarManualRate = manualRateFresh('malabar_rate_set_at') ? num('malabar_rate_inr_per_g', 0) : 0;
     const malabarLiveInr = S.portfolio.malabar_qar_live ? S.portfolio.malabar_qar_live * fx.qar_to_inr : null;
     const malabarRate = malabarManualRate > 0 ? malabarManualRate
                        : malabarLiveInr ? malabarLiveInr
@@ -1569,6 +1582,15 @@ const ODIN = (() => {
     return Number.isFinite(v) ? v : (Number.isFinite(fallback) ? fallback : 0);
   }
 
+  // Manual gold-rate overrides auto-expire 24h after being set — after that
+  // they're treated as unset and the field falls back to the live/estimated
+  // rate on its own, no manual action needed to "clear" it.
+  const MANUAL_RATE_TTL_MS = 24 * 3600 * 1000;
+  function manualRateFresh(setAtKey) {
+    const setAt = num(setAtKey, 0);
+    return setAt > 0 && (Date.now() - setAt) < MANUAL_RATE_TTL_MS;
+  }
+
   // Safe expression evaluator — allows digits, + - * / ( ) . and whitespace only
   function safeEval(expr) {
     if (expr === '' || expr === null || expr === undefined) return NaN;
@@ -1644,10 +1666,10 @@ const ODIN = (() => {
     const eqTotalVal = v.india_stocks_inr + v.us_stocks_inr + v.fo_inr + v.india_mutual_fund_inr;
     document.getElementById('a-eq-tot').textContent       = fmtINR(eqTotalVal);
 
-    const jSrc = num('jewel_22k_rate_inr_per_g', 0) > 0 ? 'manual' : 'est';
+    const jSrc = manualRateFresh('jewel_22k_rate_set_at') ? 'manual' : 'est';
     document.getElementById('jewel-22k-rate-box').textContent = `₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g (${jSrc})`;
     document.getElementById('jewel-rate').textContent    = `(${v.jewel_g.toFixed(0)}g · 22K ₹${Math.round(v.jewel22kRate).toLocaleString('en-IN')}/g · ${jSrc})`;
-    const mSrc = num('malabar_rate_inr_per_g', 0) > 0 ? 'manual' : (S.portfolio.malabar_qar_live ? 'live' : 'est');
+    const mSrc = manualRateFresh('malabar_rate_set_at') ? 'manual' : (S.portfolio.malabar_qar_live ? 'live' : 'est');
     document.getElementById('malabar-rate').textContent  = `(${v.malabar_g.toFixed(2)}g · 22K ₹${Math.round(v.malabarRate).toLocaleString('en-IN')}/g · ${mSrc})`;
     document.getElementById('a-jewel').textContent       = fmtINR(v.jewel_inr);
     document.getElementById('a-malabar').textContent     = fmtINR(v.malabar_inr);
@@ -3088,14 +3110,14 @@ const ODIN = (() => {
     const getJewelRate = () => {
       const v = view();
       const per10g = Math.round(v.jewel22kRate * 10);
-      const src = num('jewel_22k_rate_inr_per_g', 0) > 0 ? '(manual)' : '(est)';
+      const src = manualRateFresh('jewel_22k_rate_set_at') ? '(manual)' : '(est)';
       return `₹${per10g.toLocaleString('en-IN')}/10g ${src}`;
     };
 
     const getMalabarRate = () => {
       const v = view();
       const mRate = v.malabarRate / S.fx.qar_to_inr;
-      const src = num('malabar_rate_inr_per_g', 0) > 0 ? '(manual)'
+      const src = manualRateFresh('malabar_rate_set_at') ? '(manual)'
                 : S.portfolio.malabar_qar_live ? '(live · Malabar QA)'
                 : '(est)';
       return `QAR ${mRate.toFixed(2)}/g ${src}`;
@@ -3118,16 +3140,18 @@ const ODIN = (() => {
 
   function saveJewelRateOverride() {
     const val = parseFloat(document.getElementById('jewel-rate-override').value);
-    const r = resolveKey('jewel_22k_rate_inr_per_g');
-    r.set(isNaN(val) || val <= 0 ? 0 : val / 10); // input is /10g → store /g
+    const isSet = !isNaN(val) && val > 0;
+    resolveKey('jewel_22k_rate_inr_per_g').set(isSet ? val / 10 : 0); // input is /10g → store /g
+    resolveKey('jewel_22k_rate_set_at').set(isSet ? Date.now() : 0); // 24h manual-override TTL
     localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
     render();
   }
 
   function saveMalabarRateOverride() {
     const val = parseFloat(document.getElementById('malabar-rate-override').value);
-    const r = resolveKey('malabar_rate_inr_per_g');
-    r.set(isNaN(val) || val <= 0 ? 0 : val * S.fx.qar_to_inr); // QAR/g → INR/g
+    const isSet = !isNaN(val) && val > 0;
+    resolveKey('malabar_rate_inr_per_g').set(isSet ? val * S.fx.qar_to_inr : 0); // QAR/g → INR/g
+    resolveKey('malabar_rate_set_at').set(isSet ? Date.now() : 0); // 24h manual-override TTL
     localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
     render();
   }

@@ -314,17 +314,20 @@ function uid(){return`r${++_n}_${Math.random().toString(36).slice(2,6)}`}
 
 function initEntry(){
   return{
-    _eid:uid(),              // unique entry id
-    _date:todayKey(),        // MM-DD-YYYY
+    _eid:uid(),
+    _date:todayKey(),
     _createdAt:Date.now(),
-    remarks:'',              // optional short remark
+    remarks:'',
+    salary_date:'',         // date salary was credited (free text e.g. "26 Aug")
+    emi_confirmed:false,    // EMI+ins debited from bank — confirmed
+    malabar_in_stmt:false,  // Malabar matched in CC statement this month
     existingBalance:[{id:uid(),label:'Doha Bank existing balance',value:''}],
     outstandingInflow:[{id:uid(),label:'',value:''}],
     carEMI:'',carEMI_x:false,
     homeLoanEMI:'',homeLoanEMI_x:false,
     malabar:'1000',malabar_x:false,
-    luluAvailable:'',luluAvailOn7:'',luluPaid:'',lulu_x:false,
-    qaAvailable:'',qaAvailOn7:'',qaPaid:'',qa_x:false,
+    luluAvailable:'',luluAvailOn7:'',lulu_x:false,
+    qaAvailable:'',qaAvailOn7:'',qa_x:false,
     otherExpenses:[{id:uid(),label:'',value:''}],
     _confirmed:false
   };
@@ -339,8 +342,10 @@ function mergeEntry(saved){
     _date:saved._date||todayKey(),
     _createdAt:saved._createdAt||Date.now(),
     remarks:saved.remarks||'',
+    salary_date:saved.salary_date||'',
+    emi_confirmed:!!saved.emi_confirmed,
+    malabar_in_stmt:!!saved.malabar_in_stmt,
     malabar:saved.malabar!==undefined?saved.malabar:'1000',
-    // excl flags — default false if not in saved data (old entries)
     carEMI_x:!!saved.carEMI_x,
     homeLoanEMI_x:!!saved.homeLoanEMI_x,
     malabar_x:!!saved.malabar_x,
@@ -352,27 +357,26 @@ function mergeEntry(saved){
   };
 }
 const mergeDay=mergeEntry;
-function calcCard(available,availOn7,paid,limit){
+function calcCard(available,availOn7,limit){
   if(available===''||available==null)return{total:null,thisMonth:null,nextMonth:null,stillDue:null,paidAmt:0,hassplit:false};
   const at=evalExpr(available);
   const total=Math.max(0,limit-at);
-  const paidAmt=paid!==''&&paid!=null?evalExpr(paid):0;
   if(availOn7===''||availOn7==null){
-    const stillDue=Math.max(0,total-paidAmt);
-    return{total,thisMonth:total,nextMonth:0,stillDue,paidAmt,hassplit:false};
+    return{total,thisMonth:total,nextMonth:0,stillDue:Math.max(0,total),paidAmt:0,hassplit:false};
   }
   const a7=evalExpr(availOn7);
-  const thisMonth=Math.max(0,limit-a7);   // spent before 7th
-  const nextMonth=Math.max(0,a7-at);      // spent after 7th
-  const stillDue=Math.max(0,thisMonth-paidAmt); // what's left to pay from salary
+  const thisMonth=Math.max(0,limit-a7);     // spent before 7th (statement amount)
+  const nextMonth=Math.max(0,a7-at);        // spent after 7th (avail went down)
+  const paidAmt=Math.max(0,at-a7);          // auto-derived: avail went UP = payment made
+  const stillDue=Math.max(0,thisMonth-paidAmt);
   return{total,thisMonth,nextMonth,stillDue,paidAmt,hassplit:true};
 }
 function calcTotals(d){
   const carEMI=d.carEMI_x?0:evalExpr(d.carEMI);
   const homeLoanEMI=d.homeLoanEMI_x?0:evalExpr(d.homeLoanEMI);
   const malabar=d.malabar_x?0:evalExpr(d.malabar);
-  const lulu=calcCard(d.luluAvailable,d.luluAvailOn7,d.luluPaid,LULU_LIMIT);
-  const qa=calcCard(d.qaAvailable,d.qaAvailOn7,d.qaPaid,QA_LIMIT);
+  const lulu=calcCard(d.luluAvailable,d.luluAvailOn7,LULU_LIMIT);
+  const qa=calcCard(d.qaAvailable,d.qaAvailOn7,QA_LIMIT);
   const luluAmt=d.lulu_x?0:(lulu.stillDue||0);
   const qaAmt=d.qa_x?0:(qa.stillDue||0);
   const luluAmtFull=d.lulu_x?0:(lulu.total||0);
@@ -457,7 +461,7 @@ function Panel({label,total,totalColor,children,defaultOpen=true}){
 
 // ── Today View ────────────────────────────────────────────────
 // ── CardSection — TOP-LEVEL (never nest inside TodayView — causes remount on each keystroke) ──
-function CardSection({label,limit,avail,avail7,paid,onAvail,onAvail7,onPaid,cardData,excluded,onExcl}){
+function CardSection({label,limit,avail,avail7,onAvail,onAvail7,cardData,excluded,onExcl}){
   const c=cardData;
   return(
     <div className="row" style={{opacity:excluded?.45:1}}>
@@ -466,15 +470,11 @@ function CardSection({label,limit,avail,avail7,paid,onAvail,onAvail7,onPaid,card
         <ExclBtn excluded={!!excluded} onToggle={onExcl}/>
       </div>
       <div className="rv">
-        {/* All 3 inputs always visible — no conditional hiding */}
         <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,marginBottom:3}}>Available today</div>
         <ExprField value={avail} onChange={onAvail} placeholder="Current available balance"/>
 
         <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,margin:'8px 0 3px'}}>Available on 7th <span style={{fontWeight:400,opacity:.7}}>(from statement)</span></div>
         <ExprField value={avail7} onChange={onAvail7} placeholder="Balance as of 7th — optional"/>
-
-        <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,margin:'8px 0 3px'}}>Paid between 7th → today <span style={{fontWeight:400,opacity:.7}}>(optional)</span></div>
-        <ExprField value={paid} onChange={onPaid} placeholder="0 — any payment already made"/>
 
         {/* Summary box — only when available balance entered */}
         {c.total!=null&&(
@@ -553,7 +553,12 @@ function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
         <Panel label="INFLOW" total={qar(totals.totalInflow,0)} totalColor="var(--gold)">
           <div className="row">
             <div className="rl lock">Salary 🔒</div>
-            <div className="rv-locked">{qar(SALARY)}</div>
+            <div className="rv">
+              <div className="rv-locked">{qar(SALARY)}</div>
+              <input type="text" value={day.salary_date||''} onChange={e=>setDay(p=>({...p,salary_date:e.target.value}))}
+                placeholder="Received e.g. 26 Aug"
+                style={{marginTop:6,fontSize:11,padding:'4px 8px'}}/>
+            </div>
           </div>
           <div style={{marginBottom:14}}>
             <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Existing Balance</div>
@@ -596,8 +601,14 @@ function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
           <div className="row">
             <div className="rl lock">LC Loan 🔒</div>
             <div className="rv">
-              <div className="rv-locked">{qar(LC_LOAN_EMI+LC_LOAN_INS)}</div>
-              <div style={{fontSize:10,color:'var(--muted)',paddingLeft:4}}>EMI {qar(LC_LOAN_EMI,0)} + Ins {qar(LC_LOAN_INS,0)}</div>
+              <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                <div className="rv-locked">{qar(LC_LOAN_EMI+LC_LOAN_INS)}</div>
+                <label style={{display:'flex',alignItems:'center',gap:4,cursor:'pointer',fontSize:11,color:day.emi_confirmed?'var(--green)':'var(--muted)'}}>
+                  <input type="checkbox" checked={!!day.emi_confirmed} onChange={e=>setDay(p=>({...p,emi_confirmed:e.target.checked}))} style={{width:13,height:13}}/>
+                  bank confirmed
+                </label>
+              </div>
+              <div style={{fontSize:10,color:'var(--muted)',marginTop:3}}>EMI {qar(LC_LOAN_EMI,0)} + Ins {qar(LC_LOAN_INS,0)}</div>
             </div>
           </div>
           <div className="row">
@@ -605,19 +616,23 @@ function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
             <ExprField value={day.malabar} onChange={v=>setDay(p=>({...p,malabar:v}))} placeholder="1000" excluded={day.malabar_x}/>
             <ExclBtn excluded={!!day.malabar_x} onToggle={()=>setDay(p=>({...p,malabar_x:!p.malabar_x}))}/>
           </div>
+          {!day.malabar_x&&(
+            <label style={{display:'flex',alignItems:'center',gap:5,cursor:'pointer',fontSize:11,color:day.malabar_in_stmt?'var(--green)':'var(--muted)',padding:'0 0 8px 96px',marginTop:-6}}>
+              <input type="checkbox" checked={!!day.malabar_in_stmt} onChange={e=>setDay(p=>({...p,malabar_in_stmt:e.target.checked}))} style={{width:13,height:13}}/>
+              in CC statement (suppresses next-month forecast)
+            </label>
+          )}
           <CardSection label="Lulu Card" limit={LULU_LIMIT}
-            avail={day.luluAvailable} avail7={day.luluAvailOn7} paid={day.luluPaid}
+            avail={day.luluAvailable} avail7={day.luluAvailOn7}
             excluded={!!day.lulu_x} onExcl={()=>setDay(p=>({...p,lulu_x:!p.lulu_x}))}
             onAvail={v=>setDay(p=>({...p,luluAvailable:v}))}
             onAvail7={v=>setDay(p=>({...p,luluAvailOn7:v}))}
-            onPaid={v=>setDay(p=>({...p,luluPaid:v}))}
             cardData={totals.lulu}/>
           <CardSection label="QA Card" limit={QA_LIMIT}
-            avail={day.qaAvailable} avail7={day.qaAvailOn7} paid={day.qaPaid}
+            avail={day.qaAvailable} avail7={day.qaAvailOn7}
             excluded={!!day.qa_x} onExcl={()=>setDay(p=>({...p,qa_x:!p.qa_x}))}
             onAvail={v=>setDay(p=>({...p,qaAvailable:v}))}
             onAvail7={v=>setDay(p=>({...p,qaAvailOn7:v}))}
-            onPaid={v=>setDay(p=>({...p,qaPaid:v}))}
             cardData={totals.qa}/>
           <div>
             <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Other Expenses</div>
@@ -628,6 +643,32 @@ function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
           </div>
         </Panel>
       </div>
+
+      {/* ── VERIFICATION STATUS ── */}
+      {(()=>{
+        const rentOk=totals.eb>0&&totals.eb>=HOUSE_RENT;
+        const rentWarn=totals.eb>0&&totals.eb<HOUSE_RENT;
+        const insOk=totals.net>300&&!!day.emi_confirmed;
+        return(
+          <div style={{padding:'10px 16px',display:'flex',gap:10,flexWrap:'wrap',borderBottom:'1px solid var(--border)',background:'var(--bg2)'}}>
+            <span style={{fontSize:10,fontWeight:700,color:day.salary_date?'var(--green)':'var(--muted)'}}>
+              {day.salary_date?`💰 ${day.salary_date}`:'💰 salary date?'}
+            </span>
+            <span style={{fontSize:10,fontWeight:700,color:day.emi_confirmed?'var(--green)':'var(--muted)'}}>
+              {day.emi_confirmed?'🏦 EMI ✓':'🏦 EMI pending'}
+            </span>
+            <span style={{fontSize:10,fontWeight:700,color:insOk?'var(--green)':'var(--muted)'}}>
+              {insOk?'🛡 Ins addressed':'🛡 Ins check: net>300?'}
+            </span>
+            <span style={{fontSize:10,fontWeight:700,color:rentOk?'var(--green)':rentWarn?'var(--red)':'var(--muted)'}}>
+              {rentOk?'🏠 Rent covered':rentWarn?'⚠️ Rent: low balance':'🏠 Rent: enter balance'}
+            </span>
+            <span style={{fontSize:10,fontWeight:700,color:day.malabar_x?'var(--muted)':day.malabar_in_stmt?'var(--green)':'var(--gold)'}}>
+              {day.malabar_x?'📋 Malabar excluded':day.malabar_in_stmt?'📋 Malabar ✓ stmt':'📋 Malabar unmatched'}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* ── NET — two scenarios side by side ── */}
       <div className="net-section">
@@ -697,7 +738,8 @@ function NextMonthProjection({entry,dateKey}){
   const totals=useMemo(()=>calcTotals(entry),[entry]);
   const carryLulu=totals.lulu.nextMonth||0;
   const carryQA=totals.qa.nextMonth||0;
-  const fixedOut=HOUSE_RENT+DOMESTIC_HELP+(LC_LOAN_EMI+LC_LOAN_INS)+evalExpr(entry.malabar)+evalExpr(entry.carEMI)+evalExpr(entry.homeLoanEMI);
+  const malabarNext=entry.malabar_in_stmt?0:evalExpr(entry.malabar);
+  const fixedOut=HOUSE_RENT+DOMESTIC_HELP+(LC_LOAN_EMI+LC_LOAN_INS)+malabarNext+evalExpr(entry.carEMI)+evalExpr(entry.homeLoanEMI);
   const totalOut=fixedOut+carryLulu+carryQA;
   const net=SALARY-totalOut;
   const savPct=SALARY>0?net/SALARY*100:0;
@@ -727,7 +769,8 @@ function NextMonthProjection({entry,dateKey}){
         <PRow lbl="House Rent 🔒" val={HOUSE_RENT}/>
         <PRow lbl="Domestic Help 🔒" val={DOMESTIC_HELP}/>
         <PRow lbl="LC Loan (EMI+Ins) 🔒" val={LC_LOAN_EMI+LC_LOAN_INS}/>
-        {evalExpr(entry.malabar)>0&&<PRow lbl="Malabar" val={evalExpr(entry.malabar)}/>}
+        {malabarNext>0&&<PRow lbl="Malabar" val={malabarNext}/>}
+        {entry.malabar_in_stmt&&<div style={{fontSize:10,color:'var(--green)',padding:'3px 0'}}>📋 Malabar paid this month — excluded</div>}
         {carryLulu>0&&<PRow lbl="🟡 Lulu carry-forward" val={carryLulu} color="var(--gold)"/>}
         {carryQA>0&&<PRow lbl="🟡 QA carry-forward" val={carryQA} color="var(--gold)"/>}
         {carryLulu===0&&carryQA===0&&(
@@ -770,6 +813,11 @@ function HistoryDetailCompact({entry,dateKey}){
   return(
     <div className="det">
       <div className="det-status">{entry._confirmed?'✓ CONFIRMED':'● DRAFT'}</div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',margin:'4px 0 8px'}}>
+        {entry.salary_date&&<span style={{fontSize:10,color:'var(--green)',fontWeight:700}}>💰 {entry.salary_date}</span>}
+        {entry.emi_confirmed&&<span style={{fontSize:10,color:'var(--green)',fontWeight:700}}>🏦 EMI ✓</span>}
+        {entry.malabar_in_stmt&&<span style={{fontSize:10,color:'var(--green)',fontWeight:700}}>📋 Malabar ✓</span>}
+      </div>
       {entry.remarks&&<div style={{background:'var(--bg2)',borderRadius:4,color:'var(--gold)',fontSize:12,fontStyle:'italic',margin:'6px 0 10px',padding:'6px 10px'}}>"{entry.remarks}"</div>}
       <div className="ro-section">INFLOW</div>
       <div className="ro-row"><span className="ro-lbl">Salary 🔒</span><span className="ro-val">{qar(SALARY)}</span></div>
@@ -829,17 +877,23 @@ function HistoryDetailFull({entry}){
           <div className="row"><div className="rl lock">LC Loan 🔒</div>
             <div className="rv">
               <div className="rv-locked">{qar(LC_LOAN_EMI+LC_LOAN_INS)}</div>
-              <div style={{fontSize:10,color:'var(--muted)',paddingLeft:4}}>EMI {qar(LC_LOAN_EMI,0)} + Ins {qar(LC_LOAN_INS,0)}</div>
+              <div style={{fontSize:10,color:'var(--muted)',marginTop:2}}>EMI {qar(LC_LOAN_EMI,0)} + Ins {qar(LC_LOAN_INS,0)}</div>
+              {entry.emi_confirmed&&<div style={{fontSize:10,color:'var(--green)',marginTop:2}}>🏦 Bank confirmed</div>}
             </div>
           </div>
-          <div className="row"><div className="rl">Malabar</div><ExprField value={entry.malabar} disabled/></div>
+          <div className="row"><div className="rl">Malabar</div>
+            <div className="rv">
+              <ExprField value={entry.malabar} disabled/>
+              {entry.malabar_in_stmt&&<div style={{fontSize:10,color:'var(--green)',marginTop:2}}>📋 In CC statement</div>}
+            </div>
+          </div>
           {totals.lulu.total!=null&&(
             <div className="row"><div className="rl">Lulu Card</div>
               <div className="rv">
                 <ExprField value={entry.luluAvailable} disabled placeholder="Available balance"/>
                 {entry.luluAvailOn7&&<ExprField value={entry.luluAvailOn7} disabled placeholder="Available on 7th"/>}
-                {entry.luluPaid&&<ExprField value={entry.luluPaid} disabled placeholder="Paid 7th→today"/>}
                 <div className="card-cycle" style={{marginTop:8}}>
+                  {totals.lulu.paidAmt>0&&<div className="card-cycle-row"><span className="cc-lbl">✅ Auto-derived paid</span><span className="cc-val" style={{color:'var(--green)'}}>− {qar(totals.lulu.paidAmt)}</span></div>}
                   <div className="card-cycle-row"><span className="cc-lbl">🔴 Due salary</span><span className="cc-val" style={{color:'var(--red)'}}>{qar(totals.lulu.stillDue||0)}</span></div>
                   {totals.lulu.nextMonth>0&&<div className="card-cycle-row"><span className="cc-lbl">🟡 Next month</span><span className="cc-val" style={{color:'var(--gold)'}}>{qar(totals.lulu.nextMonth)}</span></div>}
                 </div>
@@ -851,8 +905,8 @@ function HistoryDetailFull({entry}){
               <div className="rv">
                 <ExprField value={entry.qaAvailable} disabled placeholder="Available balance"/>
                 {entry.qaAvailOn7&&<ExprField value={entry.qaAvailOn7} disabled placeholder="Available on 7th"/>}
-                {entry.qaPaid&&<ExprField value={entry.qaPaid} disabled placeholder="Paid 7th→today"/>}
                 <div className="card-cycle" style={{marginTop:8}}>
+                  {totals.qa.paidAmt>0&&<div className="card-cycle-row"><span className="cc-lbl">✅ Auto-derived paid</span><span className="cc-val" style={{color:'var(--green)'}}>− {qar(totals.qa.paidAmt)}</span></div>}
                   <div className="card-cycle-row"><span className="cc-lbl">🔴 Due salary</span><span className="cc-val" style={{color:'var(--red)'}}>{qar(totals.qa.stillDue||0)}</span></div>
                   {totals.qa.nextMonth>0&&<div className="card-cycle-row"><span className="cc-lbl">🟡 Next month</span><span className="cc-val" style={{color:'var(--gold)'}}>{qar(totals.qa.nextMonth)}</span></div>}
                 </div>
@@ -1085,8 +1139,9 @@ function ExportView({day,allData}){
 
   function buildSnapshot(){
     const eb=(day.existingBalance||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0);
+    const rentCovered=eb>=HOUSE_RENT;
     return{
-      schema_version:1,
+      schema_version:2,
       exported_at:new Date().toISOString(),
       salary:SALARY,
       fixed:{
@@ -1098,15 +1153,23 @@ function ExportView({day,allData}){
         malabar_default:1000,
         malabar_value:evalExpr(day.malabar),
         malabar_excluded:!!day.malabar_x,
+        malabar_in_stmt:!!day.malabar_in_stmt,
       },
       cards:{
-        qa:{limit:QA_LIMIT,available_today:evalExpr(day.qaAvailable)||null,outstanding:totals.qa.total,still_due:totals.qa.stillDue,next_month:totals.qa.nextMonth,excluded:!!day.qa_x},
-        lulu:{limit:LULU_LIMIT,available_today:evalExpr(day.luluAvailable)||null,outstanding:totals.lulu.total,still_due:totals.lulu.stillDue,next_month:totals.lulu.nextMonth,excluded:!!day.lulu_x},
+        qa:{limit:QA_LIMIT,available_today:evalExpr(day.qaAvailable)||null,outstanding:totals.qa.total,paid_auto:totals.qa.paidAmt,still_due:totals.qa.stillDue,next_month:totals.qa.nextMonth,excluded:!!day.qa_x},
+        lulu:{limit:LULU_LIMIT,available_today:evalExpr(day.luluAvailable)||null,outstanding:totals.lulu.total,paid_auto:totals.lulu.paidAmt,still_due:totals.lulu.stillDue,next_month:totals.lulu.nextMonth,excluded:!!day.lulu_x},
       },
       bank:{doha_bank_balance:eb||null},
       inflow:{salary:SALARY,existing_balance:eb,outstanding_inflow:(day.outstandingInflow||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0),total:totals.totalInflow},
       outflow:{total_mandatory:totals.totalOutflow,total_cc_cleared:totals.totalOutflowFull},
       net:{mandatory:totals.net,cc_cleared:totals.netFull,savings_pct:+totals.savingsPct.toFixed(1)},
+      verification:{
+        salary_date:day.salary_date||null,
+        emi_confirmed:!!day.emi_confirmed,
+        malabar_in_stmt:!!day.malabar_in_stmt,
+        rent_covered:eb>0?rentCovered:null,
+        insurance_addressed:totals.net>300&&!!day.emi_confirmed,
+      },
       remarks:day.remarks||null,
       history_count:Object.keys(allData).filter(k=>k!=='_draft').length,
     };
@@ -1157,7 +1220,7 @@ function ExportView({day,allData}){
           {copied?'✓ COPIED':'COPY JSON'}
         </button>
       </div>
-      <div style={{fontSize:10,color:'var(--muted)',marginTop:10}}>Schema v1 · Reflects current TODAY tab values</div>
+      <div style={{fontSize:10,color:'var(--muted)',marginTop:10}}>Schema v2 · Reflects current TODAY tab values · verification block included</div>
     </div>
   );
 }

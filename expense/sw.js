@@ -1,5 +1,5 @@
 // Expense Planner Service Worker — network-first, offline fallback
-const CACHE = 'ep-v13';
+const CACHE = 'ep-v14';
 const BASE  = '/Omm-Money/expense';
 const SHELL = [BASE + '/', BASE + '/index.html', BASE + '/icon.svg', BASE + '/manifest.json'];
 

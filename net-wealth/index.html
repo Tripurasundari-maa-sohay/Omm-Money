@@ -101,10 +101,10 @@
   .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
   .row-2col > .card { margin-bottom: 0; }
   @media (max-width: 900px) { .row-2col { grid-template-columns: 1fr; } }
-  .mtx-body { display: grid; grid-template-columns: 1fr 260px; gap: 14px; align-items: center; }
-  @media (max-width: 620px) { .mtx-body { grid-template-columns: 1fr; } }
+  .mtx-body { display: grid; grid-template-columns: 1fr 200px; gap: 14px; align-items: center; }
+  @media (max-width: 560px) { .mtx-body { grid-template-columns: 1fr; } }
   .mtx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mtx-pie-wrap { height: 190px; position: relative; cursor: pointer; }
+  .mtx-pie-wrap { height: 230px; position: relative; cursor: pointer; }
   .mtx-sub { font-size: 10px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
   /* Floating popup, anchored to the card — doesn't push the grid around */
   .mtx-popup {
@@ -125,8 +125,8 @@
   @keyframes mtxPopIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
   /* CURRENCY EXPOSURE */
-  .exp-grid { display: grid; grid-template-columns: 1fr 260px; gap: 16px; align-items: center; }
-  @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
+  .exp-grid { display: grid; grid-template-columns: 1fr 200px; gap: 16px; align-items: center; }
+  @media (max-width: 700px) { .exp-grid { grid-template-columns: 1fr; } }
   .exp-row { display: grid; grid-template-columns: 40px 60px 1fr 110px; gap: 8px; align-items: center; padding: 6px 0; font-size: 12px; }
   .exp-row .flag { font-size: 18px; }
   .exp-row .ccy { color: var(--gold); font-weight: 700; }
@@ -137,7 +137,7 @@
   .exp-row .bar-fill.qar { background: linear-gradient(90deg, #a78bfa, #6d28d9); }
   .exp-row .amt { text-align: right; color: var(--text); font-weight: 600; }
   .exp-row .amt .pct { color: var(--text-dim); font-size: 10px; margin-left: 4px; }
-  .exp-pie-wrap { height: 190px; position: relative; cursor: pointer; }
+  .exp-pie-wrap { height: 230px; position: relative; cursor: pointer; }
 
   /* PROGRESS BARS */
   .progress { margin-top: 14px; }
@@ -573,6 +573,7 @@
     <div class="kpi-tile"><div class="lbl">12-MONTH HIGH</div><div class="val" id="kpi-12hi">—</div></div>
     <div class="kpi-tile"><div class="lbl">US STOCKS vs LC LOAN</div><div class="val" id="kpi-us-lc">—</div><div class="delta" id="kpi-us-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-us-lc-bar" style="width:0%"></div></div></div>
     <div class="kpi-tile"><div class="lbl">INDIA STOCKS vs APT LOAN</div><div class="val" id="kpi-in-apt">—</div><div class="delta" id="kpi-in-apt-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-in-apt-bar" style="width:0%"></div></div></div>
+    <div class="kpi-tile"><div class="lbl">US STOCKS + GRATUITY vs LC LOAN</div><div class="val" id="kpi-usgrat-lc">—</div><div class="delta" id="kpi-usgrat-lc-delta">—</div><div class="cov-bar"><div class="cov-fill" id="kpi-usgrat-lc-bar" style="width:0%"></div></div></div>
   </div>
   <div class="chart-wrap"><canvas id="kpi-chart"></canvas></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -1907,7 +1908,7 @@ const ODIN = (() => {
           },
           plugins: {
             legend: {
-              display: true, position: 'right', align: 'center',
+              display: true, position: 'bottom', align: 'center',
               labels: {
                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73',
                 font: { size: 10 }, padding: 8, boxWidth: 10, boxHeight: 10
@@ -2032,7 +2033,7 @@ const ODIN = (() => {
         },
         plugins: {
           legend: {
-            display: true, position: 'right', align: 'center',
+            display: true, position: 'bottom', align: 'center',
             labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73', font: { size: 10 }, padding: 8, boxWidth: 10, boxHeight: 10 }
           },
           tooltip: { callbacks: { label: ctx => `${ctx.label.split(':')[0]}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/totAssets*100).toFixed(1)}%)` } },
@@ -2133,6 +2134,22 @@ const ODIN = (() => {
       aptGapEl.textContent = 'Apt loan cleared';
       aptGapEl.className = 'delta pos';
       setCoverageBar('kpi-in-apt-bar', 100);
+    }
+
+    // US stocks + Gratuity vs LC (Land Cruiser) loan
+    const usGratInr = (v.us_stocks_inr || 0) + (v.grat_inr || 0);
+    document.getElementById('kpi-usgrat-lc').textContent = fmtINR(usGratInr);
+    const usGratGapEl = document.getElementById('kpi-usgrat-lc-delta');
+    if (lcLoanInr > 0) {
+      const gap3 = usGratInr - lcLoanInr;
+      const pct3 = usGratInr / lcLoanInr * 100;
+      usGratGapEl.textContent = pct3.toFixed(0) + '% of ' + fmtINR(lcLoanInr) + (gap3 >= 0 ? ' · +' + fmtINR(gap3) : ' · −' + fmtINR(-gap3));
+      usGratGapEl.className = 'delta ' + (gap3 >= 0 ? 'pos' : 'neg');
+      setCoverageBar('kpi-usgrat-lc-bar', pct3);
+    } else {
+      usGratGapEl.textContent = 'LC loan cleared';
+      usGratGapEl.className = 'delta pos';
+      setCoverageBar('kpi-usgrat-lc-bar', 100);
     }
 
     drawKPIChart(currentNW);

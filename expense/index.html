@@ -1132,6 +1132,114 @@ function AuthScreen({onSignIn,onSignInConsent,error}){
   );
 }
 
+// ── Import View ───────────────────────────────────────────────
+function ImportView({onImport}){
+  const[status,setStatus]=useState(''); // ''|'ok'|'err'
+  const[msg,setMsg]=useState('');
+  const[preview,setPreview]=useState(null);
+  const fileRef=useRef(null);
+
+  function parseSnap(snap){
+    // Map finance-snapshot.json (v1 or v2) → entry fields
+    const entry={};
+    const b=snap.bank?.doha_bank_balance;
+    if(b!=null)entry.existingBalance=[{id:uid(),label:'Doha Bank existing balance',value:String(b)}];
+    const qa=snap.cards?.qa;
+    if(qa?.available_today!=null)entry.qaAvailable=String(qa.available_today);
+    if(qa?.available_on_7th!=null)entry.qaAvailOn7=String(qa.available_on_7th);
+    const lulu=snap.cards?.lulu;
+    if(lulu?.available_today!=null)entry.luluAvailable=String(lulu.available_today);
+    if(lulu?.available_on_7th!=null)entry.luluAvailOn7=String(lulu.available_on_7th);
+    const v=snap.verification;
+    if(v){
+      if(v.salary_date)entry.salary_date=v.salary_date;
+      if(v.emi_confirmed!=null)entry.emi_confirmed=!!v.emi_confirmed;
+      if(v.malabar_in_stmt!=null)entry.malabar_in_stmt=!!v.malabar_in_stmt;
+    }
+    const f=snap.fixed;
+    if(f){
+      if(f.malabar_value!=null&&f.malabar_value!==1000)entry.malabar=String(f.malabar_value);
+      if(f.malabar_excluded!=null)entry.malabar_x=!!f.malabar_excluded;
+      if(f.malabar_in_stmt!=null)entry.malabar_in_stmt=!!f.malabar_in_stmt;
+    }
+    if(snap.remarks)entry.remarks=String(snap.remarks).slice(0,30);
+    return entry;
+  }
+
+  function loadFile(file){
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const snap=JSON.parse(e.target.result);
+        if(!snap.schema_version)throw new Error('Not a finance-snapshot file');
+        const mapped=parseSnap(snap);
+        setPreview({snap,mapped});
+        setStatus('');setMsg('');
+      }catch(err){
+        setStatus('err');setMsg('Invalid file: '+err.message);setPreview(null);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function applyImport(){
+    if(!preview)return;
+    onImport(preview.mapped);
+    setStatus('ok');setMsg('Fields applied to TODAY tab. Review and save entry.');
+    setPreview(null);
+  }
+
+  const v=preview?.snap?.verification;
+  const cards=preview?.snap?.cards;
+  const bank=preview?.snap?.bank;
+
+  return(
+    <div style={{padding:'16px',maxWidth:600}}>
+      <div style={{fontSize:11,color:'var(--gold)',letterSpacing:3,fontWeight:700,marginBottom:4}}>IMPORT FROM STATEMENT PROJECT</div>
+      <div style={{fontSize:11,color:'var(--muted)',marginBottom:16}}>
+        Upload <code style={{background:'var(--bg2)',padding:'1px 5px',borderRadius:3}}>finance-snapshot.json</code> filled by Claude Code in statement project → auto-fills TODAY tab.
+      </div>
+
+      <div style={{border:'2px dashed var(--border2)',borderRadius:8,padding:'20px',textAlign:'center',marginBottom:16,cursor:'pointer'}}
+        onClick={()=>fileRef.current?.click()}
+        onDragOver={e=>e.preventDefault()}
+        onDrop={e=>{e.preventDefault();loadFile(e.dataTransfer.files[0]);}}>
+        <div style={{fontSize:24,marginBottom:6}}>📂</div>
+        <div style={{fontSize:12,color:'var(--muted)'}}>Click or drag finance-snapshot.json here</div>
+        <input ref={fileRef} type="file" accept=".json,application/json" style={{display:'none'}}
+          onChange={e=>loadFile(e.target.files[0])}/>
+      </div>
+
+      {status==='err'&&<div style={{color:'var(--red)',fontSize:12,marginBottom:12}}>{msg}</div>}
+      {status==='ok'&&<div style={{color:'var(--green)',fontSize:12,marginBottom:12}}>✓ {msg}</div>}
+
+      {preview&&(
+        <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,padding:14,marginBottom:12,fontSize:12}}>
+          <div style={{fontWeight:700,color:'var(--gold)',marginBottom:10}}>PREVIEW — will apply to TODAY tab</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5}}>
+            {bank?.doha_bank_balance!=null&&<><span style={{color:'var(--muted)'}}>Bank balance</span><span>{qar(bank.doha_bank_balance)}</span></>}
+            {cards?.qa?.available_today!=null&&<><span style={{color:'var(--muted)'}}>QA available today</span><span>{qar(cards.qa.available_today)}</span></>}
+            {cards?.qa?.available_on_7th!=null&&<><span style={{color:'var(--muted)'}}>QA on 7th</span><span>{qar(cards.qa.available_on_7th)}</span></>}
+            {cards?.lulu?.available_today!=null&&<><span style={{color:'var(--muted)'}}>Lulu available today</span><span>{qar(cards.lulu.available_today)}</span></>}
+            {cards?.lulu?.available_on_7th!=null&&<><span style={{color:'var(--muted)'}}>Lulu on 7th</span><span>{qar(cards.lulu.available_on_7th)}</span></>}
+            {v?.salary_date&&<><span style={{color:'var(--muted)'}}>Salary date</span><span>{v.salary_date}</span></>}
+            {v?.emi_confirmed!=null&&<><span style={{color:'var(--muted)'}}>EMI confirmed</span><span style={{color:v.emi_confirmed?'var(--green)':'var(--muted)'}}>{v.emi_confirmed?'✓ Yes':'No'}</span></>}
+            {v?.malabar_in_stmt!=null&&<><span style={{color:'var(--muted)'}}>Malabar in stmt</span><span style={{color:v.malabar_in_stmt?'var(--green)':'var(--muted)'}}>{v.malabar_in_stmt?'✓ Yes':'No'}</span></>}
+          </div>
+          <button onClick={applyImport}
+            style={{marginTop:14,background:'var(--gold)',border:'none',borderRadius:6,color:'#060610',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,letterSpacing:2,padding:'10px 20px',width:'100%'}}>
+            ✓ APPLY TO TODAY TAB
+          </button>
+        </div>
+      )}
+      <div style={{fontSize:10,color:'var(--muted)',marginTop:6}}>
+        Fields NOT in snapshot stay as-is. Switch to TODAY tab after applying to review + save.
+      </div>
+    </div>
+  );
+}
+
 // ── Export View ───────────────────────────────────────────────
 function ExportView({day,allData}){
   const totals=useMemo(()=>calcTotals(day),[day]);
@@ -1395,6 +1503,7 @@ function App(){
         <div className="tabs">
           <button className={`tab${tab==='today'?' on':''}`} onClick={()=>setTab('today')}>TODAY</button>
           <button className={`tab${tab==='history'?' on':''}`} onClick={()=>setTab('history')}>HISTORY ({historyEntries.length})</button>
+          <button className={`tab${tab==='import'?' on':''}`} onClick={()=>setTab('import')}>⬆ IMPORT</button>
           <button className={`tab${tab==='export'?' on':''}`} onClick={()=>setTab('export')}>⬇ EXPORT</button>
         </div>
       </div>
@@ -1410,7 +1519,8 @@ function App(){
         </div>
       )}
 
-      {tab==='export'?<ExportView day={day} allData={allData}/>
+      {tab==='import'?<ImportView onImport={fields=>{setDay(p=>({...mergeEntry(p),...fields}));setTab('today');}}/>
+      :tab==='export'?<ExportView day={day} allData={allData}/>
       :tab==='today'
         ?<TodayView day={day} setDay={setDay} onSave={handleSave} syncStatus={syncStatus} todayDateKey={TDK}/>
         :<HistoryView entries={historyEntries} todayKey={TDK} onGoToToday={()=>setTab('today')}

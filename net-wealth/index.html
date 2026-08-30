@@ -502,6 +502,7 @@
     <span>Assets: <b class="asset" id="hero-assets">—</b></span>
     <span>Liabilities: <b class="liab" id="hero-liab">—</b></span>
   </div>
+  <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:4px" id="last-updated">—</div>
   <div class="progress">
     <div class="row"><span>Top 1% India · ₹1.52 Cr</span><span id="m0-pct">—</span></div>
     <div class="bar"><div class="bar-fill" id="m0-bar" style="width:0"></div></div>
@@ -1665,6 +1666,20 @@ const ODIN = (() => {
       `<span><b>₹</b>${Math.round(v.netWorth).toLocaleString('en-IN')}</span>`;
     document.getElementById('hero-assets').textContent = fmtINR(v.assetsTot);
     document.getElementById('hero-liab').textContent = fmtINR(v.liabTot);
+
+    // Last-updated stamp — when seed.json (manual inputs) was last saved
+    const luEl = document.getElementById('last-updated');
+    if (luEl) {
+      const ts = S.seed._last_updated;
+      if (ts) {
+        const d = new Date(ts);
+        const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        luEl.textContent = `Last updated: ${dateStr} · ${timeStr}`;
+      } else {
+        luEl.textContent = '';
+      }
+    }
 
     // Currency exposure rows + pie
     renderExposure(v);
@@ -2896,6 +2911,7 @@ const ODIN = (() => {
     });
 
     S.seed.as_of = new Date().toISOString().slice(0, 10);
+    S.seed._last_updated = new Date().toISOString();
     localStorage.setItem(LS_STATE, JSON.stringify(S.seed));
     flash('💾 Saved locally · pushing to GitHub…');
 

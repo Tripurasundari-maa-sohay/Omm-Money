@@ -1078,6 +1078,90 @@ function AuthScreen({onSignIn,onSignInConsent,error}){
   );
 }
 
+// ── Export View ───────────────────────────────────────────────
+function ExportView({day,allData}){
+  const totals=useMemo(()=>calcTotals(day),[day]);
+  const[copied,setCopied]=useState(false);
+
+  function buildSnapshot(){
+    const eb=(day.existingBalance||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0);
+    return{
+      schema_version:1,
+      exported_at:new Date().toISOString(),
+      salary:SALARY,
+      fixed:{
+        house_rent:HOUSE_RENT,
+        domestic_help:DOMESTIC_HELP,
+        lc_loan_emi:LC_LOAN_EMI,
+        lc_loan_insurance:LC_LOAN_INS,
+        lc_loan_total:LC_LOAN_EMI+LC_LOAN_INS,
+        malabar_default:1000,
+        malabar_value:evalExpr(day.malabar),
+        malabar_excluded:!!day.malabar_x,
+      },
+      cards:{
+        qa:{limit:QA_LIMIT,available_today:evalExpr(day.qaAvailable)||null,outstanding:totals.qa.total,still_due:totals.qa.stillDue,next_month:totals.qa.nextMonth,excluded:!!day.qa_x},
+        lulu:{limit:LULU_LIMIT,available_today:evalExpr(day.luluAvailable)||null,outstanding:totals.lulu.total,still_due:totals.lulu.stillDue,next_month:totals.lulu.nextMonth,excluded:!!day.lulu_x},
+      },
+      bank:{doha_bank_balance:eb||null},
+      inflow:{salary:SALARY,existing_balance:eb,outstanding_inflow:(day.outstandingInflow||[]).reduce((s,r)=>s+(r.excl?0:evalExpr(r.value)),0),total:totals.totalInflow},
+      outflow:{total_mandatory:totals.totalOutflow,total_cc_cleared:totals.totalOutflowFull},
+      net:{mandatory:totals.net,cc_cleared:totals.netFull,savings_pct:+totals.savingsPct.toFixed(1)},
+      remarks:day.remarks||null,
+      history_count:Object.keys(allData).filter(k=>k!=='_draft').length,
+    };
+  }
+
+  function download(){
+    const snap=buildSnapshot();
+    const blob=new Blob([JSON.stringify(snap,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='finance-snapshot.json';a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function copyJSON(){
+    navigator.clipboard?.writeText(JSON.stringify(buildSnapshot(),null,2))
+      .then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});
+  }
+
+  const snap=buildSnapshot();
+  const jsonStr=JSON.stringify(snap,null,2);
+
+  return(
+    <div style={{padding:'16px',maxWidth:600}}>
+      <div style={{fontSize:11,color:'var(--gold)',letterSpacing:3,fontWeight:700,marginBottom:4}}>EXPORT FOR CLAUDE</div>
+      <div style={{fontSize:11,color:'var(--muted)',marginBottom:16}}>Share <code style={{background:'var(--bg2)',padding:'1px 5px',borderRadius:3}}>finance-snapshot.json</code> with Claude Code to update expense planner without re-entering data.</div>
+
+      {/* Summary */}
+      <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,padding:14,marginBottom:12,fontSize:12}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+          <div style={{color:'var(--muted)'}}>Salary</div><div style={{color:'var(--gold)',fontWeight:700}}>{qar(SALARY)}</div>
+          <div style={{color:'var(--muted)'}}>Bank balance</div><div style={{fontWeight:600}}>{snap.bank.doha_bank_balance!==null?qar(snap.bank.doha_bank_balance):'—'}</div>
+          <div style={{color:'var(--muted)'}}>QA outstanding</div><div style={{color:snap.cards.qa.outstanding?'var(--red)':'var(--green)',fontWeight:600}}>{snap.cards.qa.outstanding!=null?qar(snap.cards.qa.outstanding):'—'}</div>
+          <div style={{color:'var(--muted)'}}>Lulu outstanding</div><div style={{color:snap.cards.lulu.outstanding?'var(--red)':'var(--green)',fontWeight:600}}>{snap.cards.lulu.outstanding!=null?qar(snap.cards.lulu.outstanding):'—'}</div>
+          <div style={{color:'var(--muted)'}}>Total outflow</div><div style={{color:'var(--red)',fontWeight:700}}>{qar(snap.outflow.total_mandatory)}</div>
+          <div style={{color:'var(--muted)'}}>Net (mandatory)</div><div style={{color:snap.net.mandatory>=0?'var(--green)':'var(--red)',fontWeight:700,fontSize:14}}>{snap.net.mandatory<0?'−':''}{qar(Math.abs(snap.net.mandatory))}</div>
+        </div>
+      </div>
+
+      {/* JSON preview */}
+      <div style={{background:'var(--bg)',border:'1px solid var(--border2)',borderRadius:5,padding:12,marginBottom:12,fontFamily:'Courier New,monospace',fontSize:10,color:'var(--muted)',maxHeight:240,overflowY:'auto',whiteSpace:'pre-wrap',wordBreak:'break-all'}}>
+        {jsonStr}
+      </div>
+
+      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+        <button onClick={download} style={{background:'var(--gold)',border:'none',borderRadius:6,color:'#060610',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,letterSpacing:2,padding:'12px 20px'}}>⬇ DOWNLOAD JSON</button>
+        <button onClick={copyJSON} style={{background:'none',border:'2px solid var(--border2)',borderRadius:6,color:copied?'var(--green)':'var(--muted)',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:600,letterSpacing:1,padding:'12px 16px',transition:'color .2s'}}>
+          {copied?'✓ COPIED':'COPY JSON'}
+        </button>
+      </div>
+      <div style={{fontSize:10,color:'var(--muted)',marginTop:10}}>Schema v1 · Reflects current TODAY tab values</div>
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────────
 function App(){
   const TDK=useMemo(()=>todayKey(),[]);
@@ -1248,6 +1332,7 @@ function App(){
         <div className="tabs">
           <button className={`tab${tab==='today'?' on':''}`} onClick={()=>setTab('today')}>TODAY</button>
           <button className={`tab${tab==='history'?' on':''}`} onClick={()=>setTab('history')}>HISTORY ({historyEntries.length})</button>
+          <button className={`tab${tab==='export'?' on':''}`} onClick={()=>setTab('export')}>⬇ EXPORT</button>
         </div>
       </div>
 
@@ -1262,7 +1347,8 @@ function App(){
         </div>
       )}
 
-      {tab==='today'
+      {tab==='export'?<ExportView day={day} allData={allData}/>
+      :tab==='today'
         ?<TodayView day={day} setDay={setDay} onSave={handleSave} syncStatus={syncStatus} todayDateKey={TDK}/>
         :<HistoryView entries={historyEntries} todayKey={TDK} onGoToToday={()=>setTab('today')}
             onDelete={async(key)=>{

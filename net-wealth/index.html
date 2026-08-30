@@ -1829,6 +1829,7 @@ const ODIN = (() => {
     if (!document.getElementById('mtx-gold')) return;
     const total = v.assetsTot || 0;
     const reCustom = (v.customAssetsByCategory['Real Estate'] || []).reduce((s,a)=>s+a.value_inr,0);
+    const receivablesCustom = (v.customAssetsByCategory['Receivables'] || []).reduce((s,a)=>s+a.value_inr,0);
     // GOLDBEES (India) + GLDM (US) are gold ETFs held inside the equity
     // portfolios — pure class distribution, so they count as Gold here,
     // carved out of Equity. This is scoped to this matrix only; the
@@ -1837,7 +1838,7 @@ const ODIN = (() => {
     const goldUsInr = (S.portfolio.gold_us_usd || 0) * S.fx.usd_to_inr;
     const cats = [
       { key: 'gold',    val: v.jewel_inr + v.malabar_inr + goldbeesInr + goldUsInr, color: '#d9a441' },
-      { key: 'cash',    val: v.cash_tot_inr + v.grat_inr, color: '#4ade80' },
+      { key: 'cash',    val: v.cash_tot_inr + v.grat_inr + receivablesCustom, color: '#4ade80' },
       { key: 'equity',  val: (v.india_stocks_inr - goldbeesInr) + (v.us_stocks_inr - goldUsInr) + v.fo_inr + v.india_mutual_fund_inr, color: '#60a5fa' },
       { key: 're',      val: v.apt_mkt + reCustom + v.lc_qar_inr, color: '#f97316' },
     ];
@@ -1870,6 +1871,7 @@ const ODIN = (() => {
         { label: 'Qatar Banks', val: v.cash_qa_inr },
         { label: 'India Banks', val: v.cash_in_inr },
         { label: 'Gratuity (near-cash)', val: v.grat_inr },
+        ...(v.customAssetsByCategory['Receivables'] || []).map(a => ({ label: a.label, val: a.value_inr })),
       ],
       equity: [
         { label: 'India Stocks (ex-gold)', val: v.india_stocks_inr - goldbeesInr },

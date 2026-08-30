@@ -100,10 +100,15 @@
   .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
   .row-2col > .card { margin-bottom: 0; }
   @media (max-width: 900px) { .row-2col { grid-template-columns: 1fr; } }
-  .mtx-body { display: grid; grid-template-columns: 1fr 150px; gap: 14px; align-items: center; }
+  .mtx-body { display: grid; grid-template-columns: 1fr 190px; gap: 14px; align-items: center; }
   @media (max-width: 560px) { .mtx-body { grid-template-columns: 1fr; } }
   .mtx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mtx-pie-wrap { height: 150px; position: relative; }
+  .mtx-pie-wrap { height: 210px; position: relative; cursor: pointer; }
+  .mtx-sub { font-size: 10px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
+  .mtx-expand { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); animation: mtxFadeIn .2s ease; }
+  .mtx-expand .mtx-expand-title { font-size: 11px; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; font-weight: 700; }
+  .mtx-expand .row-line { font-size: 12.5px; }
+  @keyframes mtxFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
   /* CURRENCY EXPOSURE */
   .exp-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: center; }
@@ -515,13 +520,14 @@
     </p>
     <div class="mtx-body">
       <div class="mtx-grid">
-        <div class="kpi-tile"><div class="lbl">🏆 GOLD</div><div class="val" id="mtx-gold">—</div><div class="delta" id="mtx-gold-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-gold-bar" style="width:0%;background:#d9a441"></div></div></div>
+        <div class="kpi-tile"><div class="lbl">🏆 GOLD</div><div class="val" id="mtx-gold">—</div><div class="delta" id="mtx-gold-pct">—</div><div class="mtx-sub" id="mtx-gold-sub">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-gold-bar" style="width:0%;background:#d9a441"></div></div></div>
         <div class="kpi-tile"><div class="lbl">💵 CASH</div><div class="val" id="mtx-cash">—</div><div class="delta" id="mtx-cash-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-cash-bar" style="width:0%;background:#4ade80"></div></div></div>
         <div class="kpi-tile"><div class="lbl">📊 EQUITY</div><div class="val" id="mtx-equity">—</div><div class="delta" id="mtx-equity-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-equity-bar" style="width:0%;background:#60a5fa"></div></div></div>
         <div class="kpi-tile"><div class="lbl">🏠 REAL ESTATE</div><div class="val" id="mtx-re">—</div><div class="delta" id="mtx-re-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-re-bar" style="width:0%;background:#f97316"></div></div></div>
       </div>
       <div class="mtx-pie-wrap"><canvas id="mtx-pie"></canvas></div>
     </div>
+    <div class="mtx-expand" id="mtx-expand" style="display:none"></div>
   </div>
 
   <div class="card">
@@ -1785,14 +1791,60 @@ const ODIN = (() => {
       if (barEl) barEl.style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + '%';
     });
 
+    // Gold sub-breakdown: physical (jewellery + Malabar) vs India ETF vs US ETF
+    const physicalGoldInr = v.jewel_inr + v.malabar_inr;
+    const goldSubEl = document.getElementById('mtx-gold-sub');
+    if (goldSubEl) {
+      goldSubEl.innerHTML = `Physical ${fmtINR(physicalGoldInr)}<br>GOLDBEES (IN) ${fmtINR(goldbeesInr)}<br>Gold ETF (US) ${fmtINR(goldUsInr)}`;
+    }
+
+    // Detail rows behind each category, for the click-to-expand panel.
+    const catLabels = { gold: '🏆 Gold', cash: '💵 Cash', equity: '📊 Equity', re: '🏠 Real Estate' };
+    const detail = {
+      gold: [
+        { label: 'Physical (Jewellery + Malabar)', val: physicalGoldInr },
+        { label: 'GOLDBEES (India ETF)', val: goldbeesInr },
+        { label: 'Gold ETF (US · GLDM)', val: goldUsInr },
+      ],
+      cash: [
+        { label: 'Qatar Banks', val: v.cash_qa_inr },
+        { label: 'India Banks', val: v.cash_in_inr },
+      ],
+      equity: [
+        { label: 'India Stocks (ex-gold)', val: v.india_stocks_inr - goldbeesInr },
+        { label: 'US Stocks (ex-gold)', val: v.us_stocks_inr - goldUsInr },
+        { label: 'F&O Corpus', val: v.fo_inr },
+        { label: 'India Mutual Fund', val: v.india_mutual_fund_inr },
+      ],
+      re: [
+        { label: 'Apartment', val: v.apt_mkt },
+        ...(v.customAssetsByCategory['Real Estate'] || []).map(a => ({ label: a.label, val: a.value_inr })),
+      ],
+    };
+
+    function showMatrixDetail(key) {
+      const panel = document.getElementById('mtx-expand');
+      if (!panel) return;
+      if (panel.dataset.key === key && panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        panel.dataset.key = '';
+        return;
+      }
+      const cat = cats.find(c => c.key === key);
+      const rows = (detail[key] || []).filter(r => r.val > 0);
+      panel.dataset.key = key;
+      panel.innerHTML = `<div class="mtx-expand-title">${catLabels[key]} — ${fmtINR(cat.val)}</div>` +
+        rows.map(r => `<div class="row-line"><span class="name">${r.label}</span><span class="val">${fmtINR(r.val)} <span class="sub">${(r.val/cat.val*100).toFixed(1)}%</span></span></div>`).join('');
+      panel.style.display = 'block';
+    }
+
     const pieCtx = document.getElementById('mtx-pie');
     if (pieCtx) {
       if (S.charts.mtx) S.charts.mtx.destroy();
-      const labels = { gold: 'Gold', cash: 'Cash', equity: 'Equity', re: 'Real Estate' };
       S.charts.mtx = new Chart(pieCtx, {
         type: 'doughnut',
         data: {
-          labels: cats.map(c => labels[c.key]),
+          labels: cats.map(c => `${catLabels[c.key]}: ${fmtINR(c.val)}`),
           datasets: [{
             data: cats.map(c => Math.max(0, Math.round(c.val))),
             backgroundColor: cats.map(c => c.color),
@@ -1802,9 +1854,18 @@ const ODIN = (() => {
         },
         options: {
           responsive: true, maintainAspectRatio: false, cutout: '60%',
+          onClick: (evt, elements) => {
+            if (elements.length) showMatrixDetail(cats[elements[0].index].key);
+          },
           plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/total*100).toFixed(1)}%)` } }
+            legend: {
+              display: true, position: 'bottom',
+              labels: {
+                color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73',
+                font: { size: 10 }, padding: 6, boxWidth: 10, boxHeight: 10
+              }
+            },
+            tooltip: { callbacks: { label: ctx => `${ctx.label.split(':')[0]}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/total*100).toFixed(1)}%)` } }
           }
         }
       });

@@ -326,8 +326,8 @@ function initEntry(){
     carEMI:'',carEMI_x:false,
     homeLoanEMI:'',homeLoanEMI_x:false,
     malabar:'1000',malabar_x:false,
-    luluAvailable:'',luluAvailOn7:'',lulu_x:false,
-    qaAvailable:'',qaAvailOn7:'',qa_x:false,
+    luluAvailable:'',luluAvailOn7:'',luluPaid:'',lulu_x:false,
+    qaAvailable:'',qaAvailOn7:'',qaPaid:'',qa_x:false,
     otherExpenses:[{id:uid(),label:'',value:''}],
     _confirmed:false
   };
@@ -349,6 +349,8 @@ function mergeEntry(saved){
     carEMI_x:!!saved.carEMI_x,
     homeLoanEMI_x:!!saved.homeLoanEMI_x,
     malabar_x:!!saved.malabar_x,
+    luluPaid:saved.luluPaid||'',
+    qaPaid:saved.qaPaid||'',
     lulu_x:!!saved.lulu_x,
     qa_x:!!saved.qa_x,
     existingBalance:saved.existingBalance?.length?saved.existingBalance:b.existingBalance,
@@ -357,17 +359,20 @@ function mergeEntry(saved){
   };
 }
 const mergeDay=mergeEntry;
-function calcCard(available,availOn7,limit){
+function calcCard(available,availOn7,paid,limit){
   if(available===''||available==null)return{total:null,thisMonth:null,nextMonth:null,stillDue:null,paidAmt:0,hassplit:false};
   const at=evalExpr(available);
   const total=Math.max(0,limit-at);
   if(availOn7===''||availOn7==null){
-    return{total,thisMonth:total,nextMonth:0,stillDue:Math.max(0,total),paidAmt:0,hassplit:false};
+    const paidAmt=paid!==''&&paid!=null?evalExpr(paid):0;
+    return{total,thisMonth:total,nextMonth:0,stillDue:Math.max(0,total-paidAmt),paidAmt,hassplit:false};
   }
   const a7=evalExpr(availOn7);
-  const thisMonth=Math.max(0,limit-a7);     // spent before 7th (statement amount)
-  const nextMonth=Math.max(0,a7-at);        // spent after 7th (avail went down)
-  const paidAmt=Math.max(0,at-a7);          // auto-derived: avail went UP = payment made
+  const thisMonth=Math.max(0,limit-a7);
+  const nextMonth=Math.max(0,a7-at);
+  // explicit paid takes priority; fallback = auto-derive from avail delta
+  const explicitPaid=paid!==''&&paid!=null?evalExpr(paid):null;
+  const paidAmt=explicitPaid!=null?explicitPaid:Math.max(0,at-a7);
   const stillDue=Math.max(0,thisMonth-paidAmt);
   return{total,thisMonth,nextMonth,stillDue,paidAmt,hassplit:true};
 }
@@ -375,8 +380,8 @@ function calcTotals(d){
   const carEMI=d.carEMI_x?0:evalExpr(d.carEMI);
   const homeLoanEMI=d.homeLoanEMI_x?0:evalExpr(d.homeLoanEMI);
   const malabar=d.malabar_x?0:evalExpr(d.malabar);
-  const lulu=calcCard(d.luluAvailable,d.luluAvailOn7,LULU_LIMIT);
-  const qa=calcCard(d.qaAvailable,d.qaAvailOn7,QA_LIMIT);
+  const lulu=calcCard(d.luluAvailable,d.luluAvailOn7,d.luluPaid,LULU_LIMIT);
+  const qa=calcCard(d.qaAvailable,d.qaAvailOn7,d.qaPaid,QA_LIMIT);
   const luluAmt=d.lulu_x?0:(lulu.stillDue||0);
   const qaAmt=d.qa_x?0:(qa.stillDue||0);
   const luluAmtFull=d.lulu_x?0:(lulu.total||0);
@@ -461,7 +466,7 @@ function Panel({label,total,totalColor,children,defaultOpen=true}){
 
 // ── Today View ────────────────────────────────────────────────
 // ── CardSection — TOP-LEVEL (never nest inside TodayView — causes remount on each keystroke) ──
-function CardSection({label,limit,avail,avail7,onAvail,onAvail7,cardData,excluded,onExcl}){
+function CardSection({label,limit,avail,avail7,paid,onAvail,onAvail7,onPaid,cardData,excluded,onExcl}){
   const c=cardData;
   return(
     <div className="row" style={{opacity:excluded?.45:1}}>
@@ -475,6 +480,9 @@ function CardSection({label,limit,avail,avail7,onAvail,onAvail7,cardData,exclude
 
         <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,margin:'8px 0 3px'}}>Available on 7th <span style={{fontWeight:400,opacity:.7}}>(from statement)</span></div>
         <ExprField value={avail7} onChange={onAvail7} placeholder="Balance as of 7th — optional"/>
+
+        <div style={{fontSize:11,color:'var(--muted)',fontWeight:600,margin:'8px 0 3px'}}>Paid 7th→today <span style={{fontWeight:400,opacity:.7}}>(from statement / auto if blank)</span></div>
+        <ExprField value={paid} onChange={onPaid} placeholder="auto-derived if blank"/>
 
         {/* Summary box — only when available balance entered */}
         {c.total!=null&&(
@@ -623,16 +631,18 @@ function TodayView({day,setDay,onSave,syncStatus,todayDateKey}){
             </label>
           )}
           <CardSection label="Lulu Card" limit={LULU_LIMIT}
-            avail={day.luluAvailable} avail7={day.luluAvailOn7}
+            avail={day.luluAvailable} avail7={day.luluAvailOn7} paid={day.luluPaid}
             excluded={!!day.lulu_x} onExcl={()=>setDay(p=>({...p,lulu_x:!p.lulu_x}))}
             onAvail={v=>setDay(p=>({...p,luluAvailable:v}))}
             onAvail7={v=>setDay(p=>({...p,luluAvailOn7:v}))}
+            onPaid={v=>setDay(p=>({...p,luluPaid:v}))}
             cardData={totals.lulu}/>
           <CardSection label="QA Card" limit={QA_LIMIT}
-            avail={day.qaAvailable} avail7={day.qaAvailOn7}
+            avail={day.qaAvailable} avail7={day.qaAvailOn7} paid={day.qaPaid}
             excluded={!!day.qa_x} onExcl={()=>setDay(p=>({...p,qa_x:!p.qa_x}))}
             onAvail={v=>setDay(p=>({...p,qaAvailable:v}))}
             onAvail7={v=>setDay(p=>({...p,qaAvailOn7:v}))}
+            onPaid={v=>setDay(p=>({...p,qaPaid:v}))}
             cardData={totals.qa}/>
           <div>
             <div style={{fontSize:12,color:'var(--text)',fontWeight:600,marginBottom:6}}>Other Expenses</div>
@@ -892,8 +902,9 @@ function HistoryDetailFull({entry}){
               <div className="rv">
                 <ExprField value={entry.luluAvailable} disabled placeholder="Available balance"/>
                 {entry.luluAvailOn7&&<ExprField value={entry.luluAvailOn7} disabled placeholder="Available on 7th"/>}
+                {entry.luluPaid&&<ExprField value={entry.luluPaid} disabled placeholder="Paid 7th→today"/>}
                 <div className="card-cycle" style={{marginTop:8}}>
-                  {totals.lulu.paidAmt>0&&<div className="card-cycle-row"><span className="cc-lbl">✅ Auto-derived paid</span><span className="cc-val" style={{color:'var(--green)'}}>− {qar(totals.lulu.paidAmt)}</span></div>}
+                  {totals.lulu.paidAmt>0&&<div className="card-cycle-row"><span className="cc-lbl">✅ Paid (7th→today)</span><span className="cc-val" style={{color:'var(--green)'}}>− {qar(totals.lulu.paidAmt)}</span></div>}
                   <div className="card-cycle-row"><span className="cc-lbl">🔴 Due salary</span><span className="cc-val" style={{color:'var(--red)'}}>{qar(totals.lulu.stillDue||0)}</span></div>
                   {totals.lulu.nextMonth>0&&<div className="card-cycle-row"><span className="cc-lbl">🟡 Next month</span><span className="cc-val" style={{color:'var(--gold)'}}>{qar(totals.lulu.nextMonth)}</span></div>}
                 </div>
@@ -905,8 +916,9 @@ function HistoryDetailFull({entry}){
               <div className="rv">
                 <ExprField value={entry.qaAvailable} disabled placeholder="Available balance"/>
                 {entry.qaAvailOn7&&<ExprField value={entry.qaAvailOn7} disabled placeholder="Available on 7th"/>}
+                {entry.qaPaid&&<ExprField value={entry.qaPaid} disabled placeholder="Paid 7th→today"/>}
                 <div className="card-cycle" style={{marginTop:8}}>
-                  {totals.qa.paidAmt>0&&<div className="card-cycle-row"><span className="cc-lbl">✅ Auto-derived paid</span><span className="cc-val" style={{color:'var(--green)'}}>− {qar(totals.qa.paidAmt)}</span></div>}
+                  {totals.qa.paidAmt>0&&<div className="card-cycle-row"><span className="cc-lbl">✅ Paid (7th→today)</span><span className="cc-val" style={{color:'var(--green)'}}>− {qar(totals.qa.paidAmt)}</span></div>}
                   <div className="card-cycle-row"><span className="cc-lbl">🔴 Due salary</span><span className="cc-val" style={{color:'var(--red)'}}>{qar(totals.qa.stillDue||0)}</span></div>
                   {totals.qa.nextMonth>0&&<div className="card-cycle-row"><span className="cc-lbl">🟡 Next month</span><span className="cc-val" style={{color:'var(--gold)'}}>{qar(totals.qa.nextMonth)}</span></div>}
                 </div>
@@ -1140,27 +1152,51 @@ function ImportView({onImport}){
   const fileRef=useRef(null);
 
   function parseSnap(snap){
-    // Map finance-snapshot.json (v1 or v2) → entry fields
     const entry={};
+    // Bank balance
     const b=snap.bank?.doha_bank_balance;
     if(b!=null)entry.existingBalance=[{id:uid(),label:'Doha Bank existing balance',value:String(b)}];
+    // Salary date — prefer bank.salary_credit_date, fallback verification.salary_date
+    const salDate=snap.bank?.salary_credit_date||snap.verification?.salary_date;
+    if(salDate)entry.salary_date=String(salDate);
+    // EMI confirmed — prefer bank.emi_confirmed, fallback verification.emi_confirmed
+    const emiConf=snap.bank?.emi_confirmed??snap.verification?.emi_confirmed;
+    if(emiConf!=null)entry.emi_confirmed=!!emiConf;
+    // QA card
     const qa=snap.cards?.qa;
-    if(qa?.available_today!=null)entry.qaAvailable=String(qa.available_today);
-    if(qa?.available_on_7th!=null)entry.qaAvailOn7=String(qa.available_on_7th);
-    const lulu=snap.cards?.lulu;
-    if(lulu?.available_today!=null)entry.luluAvailable=String(lulu.available_today);
-    if(lulu?.available_on_7th!=null)entry.luluAvailOn7=String(lulu.available_on_7th);
-    const v=snap.verification;
-    if(v){
-      if(v.salary_date)entry.salary_date=v.salary_date;
-      if(v.emi_confirmed!=null)entry.emi_confirmed=!!v.emi_confirmed;
-      if(v.malabar_in_stmt!=null)entry.malabar_in_stmt=!!v.malabar_in_stmt;
+    if(qa){
+      if(qa.available_today!=null)entry.qaAvailable=String(qa.available_today);
+      // avail_on_7th: explicit > derived from statement_balance > derived from paid+still_due
+      let qaAvail7=qa.available_on_7th;
+      if(qaAvail7==null&&qa.statement_balance!=null)qaAvail7=QA_LIMIT-qa.statement_balance;
+      if(qaAvail7==null&&qa.paid_auto!=null&&qa.still_due!=null)qaAvail7=QA_LIMIT-(qa.paid_auto+qa.still_due);
+      if(qaAvail7!=null)entry.qaAvailOn7=String(+qaAvail7.toFixed(2));
+      // explicit paid from snapshot overrides auto-derive
+      if(qa.paid_auto!=null&&qa.paid_auto>0)entry.qaPaid=String(qa.paid_auto);
     }
+    // Lulu card
+    const lulu=snap.cards?.lulu;
+    if(lulu){
+      if(lulu.available_today!=null)entry.luluAvailable=String(lulu.available_today);
+      let luluAvail7=lulu.available_on_7th;
+      if(luluAvail7==null&&lulu.statement_balance!=null)luluAvail7=LULU_LIMIT-lulu.statement_balance;
+      if(luluAvail7==null&&lulu.paid_auto!=null&&lulu.still_due!=null)luluAvail7=LULU_LIMIT-(lulu.paid_auto+lulu.still_due);
+      if(luluAvail7!=null)entry.luluAvailOn7=String(+luluAvail7.toFixed(2));
+      if(lulu.paid_auto!=null&&lulu.paid_auto>0)entry.luluPaid=String(lulu.paid_auto);
+    }
+    // Fixed
     const f=snap.fixed;
     if(f){
-      if(f.malabar_value!=null&&f.malabar_value!==1000)entry.malabar=String(f.malabar_value);
+      if(f.malabar_value!=null)entry.malabar=String(f.malabar_value);
       if(f.malabar_excluded!=null)entry.malabar_x=!!f.malabar_excluded;
       if(f.malabar_in_stmt!=null)entry.malabar_in_stmt=!!f.malabar_in_stmt;
+    }
+    // Verification overrides (lower priority than bank.* above)
+    const v=snap.verification;
+    if(v){
+      if(!entry.salary_date&&v.salary_date)entry.salary_date=String(v.salary_date);
+      if(entry.emi_confirmed==null&&v.emi_confirmed!=null)entry.emi_confirmed=!!v.emi_confirmed;
+      if(v.malabar_in_stmt!=null&&entry.malabar_in_stmt==null)entry.malabar_in_stmt=!!v.malabar_in_stmt;
     }
     if(snap.remarks)entry.remarks=String(snap.remarks).slice(0,30);
     return entry;
@@ -1193,6 +1229,13 @@ function ImportView({onImport}){
   const v=preview?.snap?.verification;
   const cards=preview?.snap?.cards;
   const bank=preview?.snap?.bank;
+  const salDate=bank?.salary_credit_date||v?.salary_date;
+  const emiConf=bank?.emi_confirmed??v?.emi_confirmed;
+
+  function PreRow({lbl,val,color}){
+    if(val==null)return null;
+    return(<><span style={{color:'var(--muted)'}}>{lbl}</span><span style={color?{color,fontWeight:700}:{}}>{val}</span></>);
+  }
 
   return(
     <div style={{padding:'16px',maxWidth:600}}>
@@ -1217,16 +1260,53 @@ function ImportView({onImport}){
       {preview&&(
         <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,padding:14,marginBottom:12,fontSize:12}}>
           <div style={{fontWeight:700,color:'var(--gold)',marginBottom:10}}>PREVIEW — will apply to TODAY tab</div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5}}>
-            {bank?.doha_bank_balance!=null&&<><span style={{color:'var(--muted)'}}>Bank balance</span><span>{qar(bank.doha_bank_balance)}</span></>}
-            {cards?.qa?.available_today!=null&&<><span style={{color:'var(--muted)'}}>QA available today</span><span>{qar(cards.qa.available_today)}</span></>}
-            {cards?.qa?.available_on_7th!=null&&<><span style={{color:'var(--muted)'}}>QA on 7th</span><span>{qar(cards.qa.available_on_7th)}</span></>}
-            {cards?.lulu?.available_today!=null&&<><span style={{color:'var(--muted)'}}>Lulu available today</span><span>{qar(cards.lulu.available_today)}</span></>}
-            {cards?.lulu?.available_on_7th!=null&&<><span style={{color:'var(--muted)'}}>Lulu on 7th</span><span>{qar(cards.lulu.available_on_7th)}</span></>}
-            {v?.salary_date&&<><span style={{color:'var(--muted)'}}>Salary date</span><span>{v.salary_date}</span></>}
-            {v?.emi_confirmed!=null&&<><span style={{color:'var(--muted)'}}>EMI confirmed</span><span style={{color:v.emi_confirmed?'var(--green)':'var(--muted)'}}>{v.emi_confirmed?'✓ Yes':'No'}</span></>}
-            {v?.malabar_in_stmt!=null&&<><span style={{color:'var(--muted)'}}>Malabar in stmt</span><span style={{color:v.malabar_in_stmt?'var(--green)':'var(--muted)'}}>{v.malabar_in_stmt?'✓ Yes':'No'}</span></>}
+
+          {/* Bank */}
+          <div style={{fontSize:10,color:'var(--muted)',letterSpacing:2,textTransform:'uppercase',marginBottom:4}}>Bank</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:10}}>
+            <PreRow lbl="Balance" val={bank?.doha_bank_balance!=null?qar(bank.doha_bank_balance):null}/>
+            <PreRow lbl="Salary date" val={salDate}/>
+            <PreRow lbl="EMI confirmed" val={emiConf!=null?(emiConf?'✓ Yes':'No'):null} color={emiConf?'var(--green)':undefined}/>
           </div>
+
+          {/* QA Card */}
+          {cards?.qa&&<>
+            <div style={{fontSize:10,color:'var(--muted)',letterSpacing:2,textTransform:'uppercase',marginBottom:4,borderTop:'1px solid var(--border)',paddingTop:8}}>QA Card</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:10}}>
+              <PreRow lbl="Statement balance" val={cards.qa.statement_balance!=null?qar(cards.qa.statement_balance):null} color="var(--red)"/>
+              <PreRow lbl="Min due" val={cards.qa.minimum_due!=null?qar(cards.qa.minimum_due):null}/>
+              <PreRow lbl="Due date" val={cards.qa.payment_due_date}/>
+              <PreRow lbl="Available today" val={cards.qa.available_today!=null?qar(cards.qa.available_today):null}/>
+              <PreRow lbl="Avail on 7th" val={cards.qa.available_on_7th!=null?qar(cards.qa.available_on_7th):null}/>
+              <PreRow lbl="Still due" val={cards.qa.still_due!=null?qar(cards.qa.still_due):null} color="var(--red)"/>
+              <PreRow lbl="Next month" val={cards.qa.next_month>0?qar(cards.qa.next_month):null} color="var(--gold)"/>
+              <PreRow lbl="Malabar txn" val={cards.qa.malabar_txn?.amount!=null?qar(cards.qa.malabar_txn.amount):null} color="var(--green)"/>
+            </div>
+          </>}
+
+          {/* Lulu Card */}
+          {cards?.lulu&&<>
+            <div style={{fontSize:10,color:'var(--muted)',letterSpacing:2,textTransform:'uppercase',marginBottom:4,borderTop:'1px solid var(--border)',paddingTop:8}}>Lulu Card</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:10}}>
+              <PreRow lbl="Statement balance" val={cards.lulu.statement_balance!=null?qar(cards.lulu.statement_balance):null} color="var(--red)"/>
+              <PreRow lbl="Min due" val={cards.lulu.minimum_due!=null?qar(cards.lulu.minimum_due):null}/>
+              <PreRow lbl="Due date" val={cards.lulu.payment_due_date}/>
+              <PreRow lbl="Available today" val={cards.lulu.available_today!=null?qar(cards.lulu.available_today):null}/>
+              <PreRow lbl="Avail on 7th" val={cards.lulu.available_on_7th!=null?qar(cards.lulu.available_on_7th):null}/>
+              <PreRow lbl="Still due" val={cards.lulu.still_due!=null?qar(cards.lulu.still_due):null} color="var(--red)"/>
+              <PreRow lbl="Next month" val={cards.lulu.next_month>0?qar(cards.lulu.next_month):null} color="var(--gold)"/>
+              <PreRow lbl="Malabar txn" val={cards.lulu.malabar_txn?.amount!=null?qar(cards.lulu.malabar_txn.amount):null} color="var(--green)"/>
+            </div>
+          </>}
+
+          {/* Malabar + Net */}
+          {(preview.snap.fixed?.malabar_in_stmt!=null||preview.snap.net)&&(
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,borderTop:'1px solid var(--border)',paddingTop:8}}>
+              <PreRow lbl="Malabar in stmt" val={preview.snap.fixed?.malabar_in_stmt!=null?(preview.snap.fixed.malabar_in_stmt?'✓ Yes':'No'):null} color={preview.snap.fixed?.malabar_in_stmt?'var(--green)':undefined}/>
+              <PreRow lbl="Net (mandatory)" val={preview.snap.net?.mandatory!=null?qar(Math.abs(preview.snap.net.mandatory)):null} color={preview.snap.net?.mandatory>=0?'var(--green)':'var(--red)'}/>
+            </div>
+          )}
+
           <button onClick={applyImport}
             style={{marginTop:14,background:'var(--gold)',border:'none',borderRadius:6,color:'#060610',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,letterSpacing:2,padding:'10px 20px',width:'100%'}}>
             ✓ APPLY TO TODAY TAB

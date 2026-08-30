@@ -96,6 +96,12 @@
   .multi-ccy span { white-space: nowrap; }
   .multi-ccy b { color: var(--gold-dim); font-weight: 600; }
 
+  /* ASSET CLASS MATRIX + CURRENCY EXPOSURE side-by-side row */
+  .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
+  .row-2col > .card { margin-bottom: 0; }
+  @media (max-width: 900px) { .row-2col { grid-template-columns: 1fr; } }
+  .mtx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
   /* CURRENCY EXPOSURE */
   .exp-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: center; }
   @media (max-width: 760px) { .exp-grid { grid-template-columns: 1fr; } }
@@ -497,15 +503,30 @@
   </span>
 </div>
 
-<!-- CURRENCY EXPOSURE -->
-<div class="card">
-  <h2>🌍 CURRENCY EXPOSURE</h2>
-  <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
-    Net worth split by the currency each asset is <em>natively denominated in</em> — shows your real FX risk.
-  </p>
-  <div class="exp-grid">
-    <div id="exp-rows"></div>
-    <div class="exp-pie-wrap"><canvas id="exp-pie"></canvas></div>
+<!-- ASSET CLASS MATRIX + CURRENCY EXPOSURE (side by side) -->
+<div class="row-2col">
+  <div class="card">
+    <h2>💠 ASSET CLASS MATRIX</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+      Gold vs Cash vs Equity vs Real Estate — share of total assets.
+    </p>
+    <div class="mtx-grid">
+      <div class="kpi-tile"><div class="lbl">🏆 GOLD</div><div class="val" id="mtx-gold">—</div><div class="delta" id="mtx-gold-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-gold-bar" style="width:0%;background:#d9a441"></div></div></div>
+      <div class="kpi-tile"><div class="lbl">💵 CASH</div><div class="val" id="mtx-cash">—</div><div class="delta" id="mtx-cash-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-cash-bar" style="width:0%;background:#4ade80"></div></div></div>
+      <div class="kpi-tile"><div class="lbl">📊 EQUITY</div><div class="val" id="mtx-equity">—</div><div class="delta" id="mtx-equity-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-equity-bar" style="width:0%;background:#60a5fa"></div></div></div>
+      <div class="kpi-tile"><div class="lbl">🏠 REAL ESTATE</div><div class="val" id="mtx-re">—</div><div class="delta" id="mtx-re-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-re-bar" style="width:0%;background:#f97316"></div></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🌍 CURRENCY EXPOSURE</h2>
+    <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
+      Net worth split by the currency each asset is <em>natively denominated in</em> — shows your real FX risk.
+    </p>
+    <div class="exp-grid">
+      <div id="exp-rows"></div>
+      <div class="exp-pie-wrap"><canvas id="exp-pie"></canvas></div>
+    </div>
   </div>
 </div>
 
@@ -1577,6 +1598,9 @@ const ODIN = (() => {
     // Currency exposure rows + pie
     renderExposure(v);
 
+    // Asset class matrix: Gold vs Cash vs Equity vs Real Estate
+    renderAssetMatrix(v);
+
     // Milestones progress
     const m = S.seed.milestones || {};
     setProgress('m0', v.netWorth, m.top_1_pct_india || 15200000);
@@ -1713,6 +1737,27 @@ const ODIN = (() => {
 
     // Update gold rate boxes
     if (typeof updateGoldRateBoxes === 'function') updateGoldRateBoxes();
+  }
+
+  function renderAssetMatrix(v) {
+    if (!document.getElementById('mtx-gold')) return;
+    const total = v.assetsTot || 0;
+    const reCustom = (v.customAssetsByCategory['Real Estate'] || []).reduce((s,a)=>s+a.value_inr,0);
+    const cats = [
+      { key: 'gold',    val: v.jewel_inr + v.malabar_inr },
+      { key: 'cash',    val: v.cash_tot_inr },
+      { key: 'equity',  val: v.india_stocks_inr + v.us_stocks_inr + v.fo_inr + v.india_mutual_fund_inr },
+      { key: 're',      val: v.apt_mkt + reCustom },
+    ];
+    cats.forEach(c => {
+      const pct = total > 0 ? c.val / total * 100 : 0;
+      const valEl = document.getElementById('mtx-' + c.key);
+      const pctEl = document.getElementById('mtx-' + c.key + '-pct');
+      const barEl = document.getElementById('mtx-' + c.key + '-bar');
+      if (valEl) valEl.textContent = fmtINR(c.val);
+      if (pctEl) pctEl.textContent = pct.toFixed(1) + '% of assets';
+      if (barEl) barEl.style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + '%';
+    });
   }
 
   function renderExposure(v) {

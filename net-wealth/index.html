@@ -100,7 +100,10 @@
   .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
   .row-2col > .card { margin-bottom: 0; }
   @media (max-width: 900px) { .row-2col { grid-template-columns: 1fr; } }
+  .mtx-body { display: grid; grid-template-columns: 1fr 150px; gap: 14px; align-items: center; }
+  @media (max-width: 560px) { .mtx-body { grid-template-columns: 1fr; } }
   .mtx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mtx-pie-wrap { height: 150px; position: relative; }
 
   /* CURRENCY EXPOSURE */
   .exp-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: center; }
@@ -510,11 +513,14 @@
     <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
       Gold vs Cash vs Equity vs Real Estate — share of total assets.
     </p>
-    <div class="mtx-grid">
-      <div class="kpi-tile"><div class="lbl">🏆 GOLD</div><div class="val" id="mtx-gold">—</div><div class="delta" id="mtx-gold-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-gold-bar" style="width:0%;background:#d9a441"></div></div></div>
-      <div class="kpi-tile"><div class="lbl">💵 CASH</div><div class="val" id="mtx-cash">—</div><div class="delta" id="mtx-cash-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-cash-bar" style="width:0%;background:#4ade80"></div></div></div>
-      <div class="kpi-tile"><div class="lbl">📊 EQUITY</div><div class="val" id="mtx-equity">—</div><div class="delta" id="mtx-equity-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-equity-bar" style="width:0%;background:#60a5fa"></div></div></div>
-      <div class="kpi-tile"><div class="lbl">🏠 REAL ESTATE</div><div class="val" id="mtx-re">—</div><div class="delta" id="mtx-re-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-re-bar" style="width:0%;background:#f97316"></div></div></div>
+    <div class="mtx-body">
+      <div class="mtx-grid">
+        <div class="kpi-tile"><div class="lbl">🏆 GOLD</div><div class="val" id="mtx-gold">—</div><div class="delta" id="mtx-gold-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-gold-bar" style="width:0%;background:#d9a441"></div></div></div>
+        <div class="kpi-tile"><div class="lbl">💵 CASH</div><div class="val" id="mtx-cash">—</div><div class="delta" id="mtx-cash-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-cash-bar" style="width:0%;background:#4ade80"></div></div></div>
+        <div class="kpi-tile"><div class="lbl">📊 EQUITY</div><div class="val" id="mtx-equity">—</div><div class="delta" id="mtx-equity-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-equity-bar" style="width:0%;background:#60a5fa"></div></div></div>
+        <div class="kpi-tile"><div class="lbl">🏠 REAL ESTATE</div><div class="val" id="mtx-re">—</div><div class="delta" id="mtx-re-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-re-bar" style="width:0%;background:#f97316"></div></div></div>
+      </div>
+      <div class="mtx-pie-wrap"><canvas id="mtx-pie"></canvas></div>
     </div>
   </div>
 
@@ -1342,31 +1348,43 @@ const ODIN = (() => {
       S.portfolio.prices_asof = prices.generated || null;
 
       // INDIA — qty * live INR ltp
-      let indiaSum = 0, indiaCount = 0;
+      let indiaSum = 0, indiaCount = 0, goldbeesSum = 0;
       for (const h of (cost.india?.open || [])) {
         const px = p[h.tk]?.ltp ?? h.avg ?? 0;
-        indiaSum += (h.qty || 0) * px;
+        const val = (h.qty || 0) * px;
+        indiaSum += val;
         indiaCount++;
+        // GOLDBEES is a gold ETF, not equity exposure — carved out for the
+        // Asset Class Matrix so it counts as Gold, not Equity.
+        if (/^GOLDBEES/.test(h.tk)) goldbeesSum += val;
       }
       S.portfolio.india_stocks_inr = indiaSum;
       S.portfolio.india_tickers    = indiaCount;
+      S.portfolio.goldbees_inr     = goldbeesSum;
       localStorage.setItem('portfolio_india_stocks_inr', indiaSum);
       localStorage.setItem('portfolio_india_tickers', indiaCount);
+      localStorage.setItem('portfolio_goldbees_inr', goldbeesSum);
 
       // US — qty * live USD ltp + cash
-      let usSum = 0, usCount = 0;
+      let usSum = 0, usCount = 0, goldUsdSum = 0;
       for (const h of (cost.us?.open || [])) {
         const px = p[h.tk]?.ltp ?? h.avg ?? 0;
-        usSum += (h.qty || 0) * px;
+        const val = (h.qty || 0) * px;
+        usSum += val;
         usCount++;
+        // GLDM (SPDR Gold MiniShares) is physical gold, not equity — carved
+        // out for the Asset Class Matrix, same treatment as GOLDBEES.
+        if (h.tk === 'GLDM') goldUsdSum += val;
       }
       // Add US cash from trading account
       const usCash = cost.us?.cash || 0;
       S.portfolio.us_cash_usd = usCash;
       S.portfolio.us_stocks_usd = usSum + usCash;
       S.portfolio.us_tickers    = usCount;
+      S.portfolio.gold_us_usd   = goldUsdSum;
       localStorage.setItem('portfolio_us_stocks_usd', S.portfolio.us_stocks_usd);
       localStorage.setItem('portfolio_us_cash_usd', usCash);
+      localStorage.setItem('portfolio_gold_us_usd', goldUsdSum);
       localStorage.setItem('portfolio_us_tickers', usCount);
 
       // ── GOLD rates ──
@@ -1397,6 +1415,8 @@ const ODIN = (() => {
       S.portfolio.us_cash_usd      = parseFloat(localStorage.getItem('portfolio_us_cash_usd')) || 0;
       S.portfolio.india_gold_rate  = parseFloat(localStorage.getItem('portfolio_india_gold_rate')) || (S.seed.gold_rate_inr_per_gram || 8500);
       S.portfolio.intl_gold_usd_oz = parseFloat(localStorage.getItem('portfolio_intl_gold_usd_oz')) || null;
+      S.portfolio.goldbees_inr     = parseFloat(localStorage.getItem('portfolio_goldbees_inr')) || 0;
+      S.portfolio.gold_us_usd      = parseFloat(localStorage.getItem('portfolio_gold_us_usd')) || 0;
     }
   }
 
@@ -1743,11 +1763,17 @@ const ODIN = (() => {
     if (!document.getElementById('mtx-gold')) return;
     const total = v.assetsTot || 0;
     const reCustom = (v.customAssetsByCategory['Real Estate'] || []).reduce((s,a)=>s+a.value_inr,0);
+    // GOLDBEES (India) + GLDM (US) are gold ETFs held inside the equity
+    // portfolios — pure class distribution, so they count as Gold here,
+    // carved out of Equity. This is scoped to this matrix only; the
+    // Assets-tab reconciliation keeps its own established definition.
+    const goldbeesInr = S.portfolio.goldbees_inr || 0;
+    const goldUsInr = (S.portfolio.gold_us_usd || 0) * S.fx.usd_to_inr;
     const cats = [
-      { key: 'gold',    val: v.jewel_inr + v.malabar_inr },
-      { key: 'cash',    val: v.cash_tot_inr },
-      { key: 'equity',  val: v.india_stocks_inr + v.us_stocks_inr + v.fo_inr + v.india_mutual_fund_inr },
-      { key: 're',      val: v.apt_mkt + reCustom },
+      { key: 'gold',    val: v.jewel_inr + v.malabar_inr + goldbeesInr + goldUsInr, color: '#d9a441' },
+      { key: 'cash',    val: v.cash_tot_inr, color: '#4ade80' },
+      { key: 'equity',  val: (v.india_stocks_inr - goldbeesInr) + (v.us_stocks_inr - goldUsInr) + v.fo_inr + v.india_mutual_fund_inr, color: '#60a5fa' },
+      { key: 're',      val: v.apt_mkt + reCustom, color: '#f97316' },
     ];
     cats.forEach(c => {
       const pct = total > 0 ? c.val / total * 100 : 0;
@@ -1758,6 +1784,31 @@ const ODIN = (() => {
       if (pctEl) pctEl.textContent = pct.toFixed(1) + '% of assets';
       if (barEl) barEl.style.width = Math.min(100, Math.max(0, pct)).toFixed(1) + '%';
     });
+
+    const pieCtx = document.getElementById('mtx-pie');
+    if (pieCtx) {
+      if (S.charts.mtx) S.charts.mtx.destroy();
+      const labels = { gold: 'Gold', cash: 'Cash', equity: 'Equity', re: 'Real Estate' };
+      S.charts.mtx = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: cats.map(c => labels[c.key]),
+          datasets: [{
+            data: cats.map(c => Math.max(0, Math.round(c.val))),
+            backgroundColor: cats.map(c => c.color),
+            borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0a0a0f',
+            borderWidth: 3, spacing: 2, hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/total*100).toFixed(1)}%)` } }
+          }
+        }
+      });
+    }
   }
 
   function renderExposure(v) {

@@ -530,14 +530,14 @@
   <div class="card" style="position:relative">
     <h2>💠 ASSET CLASS MATRIX</h2>
     <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
-      Gold vs Cash vs Equity vs Real Estate — share of total assets. Click a slice for details.
+      Gold · Cash+Gratuity · Equity · Real Estate+Vehicles — the four slices sum to 100% of total assets. Click a slice for details.
     </p>
     <div class="mtx-body">
       <div class="mtx-grid">
         <div class="kpi-tile"><div class="lbl">🏆 GOLD</div><div class="val" id="mtx-gold">—</div><div class="delta" id="mtx-gold-pct">—</div><div class="mtx-sub" id="mtx-gold-sub">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-gold-bar" style="width:0%;background:#d9a441"></div></div></div>
         <div class="kpi-tile"><div class="lbl">💵 CASH + GRATUITY</div><div class="val" id="mtx-cash">—</div><div class="delta" id="mtx-cash-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-cash-bar" style="width:0%;background:#4ade80"></div></div></div>
         <div class="kpi-tile"><div class="lbl">📊 EQUITY</div><div class="val" id="mtx-equity">—</div><div class="delta" id="mtx-equity-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-equity-bar" style="width:0%;background:#60a5fa"></div></div></div>
-        <div class="kpi-tile"><div class="lbl">🏠 REAL ESTATE</div><div class="val" id="mtx-re">—</div><div class="delta" id="mtx-re-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-re-bar" style="width:0%;background:#f97316"></div></div></div>
+        <div class="kpi-tile"><div class="lbl">🏠 REAL ESTATE + VEHICLES</div><div class="val" id="mtx-re">—</div><div class="delta" id="mtx-re-pct">—</div><div class="cov-bar"><div class="cov-fill" id="mtx-re-bar" style="width:0%;background:#f97316"></div></div></div>
       </div>
       <div class="mtx-pie-wrap"><canvas id="mtx-pie"></canvas></div>
     </div>
@@ -1824,7 +1824,7 @@ const ODIN = (() => {
       { key: 'gold',    val: v.jewel_inr + v.malabar_inr + goldbeesInr + goldUsInr, color: '#d9a441' },
       { key: 'cash',    val: v.cash_tot_inr + v.grat_inr, color: '#4ade80' },
       { key: 'equity',  val: (v.india_stocks_inr - goldbeesInr) + (v.us_stocks_inr - goldUsInr) + v.fo_inr + v.india_mutual_fund_inr, color: '#60a5fa' },
-      { key: 're',      val: v.apt_mkt + reCustom, color: '#f97316' },
+      { key: 're',      val: v.apt_mkt + reCustom + v.lc_qar_inr, color: '#f97316' },
     ];
     cats.forEach(c => {
       const pct = total > 0 ? c.val / total * 100 : 0;
@@ -1844,7 +1844,7 @@ const ODIN = (() => {
     }
 
     // Detail rows behind each category, for the click-to-expand panel.
-    const catLabels = { gold: '🏆 Gold', cash: '💵 Cash+Gratuity', equity: '📊 Equity', re: '🏠 Real Estate' };
+    const catLabels = { gold: '🏆 Gold', cash: '💵 Cash+Gratuity', equity: '📊 Equity', re: '🏠 RE+Vehicles' };
     const detail = {
       gold: [
         { label: 'Physical (Jewellery + Malabar)', val: physicalGoldInr },
@@ -1865,6 +1865,7 @@ const ODIN = (() => {
       re: [
         { label: 'Apartment', val: v.apt_mkt },
         ...(v.customAssetsByCategory['Real Estate'] || []).map(a => ({ label: a.label, val: a.value_inr })),
+        { label: 'Land Cruiser (resale)', val: v.lc_qar_inr },
       ],
     };
 

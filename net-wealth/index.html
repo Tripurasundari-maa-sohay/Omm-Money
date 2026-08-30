@@ -18,6 +18,7 @@
 <meta name="apple-mobile-web-app-title" content="ODIN">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
@@ -100,15 +101,28 @@
   .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 14px; }
   .row-2col > .card { margin-bottom: 0; }
   @media (max-width: 900px) { .row-2col { grid-template-columns: 1fr; } }
-  .mtx-body { display: grid; grid-template-columns: 1fr 190px; gap: 14px; align-items: center; }
-  @media (max-width: 560px) { .mtx-body { grid-template-columns: 1fr; } }
+  .mtx-body { display: grid; grid-template-columns: 1fr 260px; gap: 14px; align-items: center; }
+  @media (max-width: 620px) { .mtx-body { grid-template-columns: 1fr; } }
   .mtx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mtx-pie-wrap { height: 210px; position: relative; cursor: pointer; }
+  .mtx-pie-wrap { height: 190px; position: relative; cursor: pointer; }
   .mtx-sub { font-size: 10px; color: var(--text-dim); margin-top: 3px; line-height: 1.5; }
-  .mtx-expand { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); animation: mtxFadeIn .2s ease; }
-  .mtx-expand .mtx-expand-title { font-size: 11px; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; font-weight: 700; }
-  .mtx-expand .row-line { font-size: 12.5px; }
-  @keyframes mtxFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  /* Floating popup, anchored to the card — doesn't push the grid around */
+  .mtx-popup {
+    position: absolute; top: 54px; right: 14px; z-index: 30;
+    width: min(280px, calc(100% - 28px));
+    background: var(--bg-card2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; box-shadow: 0 12px 32px rgba(0,0,0,.35);
+    animation: mtxPopIn .16s ease;
+  }
+  .mtx-popup .mtx-expand-title { font-size: 11px; letter-spacing: 1px; color: var(--gold); margin-bottom: 8px; font-weight: 700; padding-right: 20px; }
+  .mtx-popup .row-line { font-size: 12.5px; }
+  .mtx-popup-close {
+    position: absolute; top: 10px; right: 10px; width: 20px; height: 20px;
+    border: none; background: transparent; color: var(--text-dim); cursor: pointer;
+    font-size: 13px; line-height: 1; padding: 0;
+  }
+  .mtx-popup-close:hover { color: var(--text); }
+  @keyframes mtxPopIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
   /* CURRENCY EXPOSURE */
   .exp-grid { display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: center; }
@@ -513,10 +527,10 @@
 
 <!-- ASSET CLASS MATRIX + CURRENCY EXPOSURE (side by side) -->
 <div class="row-2col">
-  <div class="card">
+  <div class="card" style="position:relative">
     <h2>💠 ASSET CLASS MATRIX</h2>
     <p style="font-size:11px;color:var(--text-dim);margin:0 0 10px">
-      Gold vs Cash vs Equity vs Real Estate — share of total assets.
+      Gold vs Cash vs Equity vs Real Estate — share of total assets. Click a slice for details.
     </p>
     <div class="mtx-body">
       <div class="mtx-grid">
@@ -527,7 +541,10 @@
       </div>
       <div class="mtx-pie-wrap"><canvas id="mtx-pie"></canvas></div>
     </div>
-    <div class="mtx-expand" id="mtx-expand" style="display:none"></div>
+    <div class="mtx-popup" id="mtx-expand" style="display:none">
+      <button class="mtx-popup-close" id="mtx-popup-close" type="button" title="Close">✕</button>
+      <div id="mtx-popup-body"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -1181,18 +1198,11 @@ const ODIN = (() => {
     S.seed = (local && typeof local === 'object') ? local : baseline;
     console.log(local ? '✅ Loaded local state-v2' : '✅ Loaded baseline seed.json');
 
-    // One-time migration: a manual gold rate set before the 24h-expiry
-    // feature existed has no *_set_at timestamp. Treating "missing" as
-    // "expired" would silently wipe a rate the user is actively relying on
-    // the moment this ships — so grandfather it in with a fresh 24h window
-    // instead of resetting it to Auto on the spot.
-    (S.seed.assets ||= {});
-    if (S.seed.assets.jewel_22k_rate_inr_per_g > 0 && !S.seed.assets.jewel_22k_rate_set_at) {
-      S.seed.assets.jewel_22k_rate_set_at = Date.now();
-    }
-    if (S.seed.assets.malabar_rate_inr_per_g > 0 && !S.seed.assets.malabar_rate_set_at) {
-      S.seed.assets.malabar_rate_set_at = Date.now();
-    }
+    // A manual gold rate with no *_set_at timestamp predates the 24h-expiry
+    // feature — we don't know when it was actually set, and it clearly
+    // wasn't in the last 24h, so manualRateFresh() treats "missing" as
+    // "expired" and it falls straight through to Auto. No grandfathering:
+    // that's the literal rule, not a softened version of it.
 
     // Restore cached portfolio scalars
     const cachedIndiaStocks = parseFloat(localStorage.getItem('portfolio_india_stocks_inr'));
@@ -1855,16 +1865,28 @@ const ODIN = (() => {
       const cat = cats.find(c => c.key === key);
       const rows = (detail[key] || []).filter(r => r.val > 0);
       panel.dataset.key = key;
-      panel.innerHTML = `<div class="mtx-expand-title">${catLabels[key]} — ${fmtINR(cat.val)}</div>` +
+      document.getElementById('mtx-popup-body').innerHTML =
+        `<div class="mtx-expand-title">${catLabels[key]} — ${fmtINR(cat.val)}</div>` +
         rows.map(r => `<div class="row-line"><span class="name">${r.label}</span><span class="val">${fmtINR(r.val)} <span class="sub">${(r.val/cat.val*100).toFixed(1)}%</span></span></div>`).join('');
       panel.style.display = 'block';
+    }
+    const closeBtn = document.getElementById('mtx-popup-close');
+    if (closeBtn && !closeBtn.dataset.wired) {
+      closeBtn.dataset.wired = '1';
+      closeBtn.addEventListener('click', () => {
+        const panel = document.getElementById('mtx-expand');
+        panel.style.display = 'none';
+        panel.dataset.key = '';
+      });
     }
 
     const pieCtx = document.getElementById('mtx-pie');
     if (pieCtx) {
       if (S.charts.mtx) S.charts.mtx.destroy();
+      const dlPlugin = (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : [];
       S.charts.mtx = new Chart(pieCtx, {
         type: 'doughnut',
+        plugins: dlPlugin,
         data: {
           labels: cats.map(c => `${catLabels[c.key]}: ${fmtINR(c.val)}`),
           datasets: [{
@@ -1881,13 +1903,18 @@ const ODIN = (() => {
           },
           plugins: {
             legend: {
-              display: true, position: 'bottom',
+              display: true, position: 'right', align: 'center',
               labels: {
                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-sec').trim() || '#948a73',
-                font: { size: 10 }, padding: 6, boxWidth: 10, boxHeight: 10
+                font: { size: 10 }, padding: 8, boxWidth: 10, boxHeight: 10
               }
             },
-            tooltip: { callbacks: { label: ctx => `${ctx.label.split(':')[0]}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/total*100).toFixed(1)}%)` } }
+            tooltip: { callbacks: { label: ctx => `${ctx.label.split(':')[0]}: ${fmtINR(ctx.parsed)} (${(ctx.parsed/total*100).toFixed(1)}%)` } },
+            datalabels: {
+              color: '#fff', font: { weight: '700', size: 11 },
+              textStrokeColor: 'rgba(0,0,0,.45)', textStrokeWidth: 2,
+              formatter: (value) => total > 0 ? (value / total * 100).toFixed(0) + '%' : ''
+            }
           }
         }
       });

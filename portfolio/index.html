@@ -413,6 +413,19 @@
   .chart-modal-body{flex:1;display:flex;flex-direction:column;min-height:0;overflow:auto}
   .chart-modal-body .chart-container{flex:1;min-height:400px}
 
+  /* Lot-detail popup: shrinks to its table instead of the chart modal's
+     fixed 85vh — a 2-row table filling that height was the main complaint. */
+  .lot-modal-content{background:var(--bg-card);border:1.5px solid var(--accent-y);border-radius:12px;
+    padding:24px;width:100%;max-width:900px;max-height:85vh;position:relative;
+    box-shadow:0 30px 80px rgba(0,0,0,0.8);display:flex;flex-direction:column}
+  .lot-table{width:100%;border-collapse:collapse;font-size:14px}
+  .lot-table th{padding:9px 14px;font-weight:600;letter-spacing:.03em}
+  .lot-table td{padding:9px 14px;font-variant-numeric:tabular-nums;color:var(--text-pri)}
+  .lot-table td:not(:first-child):not(:nth-child(2)){text-align:right}
+  .lot-table tbody tr{border-bottom:1px solid var(--border)}
+  .lot-table tbody tr:nth-child(even){background:rgba(255,255,255,0.03)}
+  .lot-table tbody tr:hover{background:rgba(255,255,255,0.06)}
+
   /* ── TABLES ── */
   .holdings-section,.holdings-preview,.tab-section{background:var(--bg-card);border:1px solid var(--border);
     border-radius:8px;padding:14px;margin-bottom:14px;overflow-x:auto}
@@ -975,25 +988,34 @@
   </div>
 
   <div class="chart-modal-backdrop" id="lot-modal-backdrop" onclick="if(event.target===this)DASH.closeLotDetail()">
-    <div class="chart-modal-content">
+    <div class="lot-modal-content">
       <button class="chart-modal-close" onclick="DASH.closeLotDetail()" aria-label="Close">✕</button>
-      <h2 id="lot-modal-title" style="margin:0 0 4px 0;padding-right:40px"></h2>
-      <div id="lot-modal-subtitle" style="font-size:12px;color:var(--text-dim);margin-bottom:14px"></div>
-      <div class="chart-modal-body">
-        <div style="overflow:auto;max-height:60vh">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border);text-align:left;color:var(--text-dim)">
-                <th style="padding:6px 4px">DATE</th>
-                <th style="padding:6px 4px">SIDE</th>
-                <th style="padding:6px 4px;text-align:right">QTY</th>
-                <th style="padding:6px 4px;text-align:right">PRICE</th>
-                <th style="padding:6px 4px;text-align:right">VALUE</th>
-              </tr>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-right:40px">
+        <div>
+          <h2 id="lot-modal-title" style="margin:0 0 4px 0"></h2>
+          <div id="lot-modal-subtitle" style="font-size:13px;color:var(--text-dim)"></div>
+        </div>
+        <div style="text-align:right;flex:none;font-size:13px;white-space:nowrap">
+          <div style="color:var(--text-dim)">Current P&amp;L <strong id="lot-modal-current-pl"></strong></div>
+          <div style="color:var(--text-dim);margin-top:2px">Cumulative P&amp;L <strong id="lot-modal-hist-pl"></strong></div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px"></div>
+      <div style="overflow:auto;max-height:65vh">
+        <table class="lot-table">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);text-align:left;color:var(--text-dim)">
+              <th>DATE</th>
+              <th>SIDE</th>
+              <th>QTY</th>
+              <th>AVG PRICE</th>
+              <th>VALUE</th>
+              <th>CURRENT P&amp;L</th>
+              <th>P&amp;L %</th>
+            </tr>
             </thead>
             <tbody id="lot-modal-tbody"></tbody>
           </table>
-        </div>
       </div>
     </div>
   </div>
@@ -4441,8 +4463,34 @@ const DASH = (() => {
       }
     }
 
+    // Collapse same-instrument, different-broker rows (see TICKER_GROUPS,
+    // e.g. GOLDBEES_M/_U/_MS all = GOLDBEES.NS) into one synthetic entry —
+    // three near-identical slices/bars for "the same holding" was confusing.
+    // Return% is cost-weighted across the merged members, not a flat average.
+    function _mergeGroupedHoldings(openArr) {
+      const out = [], seen = {};
+      openArr.forEach(p => {
+        const g = _groupOf(p.tk);
+        if (!g) { out.push(p); return; }
+        if (seen[g]) return; // already emitted the merged row for this group
+        seen[g] = true;
+        const members = openArr.filter(m => _groupOf(m.tk) === g);
+        const mv = members.reduce((s,m)=>s+(m.mv||0), 0);
+        const cost = members.reduce((s,m)=>s+(m.cost||0), 0);
+        const uplNet = members.reduce((s,m)=>s+(m.uplNet||0), 0);
+        out.push({ ...p, tk: g, mv, cost, uplNet, ret: cost ? uplNet/cost*100 : 0, _isGroup: true });
+      });
+      return out;
+    }
+    const indOpenMerged = _mergeGroupedHoldings(ind.open);
+    const _tickerClickHandler = (evt, elements, labels) => {
+      if (!elements.length) return;
+      const label = labels[elements[0].index];
+      if (TICKER_GROUPS[label]) openLotGroup(label, 'india'); else openLotDetail(label, 'india');
+    };
+
     // 1. Holdings weight donut
-    const sorted = [...ind.open].sort((a,b)=>b.mv-a.mv);
+    const sorted = [...indOpenMerged].sort((a,b)=>b.mv-a.mv);
     mkChart('india-weight-chart', { type:'doughnut',
       data: {
         labels:   sorted.map(p=>p.tk),
@@ -4451,13 +4499,15 @@ const DASH = (() => {
           borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim()||'#0f0f1a', borderWidth: 2 }]
       },
       options: { responsive:true, maintainAspectRatio:false, clip:false,
+        onClick: (evt, elements) => _tickerClickHandler(evt, elements, sorted.map(p=>p.tk)),
+        onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
         plugins: { legend:{ position:'right', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--text-pri').trim()||'#e8eaf0', boxWidth:14, font:{size:12}, padding:8 } },
           tooltip:{ callbacks:{ label: ctx => { const v=ctx.dataset.data[ctx.dataIndex]; return `${ctx.label}: ${inr(v)} (${pct(v/ind.mv*100)})`; } } },
           datalabels: _DL_PCT } }
     });
 
     // 2. Return % bar (all positions, sorted by ret)
-    const uplSorted = [...ind.open].sort((a,b)=>b.ret-a.ret);
+    const uplSorted = [...indOpenMerged].sort((a,b)=>b.ret-a.ret);
     const _ics = getComputedStyle(document.documentElement);
     const _igainC = _ics.getPropertyValue('--gain').trim()   || '#00d4aa';
     const _ilossC = _ics.getPropertyValue('--loss').trim()   || '#ff5c5c';
@@ -4479,6 +4529,8 @@ const DASH = (() => {
           borderWidth:1 }]
       },
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
+        onClick: (evt, elements) => _tickerClickHandler(evt, elements, uplSorted.map(p=>p.tk)),
+        onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
         plugins:{ legend:{display:false},
           tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${Math.abs(ctx.parsed.x).toFixed(2)}%` } },
           datalabels:{ display:true, anchor:'end',
@@ -4636,6 +4688,7 @@ const DASH = (() => {
     safe(renderTopHoldings,  'top-holdings');
     safe(renderTransactionsTab, 'tx-tab');
     safe(renderTaxPNL,          'tax-tab');
+    safe(_renderLotModal,       'lot-modal-tbody');
     safe(renderTxLedger,        'tx-ledger');
     safe(renderTxCash,          'tx-cash');
     safe(renderIndices,      'indices');
@@ -5808,35 +5861,157 @@ const DASH = (() => {
   // India has no equivalent live trade log — reads S.indiaLots[tk], a
   // manually-captured lot list (see data/india_lot_detail.json) that's
   // empty for most tickers until captured from a broker statement.
-  function openLotDetail(tk, region) {
-    let rows = [];
-    if (region === 'us') {
-      rows = (S.txUs?.trades || [])
-        .filter(t => t.tk === tk)
-        .map(t => ({ date: t.date, side: t.side, qty: t.qty, price: t.price, value: Math.abs(t.gross ?? t.qty*t.price) }))
-        .sort((a,b) => a.date.localeCompare(b.date));
-    } else {
-      rows = (S.indiaLots?.[tk] || [])
-        .map(l => ({ date: l.date, side: l.side || 'buy', qty: l.qty, price: l.price, value: l.qty*l.price }))
-        .sort((a,b) => a.date.localeCompare(b.date));
+  //
+  // Current P&L / P&L % are computed from S.prices at render time, not
+  // frozen at click time — _lotModal tracks which ticker is open so
+  // _renderLotModal() (called again by every refresh() cycle, see render())
+  // can redraw the same rows against whatever price just came in. Closing
+  // the popup clears _lotModal so refresh() stops bothering to redraw it.
+  let _lotModal = null; // { tk, region } for one ticker, or { group, region } for a cross-broker combined view
+
+  // Same underlying instrument, split across brokers into separate ticker
+  // keys (GOLDBEES.NS held at Motilal/Upstox/m.Stock, each its own row in
+  // the holdings table). Extend this map as more multi-broker names show up.
+  const TICKER_GROUPS = {
+    GOLDBEES: ['GOLDBEES_M', 'GOLDBEES_U', 'GOLDBEES_MS'],
+  };
+  function _groupOf(tk) {
+    return Object.keys(TICKER_GROUPS).find(g => TICKER_GROUPS[g].includes(tk)) || null;
+  }
+
+  // FIFO-reduce a ticker's full buy/sell history down to just the lots still
+  // open right now — a fully closed-then-reopened cycle (ICHR's original
+  // 10sh, say) must never show up next to the position that replaced it.
+  function _fifoOpenLots(trades) {
+    const sorted = trades.slice().sort((a,b) => a.date.localeCompare(b.date));
+    const queue = [];
+    for (const t of sorted) {
+      if (t.side === 'buy') queue.push({ date: t.date, qty: t.qty, price: t.price });
+      else {
+        let remaining = t.qty;
+        while (remaining > 1e-9 && queue.length) {
+          const lot = queue[0];
+          if (lot.qty <= remaining + 1e-9) { remaining -= lot.qty; queue.shift(); }
+          else { lot.qty -= remaining; remaining = 0; }
+        }
+      }
     }
+    // Same-day, same-order fills (e.g. a split execution) read cleaner merged.
+    const merged = [];
+    for (const l of queue) {
+      const prev = merged[merged.length-1];
+      if (prev && prev.date === l.date) {
+        const tq = prev.qty + l.qty;
+        prev.price = (prev.qty*prev.price + l.qty*l.price) / tq;
+        prev.qty = tq;
+      } else merged.push({ ...l });
+    }
+    return merged;
+  }
 
-    document.getElementById('lot-modal-title').textContent = tk;
-    const tot = rows.reduce((s,r) => s + (r.side==='sell' ? -r.qty : r.qty), 0);
-    document.getElementById('lot-modal-subtitle').textContent = rows.length
-      ? `${rows.length} transaction${rows.length===1?'':'s'} · net qty ${tot.toLocaleString(region==='us'?'en-US':'en-IN')}`
-      : 'No transaction detail captured for this position yet.';
+  // Raw buy-lot rows for one ticker, no broker tag attached — shared by both
+  // the single-ticker view and the cross-broker combined view below.
+  function _lotRows(tk, region) {
+    if (region === 'us') {
+      const trades = (S.txUs?.trades || []).filter(t => t.tk === tk);
+      return _fifoOpenLots(trades)
+        .map(l => ({ date: l.date, side: 'buy', qty: l.qty, price: l.price, value: l.qty*l.price }));
+    }
+    return (S.indiaLots?.[tk] || [])
+      .filter(l => (l.side || 'buy') === 'buy')
+      .map(l => ({ date: l.date, side: l.side || 'buy', qty: l.qty, price: l.price, value: l.qty*l.price }));
+  }
+  function _closedPL(tk, region) {
+    const closedList = region === 'us' ? (S.cost?.us?.closed || []) : (S.cost?.india?.closed || []);
+    const forTk = closedList.filter(c => c.tk === tk);
+    return { n: forTk.length, pl: forTk.reduce((s,c) => s + (region === 'us' ? (c.realised ?? 0) : (c.rpnl ?? 0)), 0) };
+  }
 
+  function _renderLotModal() {
+    if (!_lotModal) return;
+    const { tk, region, group } = _lotModal;
     const fmtPx = region === 'us' ? usd2 : inr2;
     const fmtVal = region === 'us' ? usd : inr;
-    document.getElementById('lot-modal-tbody').innerHTML = rows.length ? rows.map(r => `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:6px 4px">${r.date}</td>
-      <td style="padding:6px 4px;text-transform:uppercase;color:${r.side==='sell'?'var(--loss,#ff5c5c)':'var(--gain,#4ade80)'}">${r.side}</td>
-      <td style="padding:6px 4px;text-align:right">${r.qty}</td>
-      <td style="padding:6px 4px;text-align:right">${fmtPx(r.price)}</td>
-      <td style="padding:6px 4px;text-align:right">${fmtVal(r.value)}</td>
-    </tr>`).join('') : `<tr><td colspan="5" style="padding:12px;color:var(--text-dim)">Nothing on file — ask to have it added once you share a statement.</td></tr>`;
+    const locale = region === 'us' ? 'en-US' : 'en-IN';
 
+    let rows, groupLink = '';
+    if (group) {
+      const members = TICKER_GROUPS[group];
+      rows = [];
+      members.forEach(mtk => {
+        const broker = (region === 'us' ? S.cost?.us?.open : S.cost?.india?.open)?.find(h => h.tk === mtk)?.broker || mtk;
+        _lotRows(mtk, region).forEach(r => rows.push({ ...r, tk: mtk, broker }));
+      });
+      document.getElementById('lot-modal-title').textContent = `${group} (All Brokers)`;
+    } else {
+      rows = _lotRows(tk, region).map(r => ({ ...r, tk, broker: null }));
+      document.getElementById('lot-modal-title').textContent = tk;
+      const g = region === 'india' ? _groupOf(tk) : null;
+      if (g) groupLink = ` · <a href="#" onclick="event.preventDefault();DASH.openLotGroup('${g}','${region}')" style="color:var(--accent-b, #3ea6ff)">View combined across brokers</a>`;
+    }
+    rows.sort((a,b) => b.date.localeCompare(a.date));
+
+    const ltpOf = (t) => S.prices?.[t]?.ltp ?? null;
+    const tot = rows.reduce((s,r) => s + r.qty, 0);
+    const avgPx = tot > 0 ? rows.reduce((s,r) => s + r.qty*r.price, 0) / tot : null;
+    const repLtp = group ? ltpOf(TICKER_GROUPS[group].find(m => ltpOf(m) != null)) : ltpOf(tk);
+    document.getElementById('lot-modal-subtitle').innerHTML = rows.length
+      ? `${rows.length} buy lot${rows.length===1?'':'s'} · total qty ${tot.toLocaleString(locale)}`
+        + `${avgPx!=null?` · Avg price ${fmtPx(avgPx)}`:''}`
+        + `${repLtp!=null?` · LTP ${fmtPx(repLtp)}`:''}`
+        + groupLink
+      : `No transaction detail captured for this position yet.${groupLink}`;
+
+    let curPL = 0;
+    const brokerCol = group ? '<th>BROKER</th>' : '';
+    document.querySelector('#lot-modal-backdrop thead tr').innerHTML =
+      `<th>DATE</th>${brokerCol}<th>SIDE</th><th>QTY</th><th>AVG PRICE</th><th>VALUE</th><th>CURRENT P&amp;L</th><th>P&amp;L %</th>`;
+    document.getElementById('lot-modal-tbody').innerHTML = rows.length ? rows.map(r => {
+      const ltp = ltpOf(r.tk);
+      const lotPL = (r.side === 'buy' && ltp != null) ? (ltp - r.price) * r.qty : null;
+      const lotPct = (r.side === 'buy' && ltp != null) ? (ltp - r.price) / r.price * 100 : null;
+      if (lotPL != null) curPL += lotPL;
+      const plCell  = lotPL  == null ? `<span style="color:var(--text-dim)">—</span>` : `<span class="${pn(lotPL)}">${sign(lotPL)}${fmtVal(lotPL)}</span>`;
+      const pctCell = lotPct == null ? `<span style="color:var(--text-dim)">—</span>` : `<span class="${pn(lotPct)}">${sign(lotPct)}${pct(lotPct)}</span>`;
+      const brokerCell = group ? `<td>${r.broker}</td>` : '';
+      return `<tr>
+      <td>${r.date}</td>
+      ${brokerCell}
+      <td style="text-transform:uppercase;color:${r.side==='sell'?'var(--loss,#ff5c5c)':'var(--gain,#4ade80)'}">${r.side}</td>
+      <td>${r.qty}</td>
+      <td>${fmtPx(r.price)}</td>
+      <td>${fmtVal(r.value)}</td>
+      <td>${plCell}</td>
+      <td>${pctCell}</td>
+    </tr>`;
+    }).join('') : `<tr><td colspan="${group?8:7}" style="padding:12px;color:var(--text-dim)">Nothing on file — ask to have it added once you share a statement.</td></tr>`;
+
+    // Cumulative P&L = realised total from every closed lot ever recorded,
+    // plus the current unrealised total on what's still open — the full
+    // lifetime picture, not just the closed-out portion. Same pine-script
+    // convention (cum_pnl = cum_realised + cum_unreal), summed across every
+    // member ticker when viewing a combined group.
+    const members = group ? TICKER_GROUPS[group] : [tk];
+    let closedPL = 0, closedN = 0;
+    members.forEach(mtk => { const c = _closedPL(mtk, region); closedPL += c.pl; closedN += c.n; });
+    const hasCumData = closedN > 0 || rows.length > 0;
+    const cumPL = hasCumData ? closedPL + curPL : null;
+
+    const curEl = document.getElementById('lot-modal-current-pl');
+    const histEl = document.getElementById('lot-modal-hist-pl');
+    if (curEl) { curEl.textContent = rows.length ? sign(curPL)+fmtVal(curPL) : '—'; curEl.className = rows.length ? pn(curPL) : ''; }
+    if (histEl) { histEl.textContent = cumPL != null ? sign(cumPL)+fmtVal(cumPL) : '—'; histEl.className = cumPL != null ? pn(cumPL) : ''; }
+  }
+
+  function openLotDetail(tk, region) {
+    _lotModal = { tk, region };
+    _renderLotModal();
+    document.getElementById('lot-modal-backdrop').classList.add('active');
+    document.addEventListener('keydown', _lotEsc);
+  }
+  function openLotGroup(group, region) {
+    _lotModal = { group, region };
+    _renderLotModal();
     document.getElementById('lot-modal-backdrop').classList.add('active');
     document.addEventListener('keydown', _lotEsc);
   }
@@ -5844,6 +6019,7 @@ const DASH = (() => {
     const bd = document.getElementById('lot-modal-backdrop');
     if (bd) bd.classList.remove('active');
     document.removeEventListener('keydown', _lotEsc);
+    _lotModal = null;
   }
   function _lotEsc(e) { if (e.key === 'Escape') closeLotDetail(); }
 
@@ -6075,7 +6251,7 @@ const DASH = (() => {
 
   document.addEventListener('DOMContentLoaded', () => { mpLoadPending(); });
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject, openLotDetail, closeLotDetail };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject, openLotDetail, closeLotDetail, openLotGroup };
 })();
 
 // Register service worker for PWA installability

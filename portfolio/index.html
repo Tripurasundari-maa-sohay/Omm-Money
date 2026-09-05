@@ -1110,6 +1110,9 @@
         <span class="live-badge" id="us-live-badge">● LIVE</span>
         <button onclick="DASH.resetColOrder('us')" title="Reset column order" style="background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:10px;margin-left:6px">↺ cols</button>
         <span id="us-asof">--</span>
+        <span id="us-fresh-signals"  style="font-size:11px;color:var(--text-dim);margin-left:12px" title="signals_update.py — last run">Signals: --</span>
+        <span id="us-fresh-screener" style="font-size:11px;color:var(--text-dim);margin-left:12px" title="run_v1.py (screener) — last run">Screener: --</span>
+        <span id="us-fresh-monthly"  style="font-size:11px;color:var(--text-dim);margin-left:12px" title="monthly_snapshot.py — last snapshot date">Monthly: --</span>
       </div>
       <table id="us-holdings-table">
         <thead>
@@ -2166,7 +2169,7 @@ const DASH = (() => {
   };
 
   async function load() {
-    const [cost, prices, indices, audit, txUs, taxPnl, indiaLots] = await Promise.all([
+    const [cost, prices, indices, audit, txUs, taxPnl, indiaLots, screener] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
       fetchJSON('data/processed/market_indices.json'),
@@ -2174,11 +2177,13 @@ const DASH = (() => {
       fetchJSON('data/transactions_us.json'),
       fetchJSON('data/india_tax_pnl.json'),
       fetchJSON('data/india_lot_detail.json'),
+      fetchJSON('data/processed/screener_v1.json'),
     ]);
     if (txUs)    S.txUs = txUs;
     if (taxPnl)  S.taxPnl = taxPnl;
     if (indiaLots) S.indiaLots = indiaLots.lots || {};
     if (cost)    S.cost = cost;
+    if (screener) S.screenerGeneratedAt = screener.generated || null;
     if (prices)  {
       S.prices    = prices.prices || {};
       S.demoPrices = prices.demo_prices || {};
@@ -2981,6 +2986,19 @@ const DASH = (() => {
     }
     setLiveBadge('us-live-badge', us.open);
     setText('us-asof', 'as of ' + (S.view.asOf || '—'));
+    setText('us-fresh-signals',  'Signals: '  + _fmtResultDate(SIG.generatedAt));
+    setText('us-fresh-screener', 'Screener: ' + _fmtResultDate(S.screenerGeneratedAt));
+    const usMonthly = S.cost.us && S.cost.us.monthly && S.cost.us.monthly.label_dates || [];
+    setText('us-fresh-monthly',  'Monthly: '  + _fmtResultDate(usMonthly[usMonthly.length - 1] || null));
+  }
+
+  function _fmtResultDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    const datePart = d.toLocaleDateString(undefined, { month:'short', day:'2-digit' });
+    if (iso.length <= 10) return datePart;   // date-only string (e.g. monthly snapshot label)
+    return datePart + ' ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
   }
 
   function renderIndiaHoldings() {

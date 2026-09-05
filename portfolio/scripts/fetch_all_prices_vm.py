@@ -21,7 +21,7 @@ Usage:
 """
 
 import json, os, sys, time, base64, math, requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 # ── Config ────────────────────────────────────────────────────────────────
 ANGEL_API_KEY  = os.environ.get("ANGEL_API_KEY", "")
@@ -642,6 +642,116 @@ def update_daily_chart(payload: dict, cost: dict, fx_rate: float) -> None:
     print(f"  daily_chart: {today}  us=${us_v:,.0f}  india=${india_v:,.0f}  total=${total_v:,.0f}")
 
 
+def _yahoo_close_on(yf_sym: str, date_iso: str):
+    """Historical daily close nearest date_iso, via Yahoo chart API (same
+    pattern as monthly_snapshot.py's fetch_yahoo_close)."""
+    try:
+        d = datetime.strptime(date_iso, "%Y-%m-%d")
+        p1 = int((d - timedelta(days=5)).timestamp())
+        p2 = int((d + timedelta(days=2)).timestamp())
+        for host in ("query1", "query2"):
+            r = requests.get(
+                f"https://{host}.finance.yahoo.com/v8/finance/chart/{yf_sym}",
+                params={"period1": p1, "period2": p2, "interval": "1d"},
+                headers=_YF_UA, timeout=10,
+            )
+            if r.status_code != 200:
+                continue
+            result = r.json()["chart"]["result"][0]
+            closes = [c for c in result["indicators"]["quote"][0]["close"] if c is not None]
+            if closes:
+                return float(closes[-1])
+    except Exception as e:
+        print(f"  _yahoo_close_on({yf_sym}, {date_iso}): {e}", file=sys.stderr)
+    return None
+
+
+def update_weekly_series(payload: dict, cost: dict, fx_rate: float) -> None:
+    """Resume weekly_chart / daily_chart / india_weekly_chart, which froze
+    ~2026-06-12/18 when market_data.py (their sole writer, a retired GitHub
+    Actions script) stopped running during the IBKR migration and nothing
+    replaced it. Chain-compounds each series' port_ret/snp_ret forward from
+    its own last recorded point — same proven pattern as
+    monthly_snapshot.py — rather than guessing at an inception baseline.
+
+    Known scope limit: inr_ret/fx_alpha are carried forward unchanged, not
+    recomputed, on both series. Precisely resuming them needs the historical
+    INR=X close on each series' freeze date, which is one more moving part
+    than port_ret/snp_ret need — left as a secondary line rather than risk a
+    wrong FX-compounding formula on real performance data. Flag if these two
+    matter enough to revisit.
+    """
+    if not cost:
+        return
+    prices  = payload.get("prices", {})
+    us      = cost.get("us", {})
+    india   = cost.get("india", {})
+    fx      = fx_rate or 95.0
+    us_v       = round(_portfolio_val_usd(prices, us.get("open", []), us.get("cash")), 2)
+    india_v_inr = round(_portfolio_val_usd(prices, india.get("open", []), india.get("cash")), 2)
+    india_v_usd = round(india_v_inr / fx, 2)
+    today = datetime.now(timezone.utc).date().isoformat()
+
+    def _label(dates_list):
+        seen = {datetime.strptime(d, "%Y-%m-%d").strftime("%b-%Y") for d in dates_list}
+        mk = datetime.strptime(today, "%Y-%m-%d").strftime("%b-%Y")
+        return datetime.strptime(today, "%Y-%m-%d").strftime("%b-%y") if mk not in seen else ""
+
+    # india_weekly_chart — plain absolute append, no % chain needed.
+    iw = payload.get("india_weekly_chart")
+    if iw and iw.get("dates") and iw["dates"][-1] != today:
+        iw["labels"].append(_label(iw["dates"]))
+        iw["dates"].append(today)
+        iw["india_val_inr"].append(india_v_inr)
+        iw["india_val_usd"].append(india_v_usd)
+        print(f"  weekly_series: india_weekly_chart resumed → {today}")
+
+    # weekly_chart's own us_val_usd anchor — daily_chart shares it (both
+    # track the same US portfolio, daily_chart just doesn't keep its own
+    # absolute-$ series).
+    wcy = payload.get("weekly_chart")
+    anchor_us_val = wcy["us_val_usd"][-1] if wcy and wcy.get("us_val_usd") else None
+
+    for key in ("weekly_chart", "daily_chart"):
+        wc = payload.get(key)
+        if not wc or not wc.get("dates") or wc["dates"][-1] == today or not anchor_us_val:
+            continue
+        # Walk back to the last non-null point — the freeze that stopped
+        # this series sometimes left a broken trailing row (daily_chart's
+        # very last entry is None on 2026-06-18), and chaining off a null
+        # anchor would just propagate the break forward forever.
+        ports, snps, dates_list = wc.get("port_ret", []), wc.get("snp_ret", []), wc["dates"]
+        idx = len(dates_list) - 1
+        while idx >= 0 and (idx >= len(ports) or idx >= len(snps) or ports[idx] is None or snps[idx] is None):
+            idx -= 1
+        if idx < 0:
+            continue
+        last_date, last_port, last_snp = dates_list[idx], ports[idx], snps[idx]
+
+        period_pct = (us_v / anchor_us_val - 1) * 100
+        new_port = round(((1 + last_port/100) * (1 + period_pct/100) - 1) * 100, 2)
+
+        snp_then = _yahoo_close_on("^GSPC", last_date)
+        snp_meta_now = fetch_yahoo_meta("^GSPC")
+        if snp_then and snp_meta_now and snp_meta_now.get("ltp"):
+            snp_period_pct = (snp_meta_now["ltp"] / snp_then - 1) * 100
+            new_snp = round(((1 + last_snp/100) * (1 + snp_period_pct/100) - 1) * 100, 2)
+        else:
+            new_snp = last_snp  # couldn't fetch a comparison point — hold rather than guess
+
+        wc["dates"].append(today)
+        wc["labels"].append(_label(wc["dates"][:-1]))
+        wc["port_ret"].append(new_port)
+        wc["snp_ret"].append(new_snp)
+        if wc.get("inr_ret") and idx < len(wc["inr_ret"]):
+            wc["inr_ret"].append(wc["inr_ret"][idx])       # carried forward, see docstring
+        if wc.get("fx_alpha") and idx < len(wc["fx_alpha"]):
+            wc["fx_alpha"].append(wc["fx_alpha"][idx])     # carried forward, see docstring
+        if key == "weekly_chart":
+            wc["us_val_usd"].append(us_v)
+        print(f"  weekly_series: {key} resumed → {today}  port_ret={new_port}%  snp_ret={new_snp}%")
+
+
 def main():
     print(f"\n{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')} fetch_all_prices [{MODE}]")
 
@@ -741,6 +851,20 @@ def main():
             write_local_json(PRICES_PATH, chart_payload)
     except Exception as e:
         print(f"  daily_chart update error: {e}", file=sys.stderr)
+
+    # ── Resume weekly_chart / daily_chart / india_weekly_chart ────────────────
+    # See update_weekly_series() docstring — these three froze when
+    # market_data.py was retired during the IBKR migration and nothing took
+    # over appending new points. Fixed 2026-09-05.
+    try:
+        chart_payload = read_local_json(PRICES_PATH, default=None)
+        cost_for_chart = read_local_json(COST_PATH, default={})
+        if chart_payload and cost_for_chart:
+            fx_for_chart = idx_payload.get("fx_rate") or existing_idx.get("fx_rate")
+            update_weekly_series(chart_payload, cost_for_chart, fx_for_chart)
+            write_local_json(PRICES_PATH, chart_payload)
+    except Exception as e:
+        print(f"  weekly_series update error: {e}", file=sys.stderr)
 
     # ── Failure alert (catches silent freezes e.g. expired GITHUB_TOKEN) ─────
     fails = []

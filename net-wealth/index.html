@@ -1212,9 +1212,21 @@ const ODIN = (() => {
     try { local = JSON.parse(localStorage.getItem(LS_STATE) || 'null'); }
     catch { local = null; }
 
-    // If local snapshot exists, it IS the state. Otherwise use repo baseline.
-    S.seed = (local && typeof local === 'object') ? local : baseline;
-    console.log(local ? '✅ Loaded local state-v2' : '✅ Loaded baseline seed.json');
+    // Server (baseline) wins unless the cached local snapshot is STRICTLY
+    // NEWER — i.e. genuine unsaved in-browser edits made after the last
+    // server write. Compares _last_updated timestamps; a snapshot with no
+    // timestamp (pre-dates this field) counts as 0 and loses to any stamped
+    // server data. Was "local always wins if present" → any VM-side edit
+    // (SSH, another device, save-api) became invisible forever until the
+    // user's browser happened to re-save, and different fields could show
+    // different ages depending on when each was last cached.
+    const localTs = (local && local._last_updated) ? new Date(local._last_updated).getTime() : 0;
+    const baseTs  = baseline._last_updated ? new Date(baseline._last_updated).getTime() : 0;
+    const useLocal = !!(local && typeof local === 'object') && localTs > baseTs;
+    S.seed = useLocal ? local : baseline;
+    // Re-sync localStorage to the winner so stale copies don't linger across reloads.
+    try { localStorage.setItem(LS_STATE, JSON.stringify(S.seed)); } catch {}
+    console.log(useLocal ? '✅ Loaded local state-v2 (newer than server)' : '✅ Loaded baseline seed.json (server authoritative)');
 
     // A manual gold rate with no *_set_at timestamp predates the 24h-expiry
     // feature — we don't know when it was actually set, and it clearly

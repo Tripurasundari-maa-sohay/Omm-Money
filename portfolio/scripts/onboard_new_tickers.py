@@ -19,11 +19,29 @@ from datetime import datetime
 ROOT        = Path(__file__).resolve().parent.parent
 COST_FILE   = ROOT / "data" / "holdings_cost.json"
 TXNS_FILE   = ROOT / "data" / "transactions_us.json"
-# Cron runs the standalone copy at /home/opc/fetch_all_prices_vm.py, not the
-# docroot copy under scripts/ — patch whichever one actually gets executed.
-_VM_STANDALONE = Path("/home/opc/fetch_all_prices_vm.py")
-VM_SCRIPT   = _VM_STANDALONE if _VM_STANDALONE.exists() else Path(__file__).parent / "fetch_all_prices_vm.py"
-SIG_SCRIPT  = Path(__file__).parent / "signals_update.py"
+# Cron runs the standalone copies at /home/opc/*.py, not the docroot copies
+# under scripts/ — patch whichever one actually gets executed. (Missed this
+# for SIG_SCRIPT originally — signals_update.py silently drifted out of sync
+# with the cron-facing copy until caught during SMCI onboarding 2026-09-08.)
+_VM_STANDALONE  = Path("/home/opc/fetch_all_prices_vm.py")
+_SIG_STANDALONE = Path("/home/opc/signals_update.py")
+VM_SCRIPT   = _VM_STANDALONE  if _VM_STANDALONE.exists()  else Path(__file__).parent / "fetch_all_prices_vm.py"
+SIG_SCRIPT  = _SIG_STANDALONE if _SIG_STANDALONE.exists() else Path(__file__).parent / "signals_update.py"
+_VM_DOCROOT  = Path(__file__).parent / "fetch_all_prices_vm.py"
+_SIG_DOCROOT = Path(__file__).parent / "signals_update.py"
+
+def _sync_docroot_copy(standalone: Path, docroot: Path) -> None:
+    """After patching the cron-facing standalone copy, mirror it to the
+    docroot copy too — leaving them out of sync is exactly the bug this
+    fixes (signals_update.py drifted for months before SMCI onboarding
+    2026-09-08 caught it)."""
+    if standalone.resolve() == docroot.resolve():
+        return   # same file (e.g. running locally, no standalone split)
+    try:
+        docroot.write_text(standalone.read_text())
+        print(f"  ✓ mirrored {standalone.name} → docroot copy")
+    except Exception as e:
+        print(f"  WARN: could not mirror {standalone} → {docroot}: {e}", file=sys.stderr)
 PDF_SCRIPT  = Path(__file__).parent / "parse_broker_pdf.py"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -137,6 +155,7 @@ def main() -> None:
                 VM_SCRIPT.write_text(new_vm)
                 vm_text = new_vm
                 print(f"  ✓ [{tk}] added to fetch_all_prices_vm.py US_HOLDINGS")
+        _sync_docroot_copy(VM_SCRIPT, _VM_DOCROOT)
 
     # ── 3. Detect tickers missing from signals_update.py SECTOR_MAP ──────────
     sig_text = SIG_SCRIPT.read_text()
@@ -152,6 +171,7 @@ def main() -> None:
                 SIG_SCRIPT.write_text(new_sig)
                 sig_text = new_sig
                 print(f"  ✓ [{tk}] added to signals_update.py SECTOR_MAP ({sector})")
+        _sync_docroot_copy(SIG_SCRIPT, _SIG_DOCROOT)
 
     # ── 4. Detect tickers missing from parse_broker_pdf.py TICKER_MAP ────────
     # Only add if the ticker itself is not referenced anywhere in the map

@@ -66,6 +66,7 @@ TICKER_MAP = {
     "servicenowinc.":                      ("NOW",   "NOW",   "Stock"),
     "corp.servicenowinc.":                 ("NOW",   "NOW",   "Stock"),
     # Added 2026-06-02
+    "supermicrocomputerinc": ("SMCI", "SMCI", "Stock"),
     "pbfenergyinc-classa": ("PBF", "PBF", "Stock"),
     "tkogroupholdingsinc": ("TKO", "TKO", "Stock"),
     "bankofamericacorp": ("BAC", "BAC", "Stock"),

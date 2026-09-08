@@ -1248,6 +1248,12 @@
         <!-- filled by JS -->
       </div>
     </div>
+
+    <div class="tab-section" id="us-earnings-section" style="margin-top:20px;">
+      <h3>📅 UPCOMING EARNINGS · US</h3>
+      <div class="table-meta"><span id="us-earnings-asof" style="font-size:11px;color:var(--text-dim)">--</span></div>
+      <div id="us-earnings-groups">Loading…</div>
+    </div>
   </div><!-- /us-tab -->
 
   <!-- ══════════ TAB 3 · INDIA PORTFOLIO ══════════ -->
@@ -2169,7 +2175,7 @@ const DASH = (() => {
   };
 
   async function load() {
-    const [cost, prices, indices, audit, txUs, taxPnl, indiaLots, screener] = await Promise.all([
+    const [cost, prices, indices, audit, txUs, taxPnl, indiaLots, screener, earnings] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
       fetchJSON('data/processed/market_indices.json'),
@@ -2178,12 +2184,14 @@ const DASH = (() => {
       fetchJSON('data/india_tax_pnl.json'),
       fetchJSON('data/india_lot_detail.json'),
       fetchJSON('data/processed/screener_v1.json'),
+      fetchJSON('data/processed/earnings_calendar.json'),
     ]);
     if (txUs)    S.txUs = txUs;
     if (taxPnl)  S.taxPnl = taxPnl;
     if (indiaLots) S.indiaLots = indiaLots.lots || {};
     if (cost)    S.cost = cost;
     if (screener) S.screenerGeneratedAt = screener.generated || null;
+    if (earnings) { S.earningsCalendar = earnings.earnings || {}; S.earningsGeneratedAt = earnings.generated || null; }
     if (prices)  {
       S.prices    = prices.prices || {};
       S.demoPrices = prices.demo_prices || {};
@@ -2990,6 +2998,38 @@ const DASH = (() => {
     setText('us-fresh-screener', 'Screener: ' + _fmtResultDate(S.screenerGeneratedAt));
     const usMonthly = S.cost.us && S.cost.us.monthly && S.cost.us.monthly.label_dates || [];
     setText('us-fresh-monthly',  'Monthly: '  + _fmtResultDate(usMonthly[usMonthly.length - 1] || null));
+  }
+
+  function renderUSEarnings() {
+    const wrap = $('us-earnings-groups');
+    if (!wrap) return;
+    setText('us-earnings-asof', S.earningsGeneratedAt ? 'as of ' + _fmtResultDate(S.earningsGeneratedAt) : '--');
+    const cal = S.earningsCalendar || {};
+    const today = new Date(); today.setHours(0,0,0,0);
+    const rows = Object.entries(cal).map(([tk, e]) => {
+      const d = new Date(e.date);
+      const days = Math.round((d - today) / 86400000);
+      return { tk, date: e.date, days };
+    }).filter(r => r.days >= 0);
+    if (!rows.length) {
+      wrap.innerHTML = '<div style="padding:6px 0;color:var(--text-dim)">No upcoming earnings within 120 days</div>';
+      return;
+    }
+    const groups = {};
+    rows.forEach(r => { (groups[r.date] = groups[r.date] || []).push(r); });
+    const dates = Object.keys(groups).sort();
+    wrap.innerHTML = dates.map(date => {
+      const g = groups[date];
+      const days = g[0].days;
+      const soon = days <= 7;
+      const label = new Date(date).toLocaleDateString(undefined, { weekday:'short', month:'short', day:'2-digit', year:'numeric' });
+      const daysLabel = days === 0 ? 'TODAY' : days + 'd to go';
+      return `<div style="display:flex;align-items:baseline;gap:12px;padding:7px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+        <div style="min-width:170px;font-weight:600">${label}</div>
+        <div style="min-width:75px;font-size:11px;font-weight:700;${soon ? 'color:var(--warn)' : 'color:var(--text-dim)'}">${daysLabel}</div>
+        <div>${g.map(r => r.tk).join(', ')}</div>
+      </div>`;
+    }).join('');
   }
 
   function _fmtResultDate(iso) {
@@ -4701,6 +4741,7 @@ const DASH = (() => {
     safe(renderUSMetrics,    'us-metrics');
     safe(renderIndiaMetrics, 'india-metrics');
     safe(renderUSHoldings,   'us-holdings');
+    safe(renderUSEarnings,   'us-earnings');
     safe(renderIndiaHoldings,'india-holdings');
     safe(renderIndiaCharts,  'india-charts');
     safe(renderTopHoldings,  'top-holdings');

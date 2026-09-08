@@ -33,6 +33,7 @@ GITHUB_TOKEN   = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_REPO    = "Tripurasundari-maa-sohay/Omm-Money"
 PRICES_PATH    = "portfolio/data/processed/holdings_prices.json"
 INDICES_PATH   = "portfolio/data/processed/market_indices.json"
+EARNINGS_PATH  = "portfolio/data/processed/earnings_calendar.json"
 COST_PATH      = "portfolio/data/holdings_cost.json"
 # Push alerts on pipeline failure (commit 401/expired token, login fail, etc).
 # Set NTFY_TOPIC in angel_env.sh and subscribe to that topic in the ntfy app
@@ -111,7 +112,8 @@ US_HOLDINGS = [
     "CARR",
     "BAC",
     "TKO",
-    "PBF"
+    "PBF",
+    "SMCI"
 ]
 # Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
 # each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.
@@ -314,6 +316,45 @@ def fetch_us_finnhub():
             print(f"  Finnhub {tk}: {e}", file=sys.stderr)
         time.sleep(delay)
     return results
+
+def fetch_us_earnings_calendar(tickers):
+    """Next upcoming earnings date per US ticker (Finnhub calendar/earnings,
+    one call per symbol — ETFs correctly come back empty, they don't report).
+    Gated to once per calendar day: this cron fires every minute for live
+    prices, but earnings dates don't move hour to hour, so re-fetching on
+    every tick would double the Finnhub call volume for no benefit."""
+    if not FINNHUB_KEY:
+        return
+    existing = read_local_json(EARNINGS_PATH, default={})
+    today = datetime.now(timezone.utc).date().isoformat()
+    if existing.get("generated_date") == today:
+        return
+    frm = today
+    to  = (datetime.now(timezone.utc).date() + timedelta(days=120)).isoformat()
+    delay = max(1, math.floor(60.0 / len(tickers)))
+    out = {}
+    for tk in tickers:
+        try:
+            r = requests.get(
+                "https://finnhub.io/api/v1/calendar/earnings",
+                params={"from": frm, "to": to, "symbol": tk, "token": FINNHUB_KEY},
+                timeout=10
+            )
+            if r.status_code == 200:
+                cal = r.json().get("earningsCalendar") or []
+                if cal:
+                    soonest = min(cal, key=lambda x: x["date"])
+                    out[tk] = {"date": soonest["date"], "hour": soonest.get("hour", "")}
+                    print(f"  {tk:8s} → {soonest['date']}  [earnings]")
+        except Exception as e:
+            print(f"  Earnings {tk}: {e}", file=sys.stderr)
+        time.sleep(delay)
+    write_local_json(EARNINGS_PATH, {
+        "generated_date": today,
+        "generated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "earnings": out,
+    })
+    print(f"  Earnings calendar: {len(out)}/{len(tickers)} US tickers have a date within 120 days")
 
 # ── Market status (port of market_data.py:market_status) ───────────────────
 def _now_in(tz_name: str):
@@ -823,6 +864,10 @@ def main():
             print(f"  manual_ltp patch error: {e}", file=sys.stderr)
         new_prices.update(us_p)
         print(f"  US: {len(us_p)} Finnhub  (fx_buy stamped: {sum(1 for t in us_p if t in fx_buy_map)}, manual: {manual_count})")
+        try:
+            fetch_us_earnings_calendar(US_HOLDINGS)
+        except Exception as e:
+            print(f"  Earnings calendar FAIL: {e}", file=sys.stderr)
 
     prices_ok = True
     if new_prices:

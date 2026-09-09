@@ -114,7 +114,8 @@ US_HOLDINGS = [
     "TKO",
     "PBF",
     "SMCI",
-    "ASND"
+    "ASND",
+    "AAPL"
 ]
 # Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
 # each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.

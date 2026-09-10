@@ -633,6 +633,19 @@ def commit_prices_to_github(new_prices: dict, existing_data: dict):
     print("  All 3 commit attempts failed", file=sys.stderr)
     return False
 
+def _live_us_cash(us: dict) -> float:
+    """Sum of cash across all US brokers (currently DBG's frozen residual +
+    IBKR's live-synced cash). us["cash"] (top-level) is a DIFFERENT field —
+    the last-parsed broker STATEMENT snapshot (written by parse_broker_csv.py,
+    read by data_audit.py as stmt_cash for reconciliation) — it only updates
+    when a new statement is parsed, not on every IBKR sync, and using it here
+    let weekly_chart/daily_chart drift $5,300+ stale after the position-closing
+    trades on 2026-09-09. brokers.*.cash is the one that gets refreshed on
+    every trade sync — use that instead."""
+    brokers = (us or {}).get("brokers") or {}
+    return sum(float(b.get("cash") or 0) for b in brokers.values())
+
+
 def _portfolio_val_usd(prices: dict, holdings: list, cash: float) -> float:
     """Sum(qty*ltp) + cash, in the holdings' native currency. Falls back to
     cost-basis avg if a live price is missing (illiquid/delisted ticker)."""
@@ -659,7 +672,7 @@ def update_daily_chart(payload: dict, cost: dict, fx_rate: float) -> None:
     prices  = payload.get("prices", {})
     us      = cost.get("us", {})
     india   = cost.get("india", {})
-    us_v    = round(_portfolio_val_usd(prices, us.get("open", []), us.get("cash")), 2)
+    us_v    = round(_portfolio_val_usd(prices, us.get("open", []), _live_us_cash(us)), 2)
     fx      = fx_rate or 95.0
     india_v = round(_portfolio_val_usd(prices, india.get("open", []), india.get("cash")) / fx, 2)
     total_v = round(us_v + india_v, 2)
@@ -730,7 +743,7 @@ def update_weekly_series(payload: dict, cost: dict, fx_rate: float) -> None:
     us      = cost.get("us", {})
     india   = cost.get("india", {})
     fx      = fx_rate or 95.0
-    us_v       = round(_portfolio_val_usd(prices, us.get("open", []), us.get("cash")), 2)
+    us_v       = round(_portfolio_val_usd(prices, us.get("open", []), _live_us_cash(us)), 2)
     india_v_inr = round(_portfolio_val_usd(prices, india.get("open", []), india.get("cash")), 2)
     india_v_usd = round(india_v_inr / fx, 2)
     today = datetime.now(timezone.utc).date().isoformat()

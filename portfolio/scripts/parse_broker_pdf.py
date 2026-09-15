@@ -66,6 +66,8 @@ TICKER_MAP = {
     "servicenowinc.":                      ("NOW",   "NOW",   "Stock"),
     "corp.servicenowinc.":                 ("NOW",   "NOW",   "Stock"),
     # Added 2026-06-02
+    "optimihealthcorp": ("OPTH", "OPTH", "Stock"),
+    "abvcbiopharmainc": ("ABVC", "ABVC", "Stock"),
     "appleinc": ("AAPL", "AAPL", "Stock"),
     "ascendispharmaa/s": ("ASND", "ASND", "Stock"),
     "supermicrocomputerinc": ("SMCI", "SMCI", "Stock"),

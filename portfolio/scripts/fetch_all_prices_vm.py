@@ -117,7 +117,9 @@ US_HOLDINGS = [
     "ASND",
     "AAPL",
     "ABVC",
-    "OPTH"
+    "OPTH",
+    "HWM",
+    "IPHA"
 ]
 # Watchlist tickers are loaded dynamically from portfolio/data/watchlist.json
 # each cycle (see load_watchlist_tickers()) — no code edit needed when user adds via UI.

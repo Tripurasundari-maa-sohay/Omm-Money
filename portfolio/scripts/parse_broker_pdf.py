@@ -66,6 +66,7 @@ TICKER_MAP = {
     "servicenowinc.":                      ("NOW",   "NOW",   "Stock"),
     "corp.servicenowinc.":                 ("NOW",   "NOW",   "Stock"),
     # Added 2026-06-02
+    "appliedmaterialsinc": ("AMAT", "AMAT", "Stock"),
     "macomtechnologysolutionsholdingsinc": ("MTSI", "MTSI", "Stock"),
     "innatepharmasa-sponsoredadr": ("IPHA", "IPHA", "Stock"),
     "howmetaerospaceinc": ("HWM", "HWM", "Stock"),

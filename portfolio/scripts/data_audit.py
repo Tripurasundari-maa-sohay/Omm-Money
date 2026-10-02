@@ -26,6 +26,7 @@ PRICES_FILE  = ROOT / "data" / "processed" / "holdings_prices.json"
 INDICES_FILE = ROOT / "data" / "processed" / "market_indices.json"
 SIGNALS_FILE = ROOT / "data" / "processed" / "stock_signals.json"
 AUDIT_FILE   = ROOT / "data" / "processed" / "audit.json"
+COMBINED_MONTHLY_FILE = ROOT / "data" / "processed" / "combined_monthly.json"
 HISTORY_FILE = ROOT / "data" / "processed" / "audit_history.json"
 TRANSACTIONS_US_FILE = ROOT / "data" / "transactions_us.json"
 SCREENER_FILE        = ROOT / "data" / "processed" / "screener.json"
@@ -213,6 +214,7 @@ def main() -> None:
     prices_data  = load_json(PRICES_FILE)
     indices_data = load_json(INDICES_FILE)
     _signals     = load_json(SIGNALS_FILE)   # loaded for completeness; not yet checked
+    combined_monthly_data = load_json(COMBINED_MONTHLY_FILE)
 
     # 2. Build expected ticker list from holdings_cost.json
     # Each entry has a "yf" field (yfinance symbol) and a "tk" field (dashboard ticker key).
@@ -758,6 +760,47 @@ def main() -> None:
                         f"{chart_key}.snp_ret has been exactly {tail[0]}% for its "
                         f"last 5 recorded points ({dates[-5:]}) — the S&P doesn't "
                         "stand still for a trading week; looks frozen."
+                    ),
+                })
+
+    # (v) cashInfusion/cash_deployed reconciliation — added 2026-10-02 after
+    # TWO independent implementations of "net capital invested" (the live
+    # JS calc on every page load, and combined_monthly.json's cash_deployed,
+    # built once a day by a separate Python script) drifted apart: one used
+    # the full us.cash_flows history, the other wrongly used IBKR's 3-entry
+    # transfer_log alone. User asked directly why these aren't "interlinked"
+    # — they can't fully be (one must run live in the browser off the raw
+    # ledger, the other needs a day's worth of historical $ bucketing that's
+    # only practical to compute once, server-side, and cache) but they CAN
+    # be checked against each other automatically, which is what this does:
+    # recompute the same live total data_audit.py's own stmt-drift check
+    # already needs, and flag if it disagrees with the cached file's latest
+    # point by more than what's explained by cash flows dated after that
+    # file's own last snapshot date.
+    if cost_data and combined_monthly_data:
+        flows = cost_data.get("us", {}).get("cash_flows") or []
+        live_net_invested = -sum(float(f.get("amount") or 0) for f in flows)
+        cd = combined_monthly_data.get("cash_deployed") or []
+        ld = combined_monthly_data.get("label_dates") or []
+        if cd and ld:
+            cached_last = cd[-1]
+            cached_last_date = ld[-1]
+            flows_after = sum(
+                -float(f.get("amount") or 0) for f in flows
+                if f.get("date") and f["date"] > cached_last_date
+            )
+            expected = cached_last + flows_after
+            gap = abs(live_net_invested - expected)
+            if gap > 50:
+                alerts.append({
+                    "type": "cash_deployed_drift",
+                    "message": (
+                        f"Live net-invested (us.cash_flows) is ${live_net_invested:,.2f}; "
+                        f"combined_monthly.json's cash_deployed ({cached_last_date}) + known "
+                        f"later flows only account for ${expected:,.2f} — gap ${gap:,.2f}. "
+                        "The two 'net invested' implementations have drifted — check "
+                        "build_combined_monthly.py's cash-flow source against "
+                        "index.html's us.cashInfusion."
                     ),
                 })
 

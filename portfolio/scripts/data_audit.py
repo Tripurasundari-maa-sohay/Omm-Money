@@ -652,6 +652,91 @@ def main() -> None:
         print(f"[audit] workflow health check failed: {exc}", file=sys.stderr)
     crosscheck["workflow_status"] = workflow_status
 
+    # 7c. ── Value-level sanity checks (flat/frozen placeholder detectors) ──
+    # Added 2026-10-02 after two real bugs slipped past every schema/freshness
+    # check above because they were schema-valid, present, "fresh enough" by
+    # timestamp — just silently wrong or stuck: (1) 14 positions' fx_buy
+    # stamped at a flat 85 across 3 weeks of distinct July buy_dates instead
+    # of the real ~95-97 historical rate; (2) 5 main-dashboard charts reading
+    # us.monthly, frozen at DBG's $13.87 since its Aug-13 liquidation, for
+    # 7+ weeks. Both were caught by the user looking at the rendered
+    # dashboard, not by any existing check here. These three checks catch
+    # that specific failure shape — "a number that's technically there but
+    # never actually changes when it plausibly should" — without needing
+    # eyes on the UI.
+
+    # (i) fx_buy identical across 3+ distinct buy_dates — real USD/INR moves
+    # daily and essentially never repeats exactly across separate trades
+    # weeks apart; a repeat this wide is a stuck default, not a captured rate.
+    if cost_data:
+        fx_by_value: dict = {}
+        for h in cost_data.get("us", {}).get("open", []) or []:
+            fxv, bd = h.get("fx_buy"), h.get("buy_date")
+            if fxv is not None and bd:
+                fx_by_value.setdefault(fxv, set()).add(bd)
+        for fxv, dates in fx_by_value.items():
+            if len(dates) >= 3:
+                sample = sorted(dates)
+                alerts.append({
+                    "type": "flat_fx_buy",
+                    "message": (
+                        f"fx_buy={fxv} is identical across {len(dates)} distinct "
+                        f"buy_dates ({sample[:5]}{'...' if len(sample) > 5 else ''}) "
+                        "— looks like a stuck default, not a real captured FX rate."
+                    ),
+                })
+
+    # (ii) us.monthly.account_value frozen across its last 3 recorded months,
+    # or its last entry is >45 days old — the exact shape of the DBG-frozen
+    # bug (monthly_snapshot.py silently stopped meaning anything after DBG's
+    # liquidation, kept re-reporting ~$13).
+    if cost_data:
+        monthly = cost_data.get("us", {}).get("monthly", {}) or {}
+        av, ld = monthly.get("account_value") or [], monthly.get("label_dates") or []
+        if len(av) >= 3 and len(set(av[-3:])) == 1:
+            alerts.append({
+                "type": "frozen_monthly_account_value",
+                "message": (
+                    f"us.monthly.account_value has been exactly {av[-1]} for its "
+                    f"last 3 recorded months ({ld[-3:] if ld else '?'}) — "
+                    "monthly_snapshot.py looks stuck, not actually re-snapshotting."
+                ),
+            })
+        if ld:
+            try:
+                last_dt = datetime.strptime(ld[-1], "%Y-%m-%d")
+                age_days = (datetime.now(timezone.utc).replace(tzinfo=None) - last_dt).days
+                if age_days > 45:
+                    alerts.append({
+                        "type": "stale_monthly_snapshot",
+                        "message": f"us.monthly's last entry is {ld[-1]} ({age_days} days old).",
+                    })
+            except ValueError:
+                pass
+
+    # (iii) WEEKLY-granularity chart $ series frozen for 3+ consecutive
+    # points (~3 weeks). Deliberately NOT applied to daily_chart — that one
+    # legitimately flattens over ordinary weekends/holidays (no new trading
+    # data), which would make a same-threshold check noisy on this project's
+    # actively-rebalanced account.
+    if prices_data:
+        for chart_key, value_key in (
+            ("weekly_chart", "us_val_usd"),
+            ("india_weekly_chart", "india_val_inr"),
+            ("combined_weekly_chart", "total_usd"),
+        ):
+            c = prices_data.get(chart_key) or {}
+            vals, dates = c.get(value_key) or [], c.get("dates") or []
+            tail = [v for v in vals[-3:] if v is not None]
+            if len(tail) == 3 and len(set(tail)) == 1:
+                alerts.append({
+                    "type": "frozen_chart_series",
+                    "message": (
+                        f"{chart_key}.{value_key} has been exactly {tail[0]} for its "
+                        f"last 3 recorded points ({dates[-3:]}) — looks frozen."
+                    ),
+                })
+
     # 8. Write audit.json
     audit = {
         "generated": now_iso(),

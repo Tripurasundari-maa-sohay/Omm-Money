@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v200</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v201</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1216,7 +1216,7 @@
         <div class="an-card">
           <div class="an-card-title">Closed Positions P&amp;L Waterfall</div>
           <div id="us-wf-summary" style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;margin:4px 0 6px;flex-wrap:wrap;"></div>
-          <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
           <div id="us-wf-note" style="font-size:10px;color:var(--text-dim);margin-top:6px;text-align:center;"></div>
         </div>
       </div>
@@ -3849,29 +3849,24 @@ const DASH = (() => {
             borderWidth:1.5 }]
         },
         options:{ responsive:true, maintainAspectRatio:false,
+          // Headroom above/below the tallest bars so their end-anchored labels
+          // don't get clipped at the canvas edge (MU/JDZG were invisible/cut
+          // off before — user flagged 2026-10-02).
+          layout:{ padding:{ top:22, bottom:22 } },
           plugins:{ legend:{display:false},
-            tooltip:{ callbacks:{ label: ctx=>sign(ctx.parsed.y)+usd(Math.abs(ctx.parsed.y)) } },
-            // Per-bar $ labels were ALWAYS on, regardless of how many closed
-            // trades there are — with 60-70+ bars crammed into one chart
-            // width, every label overlapped its neighbors into unreadable
-            // mush (user flagged 2026-10-02). Only label the few bars with
-            // room to breathe: the single best win, the single worst loss,
-            // and any bar whose |value| is at least a third of the biggest
-            // one on its side (green/red) — i.e. the outliers that actually
-            // carry the chart's story. Hover still shows every bar's exact
-            // value via tooltip.
-            datalabels:{ display: ctx => {
-                const data = ctx.dataset.data, v = data[ctx.dataIndex];
-                if (v === 0) return false;
-                const side = data.filter(x => (x>=0) === (v>=0));
-                const maxAbsOnSide = Math.max(...side.map(Math.abs));
-                return Math.abs(v) >= maxAbsOnSide / 3;
-              },
+            tooltip:{ callbacks:{ label: ctx => (ctx.parsed.y>=0?'+':'-')+usd(Math.abs(ctx.parsed.y)) } },
+            // Now capped to top-10-wins + top-10-losses (20 bars, see wfChart
+            // above), so every bar gets its own label — no longer suppressing
+            // the "middle" ones like the pre-cap 69-bar version had to.
+            datalabels:{ display: true,
               anchor:'end', align:'end',
-              formatter: v => sign(v)+usd(Math.abs(v)),
+              // sign(v) only returns '+'/'' (see its def) — needs an explicit
+              // '-' here since we pass Math.abs(v), or losses render with no
+              // minus sign at all (JDZG showed "$1,657" instead of "-$1,657").
+              formatter: v => (v>=0?'+':'-')+usd(Math.abs(v)),
               color:_dlColor, font:{size:9,weight:'600'}, textShadowBlur:2, textShadowColor:_dlShadow } },
           scales:{ x:{ grid:{display:false}, ticks:{color:_tickC,font:{size:10}} },
-                   y:{ grid:{color:_gridC}, ticks:{color:_tickC, callback:v=>sign(v)+usd(Math.abs(v))} } } }
+                   y:{ grid:{color:_gridC}, ticks:{color:_tickC, callback:v=>(v>=0?'+':'-')+usd(Math.abs(v))} } } }
       });
     }
 

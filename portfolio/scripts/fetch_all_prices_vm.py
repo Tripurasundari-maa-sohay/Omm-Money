@@ -742,6 +742,13 @@ def update_weekly_series(payload: dict, cost: dict, fx_rate: float) -> None:
     than port_ret/snp_ret need — left as a secondary line rather than risk a
     wrong FX-compounding formula on real performance data. Flag if these two
     matter enough to revisit.
+
+    snp_ret is a direct ratio vs each series' own inception close, not a
+    chain (see the inline comment where it's computed) — fixed 2026-10-02
+    after it was found frozen at a single value for a full month due to a
+    UTC-midnight cron-timing bug in the old day-over-day chain approach.
+    port_ret stays chained (it legitimately needs to, to carry forward
+    deposit-adjustment reasoning the raw $ series alone doesn't capture).
     """
     if not cost:
         return
@@ -793,11 +800,25 @@ def update_weekly_series(payload: dict, cost: dict, fx_rate: float) -> None:
         period_pct = (us_v / anchor_us_val - 1) * 100
         new_port = round(((1 + last_port/100) * (1 + period_pct/100) - 1) * 100, 2)
 
-        snp_then = _yahoo_close_on("^GSPC", last_date)
-        snp_meta_now = fetch_yahoo_meta("^GSPC")
-        if snp_then and snp_meta_now and snp_meta_now.get("ltp"):
-            snp_period_pct = (snp_meta_now["ltp"] / snp_then - 1) * 100
-            new_snp = round(((1 + last_snp/100) * (1 + snp_period_pct/100) - 1) * 100, 2)
+        # snp_ret: direct ratio vs this series' own fixed inception close —
+        # NOT a day-over-day chain. Found 2026-10-02 (user asked to verify
+        # every dashboard tile): the old chain compared _yahoo_close_on
+        # (the PREVIOUS row's date) against fetch_yahoo_meta("now"), both
+        # evaluated at THIS cron tick. Because the daily "resume" fires on
+        # the very first tick after UTC midnight — hours before the next US
+        # session has moved — "previous close" and "now" were effectively
+        # the same snapshot every single day, so snp_period_pct rounded to
+        # ~0% for a full month straight (12.35% frozen 2026-09-05 through
+        # 2026-10-02, verified against real Yahoo history: actual S&P move
+        # over that span was +15.02%, not +0.00%). The S&P index has no
+        # deposits/cash-flow complexity to justify chaining in the first
+        # place — a direct ratio against the series' own dates[0] is both
+        # simpler and immune to this timing bug. One extra Yahoo call per
+        # series per run (negligible next to the many already made here).
+        snp_inception = _yahoo_close_on("^GSPC", wc["dates"][0])
+        snp_now       = fetch_yahoo_meta("^GSPC")
+        if snp_inception and snp_now and snp_now.get("ltp"):
+            new_snp = round((snp_now["ltp"] / snp_inception - 1) * 100, 2)
         else:
             new_snp = last_snp  # couldn't fetch a comparison point — hold rather than guess
 

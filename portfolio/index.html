@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v204</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v205</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -2310,7 +2310,15 @@ const DASH = (() => {
     const mv      = holding.qty * ltp;
     const fees    = holding.fees || 0;
     const upl     = (ltp - holding.avg) * holding.qty;   // raw price gain
-    const uplNet  = upl + fees;                           // net of buy fees already paid
+    // uplNet used to be `upl + fees`, double-subtracting the buy commission:
+    // `holding.avg` is already commission-inclusive (verified against IBKR's
+    // own average_price all session — e.g. AMAT 461.845003 = 461.345 fill +
+    // $1 commission/2sh), so `upl` already nets it out once. Adding `fees`
+    // again understated Unreal P&L by ~$49-66 across the US book (found
+    // 2026-10-02 auditing every tile against live IBKR at the user's request).
+    // `fees` is kept as its own field (still shown in the FEES column) —
+    // just no longer double-counted into uplNet/ret.
+    const uplNet  = upl;
     const exitFee = -5;                                   // cost to close in 1 trade
     const dayPL   = pc !== null ? (ltp - pc) * holding.qty : null;  // null = prev-close unknown
     const dayPct  = pc ? ((ltp - pc) / pc) * 100 : null;
@@ -4765,30 +4773,36 @@ const DASH = (() => {
     const bestClosed = closed.length ? [...closed].sort((a,b)=>(b.realised||0)-(a.realised||0))[0] : null;
     // Worst closed trade
     const worstClosed = closed.length ? [...closed].sort((a,b)=>(a.realised||0)-(b.realised||0))[0] : null;
-    // Most cash infused month
-    const m = us.monthly;
+    // Most cash infused month / Best / Worst month — switched 2026-10-02
+    // from us.monthly (DBG-only, frozen) to S.combinedMonthly (combined
+    // US+India, see renderCharts). us.monthly's Sep-26 entry is DBG's
+    // liquidation-to-$13.87 showing as a fake -$14,056.52 "month" — this
+    // tile was STILL reading that when the 5 main charts got fixed earlier
+    // today; same bug, missed spot. cm.monthly_pl can be null for the
+    // first point after the Jun-Sep gap — skip those like the heatmap does.
+    const cm = S.combinedMonthly;
     let bestInfusionMonth = '--', bestInfusionAmt = 0;
-    if (m && m.labels && m.cash_deployed) {
+    if (cm && cm.labels && cm.cash_deployed) {
       let maxAdd = 0, maxIdx = -1;
-      for (let i = 1; i < m.cash_deployed.length; i++) {
-        const added = m.cash_deployed[i] - m.cash_deployed[i-1];
+      for (let i = 1; i < cm.cash_deployed.length; i++) {
+        const added = cm.cash_deployed[i] - cm.cash_deployed[i-1];
         if (added > maxAdd) { maxAdd = added; maxIdx = i; }
       }
-      if (maxIdx >= 0) { bestInfusionMonth = m.labels[maxIdx]; bestInfusionAmt = maxAdd; }
+      if (maxIdx >= 0) { bestInfusionMonth = cm.labels[maxIdx]; bestInfusionAmt = maxAdd; }
     }
     // Best month (P&L)
     let bestMonthLabel = '--', bestMonthPL = 0;
-    if (m && m.labels && m.monthly_pl) {
+    if (cm && cm.labels && cm.monthly_pl) {
       let maxPL = -Infinity, maxI = -1;
-      m.monthly_pl.forEach((v,i) => { if (v > maxPL) { maxPL = v; maxI = i; } });
-      if (maxI >= 0) { bestMonthLabel = m.labels[maxI]; bestMonthPL = maxPL; }
+      cm.monthly_pl.forEach((v,i) => { if (v !== null && v > maxPL) { maxPL = v; maxI = i; } });
+      if (maxI >= 0) { bestMonthLabel = cm.labels[maxI]; bestMonthPL = maxPL; }
     }
     // Worst month
     let worstMonthLabel = '--', worstMonthPL = 0;
-    if (m && m.labels && m.monthly_pl) {
+    if (cm && cm.labels && cm.monthly_pl) {
       let minPL = Infinity, minI = -1;
-      m.monthly_pl.forEach((v,i) => { if (v < minPL) { minPL = v; minI = i; } });
-      if (minI >= 0) { worstMonthLabel = m.labels[minI]; worstMonthPL = minPL; }
+      cm.monthly_pl.forEach((v,i) => { if (v !== null && v < minPL) { minPL = v; minI = i; } });
+      if (minI >= 0) { worstMonthLabel = cm.labels[minI]; worstMonthPL = minPL; }
     }
     // Win rate (closed)
     const wins = closed.filter(p=>(p.realised||0)>0).length;

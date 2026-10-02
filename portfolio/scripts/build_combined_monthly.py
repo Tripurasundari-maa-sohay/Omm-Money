@@ -27,10 +27,12 @@ gap); unrealized_cum_pl is derived against a "since last reset" realized
 counter so the stacked bar's two eras each reconcile internally.
 
 OTHER KNOWN APPROXIMATIONS:
-  - Only IBKR's dated transfer_log entries adjust monthly_pl/cash_deployed.
-    DBG's lifetime net flow and India's lifetime cash_infusion_itd have no
-    dated history ("Cash/transaction history still pending" per india.note)
-    and are not spread across months.
+  - monthly_pl/cash_deployed are deposit-adjusted using us.cash_flows (DBG+
+    IBKR combined, all 24 entries genuinely dated — fixed 2026-10-02, this
+    used to wrongly read IBKR's transfer_log alone on a mistaken assumption
+    DBG's flows had no dates). India's lifetime cash_infusion_itd still has
+    no dated history ("Cash/transaction history still pending" per
+    india.note) and is not spread across months.
   - India closed-position rpnl (INR) uses the CURRENT fx_rate for every
     historical trade (no historical daily FX series available) — same
     simplification already accepted for inr_ret/fx_alpha elsewhere.
@@ -89,9 +91,20 @@ def main():
     snp_dates = [datetime.strptime(d, "%Y-%m-%d") for d in snp_series.get("dates", [])]
     snp_ret = snp_series.get("snp_ret", [])
 
-    transfer_log = (cost["us"]["brokers"].get("IBKR") or {}).get("transfer_log") or []
-    dated_flows = [(datetime.strptime(t["date"], "%Y-%m-%d"), float(t.get("amount_usd") or 0))
-                   for t in transfer_log]
+    # us.cash_flows (24 entries) — the SAME source holdings_cost.json's XIRR
+    # tile already uses, DBG + IBKR combined, every entry genuinely dated.
+    # Was IBKR's transfer_log alone (3 entries) — wrongly assumed DBG's flows
+    # had no real dates (docstring said so); checked 2026-10-02 and found
+    # all 24 cash_flows entries ARE dated. That narrower source dumped all
+    # three IBKR deposits into one post-gap "Sep" bucket and made "Biggest
+    # Infusion" show $24,000/Sep regardless of DBG's much bigger individual
+    # months (e.g. Dec-2025 alone: $2,000+$5,479.45+$4,109.59 = $11,589.04).
+    # cash_flows uses the XIRR sign convention (negative=deposit,
+    # positive=withdrawal) — flipped here to this module's convention
+    # (positive=net deposit) so the existing monthly_pl/cash_deployed math
+    # doesn't need to change.
+    dated_flows = [(datetime.strptime(f["date"], "%Y-%m-%d"), -float(f.get("amount") or 0))
+                   for f in (cost["us"].get("cash_flows") or [])]
 
     pre_tracking_realised = 0.0
     dated_realised = []

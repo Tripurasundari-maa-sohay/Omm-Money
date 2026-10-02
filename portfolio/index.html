@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v205</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v206</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -2416,7 +2416,23 @@ const DASH = (() => {
       // field alone, it drifts out of sync when brokers are corrected individually
       // (confirmed 2026-08: stale at $1,904 while DBG+IBKR summed to $337.73).
       cash:         Object.keys(_brokersCost).length ? _brokerCashSum : S.cost.us.cash,
-      cashInfusion: S.cost.us.cash_infusion_itd,
+      // cashInfusion = true lifetime NET capital still deployed (DBG+IBKR
+      // combined), not just IBKR's own 3 deposits. Was S.cost.us.cash_infusion_itd
+      // (= us.brokers.IBKR.cash_infusion_itd exactly, $24,000, DBG's entire
+      // deposit/withdrawal history excluded by an earlier deliberate
+      // decision) — fixed 2026-10-02 after the user pointed out DBG's close
+      // + withdrawals make that figure wrong: DBG alone moved $21,190 in and
+      // $23,415 out over its life (net -$2,225, since IBKR-bound transfers
+      // count as a DBG withdrawal too), so true net invested is $21,775.14,
+      // not $24,000 — and PnL off the old base (+4.77%) silently contradicted
+      // the XIRR tile's own "Absolute $" on the same page (which already
+      // used the full cash_flows history correctly). Computed the same way
+      // XIRR does: -sum(every real flow, deposits negative/withdrawals
+      // positive) — falls back to the old IBKR-only field if cash_flows is
+      // ever missing, rather than silently zeroing "Invested" out.
+      cashInfusion: (S.cost.us.cash_flows && S.cost.us.cash_flows.length)
+        ? -S.cost.us.cash_flows.reduce((s,f) => s + (f.amount||0), 0)
+        : S.cost.us.cash_infusion_itd,
       open:         usOpen,                    // active only — drives tables/charts/tiles
       quar:         usQuar,                    // quarantined — drives 🔒 strip + Lessons tab
       quarMV:       usQuarMV,
@@ -2765,8 +2781,8 @@ const DASH = (() => {
       for (const name of Object.keys(_brokers)) tRealised += (us.realisedByBroker?.[name] || 0);
 
       const set = (id, html, cls_) => { const el=document.getElementById(id); if(el){ el.innerHTML=html; if(cls_) el.className=cls_; } };
-      // Same figure the hero tile uses (us.cashInfusion) — DBG is closed, its
-      // residual -$2,132 net-flow isn't netted into "Invested" going forward.
+      // Same figure the hero tile uses (us.cashInfusion) — now the true
+      // DBG+IBKR combined net-invested figure, see its definition for why.
       set('us-inv-total', usd(us.cashInfusion || 0));
       set('us-day-total', tDay!==0 ? `${fmtMon(tDay)} / ${fmtPct(tDayPct)}` : '—', cls(tDay));
       set('us-realised-total', fmtMon(tRealised), cls(tRealised));

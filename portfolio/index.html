@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v198</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v199</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -2175,7 +2175,7 @@ const DASH = (() => {
   };
 
   async function load() {
-    const [cost, prices, indices, audit, txUs, taxPnl, indiaLots, screener, earnings] = await Promise.all([
+    const [cost, prices, indices, audit, txUs, taxPnl, indiaLots, screener, earnings, combinedMonthly] = await Promise.all([
       fetchJSON('data/holdings_cost.json'),
       fetchJSON('data/processed/holdings_prices.json'),
       fetchJSON('data/processed/market_indices.json'),
@@ -2185,7 +2185,9 @@ const DASH = (() => {
       fetchJSON('data/india_lot_detail.json'),
       fetchJSON('data/processed/screener_v1.json'),
       fetchJSON('data/processed/earnings_calendar.json'),
+      fetchJSON('data/processed/combined_monthly.json'),
     ]);
+    S.combinedMonthly = combinedMonthly || null;
     if (txUs)    S.txUs = txUs;
     if (taxPnl)  S.taxPnl = taxPnl;
     if (indiaLots) S.indiaLots = indiaLots.lots || {};
@@ -3526,6 +3528,16 @@ const DASH = (() => {
       padding: { left: 4, right: 4 },
     };
     const m = us.monthly;
+    // cm = combined US+India monthly series (data/processed/combined_monthly.json,
+    // built by scripts/build_combined_monthly.py) — powers the 5 main-dashboard
+    // charts below (heatmap, rolling alpha, drawdown, cash-vs-value,
+    // realized/unrealized). Replaces the old DBG-only `m` for those specifically;
+    // `m` stays DBG/US-only for the US-tab's own Monthly Breakdown table further
+    // down, a separate, still-valid US-scoped view. cm.gap_before[i] marks a
+    // month right after a real data gap (the Jun-Sep 2026 DBG-era stretch) —
+    // its monthly_pl is null and its cumulative % resets to a fresh 0 baseline
+    // rather than spanning the gap with a number nobody can vouch for.
+    const cm = S.combinedMonthly;
     const cashBase = us.cashInfusion || 0;
     const dualLabel = ctx => {
       const v = ctx.parsed.y;
@@ -3615,36 +3627,31 @@ const DASH = (() => {
         setClass('cum-alpha-inr-snp',  pn(alphaInrSnp));
       }
 
-      // Cash vs Account value — append "today" point so chart reflects current
-      // statement + write-off accounting (not just last month-end PDF anchor).
-      let _cvLabels   = m.labels;
-      let _cvDeployed = m.cash_deployed;
-      let _cvAccount  = m.account_value;
-      const _asOf = S.cost && S.cost.as_of;
-      const _lastDt = m.label_dates && m.label_dates[m.label_dates.length - 1];
-      if (_asOf && _lastDt && new Date(_asOf) > new Date(_lastDt)) {
-        let _lbl = _asOf;
-        try { _lbl = new Date(_asOf).toLocaleDateString('en-US',{month:'short',year:'2-digit'}); } catch(e) {}
-        _cvLabels   = [..._cvLabels,   _lbl];
-        _cvDeployed = [..._cvDeployed, +((us.cashInfusion || 0)).toFixed(2)];
-        _cvAccount  = [..._cvAccount,  +(((us.statementTotal || us.totalValue) || 0)).toFixed(2)];
+      // Cash Deployed vs Account Value — combined US+India (cm). cash_deployed
+      // only tracks IBKR's dated transfers (the only cash-flow history with real
+      // dates); DBG/India lifetime capital isn't dated so isn't in this line —
+      // account_value is still the true total either way. No synthetic "today"
+      // append needed: cm is rebuilt daily by cron, already current as of its
+      // last run.
+      if (cm && cm.labels) {
+        mkChart('cash-value-chart', { type:'line',
+          data: { labels: cm.labels, datasets: [
+            { label:'Cash Deployed',  data:cm.cash_deployed, borderColor:_thc.getPropertyValue('--accent-b').trim()||'#4f8ef7', backgroundColor:'rgba(79,142,247,.12)', fill:true, ...darkLine },
+            { label:'Account Value',  data:cm.account_value, borderColor:_gainC, backgroundColor:_gainC+'14', fill:true, ...darkLine }
+          ]},
+          options: lineOpts()
+        });
       }
-      mkChart('cash-value-chart', { type:'line',
-        data: { labels: _cvLabels, datasets: [
-          { label:'Cash Deployed',  data:_cvDeployed, borderColor:_thc.getPropertyValue('--accent-b').trim()||'#4f8ef7', backgroundColor:'rgba(79,142,247,.12)', fill:true, ...darkLine },
-          { label:'Account Value',  data:_cvAccount,  borderColor:_gainC, backgroundColor:_gainC+'14', fill:true, ...darkLine }
-        ]},
-        options: lineOpts()
-      });
 
-      // Realized vs Unrealized P&L — cumulative ITD as of each month-end, US (DBG).
-      // Stacked bars so the top of the stack == total P&L (matches cash-value chart's
-      // account_value - cash_deployed reconciliation).
-      if (m.realized_cum_pl && m.unrealized_cum_pl) {
+      // Realized vs Unrealized P&L — cumulative, combined US+India (cm).
+      // Stacked bars so the top of the stack == cum_pl for that era (realized is
+      // a true lifetime total; unrealized is tracked "since last reset" so each
+      // era — split by the Jun-Sep gap — reconciles on its own).
+      if (cm && cm.realized_cum_pl && cm.unrealized_cum_pl) {
         mkChart('realized-unrealized-chart', { type:'bar',
-          data: { labels: m.labels, datasets: [
-            { label:'Realized (ITD)',   data:m.realized_cum_pl,   backgroundColor:_gainBar+'cc', borderColor:_gainBar, borderWidth:1, stack:'pl' },
-            { label:'Unrealized (ITD)', data:m.unrealized_cum_pl, backgroundColor:_thc.getPropertyValue('--accent-b').trim()+'cc'||'#4f8ef7cc', borderColor:_thc.getPropertyValue('--accent-b').trim()||'#4f8ef7', borderWidth:1, stack:'pl' }
+          data: { labels: cm.labels, datasets: [
+            { label:'Realized (ITD)',   data:cm.realized_cum_pl,   backgroundColor:_gainBar+'cc', borderColor:_gainBar, borderWidth:1, stack:'pl' },
+            { label:'Unrealized',       data:cm.unrealized_cum_pl, backgroundColor:_thc.getPropertyValue('--accent-b').trim()+'cc'||'#4f8ef7cc', borderColor:_thc.getPropertyValue('--accent-b').trim()||'#4f8ef7', borderWidth:1, stack:'pl' }
           ]},
           options:{ responsive:true, maintainAspectRatio:false,
             plugins:{ legend:{ position:'bottom', labels:{ color:_priC, boxWidth:12, font:{size:10} } },
@@ -3679,13 +3686,21 @@ const DASH = (() => {
       }
     }
 
-    // Monthly heatmap
+    // Monthly heatmap — combined US+India (cm). gap_before[idx]=true means this
+    // month immediately follows the Jun-Sep gap — monthly_pl is null there
+    // (no fabricated number spans the gap), shown as a plain "GAP" tile.
     const hmap = $('monthly-heatmap');
-    if (hmap && m && m.labels) {
-      hmap.innerHTML = m.labels.slice(1).map((mo, i) => {
+    if (hmap && cm && cm.labels) {
+      hmap.innerHTML = cm.labels.slice(1).map((mo, i) => {
         const idx = i + 1;
-        const pl = m.monthly_pl[idx] || 0;
-        const maxAbs = Math.max(...m.monthly_pl.map(Math.abs).filter(v=>v>0)) || 1;
+        const pl = cm.monthly_pl[idx];
+        if (pl === null || pl === undefined) {
+          return `<div style="background:transparent;border:1px dashed var(--border);border-radius:6px;padding:8px 12px;min-width:90px;text-align:center;" title="No real data for the Jun–Aug 2026 stretch — gap, not a fabricated number">
+            <div style="font-size:12px;color:var(--text-dim);font-weight:700;">${mo}</div>
+            <div style="font-size:13px;font-weight:700;font-family:Monaco,monospace;color:var(--text-dim);">GAP</div>
+          </div>`;
+        }
+        const maxAbs = Math.max(...cm.monthly_pl.filter(v=>v!==null&&v!==undefined).map(Math.abs).filter(v=>v>0)) || 1;
         const intensity = Math.min(1, Math.abs(pl) / maxAbs);
         const bg = pl >= 0
           ? `color-mix(in srgb,${_gainC} ${Math.round((0.15 + intensity * 0.65)*100)}%,transparent)`
@@ -3703,15 +3718,18 @@ const DASH = (() => {
       }).join('');
     }
 
-    // Rolling 3-month alpha
-    if (m && m.labels && m.port_return_cum_pct && m.snp_return_cum_pct) {
-      const alphaData = m.labels.map((_, i) => {
+    // Rolling 3-month alpha — combined US+India (cm). Null out any window that
+    // crosses a gap boundary (gap_before true for i-2..i) instead of comparing
+    // cum% values from two different post-gap baselines.
+    if (cm && cm.labels && cm.port_return_cum_pct && cm.snp_return_cum_pct) {
+      const alphaData = cm.labels.map((_, i) => {
         if (i < 3) return null;
-        return (m.port_return_cum_pct[i] - m.port_return_cum_pct[i-3])
-             - (m.snp_return_cum_pct[i]  - m.snp_return_cum_pct[i-3]);
+        for (let k = i-2; k <= i; k++) { if (cm.gap_before[k]) return null; }
+        return (cm.port_return_cum_pct[i] - cm.port_return_cum_pct[i-3])
+             - (cm.snp_return_cum_pct[i]  - cm.snp_return_cum_pct[i-3]);
       });
       mkChart('rolling-alpha-chart', { type:'bar',
-        data: { labels: m.labels,
+        data: { labels: cm.labels,
           datasets: [{ label:'3m Rolling Alpha (%)', data: alphaData,
             backgroundColor: alphaData.map(v=>v===null?'transparent':v>=0?_gainC+'cc':_lossC+'cc'),
             borderColor:     alphaData.map(v=>v===null?'transparent':v>=0?_gainC:_lossC),
@@ -3724,15 +3742,17 @@ const DASH = (() => {
       });
     }
 
-    // Drawdown from peak
-    if (m && m.labels && m.port_return_cum_pct) {
+    // Drawdown from peak — combined US+India (cm). Peak resets at each
+    // gap_before boundary, same "fresh era" treatment as the cum% chain itself.
+    if (cm && cm.labels && cm.port_return_cum_pct) {
       let peak = -Infinity;
-      const dd = m.port_return_cum_pct.map(v => {
+      const dd = cm.port_return_cum_pct.map((v, i) => {
+        if (cm.gap_before[i]) peak = -Infinity;
         if (v > peak) peak = v;
         return peak > 0 ? ((v - peak) / (1 + peak/100)) : 0;
       });
       mkChart('drawdown-chart', { type:'line',
-        data: { labels: m.labels,
+        data: { labels: cm.labels,
           datasets: [{ label:'Drawdown %', data: dd,
             borderColor:_lossC, backgroundColor:_lossC+'26',
             fill:true, tension:0.3, pointRadius:0 }]

@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v201</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v202</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1184,15 +1184,25 @@
           </div>
         </div>
         <div class="an-card">
-          <div class="an-card-title">Today's Gain / Loss %</div>
-          <div id="us-day-pct-wrap" style="height:280px;position:relative;overflow:visible;"><canvas id="us-day-pct-chart"></canvas></div>
+          <div class="an-card-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <span>Today's Gain / Loss %</span>
+            <span id="us-day-pct-sort" style="display:flex;gap:4px"></span>
+          </div>
+          <div id="us-day-pct-wrap" style="position:relative;min-height:120px;">
+            <div id="us-day-pct-tiles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:5px;"></div>
+          </div>
         </div>
       </div>
 
-      <!-- ROW 2: Return % — full width (tall chart) -->
+      <!-- ROW 2: Return % — full width tile grid, replaces the old tall bar chart -->
       <div class="an-card" style="margin-top:12px;">
-        <div class="an-card-title">Return % by Position (ITD)</div>
-        <div id="us-upl-wrap" style="height:300px;position:relative;overflow:visible;"><canvas id="us-upl-chart"></canvas></div>
+        <div class="an-card-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+          <span>Return % by Position (ITD)</span>
+          <span id="us-upl-sort" style="display:flex;gap:4px"></span>
+        </div>
+        <div id="us-upl-wrap" style="position:relative;min-height:120px;">
+          <div id="us-upl-tiles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px;"></div>
+        </div>
       </div>
 
       <!-- ROW 3: Mix + Sector — equal columns -->
@@ -1203,7 +1213,7 @@
         </div>
         <div class="an-card">
           <div class="an-card-title">Sector Exposure (Market Value)</div>
-          <div style="height:260px;position:relative;overflow:visible;"><canvas id="us-sector-chart"></canvas></div>
+          <div style="height:260px;position:relative;overflow:visible;"><svg id="us-sector-treemap" viewBox="0 0 500 240" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"></svg></div>
         </div>
       </div>
 
@@ -3405,6 +3415,27 @@ const DASH = (() => {
                         '#44ddaa','#ffcc44','#ff4488','#88ccff','#ccff88',
                         '#ff8844','#4488ff','#88ff44','#cc44ff'];
   Chart.register(ChartDataLabels);
+
+  // Simple recursive binary-slice treemap — box area = value. Used by Sector
+  // Exposure (2026-10-02 redesign, see renderCharts). items: [{label,value}],
+  // sorted desc by caller. Splits each recursion at the item index closest to
+  // half the remaining total, alternating horizontal/vertical cuts.
+  function _treemapSlice(items, x, y, w, h, horizontal) {
+    if (items.length === 0) return [];
+    if (items.length === 1) return [{ ...items[0], x, y, w, h }];
+    const total = items.reduce((s,i)=>s+i.value, 0);
+    let acc = 0, splitIdx = 0;
+    for (let i=0; i<items.length; i++) {
+      acc += items[i].value;
+      if (acc >= total/2) { splitIdx = i+1; break; }
+    }
+    splitIdx = Math.max(1, Math.min(items.length-1, splitIdx));
+    const left = items.slice(0,splitIdx), right = items.slice(splitIdx);
+    const leftFrac = left.reduce((s,i)=>s+i.value,0) / total;
+    return horizontal
+      ? [..._treemapSlice(left, x,y, w*leftFrac, h, false), ..._treemapSlice(right, x+w*leftFrac,y, w*(1-leftFrac), h, false)]
+      : [..._treemapSlice(left, x,y, w, h*leftFrac, true),  ..._treemapSlice(right, x,y+h*leftFrac, w, h*(1-leftFrac), true)];
+  }
   function applyChartDefaults() {
     const _d = getComputedStyle(document.documentElement);
     Chart.defaults.color       = _d.getPropertyValue('--text-sec').trim() || '#8892aa';
@@ -3492,6 +3523,64 @@ const DASH = (() => {
       setText('comb-india-val', fmt$(cw.india_usd[last]));
       setText('comb-total-val', fmt$(cw.total_usd[last]));
     }
+  }
+
+  // Sortable tile heatmap — one small colored square per ticker, value
+  // intensity sets the fill (same look as the Monthly P&L Heatmap). Used by
+  // Today's Gain/Loss % and Return % by Position (ITD), 2026-10-02 redesign.
+  // panelId: HTML id prefix — expects #<panelId>-tiles (grid container) and
+  // #<panelId>-sort (button row, built here too). items: live position
+  // objects. valueKey: numeric field to read off each item. fmtFn: number
+  // formatter (no sign — sign is added here).
+  const TILE_SORT_MODES = [
+    { key: 'value', label: 'Value' },
+    { key: 'alpha', label: 'A–Z' },
+    { key: 'size',  label: 'Size' },
+  ];
+  function _tileSortMode(panelId) {
+    try { return localStorage.getItem('tile_sort_' + panelId) || 'value'; }
+    catch (e) { return 'value'; }
+  }
+  function setTileSort(panelId, mode) {
+    try { localStorage.setItem('tile_sort_' + panelId, mode); } catch (e) {}
+    safe(renderCharts, 'tile-sort');
+  }
+  function _renderTileGrid(panelId, items, valueKey, fmtFn) {
+    const grid = $(panelId + '-tiles'), sortEl = $(panelId + '-sort');
+    if (!grid) return;
+    const mode = _tileSortMode(panelId);
+    const _cs = getComputedStyle(document.documentElement);
+    const _gainC = _cs.getPropertyValue('--gain').trim() || '#00d4aa';
+    const _lossC = _cs.getPropertyValue('--loss').trim() || '#ff5c5c';
+
+    if (sortEl) {
+      sortEl.innerHTML = TILE_SORT_MODES.map(m => {
+        const active = m.key === mode;
+        return `<button onclick="DASH.setTileSort('${panelId}','${m.key}')"
+          style="padding:2px 8px;border:1px solid ${active?'var(--accent-b)':'var(--border)'};border-radius:4px;
+          background:${active?'var(--accent-b)':'var(--bg-card2)'};color:${active?'#fff':'var(--text-sec)'};
+          cursor:pointer;font-size:10px;font-weight:700">${m.label}</button>`;
+      }).join('');
+    }
+
+    const sorted = [...items].sort((a,b) => {
+      if (mode === 'alpha') return a.tk.localeCompare(b.tk);
+      if (mode === 'size')  return (b.mv||0) - (a.mv||0);
+      return (b[valueKey]||0) - (a[valueKey]||0);           // 'value' (default)
+    });
+
+    const maxAbs = Math.max(...sorted.map(p => Math.abs(p[valueKey]||0)), 0.01);
+    grid.innerHTML = sorted.map(p => {
+      const v = p[valueKey] || 0;
+      const intensity = Math.min(1, Math.abs(v) / maxAbs);
+      const hue = v >= 0 ? _gainC : _lossC;
+      const bg     = `color-mix(in srgb, ${hue} ${Math.round(14 + intensity*58)}%, transparent)`;
+      const border = `color-mix(in srgb, ${hue} ${Math.round(30 + intensity*50)}%, var(--border))`;
+      return `<div style="background:${bg};border:1px solid ${border};border-radius:5px;padding:6px 4px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;color:var(--text-pri);letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.tk}</div>
+        <div style="font-size:10.5px;font-weight:600;margin-top:2px;color:${hue};">${sign(v)}${fmtFn(v)}</div>
+      </div>`;
+    }).join('');
   }
 
   function renderCharts() {
@@ -3765,27 +3854,34 @@ const DASH = (() => {
       });
     }
 
-    // US Sector exposure
+    // US Sector exposure — treemap (box area = market value). Replaced the
+    // horizontal bar chart 2026-10-02: it was the 3rd near-identical
+    // full-width ranked bar panel in this section (alongside Return% and
+    // Day%) — a treemap makes relative sector dominance legible by area
+    // instead of by reading bar lengths against each other.
     const sectorMap = {};
     us.open.forEach(p => {
       const sec = (SIG.results && SIG.results[p.tk] && SIG.results[p.tk].sector) || 'Unknown';
       sectorMap[sec] = (sectorMap[sec] || 0) + p.mv;
     });
     const secLabels = Object.keys(sectorMap).sort((a,b)=>sectorMap[b]-sectorMap[a]);
-    if (secLabels.length > 0) {
-      mkChart('us-sector-chart', { type:'bar',
-        data: { labels: secLabels,
-          datasets:[{ label:'Market Value ($)',
-            data: secLabels.map(s=>Math.round(sectorMap[s])),
-            backgroundColor: COLORS.slice(0,secLabels.length).map(c=>c+'bb'),
-            borderColor: COLORS.slice(0,secLabels.length),
-            borderWidth:1 }]
-        },
-        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${usd(ctx.parsed.x)} (${pct(ctx.parsed.x/us.mv*100)})` } } },
-          scales:{ x:{ grid:{color:_gridC}, ticks:{color:_secC, callback:v=>usd(v)} },
-                   y:{ grid:{display:false}, ticks:{color:_priC,font:{size:10}} } } }
-      });
+    const secSvg = $('us-sector-treemap');
+    if (secSvg && secLabels.length > 0) {
+      const W = 500, H = 240;
+      const items = secLabels.map(s => ({ label: s, value: sectorMap[s] }));
+      const total = items.reduce((s,i)=>s+i.value, 0);
+      const boxes = _treemapSlice(items, 0, 0, W, H, true);
+      secSvg.innerHTML = boxes.map((b,i) => {
+        const pctV = (b.value/total*100).toFixed(1);
+        const showLabel = b.w > 56 && b.h > 28;
+        const col = COLORS[secLabels.indexOf(b.label) % COLORS.length];
+        return `<g>
+          <rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${b.w.toFixed(1)}" height="${b.h.toFixed(1)}"
+                fill="${col}cc" stroke="${_thc.getPropertyValue('--bg-base').trim()||'#0f0f1a'}" stroke-width="2"/>
+          ${showLabel ? `<text x="${(b.x+6).toFixed(1)}" y="${(b.y+16).toFixed(1)}" font-size="10" font-weight="700" fill="#0b0e16">${b.label}</text>
+          <text x="${(b.x+6).toFixed(1)}" y="${(b.y+29).toFixed(1)}" font-size="9" fill="#0b0e16" opacity="0.8">${usd(b.value)} · ${pctV}%</text>` : ''}
+        </g>`;
+      }).join('');
     }
 
     // Signal score distribution (BUY/HOLD/REDUCE counts for holdings)
@@ -4008,86 +4104,14 @@ const DASH = (() => {
       }
     });
 
-    // ── Day % horizontal bar chart ──────────────────────────────────────────
-    const usDaySorted = [...usOpen]
-      .filter(p => p.dayPct !== null)
-      .sort((a,b) => b.dayPct - a.dayPct);
-    // ── Smart axis bounds — snap to nearest 5/10 beyond actual data ──────────
-    const _niceMax = v => {
-      if (v <= 0) return 5;
-      const step = v > 100 ? 10 : v > 30 ? 5 : v > 10 ? 2 : 1;
-      return Math.ceil((v * 1.05) / step) * step; // 5% breathing room then snap
-    };
-    const _niceMin = v => {
-      if (v >= 0) return 0;
-      const abs = Math.abs(v);
-      const step = abs > 100 ? 10 : abs > 30 ? 5 : abs > 10 ? 2 : 1;
-      return Math.floor((v * 1.05) / step) * step;
-    };
-    const _hbarAxis = (data) => {
-      const max = Math.max(...data.filter(v=>v!==null), 0);
-      const min = Math.min(...data.filter(v=>v!==null), 0);
-      return { min: _niceMin(min), max: _niceMax(max) };
-    };
-
-    // ── Shared bar chart options factory ─────────────────────────────────────
-    const _hbarOpts = (labelFmt, tickSize=12, axisRange={}) => ({
-      indexAxis:'y', responsive:true, maintainAspectRatio:false, clip:false,
-      layout:{ padding:{ right: 60 } },
-      plugins:{
-        legend:{ display:false },
-        tooltip:{ callbacks:{ label: ctx => `${sign(ctx.parsed.x)}${Math.abs(ctx.parsed.x).toFixed(2)}%` } },
-        datalabels: { ..._DL_BAR, formatter: labelFmt },
-      },
-      scales:{
-        x:{ grid:{color:_gridC},
-            min: axisRange.min, max: axisRange.max,
-            ticks:{ color:_tickC, font:{size:11}, callback:v=>`${v}%` } },
-        y:{ grid:{display:false},
-            ticks:{ color:_tickC, font:{size:tickSize, weight:'600'} } }
-      }
-    });
-
-    // Dynamic height so ticker labels are never squeezed
-    const _dayH = Math.max(280, usDaySorted.length * 36);
-    const _dayWrap = document.getElementById('us-day-pct-wrap');
-    if (_dayWrap) _dayWrap.style.height = _dayH + 'px';
-    mkChart('us-day-pct-chart', { type:'bar',
-      data:{
-        labels: usDaySorted.map(p => p.tk),
-        datasets:[{ label:"Today's %",
-          data:            usDaySorted.map(p => +(p.dayPct||0).toFixed(2)),
-          backgroundColor: usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainBar+'cc' : _lossBar+'cc'),
-          borderColor:     usDaySorted.map(p => (p.dayPct||0) >= 0 ? _gainBar : _lossBar),
-          borderRadius:4, borderWidth:1.5 }]
-      },
-      options:{ ..._hbarOpts(v=>`${v>0?'+':''}${v.toFixed(2)}%`, 13,
-          _hbarAxis(usDaySorted.map(p=>+(p.dayPct||0)))),
-        layout:{ padding:{ right:64, left:0 } },
-        scales:{ ...(_hbarOpts(v=>`${v>0?'+':''}${v.toFixed(2)}%`, 13,
-          _hbarAxis(usDaySorted.map(p=>+(p.dayPct||0)))).scales),
-          y:{ grid:{display:false}, ticks:{color:_tickC, font:{size:13, weight:'700'} } }
-        }
-      }
-    });
-
-    // US return % horizontal bar
-    const usRetSorted = [...usOpen].sort((a,b)=>b.ret-a.ret);
-    const _uplH = Math.max(320, usRetSorted.length * 34);
-    const _uplWrap = document.getElementById('us-upl-wrap');
-    if (_uplWrap) _uplWrap.style.height = _uplH + 'px';
-    mkChart('us-upl-chart', { type:'bar',
-      data:{
-        labels: usRetSorted.map(p=>p.tk),
-        datasets:[{ label:'Return %',
-          data: usRetSorted.map(p=>+(p.ret||0).toFixed(2)),
-          backgroundColor: usRetSorted.map(p=>(p.ret||0)>=0?_gainBar+'cc':_lossBar+'cc'),
-          borderColor:     usRetSorted.map(p=>(p.ret||0)>=0?_gainBar:_lossBar),
-          borderRadius:3, borderWidth:1.5 }]
-      },
-      options: _hbarOpts(v=>`${v>0?'+':''}${v.toFixed(1)}%`, 13,
-        _hbarAxis(usRetSorted.map(p=>+(p.ret||0))))
-    });
+    // ── Today's % + Return % (ITD) tile grids ───────────────────────────────
+    // Replaced the two full-width ranked bar charts 2026-10-02 (user: three
+    // near-identical bar panels stacked "filling the screen left to right").
+    // Each ticker is one small colored tile instead of a ranked bar — same
+    // visual language as the Monthly P&L Heatmap already on this dashboard.
+    // Sort order is a user preference (localStorage), not fixed rank.
+    _renderTileGrid('us-day-pct', usOpen.filter(p => p.dayPct !== null), 'dayPct', pct);
+    _renderTileGrid('us-upl',     usOpen, 'ret', pct);
   }
   function lineOpts(extraTooltip={}){
     return {
@@ -6359,7 +6383,7 @@ const DASH = (() => {
 
   document.addEventListener('DOMContentLoaded', () => { mpLoadPending(); });
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject, openLotDetail, closeLotDetail, openLotGroup };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, setTileSort, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject, openLotDetail, closeLotDetail, openLotGroup };
 })();
 
 // Register service worker for PWA installability

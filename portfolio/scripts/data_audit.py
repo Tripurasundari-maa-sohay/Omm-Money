@@ -737,6 +737,30 @@ def main() -> None:
                     ),
                 })
 
+        # (iv) snp_ret specifically — added 2026-10-02 after it was found
+        # frozen at a single value for a FULL MONTH (2026-09-05→10-02,
+        # 12.35%/12.09% weekly/daily) while the real S&P moved +15.02% in
+        # that span; the check above wouldn't have caught it (it's a %
+        # field, not one of the $ value fields it looks at). Both
+        # weekly_chart and daily_chart append a point every calendar day
+        # post-resume (not just weekly/trading-days), so an ordinary
+        # weekend alone can show 2-3 identical points — use a 5-point
+        # threshold (safely past any normal weekend+holiday) rather than
+        # the 3-point one above.
+        for chart_key in ("weekly_chart", "daily_chart"):
+            c = prices_data.get(chart_key) or {}
+            vals, dates = c.get("snp_ret") or [], c.get("dates") or []
+            tail = [v for v in vals[-5:] if v is not None]
+            if len(tail) == 5 and len(set(tail)) == 1:
+                alerts.append({
+                    "type": "frozen_snp_ret",
+                    "message": (
+                        f"{chart_key}.snp_ret has been exactly {tail[0]}% for its "
+                        f"last 5 recorded points ({dates[-5:]}) — the S&P doesn't "
+                        "stand still for a trading week; looks frozen."
+                    ),
+                })
+
     # 8. Write audit.json
     audit = {
         "generated": now_iso(),

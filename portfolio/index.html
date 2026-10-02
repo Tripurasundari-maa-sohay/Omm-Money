@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v203</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v204</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1174,24 +1174,9 @@
     <div class="analytics-section">
       <div class="analytics-header"><h2>🇺🇸 US PORTFOLIO · ANALYTICS</h2></div>
 
-      <!-- ROW 1: Weight donut + Sector treemap — the two "shape" charts, equal columns.
-           Reordered 2026-10-02 per user layout request (was Weight+Day%/Return%-full-width/Mix+Sector/Signals+Waterfall). -->
+      <!-- ROW 1: Today's % + Return % (ITD) — the two tile grids, equal columns.
+           Swapped with row 2 (2026-10-02, user request). -->
       <div class="an-grid-2">
-        <div class="an-card">
-          <div class="an-card-title">Open Positions by Weight</div>
-          <div style="display:flex;align-items:center;gap:18px;">
-            <div style="width:180px;height:180px;flex-shrink:0;position:relative;"><canvas id="us-weight-chart"></canvas></div>
-            <div id="us-weight-legend" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;max-height:220px;overflow-y:auto;"></div>
-          </div>
-        </div>
-        <div class="an-card">
-          <div class="an-card-title">Sector Exposure (Market Value)</div>
-          <div style="height:260px;position:relative;overflow:visible;"><svg id="us-sector-treemap" viewBox="0 0 500 240" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"></svg></div>
-        </div>
-      </div>
-
-      <!-- ROW 2: Today's % + Return % (ITD) — the two tile grids, equal columns -->
-      <div class="an-grid-2" style="margin-top:12px;">
         <div class="an-card">
           <div class="an-card-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
             <span>Today's Gain / Loss %</span>
@@ -1209,6 +1194,21 @@
           <div id="us-upl-wrap" style="position:relative;min-height:120px;">
             <div id="us-upl-tiles" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px;"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Weight donut + Sector treemap — the two "shape" charts, equal columns -->
+      <div class="an-grid-2" style="margin-top:12px;">
+        <div class="an-card">
+          <div class="an-card-title">Open Positions by Weight</div>
+          <div style="display:flex;align-items:center;gap:18px;">
+            <div style="width:180px;height:180px;flex-shrink:0;position:relative;"><canvas id="us-weight-chart"></canvas></div>
+            <div id="us-weight-legend" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;max-height:220px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div class="an-card">
+          <div class="an-card-title">Sector Exposure (Market Value)</div>
+          <div style="height:260px;position:relative;overflow:visible;"><svg id="us-sector-treemap" viewBox="0 0 500 240" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%"></svg></div>
         </div>
       </div>
 
@@ -3533,20 +3533,26 @@ const DASH = (() => {
   // #<panelId>-sort (button row, built here too). items: live position
   // objects. valueKey: numeric field to read off each item. fmtFn: number
   // formatter (no sign — sign is added here).
+  // 4 sort modes (2026-10-02, user request): '%' sorts by the panel's own
+  // percentage metric (dayPct / ret) — the original, now-renamed default;
+  // 'Value' sorts by the $ net P&L that % represents (dollarKey — dayPL for
+  // Today's%, uplNet for Return% ITD), i.e. which positions actually moved
+  // the portfolio's dollars the most, not just which moved the most in %.
   const TILE_SORT_MODES = [
-    { key: 'value', label: 'Value' },
+    { key: 'pct',   label: '%' },
+    { key: 'usd',   label: 'Value' },
     { key: 'alpha', label: 'A–Z' },
     { key: 'size',  label: 'Size' },
   ];
   function _tileSortMode(panelId) {
-    try { return localStorage.getItem('tile_sort_' + panelId) || 'value'; }
-    catch (e) { return 'value'; }
+    try { return localStorage.getItem('tile_sort_' + panelId) || 'pct'; }
+    catch (e) { return 'pct'; }
   }
   function setTileSort(panelId, mode) {
     try { localStorage.setItem('tile_sort_' + panelId, mode); } catch (e) {}
     safe(renderCharts, 'tile-sort');
   }
-  function _renderTileGrid(panelId, items, valueKey, fmtFn) {
+  function _renderTileGrid(panelId, items, valueKey, fmtFn, dollarKey) {
     const grid = $(panelId + '-tiles'), sortEl = $(panelId + '-sort');
     if (!grid) return;
     const mode = _tileSortMode(panelId);
@@ -3567,7 +3573,8 @@ const DASH = (() => {
     const sorted = [...items].sort((a,b) => {
       if (mode === 'alpha') return a.tk.localeCompare(b.tk);
       if (mode === 'size')  return (b.mv||0) - (a.mv||0);
-      return (b[valueKey]||0) - (a[valueKey]||0);           // 'value' (default)
+      if (mode === 'usd')   return (b[dollarKey]||0) - (a[dollarKey]||0);
+      return (b[valueKey]||0) - (a[valueKey]||0);           // 'pct' (default)
     });
 
     const maxAbs = Math.max(...sorted.map(p => Math.abs(p[valueKey]||0)), 0.01);
@@ -4111,8 +4118,8 @@ const DASH = (() => {
     // Each ticker is one small colored tile instead of a ranked bar — same
     // visual language as the Monthly P&L Heatmap already on this dashboard.
     // Sort order is a user preference (localStorage), not fixed rank.
-    _renderTileGrid('us-day-pct', usOpen.filter(p => p.dayPct !== null), 'dayPct', pct);
-    _renderTileGrid('us-upl',     usOpen, 'ret', pct);
+    _renderTileGrid('us-day-pct', usOpen.filter(p => p.dayPct !== null), 'dayPct', pct, 'dayPL');
+    _renderTileGrid('us-upl',     usOpen, 'ret', pct, 'uplNet');
   }
   function lineOpts(extraTooltip={}){
     return {

@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v199</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v200</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -1217,6 +1217,7 @@
           <div class="an-card-title">Closed Positions P&amp;L Waterfall</div>
           <div id="us-wf-summary" style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:11px;margin:4px 0 6px;flex-wrap:wrap;"></div>
           <div style="height:220px;position:relative;overflow:visible;"><canvas id="us-waterfall-chart"></canvas></div>
+          <div id="us-wf-note" style="font-size:10px;color:var(--text-dim);margin-top:6px;text-align:center;"></div>
         </div>
       </div>
     </div>
@@ -3822,18 +3823,51 @@ const DASH = (() => {
         <span style="background:rgba(248,113,113,0.15);color:#f87171;padding:4px 10px;border-radius:5px;font-weight:700;">🔴 ${usd(redSum)} <span style="opacity:0.7;font-weight:400;">(${redN} losses)</span></span>
         <span style="background:rgba(255,255,255,0.05);color:${netSum>=0?'#4ecf82':'#f87171'};padding:4px 10px;border-radius:5px;font-weight:700;border:1px solid ${netSum>=0?'#4ecf82':'#f87171'};">NET ${netSum>=0?'+':''}${usd(netSum)}</span>
       `;
+      // Chart itself: top 10 wins + top 10 losses only (by $ size), not all
+      // ~69 closed trades — cramming every trade in made every bar/label
+      // unreadable (user flagged 2026-10-02) and most of them are tiny
+      // $1-50 trades nobody's looking for in a chart anyway. Summary strip
+      // above still totals ALL closed trades, so nothing's actually hidden
+      // from the real numbers — just decluttered from the picture. A note
+      // under the chart names what's collapsed.
+      const WF_SHOW = 10;
+      const wins   = wf.filter(p => (p.realised||0) > 0);   // already desc-sorted
+      const losses = wf.filter(p => (p.realised||0) < 0);   // already asc-toward-worst
+      const wfChart = [...wins.slice(0, WF_SHOW), ...losses.slice(-WF_SHOW)];
+      const omittedN = wf.length - wfChart.length;
+      const omittedSum = wf.filter(p => !wfChart.includes(p)).reduce((s,p)=>s+(p.realised||0),0);
+      const noteEl = document.getElementById('us-wf-note');
+      if (noteEl) noteEl.textContent = omittedN > 0
+        ? `Showing top ${Math.min(WF_SHOW,wins.length)} wins + top ${Math.min(WF_SHOW,losses.length)} losses · ${omittedN} smaller trades not pictured (net ${sign(omittedSum)}${usd2(Math.abs(omittedSum))}, included in totals above)`
+        : '';
       mkChart('us-waterfall-chart', { type:'bar',
-        data: { labels: wf.map(p=>p.tk||'?'),
+        data: { labels: wfChart.map(p=>p.tk||'?'),
           datasets:[{ label:'Realised P&L ($)',
-            data: wf.map(p=>+(p.realised||0).toFixed(2)),
-            backgroundColor: wf.map(p=>(p.realised||0)>=0?_gainBar+'cc':_lossBar+'cc'),
-            borderColor:     wf.map(p=>(p.realised||0)>=0?_gainBar:_lossBar),
+            data: wfChart.map(p=>+(p.realised||0).toFixed(2)),
+            backgroundColor: wfChart.map(p=>(p.realised||0)>=0?_gainBar+'cc':_lossBar+'cc'),
+            borderColor:     wfChart.map(p=>(p.realised||0)>=0?_gainBar:_lossBar),
             borderWidth:1.5 }]
         },
         options:{ responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false},
             tooltip:{ callbacks:{ label: ctx=>sign(ctx.parsed.y)+usd(Math.abs(ctx.parsed.y)) } },
-            datalabels:{ display:true, anchor:'end', align:'end',
+            // Per-bar $ labels were ALWAYS on, regardless of how many closed
+            // trades there are — with 60-70+ bars crammed into one chart
+            // width, every label overlapped its neighbors into unreadable
+            // mush (user flagged 2026-10-02). Only label the few bars with
+            // room to breathe: the single best win, the single worst loss,
+            // and any bar whose |value| is at least a third of the biggest
+            // one on its side (green/red) — i.e. the outliers that actually
+            // carry the chart's story. Hover still shows every bar's exact
+            // value via tooltip.
+            datalabels:{ display: ctx => {
+                const data = ctx.dataset.data, v = data[ctx.dataIndex];
+                if (v === 0) return false;
+                const side = data.filter(x => (x>=0) === (v>=0));
+                const maxAbsOnSide = Math.max(...side.map(Math.abs));
+                return Math.abs(v) >= maxAbsOnSide / 3;
+              },
+              anchor:'end', align:'end',
               formatter: v => sign(v)+usd(Math.abs(v)),
               color:_dlColor, font:{size:9,weight:'600'}, textShadowBlur:2, textShadowColor:_dlShadow } },
           scales:{ x:{ grid:{display:false}, ticks:{color:_tickC,font:{size:10}} },

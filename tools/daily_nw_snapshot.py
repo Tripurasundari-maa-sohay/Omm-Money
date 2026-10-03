@@ -118,7 +118,14 @@ def compute_nw(seed, prices_data, cost, fx_rate_live):
     # ── LIVE portfolio values ─────────────────────────────────────────────────
     prices = prices_data.get("prices", {})
     us_open = cost.get("us", {}).get("open", [])
-    us_cash = cost.get("us", {}).get("cash", 0) or 0
+    # us["cash"] (top-level) is a STALE broker-statement snapshot — only
+    # updates when a new statement is parsed, not on live IBKR syncs. Was
+    # inflating US total by its full $5,282.62 ghost balance (phantom, does
+    # not exist). Live/current cash is the sum of us.brokers.*.cash, which
+    # IS refreshed every trade sync. Mirrors the fix already applied in
+    # fetch_all_prices_vm.py _live_us_cash() for the daily_chart series.
+    us_brokers = cost.get("us", {}).get("brokers", {}) or {}
+    us_cash = sum(float(b.get("cash") or 0) for b in us_brokers.values())
 
     us_mv_usd = us_cash
     for h in us_open:

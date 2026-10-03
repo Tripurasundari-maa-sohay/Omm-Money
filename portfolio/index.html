@@ -778,7 +778,7 @@
           <span>Clock: <span id="update-time">--:--:--</span></span>
         </div>
         <div id="fetch-status">Loading…</div>
-        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v206</div>
+        <div id="build-stamp" style="font-size:10px;color:var(--text-dim);margin-top:1px;">build v207</div>
       </div>
     </div>
     <div class="banner-metrics">
@@ -882,14 +882,9 @@
       </div>
 
       <!-- Cumulative return chart -->
-      <div class="analytics-section chart-expandable" data-chart-id="cumulative-chart" data-chart-title="CUMULATIVE RETURN · US PORTFOLIO vs S&P 500">
+      <div class="analytics-section chart-expandable" data-chart-id="cumulative-chart" data-chart-title="CUMULATIVE RETURN · COMBINED PORTFOLIO vs S&P 500">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <h2 style="margin-bottom:0">CUMULATIVE RETURN · US PORTFOLIO vs S&amp;P 500</h2>
-          <div style="display:flex;gap:4px" onclick="event.stopPropagation()">
-            <button id="cum-view-daily"   onclick="event.stopPropagation();DASH.setCumView('daily')"   style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Daily</button>
-            <button id="cum-view-weekly"  onclick="event.stopPropagation();DASH.setCumView('weekly')"  style="padding:3px 10px;border:1px solid var(--accent-b);border-radius:4px;background:var(--accent-b);color:#fff;cursor:pointer;font-size:11px;font-weight:700">Weekly</button>
-            <button id="cum-view-monthly" onclick="event.stopPropagation();DASH.setCumView('monthly')" style="padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card2);color:var(--text-sec);cursor:pointer;font-size:11px;font-weight:700">Monthly</button>
-          </div>
+          <h2 style="margin-bottom:0">CUMULATIVE RETURN · COMBINED PORTFOLIO vs S&amp;P 500</h2>
         </div>
         <div class="chart-container chart-wide"><canvas id="cumulative-chart"></canvas></div>
         <div class="chart-stat-bar">
@@ -2209,10 +2204,6 @@ const DASH = (() => {
     if (prices)  {
       S.prices    = prices.prices || {};
       S.demoPrices = prices.demo_prices || {};
-      S.snpActual  = prices.snp_actual_cum_pct || null;
-      S.inrFxMon   = prices.inr_fx_monthly    || null;
-      S.weeklyChart     = prices.weekly_chart          || null;
-      S.dailyChart      = prices.daily_chart           || null;
       S.indiaWeekly     = prices.india_weekly_chart    || null;
       S.combinedWeekly  = prices.combined_weekly_chart || null;
     }
@@ -3668,74 +3659,53 @@ const DASH = (() => {
       return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})`;
     };
 
-    // Cumulative chart (portfolio) — weekly Friday data preferred, monthly fallback
-    if (m && m.labels) {
+    // Cumulative chart — combined US+India (cm), and the US-only cumulative
+    // chart on the US tab (cm.us_*). Both replaced 2026-10-03: the old
+    // source (weekly_chart/daily_chart.port_ret, a day-over-day chain with
+    // no deposit-adjustment across the Jun-Sep gap, plus ~9 meaningless
+    // zero-AUM weeks before the user's real Dec-14-2025 first dollar) could
+    // show numbers like -8% when the true figure was +15%. cm is built with
+    // the same gap-aware, deposit-adjusted logic already proven for the
+    // other 5 cm-based charts. The old daily/weekly/monthly toggle is gone
+    // with it — cm has one trustworthy resolution (monthly); see
+    // [[portfolio-cumulative-chart-fix-2026-10-03]].
+    if (cm && cm.labels) {
       const _cumCs   = getComputedStyle(document.documentElement);
       const _cumGain = _cumCs.getPropertyValue('--gain').trim() || '#00d4aa';
       const _cumWarn = _cumCs.getPropertyValue('--warn').trim() || '#f0b429';
-      // Select dataset based on toggle (daily/weekly/monthly)
-      const _cumView = localStorage.getItem('cum_view') || 'weekly';
-      const wc = _cumView === 'daily'   ? S.dailyChart  :
-                 _cumView === 'weekly'  ? S.weeklyChart :
-                 null;  // monthly = null → use broker data below
+      const snpLabel = 'S&P 500 (^GSPC)';
 
-      // Highlight active toggle button
-      ['daily','weekly','monthly'].forEach(v => {
-        const btn = document.getElementById(`cum-view-${v}`);
-        if (!btn) return;
-        const active = v === _cumView;
-        btn.style.background    = active ? 'var(--accent-b)' : 'var(--bg-card2)';
-        btn.style.color         = active ? '#fff' : 'var(--text-sec)';
-        btn.style.borderColor   = active ? 'var(--accent-b)' : 'var(--border)';
-      });
-
-      const _labels   = wc ? wc.labels   : m.labels;
-      const _portData = wc ? wc.port_ret : m.port_return_cum_pct;
-      const _snpData  = wc ? wc.snp_ret  : (S.snpActual || m.snp_return_cum_pct);
-      const _inrData  = wc ? wc.inr_ret  : null;
-      const _dates    = wc ? wc.dates    : null;
-      const snpLabel  = 'S&P 500 (^GSPC)';
-
-      // Monthly fallback: compute INR line from inr_fx_monthly. Tolerate a
-      // length mismatch (e.g. one side updated before the other) instead of
-      // silently dropping the whole line — plot whatever prefix overlaps.
-      const _fxBase = (!wc && S.inrFxMon && S.inrFxMon[0]) ? S.inrFxMon[0] : null;
-      const inrLine = _inrData || (_fxBase && S.inrFxMon && S.inrFxMon.length > 0
-        ? m.port_return_cum_pct.map((v, i) =>
-            i < S.inrFxMon.length
-              ? +((((1 + v/100) * (S.inrFxMon[i] / _fxBase)) - 1) * 100).toFixed(2)
-              : null)
-        : null);
-
-      const _chartCallback = ctx => {
+      const _mkCallback = cashBaseForTip => ctx => {
         const v = ctx.parsed.y, s = v>=0?'+':'';
-        const dateStr = _dates ? ` · ${_dates[ctx.dataIndex]}` : '';
-        if (ctx.dataset.label === 'INR Return' || ctx.dataset.label === 'Alpha due to INR FX')
+        const dateStr = cm.label_dates ? ` · ${cm.label_dates[ctx.dataIndex]}` : '';
+        if (ctx.dataset.label === 'INR Return')
           return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%${dateStr}`;
-        const usdDelta = cashBase * (v/100);
+        const usdDelta = cashBaseForTip * (v/100);
         return `${ctx.dataset.label}: ${s}${v.toFixed(2)}%  (${s}${Math.round(usdDelta).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0})})${dateStr}`;
       };
-
-      const _datasets = [
-        { label:'Portfolio (USD)', data:_portData, borderColor:_cumGain, ...darkLine },
-        { label:snpLabel,          data:_snpData,  borderColor:'var(--text-dim)', borderDash:[5,4], ...darkLine },
-        ...(inrLine ? [{ label:'INR Return',
-          data:inrLine, borderColor:_cumWarn, borderWidth:2.5,
-          tension:0.3, pointRadius:wc ? 1 : 2, fill:false, backgroundColor:'transparent' }] : []),
+      const _mkDatasets = (portData, inrData) => [
+        { label:'Portfolio (USD)', data:portData, borderColor:_cumGain, ...darkLine },
+        { label:snpLabel,          data:cm.snp_return_cum_pct, borderColor:'var(--text-dim)', borderDash:[5,4], ...darkLine },
+        ...(inrData ? [{ label:'INR Return',
+          data:inrData, borderColor:_cumWarn, borderWidth:2.5,
+          tension:0.3, pointRadius:2, fill:false, backgroundColor:'transparent' }] : []),
       ];
 
+      // Portfolio tab — combined US+India
       mkChart('cumulative-chart', {
-        type:'line', data:{ labels:_labels, datasets:_datasets },
-        options: lineOpts({ callbacks:{ label:_chartCallback } })
+        type:'line', data:{ labels:cm.labels, datasets:_mkDatasets(cm.port_return_cum_pct, cm.inr_return_cum_pct) },
+        options: lineOpts({ callbacks:{ label:_mkCallback(cashBase) } })
       });
+      // US tab — US-only (title says "US PORTFOLIO", so don't blend in India)
+      const usCashBase = us.cashInfusion || 0;
       mkChart('us-perf-chart', {
-        type:'line', data:{ labels:_labels, datasets:_datasets },
-        options: lineOpts({ callbacks:{ label:_chartCallback } })
+        type:'line', data:{ labels:cm.labels, datasets:_mkDatasets(cm.us_port_return_cum_pct, cm.us_inr_return_cum_pct) },
+        options: lineOpts({ callbacks:{ label:_mkCallback(usCashBase) } })
       });
 
-      const portPct = _portData.at(-1) || 0;
-      const snpPct  = _snpData.at(-1)  || 0;
-      const inrPct  = inrLine ? (inrLine.at(-1) || 0) : null;
+      const portPct = cm.port_return_cum_pct.at(-1) || 0;
+      const snpPct  = cm.snp_return_cum_pct.at(-1)  || 0;
+      const inrPct  = cm.inr_return_cum_pct ? (cm.inr_return_cum_pct.at(-1) || 0) : null;
       setText('cum-port', sign(portPct) + pct(portPct));
       setText('cum-snp',  sign(snpPct)  + pct(snpPct));
       if (inrPct !== null) {
@@ -3783,7 +3753,12 @@ const DASH = (() => {
         });
       }
 
-      // Monthly breakdown body
+    }
+
+    // Monthly breakdown body — DBG/US-only `m` (us.monthly), intentionally NOT
+    // cm: this table is the US tab's own US-only view, a separate scope from
+    // the charts above. Independent of cm's presence/absence, as it always was.
+    if (m && m.labels) {
       const mb = $('us-monthly-body');
       if (mb) {
         mb.innerHTML = m.labels.slice(1).map((mo,i) => {
@@ -3799,12 +3774,14 @@ const DASH = (() => {
             <td class="${pn(alpha)}">${sign(alpha)}${pct(alpha)}</td>
           </tr>`;
         }).join('');
-        const totPL = m.monthly_pl.reduce((s,v)=>s+v,0);
-        const totC  = m.monthly_cost.reduce((s,v)=>s+v,0);
+        const totPL  = m.monthly_pl.reduce((s,v)=>s+v,0);
+        const totC   = m.monthly_cost.reduce((s,v)=>s+v,0);
+        const mPort  = m.port_return_cum_pct.at(-1) || 0;
+        const mSnp   = m.snp_return_cum_pct.at(-1)  || 0;
         setText('us-mo-pl',    sign(totPL)+usd2(totPL));
         setText('us-mo-cost',  usd2(totC));
-        setText('us-mo-ret',   sign(portPct)+pct(portPct));
-        setText('us-mo-alpha', sign(portPct-snpPct)+pct(portPct-snpPct));
+        setText('us-mo-ret',   sign(mPort)+pct(mPort));
+        setText('us-mo-alpha', sign(mPort-mSnp)+pct(mPort-mSnp));
       }
     }
 
@@ -5785,10 +5762,6 @@ const DASH = (() => {
   // public surface for inline handlers
   fsApply();     // restore saved font size on load
   themeApply();  // restore saved theme on load
-  function setCumView(view) {
-    localStorage.setItem('cum_view', view);
-    safe(renderCharts, 'charts-cumview');
-  }
 
   function editSMELTP(tk, currentLTP) {
     const stored = localStorage.getItem('manual_ltp_' + tk);
@@ -6421,7 +6394,7 @@ const DASH = (() => {
 
   document.addEventListener('DOMContentLoaded', () => { mpLoadPending(); });
 
-  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setCumView, setTileSort, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject, openLotDetail, closeLotDetail, openLotGroup };
+  return { setCurrency, toggleDemoMode, togglePill, toggleMarket, filterTx, exportPL, fsAdjust, toggleTheme, setTileSort, editSMELTP, openChartModal, closeChartModal, _dropCol, _sortCol, resetColOrder, openDrilldown, closeDrilldown, sortDrilldown, mpSwitch, mpPosChange, mpStage, mpLoadPending, mpApply, mpReject, openLotDetail, closeLotDetail, openLotGroup };
 })();
 
 // Register service worker for PWA installability

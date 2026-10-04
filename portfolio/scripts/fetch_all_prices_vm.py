@@ -907,7 +907,16 @@ def main():
         new_prices.update(us_p)
         print(f"  US: {len(us_p)} Finnhub  (fx_buy stamped: {sum(1 for t in us_p if t in fx_buy_map)}, manual: {manual_count})")
         try:
-            fetch_us_earnings_calendar(US_HOLDINGS)
+            # Present holdings only (hold_tickers, loaded fresh above from
+            # holdings_cost.json us.open) — NOT US_HOLDINGS, which is a
+            # watchlist+historical union that only ever grows (a closed
+            # position's ticker stays in it forever). Earnings calendar
+            # should track what's actually open, nothing else. Fixed
+            # 2026-10-04 per user: "based on only my present holding... when
+            # ever you update the holding, you update this as well" — since
+            # hold_tickers is reloaded every cycle, this self-syncs with no
+            # further wiring needed.
+            fetch_us_earnings_calendar(hold_tickers)
         except Exception as e:
             print(f"  Earnings calendar FAIL: {e}", file=sys.stderr)
 

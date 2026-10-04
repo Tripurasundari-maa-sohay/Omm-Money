@@ -3118,6 +3118,13 @@ const ODIN = (() => {
     const i = S.trendItems.indexOf(k);
     if (i >= 0) S.trendItems.splice(i, 1); else S.trendItems.push(k);
     if (S.trendItems.length === 0) S.trendItems = ['net_worth'];
+    // Re-render the picker so checkbox states always match S.trendItems —
+    // was only calling renderTrends(), so the empty-selection fallback above
+    // (forces net_worth back in) happened invisibly: the Net Worth checkbox
+    // stayed visually unchecked from the user's own click while the chart
+    // and KPI tiles silently kept/re-added it, making it look like every
+    // other item you picked was just stacking on top of a "stuck" series.
+    _renderTrendPicker();
     renderTrends();
   }
   function _fmtTrendVal(v, key) {

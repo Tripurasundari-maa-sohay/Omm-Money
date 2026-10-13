@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-13T05:19:30.116359Z",
+  "generated": "2026-10-13T05:20:06.528694Z",
   "usa_market": {
     "status": "CLOSED",
     "indices": {
@@ -22,25 +22,25 @@
     "status": "OPEN",
     "indices": {
       "nifty_50": {
-        "current": 22511.45,
+        "current": 22523.45,
         "prev_close": 22363.35,
-        "change": 148.1,
-        "change_pct": 0.66
+        "change": 160.1,
+        "change_pct": 0.72
       },
       "sensex": {
-        "current": 72400.07,
+        "current": 72391.67,
         "prev_close": 71924.68,
-        "change": 475.39,
-        "change_pct": 0.66
+        "change": 466.99,
+        "change_pct": 0.65
       }
     },
-    "timestamp": "2026-10-13T05:18:06.762739Z"
+    "timestamp": "2026-10-13T05:20:08.118935Z"
   },
-  "fx_rate": 95.2125,
+  "fx_rate": 95.1975,
   "malabar_gold_qatar": {
     "rate_22k_qar_per_g": 463.5,
     "rate_24k_qar_per_g": 503.0,
     "source_updated_time": "12/10/2026 06:14 PM",
-    "fetched": "2026-10-13T05:18:08.533947Z"
+    "fetched": "2026-10-13T05:20:09.829632Z"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-02T18:31:07.889696Z",
+  "generated": "2026-11-02T18:32:06.168229Z",
   "usa_market": {
     "status": "OPEN",
     "indices": {
@@ -27,9 +27,14 @@
         "change": 387.7,
         "change_pct": 1.68
       },
-      "sensex": null
+      "sensex": {
+        "current": 75692.78,
+        "prev_close": 74459.53,
+        "change": 1233.25,
+        "change_pct": 1.66
+      }
     },
-    "timestamp": "2026-11-02T18:30:22.018489Z"
+    "timestamp": "2026-11-02T18:32:09.835583Z"
   },
   "fx_rate": 94.89,
   "malabar_gold_qatar": {

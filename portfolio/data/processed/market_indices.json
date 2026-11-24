@@ -1,22 +1,22 @@
 {
-  "generated": "2026-11-24T14:30:05.673566Z",
+  "generated": "2026-11-24T14:31:32.612566Z",
   "usa_market": {
-    "status": "RESET",
+    "status": "OPEN",
     "indices": {
       "snp_500": {
-        "current": 7237.17,
-        "prev_close": 6910.39,
-        "change": 326.78,
-        "change_pct": 4.73
+        "current": 7146.64,
+        "prev_close": 7237.17,
+        "change": -90.53,
+        "change_pct": -1.25
       },
       "nasdaq": {
-        "current": 24089.559,
-        "prev_close": 22617.7,
-        "change": 1471.86,
-        "change_pct": 6.51
+        "current": 23707.842,
+        "prev_close": 24089.559,
+        "change": -381.72,
+        "change_pct": -1.58
       }
     },
-    "timestamp": "2026-11-24T14:29:32.227724Z"
+    "timestamp": "2026-11-24T14:31:33.431599Z"
   },
   "india_market": {
     "status": "CLOSED",
